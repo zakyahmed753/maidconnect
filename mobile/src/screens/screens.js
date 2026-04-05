@@ -1,7 +1,9 @@
 // ─── NotificationsScreen ───
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar } from 'react-native';
+import useLangStore from '../store/langStore';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView } from 'react-native';
+import { LANGUAGES } from '../utils/i18n';
 import { notificationsAPI } from '../services/api';
 import { COLORS, FONTS } from '../utils/theme';
 
@@ -122,26 +124,84 @@ export function ChatsListScreen({ navigation }) {
 // ─── SavedScreen ───
 export function SavedScreen({ navigation }) {
   const [maids, setMaids] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { maidsAPI } = require('../services/api');
-  useEffect(() => { maidsAPI.getSaved().then(r=>setMaids(r.data.maids)).catch(()=>{}); }, []);
+  const { useFocusEffect } = require('@react-navigation/native');
+
+  // Refetch every time this tab comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoading(true);
+      maidsAPI.getSaved()
+        .then(r => setMaids(r.data.maids || []))
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, [])
+  );
+
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={styles.topBar}><Text style={styles.pageTitle}>Saved Maids</Text></View>
-      <FlatList data={maids} keyExtractor={i=>i._id}
-        contentContainerStyle={{ padding:14 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.savedCard} onPress={() => navigation.navigate('MaidDetail', { maid:item })}>
-            <View style={[styles.savedAva, { backgroundColor: item.origin==='african'?'#2d1a0a':'#1a0d2e' }]}><Text style={{ fontSize:26 }}>👩</Text></View>
-            <View style={{ flex:1 }}>
-              <Text style={styles.savedName}>{item.fullName}</Text>
-              <Text style={styles.savedSub}>{item.nationality} · {item.age}yrs · ${item.expectedSalary}/mo</Text>
-            </View>
-            <Text style={{ fontSize:18 }}>❤️</Text>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>No saved maids yet</Text>}
-      />
+      <View style={styles.topBar}><Text style={styles.pageTitle}>Saved Maids ❤️</Text></View>
+      {loading
+        ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
+            <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.gold, borderTopColor:'transparent' }}/>
+          </View>
+        : <FlatList data={maids} keyExtractor={i=>i._id}
+            contentContainerStyle={{ padding:14 }}
+            renderItem={({ item }) => (
+              <TouchableOpacity style={styles.savedCard}
+                onPress={() => navigation.navigate('Browse', { screen:'MaidDetail', params:{ maid:item } })}>
+                <View style={[styles.savedAva, { backgroundColor: item.origin==='african'?'#2d1a0a':'#1a0d2e' }]}>
+                  {item.photos?.[0]?.url
+                    ? <View style={{ width:44, height:44, borderRadius:22, overflow:'hidden' }}>
+                        <View style={{ width:'100%', height:'100%', alignItems:'center', justifyContent:'center', backgroundColor: item.origin==='african'?'#2d1a0a':'#1a0d2e' }}>
+                          <Text style={{ fontSize:22 }}>👩</Text>
+                        </View>
+                      </View>
+                    : <Text style={{ fontSize:26 }}>👩</Text>}
+                </View>
+                <View style={{ flex:1 }}>
+                  <Text style={styles.savedName}>{item.fullName}</Text>
+                  <Text style={styles.savedSub}>{item.nationality} · {item.age}yrs · EGP {(item.expectedSalary||0).toLocaleString()}/mo</Text>
+                  <View style={{ flexDirection:'row', gap:5, marginTop:4 }}>
+                    {(item.skills||[]).slice(0,3).map(s=>(
+                      <View key={s} style={{ backgroundColor:'#f4ede0', paddingHorizontal:6, paddingVertical:2, borderRadius:2 }}>
+                        <Text style={{ fontSize:9, color:COLORS.muted }}>{s}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+                <Text style={{ fontSize:18 }}>❤️</Text>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>No saved maids yet</Text>}
+          />
+      }
     </View>
+  );
+}
+
+// ─── LanguageModal ───
+function LanguageModal({ visible, onClose }) {
+  const { lang, setLang } = useLangStore();
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <TouchableOpacity style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'center', alignItems:'center' }} activeOpacity={1} onPress={onClose}>
+        <View style={{ backgroundColor:COLORS.surface, borderRadius:10, overflow:'hidden', width:280, borderWidth:1, borderColor:COLORS.border }}>
+          <View style={{ backgroundColor:'#1a1108', padding:16 }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:18, color:'#e8c97a' }}>🌐 Language / اللغة</Text>
+          </View>
+          {LANGUAGES.map(l => (
+            <TouchableOpacity key={l.code} onPress={() => { setLang(l.code); onClose(); }}
+              style={{ flexDirection:'row', alignItems:'center', gap:12, padding:14, borderTopWidth:1, borderTopColor:COLORS.border, backgroundColor: lang===l.code ? '#fef9ee' : COLORS.surface }}>
+              <Text style={{ fontSize:22 }}>{l.flag}</Text>
+              <Text style={{ fontSize:14, color: lang===l.code ? COLORS.gold : COLORS.text, fontWeight: lang===l.code ? '700':'400', flex:1 }}>{l.label}</Text>
+              {lang===l.code && <Text style={{ color:COLORS.gold, fontSize:16 }}>✓</Text>}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </TouchableOpacity>
+    </Modal>
   );
 }
 
@@ -150,6 +210,7 @@ export function HWProfileScreen({ navigation }) {
   const useAuthStore = require('../store/authStore').default;
   const Toast = require('react-native-toast-message').default;
   const { user, logout } = useAuthStore();
+  const [langVisible, setLangVisible] = useState(false);
 
   const MENU = [
     { icon:'❤️', title:'Saved Maids',   color:'',    onPress: () => navigation.navigate('Saved') },
@@ -157,30 +218,34 @@ export function HWProfileScreen({ navigation }) {
     { icon:'✅', title:'Approval Flow',  color:'',    onPress: () => navigation.navigate('Browse', { screen:'Approval' }) },
     { icon:'💳', title:'Payments',       color:'',    onPress: () => Toast.show({ type:'info', text1:'Coming soon' }) },
     { icon:'🔔', title:'Notifications',  color:'',    onPress: () => navigation.navigate('Alerts') },
+    { icon:'🌐', title:'Language',       color:'',    onPress: () => setLangVisible(true) },
     { icon:'🔒', title:'Security',       color:'',    onPress: () => Toast.show({ type:'info', text1:'Coming soon' }) },
     { icon:'🚪', title:'Sign Out',       color:'red', onPress: logout },
   ];
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={{ backgroundColor:'#3d2203', padding:20, paddingTop:54, paddingBottom:20 }}>
-        <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:12 }}>
-          <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:28 }}>👩</Text></View>
-          <TouchableOpacity style={{ borderWidth:1, borderColor:'rgba(201,168,76,0.35)', paddingHorizontal:14, paddingVertical:8, borderRadius:4, alignSelf:'flex-start' }}><Text style={{ fontSize:12, color:'#e8c97a' }}>✏️ Edit</Text></TouchableOpacity>
+      <LanguageModal visible={langVisible} onClose={() => setLangVisible(false)}/>
+      <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false}>
+        <View style={{ backgroundColor:'#3d2203', padding:20, paddingTop:54, paddingBottom:20 }}>
+          <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:12 }}>
+            <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:28 }}>👩</Text></View>
+            <TouchableOpacity style={{ borderWidth:1, borderColor:'rgba(201,168,76,0.35)', paddingHorizontal:14, paddingVertical:8, borderRadius:4, alignSelf:'flex-start' }}><Text style={{ fontSize:12, color:'#e8c97a' }}>✏️ Edit</Text></TouchableOpacity>
+          </View>
+          <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{user?.name || 'Customer'}</Text>
+          <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', fontFamily:FONTS.body, marginTop:2 }}>{user?.email}</Text>
         </View>
-        <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{user?.name || 'House Wife'}</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', fontFamily:FONTS.body, marginTop:2 }}>{user?.email}</Text>
-      </View>
-      <View style={{ margin:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
-        {MENU.map(({ icon, title, color, onPress }) => (
-          <TouchableOpacity key={title} onPress={onPress}
-            style={{ flexDirection:'row', alignItems:'center', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-            <View style={{ width:32, height:32, borderRadius:6, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:15 }}>{icon}</Text></View>
-            <Text style={{ fontSize:14, fontWeight:'500', color: color==='red' ? COLORS.red : COLORS.text, flex:1 }}>{title}</Text>
-            <Text style={{ color:COLORS.muted, fontSize:16 }}>›</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={{ margin:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
+          {MENU.map(({ icon, title, color, onPress }) => (
+            <TouchableOpacity key={title} onPress={onPress}
+              style={{ flexDirection:'row', alignItems:'center', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+              <View style={{ width:32, height:32, borderRadius:6, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:15 }}>{icon}</Text></View>
+              <Text style={{ fontSize:14, fontWeight:'500', color: color==='red' ? COLORS.red : COLORS.text, flex:1 }}>{title}</Text>
+              <Text style={{ color:COLORS.muted, fontSize:16 }}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -189,37 +254,41 @@ export function HWProfileScreen({ navigation }) {
 export function MaidDashScreen() {
   const useAuthStore = require('../store/authStore').default;
   const { user, profile, logout } = useAuthStore();
+  const [langVisible, setLangVisible] = useState(false);
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={{ backgroundColor:'#1a1108', padding:20, paddingTop:54 }}>
-        <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:10 }}>
-          <View style={{ backgroundColor:'rgba(46,125,94,0.2)', borderWidth:1, borderColor:'rgba(46,125,94,0.35)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
-            <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#5dd6a8' }}>Active Subscription</Text>
+      <LanguageModal visible={langVisible} onClose={() => setLangVisible(false)}/>
+      <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false}>
+        <View style={{ backgroundColor:'#1a1108', padding:20, paddingTop:54 }}>
+          <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:10 }}>
+            <View style={{ backgroundColor:'rgba(46,125,94,0.2)', borderWidth:1, borderColor:'rgba(46,125,94,0.35)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
+              <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#5dd6a8' }}>Active Subscription</Text>
+            </View>
+            <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:COLORS.gold, paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}><Text style={{ fontSize:9, color:COLORS.gold, fontWeight:'700' }}>Annual</Text></View>
           </View>
-          <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:COLORS.gold, paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}><Text style={{ fontSize:9, color:COLORS.gold, fontWeight:'700' }}>Annual</Text></View>
+          <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center', marginBottom:8 }}><Text style={{ fontSize:28 }}>👩🏿</Text></View>
+          <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
+          <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
         </View>
-        <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center', marginBottom:8 }}><Text style={{ fontSize:28 }}>👩🏿</Text></View>
-        <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
-      </View>
-      <View style={{ flexDirection:'row', gap:10, padding:14 }}>
-        {[['18','Views'],['7','Likes'],['3','Chats']].map(([n,l])=>(
-          <View key={l} style={{ flex:1, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, alignItems:'center' }}>
-            <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.gold }}>{n}</Text>
-            <Text style={{ fontSize:9, textTransform:'uppercase', letterSpacing:0.5, color:COLORS.muted, marginTop:2 }}>{l}</Text>
-          </View>
-        ))}
-      </View>
-      <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
-        {[['💬','Messages','3 active'],['💳','Subscription','Annual · Dec 2025'],['📊','Analytics','18 views'],['🔔','Notifications',''],['🚪','Sign Out','']].map(([icon,title,sub])=>(
-          <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : undefined}
-            style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-            <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
-            <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: title==='Sign Out'?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
-            <Text style={{ color:COLORS.muted }}>›</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={{ flexDirection:'row', gap:10, padding:14 }}>
+          {[['18','Views'],['7','Likes'],['3','Chats']].map(([n,l])=>(
+            <View key={l} style={{ flex:1, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, alignItems:'center' }}>
+              <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.gold }}>{n}</Text>
+              <Text style={{ fontSize:9, textTransform:'uppercase', letterSpacing:0.5, color:COLORS.muted, marginTop:2 }}>{l}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
+          {[['💬','Messages','3 active'],['💳','Subscription','Annual · Dec 2025'],['📊','Analytics','18 views'],['🌐','Language',''],['🔔','Notifications',''],['🚪','Sign Out','']].map(([icon,title,sub])=>(
+            <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : undefined}
+              style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+              <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
+              <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: title==='Sign Out'?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
+              <Text style={{ color:COLORS.muted }}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
     </View>
   );
 }

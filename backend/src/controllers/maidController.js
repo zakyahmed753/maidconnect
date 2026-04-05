@@ -150,6 +150,46 @@ exports.getSavedMaids = async (req, res) => {
   }
 };
 
+// ── Submit Passport / National ID + Selfie for Verification ──
+exports.submitVerification = async (req, res) => {
+  try {
+    const { passportNumber, nationalId, passportPhotoUrl, passportPhotoPublicId, residencePermitUrl, selfieUrl, selfiePublicId } = req.body;
+    const maid = await Maid.findOne({ user: req.user._id });
+    if (!maid) return res.status(404).json({ success: false, message: 'Profile not found' });
+
+    if (residencePermitUrl) {
+      maid.residencePermit = { url: residencePermitUrl, submittedAt: new Date() };
+    }
+
+    if (nationalId) {
+      maid.nationalId = nationalId;
+    } else {
+      maid.passport = {
+        number: passportNumber,
+        photo: { url: passportPhotoUrl, publicId: passportPhotoPublicId },
+        submittedAt: new Date()
+      };
+    }
+    maid.selfie = {
+      photo: { url: selfieUrl, publicId: selfiePublicId },
+      submittedAt: new Date()
+    };
+    maid.verificationStatus = 'pending';
+    await maid.save();
+
+    // Notify admins (create a system notification)
+    await Notification.create({
+      user: req.user._id, type: 'system',
+      title: '📋 Verification Submitted',
+      body: 'Your passport and selfie have been submitted. We will review within 24 hours.'
+    });
+
+    res.json({ success: true, maid });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Add Photo to Maid Profile ──
 exports.addPhoto = async (req, res) => {
   try {

@@ -69,7 +69,7 @@ export default function MaidDetailScreen({ route, navigation }) {
 
           <Text style={styles.secTitle}>Details</Text>
           <View style={styles.infoGrid}>
-            {[['Experience',`${maid.experienceYears} Years`],['Expected Salary',`$${maid.expectedSalary}/mo`],['Age',`${maid.age} years`],['Origin',maid.nationality]].map(([l,v])=>(
+            {[['Experience',`${maid.experienceYears} Years`],['Expected Salary',`EGP ${(maid.expectedSalary||0).toLocaleString()}/mo`],['Age',`${maid.age} years`],['Origin',maid.nationality]].map(([l,v])=>(
               <View key={l} style={styles.infoBox}>
                 <Text style={styles.infoLabel}>{l}</Text>
                 <Text style={styles.infoVal}>{v}</Text>

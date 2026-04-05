@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://192.168.1.15:5001/api'; // Replace with your IP
+const BASE_URL = 'http://192.168.1.23:5001/api'; // Replace with your IP
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -37,10 +37,11 @@ export const authAPI = {
 export const maidsAPI = {
   getAll:       (params) => api.get('/maids', { params }),
   getOne:       (id)     => api.get(`/maids/${id}`),
-  getMyProfile: ()       => api.get('/maids/me'),
+  getMyProfile: ()       => api.get('/maids/me', { params: { _t: Date.now() } }),
   createProfile:(data)   => api.post('/maids', data),
   updateProfile:(data)   => api.put('/maids/me', data),
-  addPhoto:     (data)   => api.post('/maids/me/photos', data),
+  addPhoto:         (data) => api.post('/maids/me/photos', data),
+  submitVerification:(data) => api.post('/maids/me/verification', data),
   toggleLike:   (id)     => api.post(`/maids/${id}/like`),
   getSaved:     ()       => api.get('/maids/saved/list'),
 };

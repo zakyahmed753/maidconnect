@@ -77,11 +77,14 @@ exports.getAllMaids = async (req, res) => {
 exports.updateMaidStatus = async (req, res) => {
   try {
     const { status, note } = req.body;
-    const maid = await Maid.findByIdAndUpdate(
-      req.params.id,
-      { approvalStatus: status, approvalNote: note, approvedBy: req.user._id, approvedAt: Date.now() },
-      { new: true }
-    ).populate('user');
+    const update = { approvalStatus: status, approvalNote: note, approvedBy: req.user._id, approvedAt: Date.now() };
+    // When admin approves the profile, also mark identity as verified
+    if (status === 'approved') {
+      update.verificationStatus = 'verified';
+      update.verifiedBy = req.user._id;
+      update.verifiedAt = new Date();
+    }
+    const maid = await Maid.findByIdAndUpdate(req.params.id, update, { new: true }).populate('user');
 
     const notifMessage = {
       approved: { title: '✅ Profile Approved!', body: 'Your profile is now visible to house wives.' },
@@ -96,6 +99,31 @@ exports.updateMaidStatus = async (req, res) => {
       });
     }
 
+    res.json({ success: true, maid });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Verify / Reject Maid Identity (passport + selfie) ──
+exports.verifyIdentity = async (req, res) => {
+  try {
+    const { status, note } = req.body; // status: 'verified' | 'rejected'
+    if (!['verified', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+    const maid = await Maid.findByIdAndUpdate(
+      req.params.id,
+      { verificationStatus: status, verificationNote: note, verifiedBy: req.user._id, verifiedAt: new Date() },
+      { new: true }
+    ).populate('user');
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+
+    const msg = status === 'verified'
+      ? { title: '✅ Identity Verified!', body: 'Your passport and selfie have been verified. You can now subscribe.' }
+      : { title: '❌ Verification Rejected', body: `Reason: ${note || 'Documents did not meet requirements. Please resubmit.'}` };
+
+    await Notification.create({ user: maid.user._id, type: 'system', ...msg });
     res.json({ success: true, maid });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

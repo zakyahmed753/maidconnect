@@ -6,8 +6,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
+import { useTranslation } from '../../utils/i18n';
 
 export default function RegisterHousewifeScreen({ navigation }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
   const [loading, setLoading] = useState(false);
   const register = useAuthStore(s => s.register);
@@ -16,17 +18,23 @@ export default function RegisterHousewifeScreen({ navigation }) {
 
   const handleSubmit = async () => {
     if (!form.name || !form.email || !form.password) {
-      return Toast.show({ type: 'error', text1: 'Fill required fields' });
+      return Toast.show({ type: 'error', text1: t('fill_required') });
     }
     setLoading(true);
     try {
       await register({ ...form, role: 'housewife' });
       Toast.show({ type: 'success', text1: 'Account created! Welcome 🏠' });
-      // AppNavigator will auto-navigate to HouseWifeTabs once token is set
     } catch (err) {
-      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Registration failed' });
+      Toast.show({ type: 'error', text1: err.response?.data?.message || t('registration_failed') });
     } finally { setLoading(false); }
   };
+
+  const FIELDS = [
+    [t('full_name') + ' *', 'name',     'default'],
+    [t('email') + ' *',     'email',    'email-address'],
+    [t('password') + ' *',  'password', 'default'],
+    [t('phone'),             'phone',    'phone-pad'],
+  ];
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -35,17 +43,12 @@ export default function RegisterHousewifeScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.heroTitle}>Create Account</Text>
-        <Text style={styles.heroSub}>House Wife — Find your trusted maid</Text>
+        <Text style={styles.heroTitle}>{t('sign_up')}</Text>
+        <Text style={styles.heroSub}>Customer — Find your trusted maid</Text>
       </LinearGradient>
 
       <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
-        {[
-          ['Full Name *', 'name', 'default'],
-          ['Email *', 'email', 'email-address'],
-          ['Password *', 'password', 'default'],
-          ['Phone', 'phone', 'phone-pad'],
-        ].map(([label, key, kb]) => (
+        {FIELDS.map(([label, key, kb]) => (
           <View key={key}>
             <Text style={styles.label}>{label}</Text>
             <TextInput
@@ -61,15 +64,12 @@ export default function RegisterHousewifeScreen({ navigation }) {
           </View>
         ))}
 
-        <TouchableOpacity
-          style={[styles.btn, loading && styles.btnDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}>
-          <Text style={styles.btnTxt}>{loading ? 'Creating Account…' : 'Create Account'}</Text>
+        <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleSubmit} disabled={loading}>
+          <Text style={styles.btnTxt}>{loading ? t('loading') : t('sign_up')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login', { role: 'housewife' })}>
-          <Text style={styles.linkTxt}>Already have an account? <Text style={{ color: COLORS.gold }}>Sign In</Text></Text>
+          <Text style={styles.linkTxt}>{t('have_account')} <Text style={{ color: COLORS.gold }}>{t('sign_in_link')}</Text></Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -77,15 +77,15 @@ export default function RegisterHousewifeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  hero:      { padding: 20, paddingTop: 54 },
-  heroTitle: { fontFamily: FONTS.display, fontSize: 26, color: '#e8c97a', marginTop: 8 },
-  heroSub:   { fontSize: 12, color: 'rgba(232,201,122,0.5)', marginTop: 3 },
-  body:      { flex: 1, backgroundColor: COLORS.cream, padding: 22 },
-  label:     { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 5, marginTop: 14, fontFamily: FONTS.bodySemiBold },
-  input:     { borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 5, padding: 13, fontSize: 14, color: COLORS.text, backgroundColor: COLORS.surface, fontFamily: FONTS.body },
-  btn:       { backgroundColor: COLORS.gold, padding: 15, borderRadius: 5, alignItems: 'center', marginTop: 24 },
+  hero:        { padding: 20, paddingTop: 54 },
+  heroTitle:   { fontFamily: FONTS.display, fontSize: 26, color: '#e8c97a', marginTop: 8 },
+  heroSub:     { fontSize: 12, color: 'rgba(232,201,122,0.5)', marginTop: 3 },
+  body:        { flex: 1, backgroundColor: COLORS.cream, padding: 22 },
+  label:       { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 5, marginTop: 14, fontFamily: FONTS.bodySemiBold },
+  input:       { borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 5, padding: 13, fontSize: 14, color: COLORS.text, backgroundColor: COLORS.surface },
+  btn:         { backgroundColor: COLORS.gold, padding: 15, borderRadius: 5, alignItems: 'center', marginTop: 24 },
   btnDisabled: { opacity: 0.5 },
-  btnTxt:    { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark, letterSpacing: 0.5 },
-  link:      { alignItems: 'center', marginTop: 18, marginBottom: 30 },
-  linkTxt:   { fontSize: 13, color: COLORS.muted },
+  btnTxt:      { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark, letterSpacing: 0.5 },
+  link:        { alignItems: 'center', marginTop: 18, marginBottom: 30 },
+  linkTxt:     { fontSize: 13, color: COLORS.muted },
 });

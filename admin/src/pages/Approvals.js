@@ -41,7 +41,7 @@ const Modal = ({ maid, onClose, onAction }) => {
               ['Nationality', maid.nationality],
               ['Origin',      maid.origin],
               ['Experience',  `${maid.experienceYears} years`],
-              ['Salary',      `$${maid.expectedSalary}/mo`],
+              ['Salary',      `EGP ${(maid.expectedSalary||0).toLocaleString()}/mo`],
               ['Photos',      `${maid.photos?.length||0} uploaded`],
               ['Status',      maid.approvalStatus],
             ].map(([l, v]) => (
@@ -154,7 +154,7 @@ export default function Approvals() {
             <div style={{ flex:1 }}>
               <div style={{ fontSize:14, fontWeight:600, color:'#f0ece4', marginBottom:2 }}>{maid.fullName}</div>
               <div style={{ fontSize:11, color:'#555' }}>
-                {maid.nationality} · {maid.age} yrs · {maid.experienceYears}yr exp · ${maid.expectedSalary}/mo
+                {maid.nationality} · {maid.age} yrs · {maid.experienceYears}yr exp · EGP {(maid.expectedSalary||0).toLocaleString()}/mo
               </div>
               <div style={{ fontSize:10, color:'#444', marginTop:2, fontFamily:"'DM Mono',monospace" }}>
                 {maid.photos?.length || 0} photos · Joined {new Date(maid.createdAt).toLocaleDateString()}

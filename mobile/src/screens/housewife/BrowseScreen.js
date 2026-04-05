@@ -8,22 +8,29 @@ import { maidsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from '../../utils/i18n';
 
 const FILTERS = ['All','African','Asian','Childcare','Cooking','Eldercare','Available'];
 
-const MaidCard = ({ maid, onPress, onLike }) => {
-  const [liked, setLiked] = useState(false);
+const MaidCard = ({ maid, onPress, initialLiked }) => {
+  const [liked, setLiked] = useState(!!initialLiked);
+
+  // Sync if parent savedIds change (e.g. after refresh)
+  useEffect(() => { setLiked(!!initialLiked); }, [initialLiked]);
 
   const handleLike = async () => {
+    const next = !liked;
+    setLiked(next); // optimistic
     try {
       await maidsAPI.toggleLike(maid._id);
-      setLiked(l => !l);
-    } catch { Toast.show({ type:'error', text1:'Failed to save' }); }
+    } catch {
+      setLiked(!next); // revert on failure
+      Toast.show({ type:'error', text1:'Failed to save' });
+    }
   };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-      {/* Photos */}
       <View style={styles.photos}>
         <View style={[styles.photoMain, { backgroundColor: maid.origin==='african'?'#2d1a0a':'#1a0d2e' }]}>
           {maid.photos?.[0]?.url
@@ -43,7 +50,6 @@ const MaidCard = ({ maid, onPress, onLike }) => {
         </View>
       </View>
 
-      {/* Info */}
       <View style={styles.info}>
         <View style={styles.infoTop}>
           <View>
@@ -59,7 +65,7 @@ const MaidCard = ({ maid, onPress, onLike }) => {
         </View>
         <View style={styles.statsRow}>
           <View style={styles.stat}><Text style={styles.statN}>{maid.experienceYears}yr</Text><Text style={styles.statL}>Exp</Text></View>
-          <View style={[styles.stat, styles.statBorder]}><Text style={styles.statN}>${maid.expectedSalary}</Text><Text style={styles.statL}>Expected</Text></View>
+          <View style={[styles.stat, styles.statBorder]}><Text style={styles.statN}>EGP {(maid.expectedSalary||0).toLocaleString()}</Text><Text style={styles.statL}>Expected</Text></View>
           <View style={styles.stat}><Text style={styles.statN}>⭐{maid.rating?.toFixed(1)||'—'}</Text><Text style={styles.statL}>{maid.reviewCount||0} rev</Text></View>
         </View>
       </View>
@@ -68,22 +74,32 @@ const MaidCard = ({ maid, onPress, onLike }) => {
 };
 
 export default function BrowseScreen({ navigation }) {
+  const { t } = useTranslation();
   const user = useAuthStore(s => s.user);
   const [maids, setMaids] = useState([]);
+  const [savedIds, setSavedIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [hasMore, setHasMore] = useState(true);
 
-  // Use refs to avoid stale-closure bugs with page tracking and concurrent fetches
   const pageRef    = useRef(1);
   const hasMoreRef = useRef(true);
   const fetchingRef = useRef(false);
 
+  // Load saved maid IDs so hearts persist across refreshes
+  const loadSavedIds = useCallback(async () => {
+    try {
+      const res = await maidsAPI.getSaved();
+      const ids = (res.data.maids || []).map(m => m._id);
+      setSavedIds(new Set(ids));
+    } catch {}
+  }, []);
+
   const fetchMaids = useCallback(async (reset = false) => {
-    if (fetchingRef.current) return;          // prevent concurrent calls
-    if (!hasMoreRef.current && !reset) return; // nothing more to load
+    if (fetchingRef.current) return;
+    if (!hasMoreRef.current && !reset) return;
     fetchingRef.current = true;
 
     if (reset) {
@@ -107,32 +123,37 @@ export default function BrowseScreen({ navigation }) {
       setMaids(prev => reset ? newMaids : [...prev, ...newMaids]);
       hasMoreRef.current = more;
       setHasMore(more);
-      pageRef.current += 1; // always increment after every successful fetch
-    } catch { Toast.show({ type:'error', text1:'Failed to load maids' }); }
+      pageRef.current += 1;
+    } catch { Toast.show({ type:'error', text1: t('load_failed') }); }
     finally { fetchingRef.current = false; setLoading(false); setRefreshing(false); }
   }, [activeFilter]);
 
   useEffect(() => { setLoading(true); fetchMaids(true); }, [activeFilter]);
 
-  const onRefresh = () => { setRefreshing(true); fetchMaids(true); };
+  // Load saved IDs on mount and after each refresh
+  useEffect(() => { loadSavedIds(); }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadSavedIds();
+    fetchMaids(true);
+  };
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <StatusBar barStyle="light-content"/>
 
-      {/* Hero header */}
       <LinearGradient colors={['#3d2203','#1a1108']} style={styles.hero}>
-        <Text style={styles.greet}>Good morning</Text>
-        <Text style={styles.heroName}>{user?.name || 'Welcome'} 👋</Text>
+        <Text style={styles.greet}>{t('good_morning')}</Text>
+        <Text style={styles.heroName}>{user?.name || t('welcome')} 👋</Text>
         <View style={styles.searchRow}>
           <TextInput style={styles.searchInput} value={search} onChangeText={setSearch}
-            placeholder="Search name, nationality, skill…"
+            placeholder={t('search_placeholder')}
             placeholderTextColor="rgba(232,201,122,0.38)"/>
           <View style={styles.filterFab}><Text style={{ fontSize:16, color:'#e8c97a' }}>⚙</Text></View>
         </View>
       </LinearGradient>
 
-      {/* Filter chips */}
       <View style={styles.chipsWrap}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {FILTERS.map(f => (
@@ -150,9 +171,10 @@ export default function BrowseScreen({ navigation }) {
             data={maids.filter(m => !search || m.fullName?.toLowerCase().includes(search.toLowerCase()))}
             keyExtractor={item => item._id}
             contentContainerStyle={{ padding:14, paddingBottom:100 }}
-            renderItem={({ item, index }) => (
+            renderItem={({ item }) => (
               <MaidCard
                 maid={item}
+                initialLiked={savedIds.has(item._id)}
                 onPress={() => navigation.navigate('MaidDetail', { maid: item })}
               />
             )}

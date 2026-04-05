@@ -11,6 +11,8 @@ import SplashScreen  from '../screens/auth/SplashScreen';
 import LoginScreen   from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import RegisterHousewifeScreen from '../screens/auth/RegisterHousewifeScreen';
+import SelfieVerificationScreen from '../screens/auth/SelfieVerificationScreen';
+import PendingApprovalScreen from '../screens/auth/PendingApprovalScreen';
 import SubscriptionScreen from '../screens/auth/SubscriptionScreen';
 import PaymentScreen from '../screens/payment/PaymentScreen';
 import PaymentResultScreen from '../screens/payment/PaymentResultScreen';
@@ -81,21 +83,32 @@ function MaidTabs() {
 
 // Root navigator
 export default function AppNavigator() {
-  const { token, user } = useAuthStore();
+  const { token, user, profile } = useAuthStore();
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown:false, cardStyle:{ backgroundColor:COLORS.cream } }}>
         {!token ? (
-          // Auth flow
+          // Auth flow (unauthenticated + mid-registration before completeAuth)
           <>
-            <Stack.Screen name="Splash"       component={SplashScreen}/>
-            <Stack.Screen name="Login"        component={LoginScreen}/>
-            <Stack.Screen name="Register"          component={RegisterScreen}/>
-            <Stack.Screen name="RegisterHousewife" component={RegisterHousewifeScreen}/>
-            <Stack.Screen name="Subscription" component={SubscriptionScreen}/>
-            <Stack.Screen name="Payment"      component={PaymentScreen}/>
-            <Stack.Screen name="PaymentResult" component={PaymentResultScreen}/>
+            <Stack.Screen name="Splash"             component={SplashScreen}/>
+            <Stack.Screen name="Login"              component={LoginScreen}/>
+            <Stack.Screen name="Register"           component={RegisterScreen}/>
+            <Stack.Screen name="RegisterHousewife"  component={RegisterHousewifeScreen}/>
+            <Stack.Screen name="SelfieVerification" component={SelfieVerificationScreen}/>
+            <Stack.Screen name="PendingApproval"    component={PendingApprovalScreen}/>
+            <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
+            <Stack.Screen name="Payment"            component={PaymentScreen}/>
+            <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
+          </>
+        ) : user?.role === 'maid' && profile?.verificationStatus === 'pending' ? (
+          // Maid logged back in while still awaiting identity verification
+          <>
+            <Stack.Screen name="PendingApproval"    component={PendingApprovalScreen}/>
+            <Stack.Screen name="SelfieVerification" component={SelfieVerificationScreen}/>
+            <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
+            <Stack.Screen name="Payment"            component={PaymentScreen}/>
+            <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
           </>
         ) : user?.role === 'maid' ? (
           <Stack.Screen name="MaidMain" component={MaidTabs}/>

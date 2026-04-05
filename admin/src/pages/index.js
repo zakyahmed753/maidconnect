@@ -54,7 +54,7 @@ export function Maids() {
             </div>
             <div style={{ flex:1 }}>
               <div style={{ fontSize:13, fontWeight:600, color:'#f0ece4' }}>{maid.fullName}</div>
-              <div style={{ fontSize:11, color:'#555', marginTop:1 }}>{maid.nationality} · {maid.age}yrs · {maid.experienceYears}yr exp · ${maid.expectedSalary}/mo</div>
+              <div style={{ fontSize:11, color:'#555', marginTop:1 }}>{maid.nationality} · {maid.age}yrs · {maid.experienceYears}yr exp · EGP {(maid.expectedSalary||0).toLocaleString()}/mo</div>
               <div style={{ fontSize:10, color:'#333', fontFamily:"'DM Mono',monospace", marginTop:1 }}>{maid.user?.email}</div>
             </div>
             <Pill status={maid.approvalStatus}/>
@@ -78,7 +78,7 @@ export function Maids() {
   );
 }
 
-// ─── HouseWives.js ───
+// ─── Customers.js ───
 export function HouseWives() {
   const [hws, setHws] = useState([]);
   const [loading, setLoading] = useState(true);

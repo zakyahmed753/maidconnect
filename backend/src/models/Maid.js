@@ -4,12 +4,13 @@ const maidSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
 
   // ── Personal Info ──
-  fullName:    { type: String, required: true },
-  age:         { type: Number, required: true, min: 18, max: 60 },
-  nationality: { type: String, required: true },
-  origin:      { type: String, enum: ['african', 'asian'], required: true },
-  languages:   [{ type: String }],
-  bio:         { type: String, maxlength: 500 },
+  fullName:        { type: String, required: true },
+  age:             { type: Number, required: true, min: 18, max: 60 },
+  nationality:     { type: String, required: true },
+  origin:          { type: String, enum: ['african', 'asian'], required: true },
+  residentialArea: { type: String, default: null }, // area in Egypt
+  languages:       [{ type: String }],
+  bio:             { type: String, maxlength: 500 },
 
   // ── Professional Info ──
   experienceYears: { type: Number, required: true, min: 0 },
@@ -40,6 +41,27 @@ const maidSchema = new mongoose.Schema({
     endDate:   { type: Date },
     paymentId: { type: String }
   },
+
+  // ── Identity Verification ──
+  nationalId:      { type: String, default: null }, // Egyptian maids use national ID instead of passport
+  residencePermit: { url: { type: String }, submittedAt: { type: Date } },
+  passport: {
+    number:      { type: String },
+    photo:       { url: { type: String }, publicId: { type: String } },
+    submittedAt: { type: Date }
+  },
+  selfie: {
+    photo:       { url: { type: String }, publicId: { type: String } },
+    submittedAt: { type: Date }
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['unverified', 'pending', 'verified', 'rejected'],
+    default: 'unverified'
+  },
+  verificationNote:   { type: String },
+  verifiedBy:         { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  verifiedAt:         { type: Date },
 
   // ── Admin Approval ──
   approvalStatus: {

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "MaidConnect",
-    "slug": "maidconnect",
+    "name": "Servix",
+    "slug": "servix",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -10,13 +10,13 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.maidconnect.app"
+      "bundleIdentifier": "com.servix.app"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#1a1108"
       },
-      "package": "com.maidconnect.app",
+      "package": "com.servix.app",
       "versionCode": 1,
       "permissions": [
         "RECORD_AUDIO",
