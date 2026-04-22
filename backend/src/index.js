@@ -44,6 +44,7 @@ app.use('/api/payments', require('./routes/payments'));
 app.use('/api/admin',    require('./routes/admin'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/upload',   require('./routes/upload'));
+app.use('/api/support',  require('./routes/support'));
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
@@ -58,7 +59,7 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('❌ MongoDB error:', err));
 
 // ── Start Server ──
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 MaidConnect API running on port ${PORT}`);
   console.log(`📦 Environment: ${process.env.NODE_ENV}`);

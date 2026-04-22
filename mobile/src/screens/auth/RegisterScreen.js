@@ -30,7 +30,6 @@ export default function RegisterScreen({ navigation }) {
   });
   const [photos, setPhotos] = useState([]);
   const [idPhoto, setIdPhoto] = useState(null); // passport photo (non-Egyptian only)
-  const [residencePermitPhoto, setResidencePermitPhoto] = useState(null);
   const [loading, setLoading] = useState(false);
   const register = useAuthStore(s => s.register);
 
@@ -48,11 +47,6 @@ export default function RegisterScreen({ navigation }) {
   const pickIdPhoto = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.9 });
     if (!res.canceled) setIdPhoto(res.assets[0].uri);
-  };
-
-  const pickResidencePermit = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.9 });
-    if (!res.canceled) setResidencePermitPhoto(res.assets[0].uri);
   };
 
   const handleSubmit = async () => {
@@ -106,7 +100,6 @@ export default function RegisterScreen({ navigation }) {
         isEgyptian,
         idNumber: form.idNumber,
         idPhotoUri: isEgyptian ? null : idPhoto,
-        residencePermitUri: residencePermitPhoto,
       });
     } catch (err) {
       Toast.show({ type:'error', text1: err.response?.data?.message || t('registration_failed') });
@@ -140,22 +133,6 @@ export default function RegisterScreen({ navigation }) {
         {/* Nationality dropdown */}
         <Text style={styles.label}>{t('nationality')} *</Text>
         <CountryPicker value={form.nationality} onChange={v => upd('nationality', v)}/>
-
-        {/* Residence Permit — only for non-Egyptian maids */}
-        {!isEgyptian && (
-          <>
-            <Text style={styles.label}>Residence Permit (إقامة)</Text>
-            <TouchableOpacity style={styles.uploadBox} onPress={pickResidencePermit}>
-              {residencePermitPhoto
-                ? <Image source={{ uri: residencePermitPhoto }} style={{ width:'100%', height:120, borderRadius:4, resizeMode:'cover' }}/>
-                : <>
-                    <Text style={{ fontSize:24, marginBottom:4 }}>📄</Text>
-                    <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.gold }}>Tap to Upload Residence Permit</Text>
-                    <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>Valid residency document in Egypt</Text>
-                  </>}
-            </TouchableOpacity>
-          </>
-        )}
 
         {/* Age + Experience */}
         <View style={styles.twoCol}>

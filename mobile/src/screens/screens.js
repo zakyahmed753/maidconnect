@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { LANGUAGES } from '../utils/i18n';
 import { notificationsAPI } from '../services/api';
 import { COLORS, FONTS } from '../utils/theme';
@@ -219,6 +219,7 @@ export function HWProfileScreen({ navigation }) {
     { icon:'💳', title:'Payments',       color:'',    onPress: () => Toast.show({ type:'info', text1:'Coming soon' }) },
     { icon:'🔔', title:'Notifications',  color:'',    onPress: () => navigation.navigate('Alerts') },
     { icon:'🌐', title:'Language',       color:'',    onPress: () => setLangVisible(true) },
+    { icon:'🎫', title:'Support',        color:'',    onPress: () => navigation.navigate('Support') },
     { icon:'🔒', title:'Security',       color:'',    onPress: () => Toast.show({ type:'info', text1:'Coming soon' }) },
     { icon:'🚪', title:'Sign Out',       color:'red', onPress: logout },
   ];
@@ -230,7 +231,7 @@ export function HWProfileScreen({ navigation }) {
         <View style={{ backgroundColor:'#3d2203', padding:20, paddingTop:54, paddingBottom:20 }}>
           <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:12 }}>
             <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:28 }}>👩</Text></View>
-            <TouchableOpacity style={{ borderWidth:1, borderColor:'rgba(201,168,76,0.35)', paddingHorizontal:14, paddingVertical:8, borderRadius:4, alignSelf:'flex-start' }}><Text style={{ fontSize:12, color:'#e8c97a' }}>✏️ Edit</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('EditHWProfile')} style={{ borderWidth:1, borderColor:'rgba(201,168,76,0.35)', paddingHorizontal:14, paddingVertical:8, borderRadius:4, alignSelf:'flex-start' }}><Text style={{ fontSize:12, color:'#e8c97a' }}>✏️ Edit</Text></TouchableOpacity>
           </View>
           <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{user?.name || 'Customer'}</Text>
           <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', fontFamily:FONTS.body, marginTop:2 }}>{user?.email}</Text>
@@ -251,10 +252,25 @@ export function HWProfileScreen({ navigation }) {
 }
 
 // ─── MaidDashScreen ───
-export function MaidDashScreen() {
+export function MaidDashScreen({ navigation }) {
   const useAuthStore = require('../store/authStore').default;
+  const { useFocusEffect } = require('@react-navigation/native');
+  const { maidsAPI } = require('../services/api');
   const { user, profile, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
+  const [stats, setStats] = useState({ views: 0, likes: 0, chats: 0 });
+
+  useFocusEffect(
+    React.useCallback(() => {
+      maidsAPI.getMyProfile()
+        .then(r => {
+          const s = r.data?.maid?.stats || {};
+          setStats({ views: s.views || 0, likes: s.likes || 0, chats: s.chats || 0 });
+        })
+        .catch(() => {});
+    }, [])
+  );
+
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <LanguageModal visible={langVisible} onClose={() => setLangVisible(false)}/>
@@ -271,7 +287,7 @@ export function MaidDashScreen() {
           <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
         </View>
         <View style={{ flexDirection:'row', gap:10, padding:14 }}>
-          {[['18','Views'],['7','Likes'],['3','Chats']].map(([n,l])=>(
+          {[[String(stats.views),'Views'],[String(stats.likes),'Likes'],[String(stats.chats),'Chats']].map(([n,l])=>(
             <View key={l} style={{ flex:1, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, alignItems:'center' }}>
               <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.gold }}>{n}</Text>
               <Text style={{ fontSize:9, textTransform:'uppercase', letterSpacing:0.5, color:COLORS.muted, marginTop:2 }}>{l}</Text>
@@ -279,8 +295,16 @@ export function MaidDashScreen() {
           ))}
         </View>
         <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
-          {[['💬','Messages','3 active'],['💳','Subscription','Annual · Dec 2025'],['📊','Analytics','18 views'],['🌐','Language',''],['🔔','Notifications',''],['🚪','Sign Out','']].map(([icon,title,sub])=>(
-            <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : undefined}
+          {[
+            ['💬','Messages', `${stats.chats} active`],
+            ['💳','Subscription','Annual · Dec 2025'],
+            ['📊','Analytics', `${stats.views} views · ${stats.likes} likes`],
+            ['🌐','Language',''],
+            ['🔔','Notifications',''],
+            ['🎫','Support','Contact us anytime'],
+            ['🚪','Sign Out','']
+          ].map(([icon,title,sub])=>(
+            <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : undefined}
               style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
               <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
               <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: title==='Sign Out'?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
@@ -345,6 +369,237 @@ export function ApprovalScreen({ route, navigation }) {
           <Text style={{ fontSize:14, color:COLORS.red }}>✗ Decline — Not the Right Fit</Text>
         </TouchableOpacity>
       </View>
+    </View>
+  );
+}
+
+// ─── SupportScreen ───
+export function SupportScreen({ navigation }) {
+  const useAuthStore = require('../store/authStore').default;
+  const Toast = require('react-native-toast-message').default;
+  const { supportAPI } = require('../services/api');
+  const { user } = useAuthStore();
+
+  const [subject, setSubject]   = useState('');
+  const [message, setMessage]   = useState('');
+  const [priority, setPriority] = useState('medium');
+  const [loading, setLoading]   = useState(false);
+  const [tickets, setTickets]   = useState([]);
+  const [tab, setTab]           = useState('new'); // 'new' | 'history'
+
+  useEffect(() => {
+    if (tab === 'history') {
+      supportAPI.getMine().then(r => setTickets(r.data.tickets || [])).catch(() => {});
+    }
+  }, [tab]);
+
+  const handleSubmit = async () => {
+    if (!subject.trim() || !message.trim()) return Toast.show({ type:'error', text1:'Subject and message are required' });
+    setLoading(true);
+    try {
+      await supportAPI.create({ subject: subject.trim(), message: message.trim(), priority });
+      Toast.show({ type:'success', text1:'Ticket submitted', text2:"We'll get back to you soon" });
+      setSubject(''); setMessage(''); setPriority('medium');
+      setTab('history');
+    } catch (err) {
+      Toast.show({ type:'error', text1: err.response?.data?.message || 'Failed to submit' });
+    } finally { setLoading(false); }
+  };
+
+  const STATUS_COLOR = { open:'#C9A84C', in_progress:'#2196F3', resolved:'#2e7d5e', closed:COLORS.muted };
+
+  return (
+    <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':undefined}>
+      <View style={{ backgroundColor:'#1a1108', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+        </TouchableOpacity>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Customer Support</Text>
+        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>We typically respond within 24 hours</Text>
+      </View>
+      {/* Tabs */}
+      <View style={{ flexDirection:'row', backgroundColor:COLORS.surface, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+        {[['new','New Ticket'],['history','My Tickets']].map(([key, label]) => (
+          <TouchableOpacity key={key} onPress={() => setTab(key)}
+            style={{ flex:1, padding:14, alignItems:'center', borderBottomWidth:2, borderBottomColor: tab===key ? COLORS.gold : 'transparent' }}>
+            <Text style={{ fontSize:13, fontFamily:FONTS.bodySemiBold, color: tab===key ? COLORS.gold : COLORS.muted }}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {tab === 'new' ? (
+        <ScrollView style={{ flex:1, backgroundColor:COLORS.cream }} contentContainerStyle={{ padding:20 }} keyboardShouldPersistTaps="handled">
+          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>Priority</Text>
+          <View style={{ flexDirection:'row', gap:8, marginBottom:16 }}>
+            {[['low','Low'],['medium','Medium'],['high','High']].map(([val, label]) => (
+              <TouchableOpacity key={val} onPress={() => setPriority(val)}
+                style={{ flex:1, padding:10, borderRadius:5, borderWidth:1.5, alignItems:'center',
+                  borderColor: priority===val ? COLORS.gold : COLORS.border,
+                  backgroundColor: priority===val ? `${COLORS.gold}15` : COLORS.surface }}>
+                <Text style={{ fontSize:12, color: priority===val ? COLORS.gold : COLORS.muted, fontFamily:FONTS.bodySemiBold }}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>Subject</Text>
+          <TextInput style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, marginBottom:16 }}
+            value={subject} onChangeText={setSubject} placeholder="Brief description of your issue" placeholderTextColor={COLORS.muted}/>
+          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>Message</Text>
+          <TextInput style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, height:140, textAlignVertical:'top', marginBottom:20 }}
+            value={message} onChangeText={setMessage} placeholder="Describe your issue in detail…" placeholderTextColor={COLORS.muted} multiline/>
+          <TouchableOpacity style={{ backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', opacity: loading ? 0.6 : 1 }}
+            onPress={handleSubmit} disabled={loading}>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? 'Submitting…' : 'Submit Ticket'}</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      ) : (
+        <FlatList
+          data={tickets}
+          keyExtractor={i => i._id}
+          contentContainerStyle={{ padding:14 }}
+          renderItem={({ item }) => (
+            <View style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:14, marginBottom:10, borderLeftWidth:3, borderLeftColor: STATUS_COLOR[item.status] || COLORS.gold }}>
+              <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:4 }}>
+                <Text style={{ fontSize:13, fontFamily:FONTS.bodySemiBold, color:COLORS.dark, flex:1 }}>{item.subject}</Text>
+                <View style={{ backgroundColor:`${STATUS_COLOR[item.status]}20`, paddingHorizontal:8, paddingVertical:3, borderRadius:10 }}>
+                  <Text style={{ fontSize:10, color: STATUS_COLOR[item.status], textTransform:'uppercase', letterSpacing:0.5 }}>{item.status.replace('_',' ')}</Text>
+                </View>
+              </View>
+              <Text style={{ fontSize:12, color:COLORS.muted, lineHeight:18 }} numberOfLines={2}>{item.message}</Text>
+              {item.adminNotes ? <Text style={{ fontSize:12, color:'#2e7d5e', marginTop:6, fontStyle:'italic' }}>Admin: {item.adminNotes}</Text> : null}
+              <Text style={{ fontSize:10, color:COLORS.muted, marginTop:6 }}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+            </View>
+          )}
+          ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60 }}>No tickets yet</Text>}
+        />
+      )}
+    </KeyboardAvoidingView>
+  );
+}
+
+// ─── EditHWProfileScreen ───
+export function EditHWProfileScreen({ navigation }) {
+  const useAuthStore = require('../store/authStore').default;
+  const Toast = require('react-native-toast-message').default;
+  const { authAPI, hwAPI } = require('../services/api');
+  const { user, init } = useAuthStore();
+
+  const [name, setName]       = useState(user?.name || '');
+  const [phone, setPhone]     = useState(user?.phone || '');
+  const [city, setCity]       = useState('');
+  const [country, setCountry] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    hwAPI.getProfile().then(r => {
+      const p = r.data?.profile;
+      if (p) { setCity(p.city || ''); setCountry(p.country || ''); }
+    }).catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    if (!name.trim()) return Toast.show({ type:'error', text1:'Name is required' });
+    setLoading(true);
+    try {
+      await Promise.all([
+        authAPI.updateMe({ name: name.trim(), phone: phone.trim() }),
+        hwAPI.updateProfile({ city: city.trim(), country: country.trim() }),
+      ]);
+      await init();
+      Toast.show({ type:'success', text1:'Profile updated' });
+      navigation.goBack();
+    } catch (err) {
+      Toast.show({ type:'error', text1: err.response?.data?.message || 'Update failed' });
+    } finally { setLoading(false); }
+  };
+
+  const Field = ({ label, value, onChange, placeholder, keyboardType }) => (
+    <View style={{ marginBottom:16 }}>
+      <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>{label}</Text>
+      <TextInput
+        style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, fontFamily:FONTS.body }}
+        value={value} onChangeText={onChange} placeholder={placeholder}
+        placeholderTextColor={COLORS.muted} keyboardType={keyboardType || 'default'}
+      />
+    </View>
+  );
+
+  return (
+    <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':undefined}>
+      <View style={{ backgroundColor:'#3d2203', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+        </TouchableOpacity>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Edit Profile</Text>
+      </View>
+      <ScrollView style={{ flex:1, backgroundColor:COLORS.cream }} contentContainerStyle={{ padding:20 }} keyboardShouldPersistTaps="handled">
+        <Field label="Full Name"    value={name}    onChange={setName}    placeholder="Your name" />
+        <Field label="Phone"        value={phone}   onChange={setPhone}   placeholder="+20 ..." keyboardType="phone-pad" />
+        <Field label="City"         value={city}    onChange={setCity}    placeholder="e.g. Cairo" />
+        <Field label="Country"      value={country} onChange={setCountry} placeholder="e.g. Egypt" />
+        <TouchableOpacity
+          style={{ backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', marginTop:8, opacity: loading ? 0.6 : 1 }}
+          onPress={handleSave} disabled={loading}>
+          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? 'Saving…' : 'Save Changes'}</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+// ─── AnalyticsScreen ───
+export function AnalyticsScreen({ navigation }) {
+  const { maidsAPI } = require('../services/api');
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    maidsAPI.getMyProfile()
+      .then(r => setStats(r.data?.maid?.stats || {}))
+      .catch(() => setStats({}))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const rows = [
+    { icon:'👁️', label:'Profile Views',   value: stats?.views     ?? 0 },
+    { icon:'❤️', label:'Likes Received',  value: stats?.likes     ?? 0 },
+    { icon:'💬', label:'Chat Requests',   value: stats?.chats     ?? 0 },
+    { icon:'🏠', label:'Times Hired',     value: stats?.hireCount ?? 0 },
+  ];
+
+  return (
+    <View style={{ flex:1, backgroundColor:COLORS.cream }}>
+      <View style={{ backgroundColor:'#1a1108', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+        </TouchableOpacity>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Analytics</Text>
+        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>Your profile performance</Text>
+      </View>
+      {loading
+        ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
+            <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.gold, borderTopColor:'transparent' }}/>
+          </View>
+        : <ScrollView contentContainerStyle={{ padding:16 }}>
+            <View style={{ flexDirection:'row', flexWrap:'wrap', gap:10, marginBottom:16 }}>
+              {rows.map(({ icon, label, value }) => (
+                <View key={label} style={{ width:'47%', backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:16, alignItems:'center' }}>
+                  <Text style={{ fontSize:26, marginBottom:6 }}>{icon}</Text>
+                  <Text style={{ fontFamily:FONTS.display, fontSize:30, color:COLORS.gold }}>{value}</Text>
+                  <Text style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.8, color:COLORS.muted, marginTop:4, textAlign:'center' }}>{label}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:16 }}>
+              <Text style={{ fontSize:11, letterSpacing:1, textTransform:'uppercase', color:COLORS.gold, fontFamily:FONTS.bodySemiBold, marginBottom:12 }}>Summary</Text>
+              {rows.map(({ icon, label, value }) => (
+                <View key={label} style={{ flexDirection:'row', justifyContent:'space-between', paddingVertical:8, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+                  <Text style={{ fontSize:13, color:COLORS.text }}>{icon}  {label}</Text>
+                  <Text style={{ fontSize:13, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>{value}</Text>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+      }
     </View>
   );
 }

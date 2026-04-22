@@ -10,6 +10,7 @@ import HouseWives from './pages/HouseWives';
 import Approvals from './pages/Approvals';
 import Payments from './pages/Payments';
 import Notifications from './pages/Notifications';
+import SupportTickets from './pages/SupportTickets';
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore(s => s.token);
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="approvals"  element={<Approvals />} />
           <Route path="payments"   element={<Payments />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="support" element={<SupportTickets />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -9,6 +9,7 @@ const NAV = [
   { to: '/approvals',    icon: '✅', label: 'Approvals' },
   { to: '/payments',     icon: '💳', label: 'Payments' },
   { to: '/notifications',icon: '🔔', label: 'Notifications' },
+  { to: '/support',      icon: '🎫', label: 'Support' },
 ];
 
 const S = {

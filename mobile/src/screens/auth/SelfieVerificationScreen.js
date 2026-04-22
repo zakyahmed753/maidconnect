@@ -8,7 +8,7 @@ import { maidsAPI, uploadAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 
 export default function SelfieVerificationScreen({ route, navigation }) {
-  const { isEgyptian, idNumber, idPhotoUri, residencePermitUri, passportNumber, passportPhotoUri } = route.params || {};
+  const { isEgyptian, idNumber, idPhotoUri, passportNumber, passportPhotoUri } = route.params || {};
   const resolvedIdNumber = idNumber || passportNumber;
   const resolvedIdPhotoUri = idPhotoUri || passportPhotoUri;
   const [selfieUri, setSelfieUri] = useState(null);
@@ -61,21 +61,11 @@ export default function SelfieVerificationScreen({ route, navigation }) {
         selfiePublicId = sRes.data.publicId;
       } catch { /* Cloudinary not configured — skip */ }
 
-      // Upload residence permit if provided
-      let residencePermitUrl = null;
-      if (residencePermitUri) {
-        try {
-          const rRes = await uploadAPI.image(residencePermitUri);
-          residencePermitUrl = rRes.data.url;
-        } catch { /* skip */ }
-      }
-
       // Submit verification to backend
       await maidsAPI.submitVerification({
         ...(isEgyptian
           ? { nationalId: resolvedIdNumber }
           : { passportNumber: resolvedIdNumber, passportPhotoUrl, passportPhotoPublicId }),
-        residencePermitUrl,
         selfieUrl,
         selfiePublicId,
       });

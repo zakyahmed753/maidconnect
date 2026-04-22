@@ -32,6 +32,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 // Maid screens
 import MaidDashScreen from '../screens/maid/MaidDashScreen';
 import EditProfileScreen from '../screens/maid/EditProfileScreen';
+import { AnalyticsScreen, EditHWProfileScreen, SupportScreen } from '../screens/screens';
 
 const Stack = createStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -43,15 +44,25 @@ const TabIcon = ({ icon, focused, label }) => (
   </View>
 );
 
+function HWProfileStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown:false }}>
+      <Stack.Screen name="HWProfile"      component={HWProfileScreen}/>
+      <Stack.Screen name="EditHWProfile"  component={EditHWProfileScreen}/>
+      <Stack.Screen name="Support"        component={SupportScreen}/>
+    </Stack.Navigator>
+  );
+}
+
 // Housewife bottom tabs
 function HouseWifeTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:70, paddingBottom:10 }, tabBarShowLabel:false }}>
-      <Tab.Screen name="Browse"  component={BrowseStack}  options={{ tabBarIcon:({focused})=><TabIcon icon="🔍" focused={focused} label="Browse"/> }}/>
+      <Tab.Screen name="Browse"  component={BrowseStack}   options={{ tabBarIcon:({focused})=><TabIcon icon="🔍" focused={focused} label="Browse"/> }}/>
       <Tab.Screen name="Saved"   component={SavedScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="❤️" focused={focused} label="Saved"/> }}/>
       <Tab.Screen name="Chats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
       <Tab.Screen name="Alerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} label="Alerts"/> }}/>
-      <Tab.Screen name="Me"      component={HWProfileScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} label="Me"/> }}/>
+      <Tab.Screen name="Me"      component={HWProfileStack} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} label="Me"/> }}/>
     </Tab.Navigator>
   );
 }
@@ -69,11 +80,21 @@ function BrowseStack() {
   );
 }
 
+function MaidHomeStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown:false }}>
+      <Stack.Screen name="MaidDash"   component={MaidDashScreen}/>
+      <Stack.Screen name="Analytics"  component={AnalyticsScreen}/>
+      <Stack.Screen name="Support"    component={SupportScreen}/>
+    </Stack.Navigator>
+  );
+}
+
 // Maid bottom tabs
 function MaidTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:70, paddingBottom:10 }, tabBarShowLabel:false }}>
-      <Tab.Screen name="MaidDash"    component={MaidDashScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} label="Home"/> }}/>
+      <Tab.Screen name="MaidHome"    component={MaidHomeStack} options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} label="Home"/> }}/>
       <Tab.Screen name="MaidChats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
       <Tab.Screen name="MaidAlerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} label="Alerts"/> }}/>
       <Tab.Screen name="EditProfile" component={EditProfileScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} label="Profile"/> }}/>

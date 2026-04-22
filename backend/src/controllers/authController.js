@@ -11,7 +11,12 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid role' });
     }
     const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ success: false, message: 'Email already in use' });
+    if (exists) {
+      const conflictMsg = exists.role !== role
+        ? `This email is already registered as a ${exists.role}. Each account must use a unique email.`
+        : 'Email already in use';
+      return res.status(400).json({ success: false, message: conflictMsg });
+    }
 
     const user = await User.create({ name, email, password, phone, role });
 
@@ -97,6 +102,21 @@ exports.updateFCMToken = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user._id, { fcmToken: req.body.token });
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Update Profile (name, phone) ──
+exports.updateMe = async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { name, phone, updatedAt: Date.now() },
+      { new: true, runValidators: true }
+    );
+    res.json({ success: true, user: user.toSafeObject() });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

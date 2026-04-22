@@ -8,8 +8,9 @@ import { COLORS, FONTS } from '../../utils/theme';
 import { useTranslation } from '../../utils/i18n';
 
 export default function LoginScreen({ navigation, route }) {
-  const role = route?.params?.role || 'housewife';
+  const initialRole = route?.params?.role || 'housewife';
   const { t } = useTranslation();
+  const [role, setRole]         = useState(initialRole);
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading]   = useState(false);
@@ -30,9 +31,21 @@ export default function LoginScreen({ navigation, route }) {
     <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':undefined}>
       <StatusBar barStyle="light-content"/>
       <LinearGradient colors={['#1a1108','#3d2203']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom:12 }}>
+          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+        </TouchableOpacity>
         <Text style={styles.heroTitle}>Welcome Back</Text>
-        <Text style={styles.heroSub}>{role === 'maid' ? t('login_maid') : t('login_hw')}</Text>
+        {/* Role tabs */}
+        <View style={styles.roleTabs}>
+          {[['housewife','🏠 Customer'],['maid','👩 Maid']].map(([r, label]) => (
+            <TouchableOpacity key={r} onPress={() => setRole(r)}
+              style={[styles.roleTab, role === r && styles.roleTabActive]}>
+              <Text style={[styles.roleTabTxt, role === r && styles.roleTabTxtActive]}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </LinearGradient>
+
       <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>{t('email')}</Text>
         <TextInput style={styles.input} value={email} onChangeText={setEmail}
@@ -53,15 +66,19 @@ export default function LoginScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  hero:       { padding:28, paddingTop:60, paddingBottom:28 },
-  heroTitle:  { fontFamily:FONTS.display, fontSize:30, color:'#e8c97a' },
-  heroSub:    { fontSize:13, color:'rgba(232,201,122,0.5)', marginTop:4 },
-  body:       { flex:1, backgroundColor:COLORS.cream, padding:22 },
-  label:      { fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, marginTop:14, fontFamily:FONTS.bodySemiBold },
-  input:      { borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, fontFamily:FONTS.body },
-  btn:        { backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', marginTop:22 },
-  btnDisabled:{ opacity:0.5 },
-  btnTxt:     { fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark, letterSpacing:0.5 },
-  link:       { alignItems:'center', marginTop:18 },
-  linkTxt:    { fontSize:13, color:COLORS.muted },
+  hero:           { padding:24, paddingTop:54, paddingBottom:20 },
+  heroTitle:      { fontFamily:FONTS.display, fontSize:30, color:'#e8c97a', marginBottom:16 },
+  roleTabs:       { flexDirection:'row', backgroundColor:'rgba(255,255,255,0.07)', borderRadius:6, padding:3 },
+  roleTab:        { flex:1, paddingVertical:10, borderRadius:4, alignItems:'center' },
+  roleTabActive:  { backgroundColor:'rgba(201,168,76,0.25)' },
+  roleTabTxt:     { fontSize:13, color:'rgba(232,201,122,0.45)', fontWeight:'600' },
+  roleTabTxtActive:{ color:'#e8c97a' },
+  body:           { flex:1, backgroundColor:COLORS.cream, padding:22 },
+  label:          { fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, marginTop:14, fontFamily:FONTS.bodySemiBold },
+  input:          { borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, fontFamily:FONTS.body },
+  btn:            { backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', marginTop:22 },
+  btnDisabled:    { opacity:0.5 },
+  btnTxt:         { fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark, letterSpacing:0.5 },
+  link:           { alignItems:'center', marginTop:18 },
+  linkTxt:        { fontSize:13, color:COLORS.muted },
 });

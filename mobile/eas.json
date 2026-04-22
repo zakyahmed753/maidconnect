@@ -1,0 +1,7 @@
+{
+  "cli": { "version": ">= 5.9.0" },
+  "build": {
+    "preview": { "android": { "buildType": "apk" }, "ios": { "simulator": false } },
+    "production": { "android": { "buildType": "aab" }, "ios": {} }
+  }
+}

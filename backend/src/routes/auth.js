@@ -8,6 +8,7 @@ router.post('/register',          ctrl.register);
 router.post('/login',             ctrl.login);
 router.post('/social',            ctrl.socialAuth);
 router.get('/me',                 protect, ctrl.getMe);
+router.put('/me',                 protect, ctrl.updateMe);
 router.put('/fcm-token',          protect, ctrl.updateFCMToken);
 router.put('/change-password',    protect, ctrl.changePassword);
 

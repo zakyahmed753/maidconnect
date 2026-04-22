@@ -33,4 +33,9 @@ export const adminAPI = {
   broadcast:          (data) => api.post('/admin/broadcast', data),
 };
 
+export const supportAPI = {
+  getAll:   (params) => api.get('/support', { params }),
+  update:   (id, data) => api.put(`/support/${id}`, data),
+};
+
 export default api;

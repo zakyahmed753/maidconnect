@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://192.168.1.23:5001/api'; // Replace with your IP
+const BASE_URL = 'http://192.168.1.8:5001/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -32,6 +32,12 @@ export const authAPI = {
   login:      (data) => api.post('/auth/login', data),
   socialAuth: (data) => api.post('/auth/social', data),
   getMe:      ()     => api.get('/auth/me'),
+  updateMe:   (data) => api.put('/auth/me', data),
+};
+
+export const hwAPI = {
+  getProfile:    ()     => api.get('/housewives/me'),
+  updateProfile: (data) => api.put('/housewives/me', data),
 };
 
 export const maidsAPI = {
@@ -61,6 +67,11 @@ export const paymentsAPI = {
   amazonPay:    (data) => api.post('/payments/amazon-pay', data),
   getHistory:   ()     => api.get('/payments/history'),
   checkStatus:  (id)   => api.get(`/payments/${id}/status`),
+};
+
+export const supportAPI = {
+  create:   (data) => api.post('/support', data),
+  getMine:  ()     => api.get('/support/mine'),
 };
 
 export const notificationsAPI = {

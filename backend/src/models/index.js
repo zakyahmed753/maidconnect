@@ -107,8 +107,25 @@ const reviewSchema = new mongoose.Schema({
 });
 reviewSchema.index({ maid: 1, housewife: 1 }, { unique: true });
 
+// ── Support Ticket ──
+const supportTicketSchema = new mongoose.Schema({
+  user:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  role:     { type: String, enum: ['maid', 'housewife'], required: true },
+  name:     { type: String, required: true },
+  email:    { type: String, required: true },
+  subject:  { type: String, required: true },
+  message:  { type: String, required: true },
+  status:   { type: String, enum: ['open', 'in_progress', 'resolved', 'closed'], default: 'open' },
+  priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+  adminNotes: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
+});
+supportTicketSchema.index({ user: 1, createdAt: -1 });
+
 module.exports = {
-  HouseWife:    mongoose.model('HouseWife', houseWifeSchema),
+  HouseWife:      mongoose.model('HouseWife', houseWifeSchema),
+  SupportTicket:  mongoose.model('SupportTicket', supportTicketSchema),
   Chat:         mongoose.model('Chat', chatSchema),
   Message:      mongoose.model('Message', messageSchema),
   Payment:      mongoose.model('Payment', paymentSchema),
