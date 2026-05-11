@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Servix — Premium Domestic Staffing</title>
+  <meta name="description" content="Find trusted, verified maids and domestic staff across Egypt. Servix connects families with professional home helpers."/>
+  <meta property="og:title" content="Servix — Premium Domestic Staffing"/>
+  <meta property="og:description" content="Find trusted, verified maids and domestic staff across Egypt."/>
+  <meta property="og:url" content="https://servix.world"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@300;400;500;600&family=Noto+Sans+Arabic:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --dark: #0f0c09;
+      --dark2: #1a1108;
+      --dark3: #3d2203;
+      --cream: #fdf6ec;
+      --cream2: #f5e9d5;
+      --text: #2c1a00;
+      --muted: #9a8060;
+      --green: #2e7d5e;
+      --surface: #fff9f0;
+      --border: #e8d9c0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--dark);
+      color: #f0ece4;
+      overflow-x: hidden;
+    }
+
+    html[lang="ar"] body {
+      font-family: 'Noto Sans Arabic', 'Jost', sans-serif;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(15,12,9,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+      gap: 16px;
+    }
+    .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--gold-light); font-weight: 700; text-decoration: none; }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a { color: rgba(240,236,228,0.6); text-decoration: none; font-size: 13px; font-weight: 500; letter-spacing: 0.05em; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--gold-light); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-cta { background: var(--gold); color: var(--dark2); padding: 10px 22px; border-radius: 4px; font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: 0.04em; transition: background 0.2s; white-space: nowrap; }
+    .nav-cta:hover { background: var(--gold-light); }
+    .lang-btn { background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.25); color: var(--gold-light); padding: 8px 14px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: 0.05em; transition: all 0.2s; white-space: nowrap; }
+    .lang-btn:hover { background: rgba(201,168,76,0.2); border-color: var(--gold); }
+    .nav-menu-btn { display: none; background: none; border: none; color: var(--gold-light); font-size: 22px; cursor: pointer; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #1a1108 0%, #3d2203 50%, #0f0c09 100%);
+      display: flex; align-items: center;
+      padding: 120px 40px 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; right: -200px;
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -100px; left: -100px;
+      width: 400px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(46,125,94,0.06) 0%, transparent 70%);
+    }
+    .hero-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; width: 100%; position: relative; z-index: 1; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.3); border-radius: 20px; padding: 6px 16px; font-size: 11px; color: var(--gold); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
+    .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .hero h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(42px, 5vw, 66px); line-height: 1.1; color: #fff8ee; font-weight: 700; margin-bottom: 20px; }
+    html[lang="ar"] .hero h1 { font-family: 'Noto Sans Arabic', serif; font-size: clamp(34px, 4.5vw, 56px); line-height: 1.3; }
+    .hero h1 em { color: var(--gold-light); font-style: normal; }
+    .hero-sub { font-size: 16px; color: rgba(240,236,228,0.6); line-height: 1.7; margin-bottom: 36px; max-width: 460px; }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-primary { background: var(--gold); color: var(--dark2); padding: 14px 28px; border-radius: 5px; font-size: 14px; font-weight: 600; text-decoration: none; letter-spacing: 0.04em; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); }
+    .btn-outline { border: 1.5px solid rgba(201,168,76,0.4); color: var(--gold-light); padding: 14px 28px; border-radius: 5px; font-size: 14px; font-weight: 500; text-decoration: none; letter-spacing: 0.04em; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-outline:hover { border-color: var(--gold); background: rgba(201,168,76,0.08); }
+    .hero-stats { display: flex; gap: 32px; margin-top: 44px; padding-top: 32px; border-top: 1px solid rgba(201,168,76,0.12); }
+    .hero-stat-num { font-family: 'Cormorant Garamond', serif; font-size: 30px; color: var(--gold-light); font-weight: 700; }
+    .hero-stat-lbl { font-size: 11px; color: rgba(240,236,228,0.45); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+    /* Phone mockup */
+    .hero-visual { display: flex; justify-content: center; align-items: center; position: relative; }
+    .phone-wrap { position: relative; width: 260px; }
+    .phone {
+      width: 260px; height: 520px;
+      background: linear-gradient(180deg, #1a1108 0%, #2d1a08 100%);
+      border-radius: 38px;
+      border: 2px solid rgba(201,168,76,0.3);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(201,168,76,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+      overflow: hidden; position: relative;
+    }
+    .phone-notch { width: 80px; height: 20px; background: #0f0c09; border-radius: 0 0 12px 12px; margin: 0 auto 12px; }
+    .phone-screen { padding: 0 14px; }
+    .phone-header { background: rgba(201,168,76,0.06); border-bottom: 1px solid rgba(201,168,76,0.1); padding: 10px 14px; margin: 0 -14px; display: flex; align-items: center; justify-content: space-between; }
+    .phone-logo { font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--gold-light); }
+    .phone-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(201,168,76,0.12); border-radius: 10px; padding: 12px; margin-top: 10px; }
+    .phone-card-name { font-size: 13px; color: #f0ece4; font-weight: 600; margin-bottom: 3px; }
+    .phone-card-sub { font-size: 10px; color: rgba(240,236,228,0.45); }
+    .phone-card-badge { font-size: 9px; background: rgba(46,125,94,0.2); color: #5dd6a8; border-radius: 10px; padding: 2px 8px; display: inline-block; margin-top: 6px; }
+    .phone-tag { font-size: 9px; background: rgba(201,168,76,0.12); color: var(--gold); border-radius: 3px; padding: 2px 6px; display: inline-block; margin: 2px 2px 0 0; }
+    .phone-glow { position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; border-radius: 50%; background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%); pointer-events: none; }
+
+    /* ── TRUST BAR ── */
+    .trust-bar { background: rgba(201,168,76,0.04); border-top: 1px solid rgba(201,168,76,0.1); border-bottom: 1px solid rgba(201,168,76,0.1); padding: 20px 40px; }
+    .trust-bar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 48px; flex-wrap: wrap; }
+    .trust-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(240,236,228,0.55); }
+    .trust-item span { font-size: 18px; }
+
+    /* ── SECTION BASE ── */
+    section { padding: 100px 40px; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-label { font-size: 11px; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; font-weight: 600; }
+    .section-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 4vw, 48px); font-weight: 700; line-height: 1.15; margin-bottom: 16px; }
+    html[lang="ar"] .section-title { font-family: 'Noto Sans Arabic', sans-serif; font-size: clamp(26px, 3.5vw, 40px); line-height: 1.4; }
+    .section-sub { font-size: 15px; color: rgba(240,236,228,0.55); line-height: 1.7; max-width: 520px; }
+
+    /* ── HOW IT WORKS ── */
+    .hiw { background: linear-gradient(180deg, #0f0c09 0%, #140e06 100%); }
+    .hiw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 56px; }
+    .hiw-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(201,168,76,0.1); border-radius: 12px; padding: 32px 28px; position: relative; transition: border-color 0.3s; }
+    .hiw-card:hover { border-color: rgba(201,168,76,0.3); }
+    .hiw-num { font-family: 'Cormorant Garamond', serif; font-size: 56px; color: rgba(201,168,76,0.08); font-weight: 700; line-height: 1; margin-bottom: 16px; }
+    .hiw-icon { font-size: 32px; margin-bottom: 14px; }
+    .hiw-title { font-size: 17px; font-weight: 600; color: #f0ece4; margin-bottom: 10px; }
+    .hiw-desc { font-size: 13px; color: rgba(240,236,228,0.5); line-height: 1.7; }
+
+    /* ── FEATURES ── */
+    .features { background: #0f0c09; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+    .feat-card { background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(201,168,76,0.03) 100%); border: 1px solid rgba(201,168,76,0.1); border-radius: 12px; padding: 28px 24px; transition: all 0.3s; }
+    .feat-card:hover { border-color: rgba(201,168,76,0.25); transform: translateY(-3px); }
+    .feat-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(201,168,76,0.1); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; }
+    .feat-title { font-size: 15px; font-weight: 600; color: #f0ece4; margin-bottom: 8px; }
+    .feat-desc { font-size: 13px; color: rgba(240,236,228,0.5); line-height: 1.6; }
+
+    /* ── FOR WHO ── */
+    .for-who { background: linear-gradient(180deg, #140e06 0%, #1a1108 100%); }
+    .for-who-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 56px; }
+    .for-card { border-radius: 16px; padding: 44px 40px; position: relative; overflow: hidden; }
+    .for-card-customer { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border: 1px solid rgba(100,160,255,0.15); }
+    .for-card-maid { background: linear-gradient(135deg, #1a1108 0%, #3d2203 100%); border: 1px solid rgba(201,168,76,0.2); }
+    .for-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 20px; }
+    .for-tag-customer { background: rgba(100,160,255,0.15); color: #6ba4ff; }
+    .for-tag-maid { background: rgba(201,168,76,0.15); color: var(--gold); }
+    .for-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 700; margin-bottom: 14px; }
+    html[lang="ar"] .for-card h3 { font-family: 'Noto Sans Arabic', sans-serif; font-size: 24px; line-height: 1.4; }
+    .for-card p { font-size: 14px; color: rgba(240,236,228,0.6); line-height: 1.7; margin-bottom: 24px; }
+    .for-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+    .for-list li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: rgba(240,236,228,0.75); }
+    .for-list li::before { content: '✓'; width: 20px; height: 20px; border-radius: 50%; background: rgba(46,125,94,0.2); color: #5dd6a8; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    html[lang="ar"] .for-list li { flex-direction: row-reverse; }
+    .for-emoji { position: absolute; right: 32px; top: 32px; font-size: 64px; opacity: 0.12; }
+    html[lang="ar"] .for-emoji { right: auto; left: 32px; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { background: #0f0c09; }
+    .testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 56px; }
+    .testi-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(201,168,76,0.08); border-radius: 12px; padding: 28px 24px; }
+    .testi-stars { color: var(--gold); font-size: 14px; margin-bottom: 14px; }
+    .testi-text { font-size: 14px; color: rgba(240,236,228,0.65); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    html[lang="ar"] .testi-text { font-style: normal; }
+    .testi-author { display: flex; align-items: center; gap: 12px; }
+    .testi-ava { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--dark3)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .testi-name { font-size: 13px; font-weight: 600; color: #f0ece4; }
+    .testi-role { font-size: 11px; color: rgba(240,236,228,0.4); margin-top: 1px; }
+
+    /* ── DOWNLOAD CTA ── */
+    .download { background: linear-gradient(135deg, #1a1108 0%, #3d2203 50%, #1a1108 100%); text-align: center; position: relative; overflow: hidden; }
+    .download::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%); }
+    .download-inner { position: relative; z-index: 1; }
+    .download h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px, 5vw, 56px); font-weight: 700; margin-bottom: 16px; }
+    html[lang="ar"] .download h2 { font-family: 'Noto Sans Arabic', sans-serif; font-size: clamp(28px, 4vw, 46px); line-height: 1.4; }
+    .download-sub { font-size: 16px; color: rgba(240,236,228,0.6); margin-bottom: 40px; }
+    .store-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+    .store-btn { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(201,168,76,0.2); border-radius: 10px; padding: 14px 24px; text-decoration: none; color: #f0ece4; transition: all 0.2s; min-width: 180px; }
+    .store-btn:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+    .store-btn-icon { font-size: 28px; }
+    .store-btn-text { text-align: left; }
+    html[lang="ar"] .store-btn-text { text-align: right; }
+    .store-btn-small { font-size: 10px; color: rgba(240,236,228,0.45); text-transform: uppercase; letter-spacing: 0.08em; }
+    .store-btn-big { font-size: 15px; font-weight: 600; margin-top: 1px; }
+    .store-badge { font-size: 12px; color: rgba(240,236,228,0.4); }
+
+    /* ── FOOTER ── */
+    footer { background: #0a0806; border-top: 1px solid rgba(201,168,76,0.08); padding: 60px 40px 32px; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; }
+    .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+    .footer-brand p { font-size: 13px; color: rgba(240,236,228,0.4); line-height: 1.7; margin-top: 12px; max-width: 280px; }
+    .footer-col h4 { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a { font-size: 13px; color: rgba(240,236,228,0.45); text-decoration: none; transition: color 0.2s; }
+    .footer-col ul li a:hover { color: var(--gold-light); }
+    .footer-bottom { border-top: 1px solid rgba(201,168,76,0.08); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .footer-copy { font-size: 12px; color: rgba(240,236,228,0.25); }
+    .footer-social { display: flex; gap: 14px; }
+    .footer-social a { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(201,168,76,0.1); display: flex; align-items: center; justify-content: center; font-size: 15px; text-decoration: none; transition: all 0.2s; }
+    .footer-social a:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      .nav-menu-btn { display: block; }
+      .hero { padding: 100px 20px 60px; }
+      .hero-inner { grid-template-columns: 1fr; text-align: center; }
+      html[lang="ar"] .hero-inner { text-align: right; }
+      .hero-sub { margin: 0 auto 32px; }
+      .hero-btns { justify-content: center; }
+      html[lang="ar"] .hero-btns { justify-content: flex-end; }
+      .hero-stats { justify-content: center; }
+      .hero-visual { display: none; }
+      section { padding: 70px 20px; }
+      .hiw-grid, .features-grid, .testi-grid { grid-template-columns: 1fr; }
+      .for-who-grid { grid-template-columns: 1fr; }
+      .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .trust-bar { padding: 16px 20px; }
+      .trust-bar-inner { gap: 24px; }
+    }
+    @media (max-width: 600px) {
+      .nav-cta { display: none; }
+      .footer-top { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Servix</a>
+  <ul class="nav-links">
+    <li><a href="#how-it-works" data-en="How it works" data-ar="كيف يعمل">How it works</a></li>
+    <li><a href="#features" data-en="Features" data-ar="المميزات">Features</a></li>
+    <li><a href="#for-who" data-en="Who is it for" data-ar="لمن هو">Who is it for</a></li>
+    <li><a href="#download" data-en="Download" data-ar="التحميل">Download</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="lang-btn" onclick="toggleLang()" id="langBtn">عربي</button>
+    <a href="#download" class="nav-cta" data-en="Get the App" data-ar="حمّل التطبيق">Get the App</a>
+    <button class="nav-menu-btn" onclick="toggleMenu()">☰</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge"><span></span> <span data-en="Now available in Egypt" data-ar="متاح الآن في مصر">Now available in Egypt</span></div>
+      <h1 data-en='Find Your <em>Trusted</em><br/>Home Helper' data-ar='ابحث عن <em>مساعدتك</em><br/>الموثوقة في المنزل'>Find Your <em>Trusted</em><br/>Home Helper</h1>
+      <p class="hero-sub" data-en="Servix connects Egyptian families with verified, professional maids and domestic staff. Safe, simple, and reliable — right from your phone." data-ar="سيرفيكس يربط الأسر المصرية بالعمالة المنزلية الموثقة والمحترفة. آمن، بسيط، وموثوق — من هاتفك مباشرة.">Servix connects Egyptian families with verified, professional maids and domestic staff. Safe, simple, and reliable — right from your phone.</p>
+      <div class="hero-btns">
+        <a href="#download" class="btn-primary" data-en="📱 Download App" data-ar="📱 حمّل التطبيق">📱 Download App</a>
+        <a href="#how-it-works" class="btn-outline" data-en="See how it works →" data-ar="→ شاهد كيف يعمل">See how it works →</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-num">500+</div>
+          <div class="hero-stat-lbl" data-en="Verified Maids" data-ar="عاملة موثقة">Verified Maids</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">1,200+</div>
+          <div class="hero-stat-lbl" data-en="Happy Families" data-ar="عائلة سعيدة">Happy Families</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">4.9★</div>
+          <div class="hero-stat-lbl" data-en="App Rating" data-ar="تقييم التطبيق">App Rating</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="phone-wrap">
+        <div class="phone-glow"></div>
+        <div class="phone">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-header">
+              <span class="phone-logo">Servix</span>
+              <span style="font-size:11px;color:rgba(232,201,122,0.4);">Browse</span>
+            </div>
+            <div style="margin-top:12px;font-size:10px;color:rgba(232,201,122,0.35);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Featured Maids</div>
+            <div class="phone-card">
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div style="width:36px;height:36px;border-radius:18px;background:linear-gradient(135deg,#c9a84c,#3d2203);display:flex;align-items:center;justify-content:center;font-size:18px;">👩🏿</div>
+                <div>
+                  <div class="phone-card-name">Amara Diallo</div>
+                  <div class="phone-card-sub">Ethiopian · 5 yrs exp</div>
+                  <div class="phone-card-badge">✓ Verified</div>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <span class="phone-tag">Cooking</span>
+                <span class="phone-tag">Childcare</span>
+                <span class="phone-tag">Cleaning</span>
+              </div>
+            </div>
+            <div class="phone-card" style="margin-top:8px;">
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div style="width:36px;height:36px;border-radius:18px;background:linear-gradient(135deg,#5c3210,#c9a84c);display:flex;align-items:center;justify-content:center;font-size:18px;">👩🏽</div>
+                <div>
+                  <div class="phone-card-name">Fatima Hassan</div>
+                  <div class="phone-card-sub">Kenyan · 3 yrs exp</div>
+                  <div class="phone-card-badge">✓ Verified</div>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                <span class="phone-tag">Eldercare</span>
+                <span class="phone-tag">Laundry</span>
+              </div>
+            </div>
+            <div style="margin-top:14px;background:rgba(201,168,76,0.1);border-radius:6px;padding:10px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:16px;">💬</span>
+              <span style="font-size:11px;color:rgba(232,201,122,0.6);">Chat with maids directly</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <div class="trust-bar-inner">
+    <div class="trust-item"><span>🛡️</span> <span data-en="Background verified" data-ar="فحص السجل الجنائي">Background verified</span></div>
+    <div class="trust-item"><span>📋</span> <span data-en="ID & passport checked" data-ar="التحقق من الهوية والجواز">ID &amp; passport checked</span></div>
+    <div class="trust-item"><span>⭐</span> <span data-en="Rated by real customers" data-ar="تقييمات من عملاء حقيقيين">Rated by real customers</span></div>
+    <div class="trust-item"><span>💬</span> <span data-en="In-app chat & voice" data-ar="دردشة ورسائل صوتية">In-app chat &amp; voice</span></div>
+    <div class="trust-item"><span>🔒</span> <span data-en="Secure payments (EGP)" data-ar="دفع آمن بالجنيه المصري">Secure payments (EGP)</span></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="hiw" id="how-it-works">
+  <div class="section-inner">
+    <div class="section-label" data-en="Simple Process" data-ar="عملية بسيطة">Simple Process</div>
+    <h2 class="section-title" data-en="Hire in 3 Easy Steps" data-ar="توظيف في 3 خطوات سهلة">Hire in 3 Easy Steps</h2>
+    <p class="section-sub" data-en="From browsing to hiring, the entire process happens inside the app — fast, safe, and transparent." data-ar="من التصفح حتى التوظيف، كل شيء داخل التطبيق — سريع، آمن، وشفاف.">From browsing to hiring, the entire process happens inside the app — fast, safe, and transparent.</p>
+    <div class="hiw-grid">
+      <div class="hiw-card">
+        <div class="hiw-num">01</div>
+        <div class="hiw-icon">🔍</div>
+        <div class="hiw-title" data-en="Browse & Filter" data-ar="تصفح وفلتر">Browse &amp; Filter</div>
+        <div class="hiw-desc" data-en="Search maids by nationality, skills, experience, and salary. View full profiles with photos and ratings." data-ar="ابحث عن العاملات بالجنسية والمهارات والخبرة والراتب. شاهد الملفات الكاملة مع الصور والتقييمات.">Search maids by nationality, skills, experience, and salary. View full profiles with photos and ratings.</div>
+      </div>
+      <div class="hiw-card">
+        <div class="hiw-num">02</div>
+        <div class="hiw-icon">💬</div>
+        <div class="hiw-title" data-en="Chat & Interview" data-ar="دردشة ومقابلة">Chat &amp; Interview</div>
+        <div class="hiw-desc" data-en="Message directly, send voice notes, and conduct interviews — all inside the app before committing." data-ar="راسل مباشرة، أرسل رسائل صوتية، وأجرِ المقابلات — كل هذا داخل التطبيق قبل اتخاذ القرار.">Message directly, send voice notes, and conduct interviews — all inside the app before committing.</div>
+      </div>
+      <div class="hiw-card">
+        <div class="hiw-num">03</div>
+        <div class="hiw-icon">✅</div>
+        <div class="hiw-title" data-en="Hire & Pay" data-ar="وظّف وادفع">Hire &amp; Pay</div>
+        <div class="hiw-desc" data-en="Approve your chosen maid, pay the one-time commission via Fawry, Vodafone Cash, or InstaPay." data-ar="وافق على العاملة المختارة، وادفع العمولة عبر فوري أو فودافون كاش أو إنستاباي.">Approve your chosen maid, pay the one-time commission via Fawry, Vodafone Cash, or InstaPay.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-inner">
+    <div class="section-label" data-en="Why Servix" data-ar="لماذا سيرفيكس">Why Servix</div>
+    <h2 class="section-title" data-en="Everything You Need,<br/>Nothing You Don't" data-ar="كل ما تحتاجه،<br/>بدون زيادة">Everything You Need,<br/>Nothing You Don't</h2>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon">🛡️</div>
+        <div class="feat-title" data-en="Fully Verified Profiles" data-ar="ملفات موثقة بالكامل">Fully Verified Profiles</div>
+        <div class="feat-desc" data-en="Every maid goes through ID verification, selfie check, and admin approval before appearing on the platform." data-ar="كل عاملة تمر بالتحقق من الهوية وصورة السيلفي وموافقة الإدارة قبل الظهور في التطبيق.">Every maid goes through ID verification, selfie check, and admin approval before appearing on the platform.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">💬</div>
+        <div class="feat-title" data-en="Real-time Chat" data-ar="دردشة فورية">Real-time Chat</div>
+        <div class="feat-desc" data-en="Text and voice notes directly inside the app. No need to share personal numbers before you're ready." data-ar="رسائل نصية وصوتية داخل التطبيق مباشرة. لا داعي لمشاركة أرقامك الشخصية قبل أن تكون مستعداً.">Text and voice notes directly inside the app. No need to share personal numbers before you're ready.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">💳</div>
+        <div class="feat-title" data-en="Egyptian Payment Methods" data-ar="طرق الدفع المصرية">Egyptian Payment Methods</div>
+        <div class="feat-desc" data-en="Pay safely via Fawry, Vodafone Cash, InstaPay, or AmazonPay — all in EGP, no hidden fees." data-ar="ادفع بأمان عبر فوري وفودافون كاش وإنستاباي وأمازون باي — كلها بالجنيه المصري بدون رسوم خفية.">Pay safely via Fawry, Vodafone Cash, InstaPay, or AmazonPay — all in EGP, no hidden fees.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⭐</div>
+        <div class="feat-title" data-en="Ratings & Reviews" data-ar="التقييمات والمراجعات">Ratings &amp; Reviews</div>
+        <div class="feat-desc" data-en="Honest reviews from verified customers help you make the right choice for your home and family." data-ar="تقييمات صادقة من عملاء حقيقيين تساعدك في اتخاذ القرار الصحيح لمنزلك وعائلتك.">Honest reviews from verified customers help you make the right choice for your home and family.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔔</div>
+        <div class="feat-title" data-en="Smart Notifications" data-ar="إشعارات ذكية">Smart Notifications</div>
+        <div class="feat-desc" data-en="Get notified when maids like you back, when chats are approved, and when your hire is confirmed." data-ar="احصل على إشعارات عندما تعجب بك العاملة، وعند الموافقة على الدردشة، وتأكيد التوظيف.">Get notified when maids like you back, when chats are approved, and when your hire is confirmed.</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌐</div>
+        <div class="feat-title" data-en="Arabic & English" data-ar="عربي وإنجليزي">Arabic &amp; English</div>
+        <div class="feat-desc" data-en="Full support for Arabic and English with seamless language switching inside the app." data-ar="دعم كامل للعربية والإنجليزية مع تبديل سلس بين اللغتين داخل التطبيق.">Full support for Arabic and English with seamless language switching inside the app.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOR WHO -->
+<section class="for-who" id="for-who">
+  <div class="section-inner">
+    <div class="section-label" data-en="Who it's for" data-ar="لمن هو">Who it's for</div>
+    <h2 class="section-title" data-en="Built for Both Sides" data-ar="مصمم للطرفين">Built for Both Sides</h2>
+    <p class="section-sub" data-en="Whether you're looking for help or looking for work, Servix is designed for you." data-ar="سواء كنت تبحث عن مساعدة أو عن عمل، سيرفيكس مصمم لك.">Whether you're looking for help or looking for work, Servix is designed for you.</p>
+    <div class="for-who-grid">
+      <div class="for-card for-card-customer">
+        <div class="for-emoji">🏠</div>
+        <div class="for-tag for-tag-customer" data-en="For Customers" data-ar="للعائلات">For Customers</div>
+        <h3 data-en="Find Your Perfect Home Helper" data-ar="ابحث عن مساعدتك المثالية">Find Your Perfect Home Helper</h3>
+        <p data-en="Browse hundreds of verified maids, filter by skills and budget, chat before you hire, and pay only when you're sure." data-ar="تصفح مئات العاملات الموثقات، فلتر حسب المهارات والميزانية، دردش قبل التوظيف، وادفع فقط عندما تكون متأكداً.">Browse hundreds of verified maids, filter by skills and budget, chat before you hire, and pay only when you're sure.</p>
+        <ul class="for-list">
+          <li data-en="Browse verified profiles with photos" data-ar="تصفح الملفات الموثقة مع الصور">Browse verified profiles with photos</li>
+          <li data-en="Filter by skills, nationality & salary" data-ar="فلتر حسب المهارات والجنسية والراتب">Filter by skills, nationality &amp; salary</li>
+          <li data-en="Chat & voice interview before hiring" data-ar="دردشة ومقابلة صوتية قبل التوظيف">Chat &amp; voice interview before hiring</li>
+          <li data-en="Pay securely in EGP" data-ar="ادفع بأمان بالجنيه المصري">Pay securely in EGP</li>
+          <li data-en="Save favourites & compare" data-ar="احفظ المفضلة وقارن">Save favourites &amp; compare</li>
+        </ul>
+        <a href="#download" class="btn-outline" data-en="Find a Maid →" data-ar="→ ابحث عن عاملة">Find a Maid →</a>
+      </div>
+      <div class="for-card for-card-maid">
+        <div class="for-emoji">👩</div>
+        <div class="for-tag for-tag-maid" data-en="For Maids" data-ar="للعاملات">For Maids</div>
+        <h3 data-en="Get Hired by the Right Family" data-ar="وظّفك العائلة المناسبة">Get Hired by the Right Family</h3>
+        <p data-en="Create your profile, get verified, and let families find you. No middlemen, no hidden fees — just direct connections." data-ar="أنشئي ملفك، احصلي على التوثيق، ودعي العائلات تجدك. لا وسطاء، لا رسوم خفية — اتصال مباشر.">Create your profile, get verified, and let families find you. No middlemen, no hidden fees — just direct connections.</p>
+        <ul class="for-list">
+          <li data-en="Free profile creation" data-ar="إنشاء ملف مجاني">Free profile creation</li>
+          <li data-en="Get discovered by hundreds of families" data-ar="اكتشفك مئات العائلات">Get discovered by hundreds of families</li>
+          <li data-en="Track your profile views & likes" data-ar="تابعي مشاهدات وإعجابات ملفك">Track your profile views &amp; likes</li>
+          <li data-en="Chat directly with potential employers" data-ar="دردشي مباشرة مع أصحاب العمل المحتملين">Chat directly with potential employers</li>
+          <li data-en="Set your own expected salary" data-ar="حددي راتبك المتوقع بنفسك">Set your own expected salary</li>
+        </ul>
+        <a href="#download" class="btn-primary" data-en="Join as a Maid →" data-ar="→ انضمي كعاملة">Join as a Maid →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="section-inner">
+    <div class="section-label" data-en="Reviews" data-ar="التقييمات">Reviews</div>
+    <h2 class="section-title" data-en="Trusted by Families<br/>Across Egypt" data-ar="موثوق من العائلات<br/>في جميع أنحاء مصر">Trusted by Families<br/>Across Egypt</h2>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text" data-en='"Found our maid within 2 days. The verification process gave me so much confidence. Highly recommend Servix to every family."' data-ar='"وجدنا العاملة في يومين. عملية التحقق أعطتني ثقة كبيرة. أوصي بسيرفيكس لكل عائلة."'>"Found our maid within 2 days. The verification process gave me so much confidence. Highly recommend Servix to every family."</div>
+        <div class="testi-author">
+          <div class="testi-ava">👩</div>
+          <div>
+            <div class="testi-name" data-en="Nour Al-Hassan" data-ar="نور الحسن">Nour Al-Hassan</div>
+            <div class="testi-role" data-en="Customer · Cairo" data-ar="عميلة · القاهرة">Customer · Cairo</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text" data-en='"The in-app chat was amazing — I could interview three maids before deciding. The whole process felt safe and professional."' data-ar='"الدردشة داخل التطبيق رائعة — قابلت ثلاث عاملات قبل القرار. كل العملية شعرت بالأمان والاحترافية."'>"The in-app chat was amazing — I could interview three maids before deciding. The whole process felt safe and professional."</div>
+        <div class="testi-author">
+          <div class="testi-ava">👤</div>
+          <div>
+            <div class="testi-name" data-en="Ahmed Mostafa" data-ar="أحمد مصطفى">Ahmed Mostafa</div>
+            <div class="testi-role" data-en="Customer · Alexandria" data-ar="عميل · الإسكندرية">Customer · Alexandria</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text" data-en='"I got hired within a week of joining Servix. The app is easy to use and I feel safe knowing families can verify who I am."' data-ar='"تم توظيفي في أسبوع من انضمامي لسيرفيكس. التطبيق سهل الاستخدام وأشعر بالأمان لأن العائلات تستطيع التحقق من هويتي."'>"I got hired within a week of joining Servix. The app is easy to use and I feel safe knowing families can verify who I am."</div>
+        <div class="testi-author">
+          <div class="testi-ava">👩🏿</div>
+          <div>
+            <div class="testi-name" data-en="Amara D." data-ar="أمارا د.">Amara D.</div>
+            <div class="testi-role" data-en="Maid · Ethiopian" data-ar="عاملة · إثيوبية">Maid · Ethiopian</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section class="download" id="download">
+  <div class="section-inner download-inner">
+    <div class="section-label" style="justify-content:center;display:flex;" data-en="Download the App" data-ar="حمّل التطبيق">Download the App</div>
+    <h2 data-en='Start Today.<br/>It\'s <em style="color:var(--gold-light);font-style:normal;">Free</em> to Join.' data-ar='ابدأ اليوم.<br/>الانضمام <em style="color:var(--gold-light);font-style:normal;">مجاني</em>.'>Start Today.<br/>It's <em style="color:var(--gold-light);font-style:normal;">Free</em> to Join.</h2>
+    <p class="download-sub" style="margin:0 auto 40px;" data-en="Available on Android and iOS. Download Servix and find your match in minutes." data-ar="متاح على أندرويد وiOS. حمّل سيرفيكس واعثر على مطابقتك في دقائق.">Available on Android and iOS. Download Servix and find your match in minutes.</p>
+    <div class="store-btns">
+      <a href="#" class="store-btn">
+        <span class="store-btn-icon">🤖</span>
+        <div class="store-btn-text">
+          <div class="store-btn-small" data-en="Get it on" data-ar="احصل عليه من">Get it on</div>
+          <div class="store-btn-big">Google Play</div>
+        </div>
+      </a>
+      <a href="#" class="store-btn">
+        <span class="store-btn-icon">🍎</span>
+        <div class="store-btn-text">
+          <div class="store-btn-small" data-en="Download on the" data-ar="حمّل من">Download on the</div>
+          <div class="store-btn-big">App Store</div>
+        </div>
+      </a>
+    </div>
+    <p class="store-badge" data-en="🚀 Launching soon on all platforms" data-ar="🚀 قريباً على جميع المنصات">🚀 Launching soon on all platforms</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold-light);font-weight:700;">Servix</div>
+        <p data-en="Premium domestic staffing platform connecting Egyptian families with trusted, verified home helpers." data-ar="منصة توظيف منزلية متميزة تربط الأسر المصرية بمساعدات منزليات موثوقات وموثقات.">Premium domestic staffing platform connecting Egyptian families with trusted, verified home helpers.</p>
+        <div style="margin-top:16px;font-size:12px;color:rgba(240,236,228,0.3);">📧 ahmed.ibrahim.zaky.91@gmail.com</div>
+      </div>
+      <div class="footer-col">
+        <h4 data-en="Product" data-ar="المنتج">Product</h4>
+        <ul>
+          <li><a href="#how-it-works" data-en="How it works" data-ar="كيف يعمل">How it works</a></li>
+          <li><a href="#features" data-en="Features" data-ar="المميزات">Features</a></li>
+          <li><a href="#download" data-en="Download" data-ar="تحميل">Download</a></li>
+          <li><a href="#" data-en="Pricing" data-ar="الأسعار">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 data-en="Company" data-ar="الشركة">Company</h4>
+        <ul>
+          <li><a href="#" data-en="About us" data-ar="من نحن">About us</a></li>
+          <li><a href="#" data-en="Blog" data-ar="المدونة">Blog</a></li>
+          <li><a href="#" data-en="Careers" data-ar="وظائف">Careers</a></li>
+          <li><a href="#" data-en="Contact" data-ar="اتصل بنا">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 data-en="Legal" data-ar="قانوني">Legal</h4>
+        <ul>
+          <li><a href="#" data-en="Privacy Policy" data-ar="سياسة الخصوصية">Privacy Policy</a></li>
+          <li><a href="#" data-en="Terms of Service" data-ar="شروط الخدمة">Terms of Service</a></li>
+          <li><a href="#" data-en="Cookie Policy" data-ar="سياسة الكوكيز">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy" data-en="© 2025 Servix. All rights reserved. servix.world" data-ar="© 2025 سيرفيكس. جميع الحقوق محفوظة. servix.world">© 2025 Servix. All rights reserved. servix.world</div>
+      <div class="footer-social">
+        <a href="#" title="Instagram">📸</a>
+        <a href="#" title="Facebook">📘</a>
+        <a href="#" title="Twitter/X">🐦</a>
+        <a href="#" title="LinkedIn">💼</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var currentLang = 'en';
+
+  function toggleLang() {
+    currentLang = currentLang === 'en' ? 'ar' : 'en';
+    applyLang();
+  }
+
+  function applyLang() {
+    var html = document.documentElement;
+    var btn = document.getElementById('langBtn');
+    var isAr = currentLang === 'ar';
+
+    html.setAttribute('lang', currentLang);
+    html.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+    btn.textContent = isAr ? 'English' : 'عربي';
+
+    // Update all data-en / data-ar elements
+    document.querySelectorAll('[data-en]').forEach(function(el) {
+      var val = isAr ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+      if (!val) return;
+      if (el.tagName === 'H1' || el.tagName === 'H2' || el.tagName === 'H3') {
+        el.innerHTML = val;
+      } else {
+        el.innerHTML = val;
+      }
+    });
+  }
+
+  // Mobile menu toggle
+  function toggleMenu() {
+    var links = document.querySelector('.nav-links');
+    var showing = links.style.display === 'flex';
+    links.style.cssText = showing ? '' : 'display:flex;flex-direction:column;position:fixed;top:60px;left:0;right:0;background:#0f0c09;padding:20px;border-bottom:1px solid rgba(201,168,76,0.1);gap:16px;z-index:99;';
+  }
+
+  // Smooth reveal on scroll
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(e) {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.hiw-card, .feat-card, .for-card, .testi-card').forEach(function(el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(24px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>
