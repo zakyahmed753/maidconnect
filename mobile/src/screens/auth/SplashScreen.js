@@ -48,23 +48,23 @@ export function SplashScreen({ navigation }) {
 
       {/* Role toggle */}
       <View style={styles.roleToggle}>
-        {['housewife','maid'].map(r => (
-          <TouchableOpacity key={r} onPress={() => setRole(r)}
-            style={[styles.roleBtn, role === r && styles.roleBtnActive]}>
-            <Text style={[styles.roleTxt, role === r && styles.roleTxtActive]}>
-              {r === 'housewife' ? `🏠 Customer` : `👩 ${t('login_maid')}`}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <TouchableOpacity onPress={() => setRole('housewife')}
+          style={[styles.roleBtn, role === 'housewife' && styles.roleBtnActive]}>
+          <Text style={[styles.roleTxt, role === 'housewife' && styles.roleTxtActive]}>🏠 Customer</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setRole('maid')}
+          style={[styles.roleBtn, role === 'maid' && styles.roleBtnActive]}>
+          <Text style={[styles.roleTxt, role === 'maid' && styles.roleTxtActive]}>👩 Maid</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity style={styles.btnGold}
         onPress={() => navigation.navigate(role === 'maid' ? 'Register' : 'Login', { role })}>
-        <Text style={styles.btnGoldTxt}>{role === 'maid' ? `${t('create_profile')} →` : `${t('browse_maids')} →`}</Text>
+        <Text key={role} style={styles.btnGoldTxt}>{role === 'maid' ? 'Create Profile →' : 'Browse Maids →'}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.btnOutline} onPress={() => navigation.navigate('Login', { role })}>
-        <Text style={styles.btnOutlineTxt}>{t('sign_in')}</Text>
+        <Text style={styles.btnOutlineTxt}>Sign In</Text>
       </TouchableOpacity>
 
       <View style={styles.dividerRow}>
@@ -72,12 +72,10 @@ export function SplashScreen({ navigation }) {
       </View>
 
       <View style={styles.socialRow}>
-        {[{icon:'🔵', label:'Google'},{icon:'🍎', label:'Apple'},{icon:'📘', label:'Facebook'}].map(s=>(
-          <TouchableOpacity key={s.label} style={styles.socialBtn}
-            onPress={() => navigation.navigate(role==='maid'?'Register':'Login',{role,social:s.label})}>
-            <Text style={styles.socialTxt}>{s.icon} {s.label}</Text>
-          </TouchableOpacity>
-        ))}
+        <TouchableOpacity style={styles.socialBtn}
+          onPress={() => navigation.navigate('Login', { role, social: 'Google' })}>
+          <Text style={styles.socialTxt}>🔵 Google</Text>
+        </TouchableOpacity>
       </View>
     </LinearGradient>
   );

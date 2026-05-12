@@ -13,6 +13,7 @@ import {
   Jost_500Medium, Jost_600SemiBold, Jost_700Bold,
 } from '@expo-google-fonts/jost';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import AppNavigator from './src/navigation/AppNavigator';
 import useAuthStore from './src/store/authStore';
@@ -53,8 +54,10 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex:1 }}>
-      <AppNavigator />
-      <Toast />
+      <SafeAreaProvider>
+        <AppNavigator />
+        <Toast />
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

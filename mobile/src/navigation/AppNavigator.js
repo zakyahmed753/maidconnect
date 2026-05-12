@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -56,8 +57,9 @@ function HWProfileStack() {
 
 // Housewife bottom tabs
 function HouseWifeTabs() {
+  const insets = useSafeAreaInsets();
   return (
-    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:70, paddingBottom:10 }, tabBarShowLabel:false }}>
+    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
       <Tab.Screen name="Browse"  component={BrowseStack}   options={{ tabBarIcon:({focused})=><TabIcon icon="🔍" focused={focused} label="Browse"/> }}/>
       <Tab.Screen name="Saved"   component={SavedScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="❤️" focused={focused} label="Saved"/> }}/>
       <Tab.Screen name="Chats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
@@ -92,8 +94,9 @@ function MaidHomeStack() {
 
 // Maid bottom tabs
 function MaidTabs() {
+  const insets = useSafeAreaInsets();
   return (
-    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:70, paddingBottom:10 }, tabBarShowLabel:false }}>
+    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
       <Tab.Screen name="MaidHome"    component={MaidHomeStack} options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} label="Home"/> }}/>
       <Tab.Screen name="MaidChats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
       <Tab.Screen name="MaidAlerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} label="Alerts"/> }}/>
