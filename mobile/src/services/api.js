@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://192.168.1.16:5001/api';
+const BASE_URL = 'https://api.servix.world/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
