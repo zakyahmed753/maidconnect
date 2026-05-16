@@ -37,6 +37,14 @@ export function Maids() {
     } catch { toast.error('Failed to update user'); }
   };
 
+  const handleToggleHired = async (maidId, isHired) => {
+    try {
+      await adminAPI.toggleHired(maidId);
+      toast.success(isHired ? 'Vacancy restored — maid visible again' : 'Maid marked as hired — hidden from browse');
+      setMaids(prev => prev.map(m => m._id === maidId ? { ...m, isHired: !isHired } : m));
+    } catch { toast.error('Failed to update hired status'); }
+  };
+
   return (
     <div style={{ fontFamily:"'Jost',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400&display=swap');`}</style>
@@ -58,11 +66,18 @@ export function Maids() {
               <div style={{ fontSize:10, color:'#333', fontFamily:"'DM Mono',monospace", marginTop:1 }}>{maid.user?.email}</div>
             </div>
             <Pill status={maid.approvalStatus}/>
+            {maid.isHired && (
+              <span style={{ fontSize:9, letterSpacing:'0.07em', textTransform:'uppercase', padding:'3px 8px', borderRadius:3, fontWeight:700, background:'rgba(201,168,76,0.1)', color:'#c9a84c', border:'1px solid rgba(201,168,76,0.3)', marginLeft:4 }}>hired</span>
+            )}
             <span style={{ fontSize:10, color: maid.user?.isSuspended ? '#ff6b6b' : '#5dd6a8', marginLeft:6 }}>
               {maid.user?.isSuspended ? '🔴 Suspended' : '🟢 Active'}
             </span>
+            <button onClick={() => handleToggleHired(maid._id, maid.isHired)}
+              style={{ padding:'6px 12px', background: maid.isHired ? 'rgba(93,214,168,0.08)' : 'rgba(201,168,76,0.08)', border:`1px solid ${maid.isHired ? 'rgba(93,214,168,0.25)' : 'rgba(201,168,76,0.25)'}`, borderRadius:4, color: maid.isHired ? '#5dd6a8' : '#c9a84c', fontSize:11, fontWeight:600, cursor:'pointer', marginLeft:4, fontFamily:"'Jost',sans-serif" }}>
+              {maid.isHired ? '✅ Remove Vacancy' : '💼 Mark Hired'}
+            </button>
             <button onClick={() => handleSuspend(maid.user?._id, maid.user?.isSuspended)}
-              style={{ padding:'6px 12px', background:'rgba(255,107,107,0.08)', border:'1px solid rgba(255,107,107,0.2)', borderRadius:4, color:'#ff6b6b', fontSize:11, fontWeight:600, cursor:'pointer', marginLeft:8, fontFamily:"'Jost',sans-serif" }}>
+              style={{ padding:'6px 12px', background:'rgba(255,107,107,0.08)', border:'1px solid rgba(255,107,107,0.2)', borderRadius:4, color:'#ff6b6b', fontSize:11, fontWeight:600, cursor:'pointer', marginLeft:4, fontFamily:"'Jost',sans-serif" }}>
               {maid.user?.isSuspended ? 'Unsuspend' : 'Suspend'}
             </button>
           </div>

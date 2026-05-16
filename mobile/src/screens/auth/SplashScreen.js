@@ -48,19 +48,20 @@ export function SplashScreen({ navigation }) {
 
       {/* Role toggle */}
       <View style={styles.roleToggle}>
-        <TouchableOpacity onPress={() => setRole('housewife')}
-          style={[styles.roleBtn, role === 'housewife' && styles.roleBtnActive]}>
-          <Text style={[styles.roleTxt, role === 'housewife' && styles.roleTxtActive]}>🏠 Customer</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setRole('maid')}
-          style={[styles.roleBtn, role === 'maid' && styles.roleBtnActive]}>
-          <Text style={[styles.roleTxt, role === 'maid' && styles.roleTxtActive]}>👩 Maid</Text>
-        </TouchableOpacity>
+        {[
+          { r: 'housewife', label: '🏠 Customer' },
+          { r: 'maid',      label: '👩 Maid' },
+        ].map(({ r, label }) => (
+          <TouchableOpacity key={r} onPress={() => setRole(r)}
+            style={[styles.roleBtn, role === r && styles.roleBtnActive]}>
+            <Text style={[styles.roleTxt, role === r && styles.roleTxtActive]}>{label}</Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <TouchableOpacity style={styles.btnGold}
         onPress={() => navigation.navigate(role === 'maid' ? 'Register' : 'Login', { role })}>
-        <Text key={role} style={styles.btnGoldTxt}>{role === 'maid' ? 'Create Profile →' : 'Browse Maids →'}</Text>
+        <Text style={styles.btnGoldTxt}>{role === 'maid' ? 'Create Profile →' : 'Browse Maids →'}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.btnOutline} onPress={() => navigation.navigate('Login', { role })}>

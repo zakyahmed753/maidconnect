@@ -42,6 +42,7 @@ exports.getAllMaids = async (req, res) => {
 
     const filter = {
       approvalStatus: 'approved',
+      isHired: false,
     };
 
     if (origin)      filter.origin = origin;

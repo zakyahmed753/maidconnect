@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5001/api',
+  baseURL: 'https://api.servix.world/api',
   timeout: 15000,
 });
 
@@ -29,6 +29,7 @@ export const adminAPI = {
   updateMaidStatus:   (id, data) => api.put(`/admin/maids/${id}/status`, data),
   getHouseWives:      (params) => api.get('/admin/housewives', { params }),
   suspendUser:        (userId, data) => api.put(`/admin/users/${userId}/suspend`, data),
+  toggleHired:        (id) => api.put(`/admin/maids/${id}/hired`),
   getPayments:        (params) => api.get('/admin/payments', { params }),
   broadcast:          (data) => api.post('/admin/broadcast', data),
 };

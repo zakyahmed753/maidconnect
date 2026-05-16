@@ -28,7 +28,7 @@ export default function Login() {
       <div style={{ width:380, background:'#161616', border:'1px solid #2a2a2a', borderRadius:12, padding:36, boxShadow:'0 20px 60px rgba(0,0,0,0.6)' }}>
         <div style={{ textAlign:'center', marginBottom:32 }}>
           <div style={{ fontSize:40, marginBottom:10 }}>🏡</div>
-          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#e8c97a', marginBottom:4 }}>MaidConnect</div>
+          <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:26, fontWeight:700, color:'#e8c97a', marginBottom:4 }}>Servix</div>
           <div style={{ fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555', fontFamily:"'DM Mono',monospace" }}>Admin Panel</div>
         </div>
 

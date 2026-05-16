@@ -20,7 +20,7 @@ export default function LoginScreen({ navigation, route }) {
     if (!email || !password) return Toast.show({ type:'error', text1: t('fill_required') });
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, role);
       Toast.show({ type:'success', text1:'Welcome back! 👋' });
     } catch (err) {
       Toast.show({ type:'error', text1: err.response?.data?.message || 'Login failed' });

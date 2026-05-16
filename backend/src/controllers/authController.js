@@ -35,10 +35,14 @@ exports.register = async (req, res) => {
 // ── Login ──
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
     const user = await User.findOne({ email }).select('+password');
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+    // Enforce role: maid can't login as customer and vice versa
+    if (role && user.role !== 'admin' && user.role !== role) {
+      return res.status(403).json({ success: false, message: `This account is registered as a ${user.role}. Please sign in from the correct tab.` });
     }
     if (user.isSuspended) {
       return res.status(403).json({ success: false, message: `Account suspended: ${user.suspendReason}` });

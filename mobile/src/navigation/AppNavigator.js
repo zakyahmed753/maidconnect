@@ -85,9 +85,10 @@ function BrowseStack() {
 function MaidHomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown:false }}>
-      <Stack.Screen name="MaidDash"   component={MaidDashScreen}/>
-      <Stack.Screen name="Analytics"  component={AnalyticsScreen}/>
-      <Stack.Screen name="Support"    component={SupportScreen}/>
+      <Stack.Screen name="MaidDash"    component={MaidDashScreen}/>
+      <Stack.Screen name="Analytics"   component={AnalyticsScreen}/>
+      <Stack.Screen name="Support"     component={SupportScreen}/>
+      <Stack.Screen name="EditProfile" component={EditProfileScreen}/>
     </Stack.Navigator>
   );
 }
@@ -97,10 +98,9 @@ function MaidTabs() {
   const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
-      <Tab.Screen name="MaidHome"    component={MaidHomeStack} options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} label="Home"/> }}/>
-      <Tab.Screen name="MaidChats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
-      <Tab.Screen name="MaidAlerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} label="Alerts"/> }}/>
-      <Tab.Screen name="EditProfile" component={EditProfileScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} label="Profile"/> }}/>
+      <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} label="Home"/> }}/>
+      <Tab.Screen name="MaidChats"  component={ChatsListScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
+      <Tab.Screen name="MaidAlerts" component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} label="Alerts"/> }}/>
     </Tab.Navigator>
   );
 }

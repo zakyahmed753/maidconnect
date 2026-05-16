@@ -44,7 +44,7 @@ export default function Layout() {
       {/* Sidebar */}
       <div style={S.sidebar}>
         <div style={S.logo}>
-          <div style={S.logoT}>MaidConnect</div>
+          <div style={S.logoT}>Servix</div>
           <div style={S.logoS}>Admin Panel</div>
         </div>
         <nav style={S.nav}>

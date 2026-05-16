@@ -32,6 +32,7 @@ const maidSchema = new mongoose.Schema({
   // ── Availability ──
   isAvailable:    { type: Boolean, default: true },
   availableFrom:  { type: Date, default: Date.now },
+  isHired:        { type: Boolean, default: false },
 
   // ── Subscription ──
   subscription: {

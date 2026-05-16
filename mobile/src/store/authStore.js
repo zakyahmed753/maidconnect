@@ -43,8 +43,8 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  login: async (email, password) => {
-    const res = await authAPI.login({ email, password });
+  login: async (email, password, role) => {
+    const res = await authAPI.login({ email, password, role });
     await SecureStore.setItemAsync('maidconnect_token', res.data.token);
     const me = await authAPI.getMe();
     set({ token: res.data.token, user: res.data.user, profile: me.data.profile });

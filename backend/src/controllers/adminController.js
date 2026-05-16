@@ -215,6 +215,27 @@ exports.getPayments = async (req, res) => {
   }
 };
 
+// ── Toggle Maid Hired Status ──
+exports.toggleHired = async (req, res) => {
+  try {
+    const maid = await Maid.findById(req.params.id);
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+    const newStatus = !maid.isHired;
+    await Maid.findByIdAndUpdate(req.params.id, { isHired: newStatus });
+    await Notification.create({
+      user: maid.user,
+      type: 'system',
+      title: newStatus ? '💼 Profile Hidden — Hired' : '🟢 Profile Visible Again',
+      body: newStatus
+        ? 'Your profile has been marked as hired and is temporarily hidden from customers.'
+        : 'Your profile is now visible to customers again.'
+    });
+    res.json({ success: true, isHired: newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Send Broadcast Notification ──
 exports.broadcastNotification = async (req, res) => {
   try {
