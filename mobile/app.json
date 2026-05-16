@@ -26,7 +26,10 @@
       ]
     },
     "extra": {
-      "API_URL": "http://192.168.1.16:5001/api"
+      "API_URL": "https://api.servix.world/api",
+      "eas": {
+        "projectId": "aaf38d20-cf98-4589-b23d-1e6838133970"
+      }
     },
     "plugins": [
       "expo-font",
