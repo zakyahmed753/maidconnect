@@ -1,9 +1,11 @@
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const ADMIN_EMAIL    = 'admin@maidconnect.com';
 const NEW_PASSWORD   = 'Admin@1234';
-const MONGO_URI      = 'mongodb://localhost:27017/maidconnect';
+const MONGO_URI      = 'mongodb+srv://servixadmin:EOdPRnLXKWqx07qj@cluster0.fxqauy3.mongodb.net/maidconnect';
 
 async function run() {
   console.log('Connecting to MongoDB...');
