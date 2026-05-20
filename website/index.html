@@ -822,9 +822,19 @@ function setOrigin(val) {
   document.getElementById('originForeign').classList.toggle('active', val === 'foreign');
 }
 
+function getNatOrigin(nat) {
+  var n = (nat || '').toLowerCase();
+  if (n === 'egyptian') return 'egyptian';
+  var asian = ['filipino','malaysian','indonesian'];
+  if (asian.includes(n)) return 'asian';
+  var african = ['ethiopian','kenyan','ugandan','sudanese'];
+  if (african.includes(n)) return 'african';
+  return 'other';
+}
+
 function updateOriginAndFee() {
-  var nat = (document.getElementById('r_nat').value || '').toLowerCase();
-  var highFee = ['malaysian','indonesian'].includes(nat);
+  var nat = document.getElementById('r_nat').value || '';
+  var highFee = ['Malaysian','Indonesian'].includes(nat);
   var hint = document.getElementById('salaryHint');
   if (highFee) {
     hint.style.display = 'block';
@@ -832,9 +842,11 @@ function updateOriginAndFee() {
   } else {
     hint.style.display = 'none';
   }
-  // auto-set origin
-  var local = ['egyptian'];
-  setOrigin(local.includes(nat) ? 'local' : 'foreign');
+  var derivedOrigin = getNatOrigin(nat);
+  var isLocal = derivedOrigin === 'egyptian';
+  document.getElementById('originLocal').classList.toggle('active', isLocal);
+  document.getElementById('originForeign').classList.toggle('active', !isLocal);
+  regOrigin = derivedOrigin;
 }
 
 function showRegError(msg) {
@@ -877,18 +889,22 @@ function regGoBack() {
 
 async function regSubmit() {
   hideRegError();
-  var btn = document.getElementById('regSubmitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
   var fname = document.getElementById('r_fname').value.trim();
   var lname = document.getElementById('r_lname').value.trim();
-  var email = document.getElementById('r_email').value.trim();
-  var phone = document.getElementById('r_phone').value.trim();
-  var pass  = document.getElementById('r_pass').value;
   var nat   = document.getElementById('r_nat').value;
   var age   = document.getElementById('r_age').value;
   var exp   = document.getElementById('r_exp').value;
   var sal   = document.getElementById('r_salary').value;
+  if (!nat) return showRegError('Please select your nationality.');
+  if (!age) return showRegError('Please enter your age.');
+  if (!exp && exp !== '0') return showRegError('Please enter your years of experience.');
+  if (!sal) return showRegError('Please enter your expected salary.');
+  var btn = document.getElementById('regSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  var email = document.getElementById('r_email').value.trim();
+  var phone = document.getElementById('r_phone').value.trim();
+  var pass  = document.getElementById('r_pass').value;
   var area  = document.getElementById('r_area').value;
   var bio   = document.getElementById('r_bio').value.trim();
   var langs = Array.from(document.querySelectorAll('.reg-checks input[id^="l_"]:checked')).map(function(el){return el.value;});
@@ -901,17 +917,25 @@ async function regSubmit() {
     var d1 = await r1.json();
     if (!r1.ok) throw new Error(d1.message || 'Registration failed');
     var token = d1.token;
-    var maidBody = { nationality: nat, origin: regOrigin, bio: bio };
-    if (age) maidBody.age = parseInt(age);
-    if (exp) maidBody.yearsExperience = parseInt(exp);
-    if (sal) maidBody.expectedSalary = parseInt(sal);
-    if (area) maidBody.area = area;
+    var origin = getNatOrigin(nat);
+    var maidBody = {
+      fullName: fname+' '+lname,
+      nationality: nat,
+      origin: origin,
+      age: parseInt(age),
+      experienceYears: parseInt(exp),
+      expectedSalary: parseInt(sal)
+    };
+    if (area) maidBody.residentialArea = area;
+    if (bio) maidBody.bio = bio;
     if (langs.length) maidBody.languages = langs;
     if (skills.length) maidBody.skills = skills;
-    await fetch('https://api.servix.world/api/maids', {
+    var r2 = await fetch('https://api.servix.world/api/maids', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body: JSON.stringify(maidBody)
     });
+    var d2 = await r2.json();
+    if (!r2.ok) throw new Error(d2.message || 'Profile creation failed');
     document.getElementById('regStep2').style.display = 'none';
     document.getElementById('regStep3').style.display = 'block';
     document.getElementById('stepDot2').classList.remove('active');

@@ -7,7 +7,7 @@ const maidSchema = new mongoose.Schema({
   fullName:        { type: String, required: true },
   age:             { type: Number, required: true, min: 18, max: 60 },
   nationality:     { type: String, required: true },
-  origin:          { type: String, enum: ['african', 'asian'], required: true },
+  origin:          { type: String, enum: ['african', 'asian', 'egyptian', 'other'], required: true },
   residentialArea: { type: String, default: null }, // area in Egypt
   languages:       [{ type: String }],
   bio:             { type: String, maxlength: 500 },
