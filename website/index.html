@@ -238,6 +238,53 @@
 
     /* Mobile nav open */
     .nav-mobile-open .nav-links{display:flex;flex-direction:column;position:fixed;top:58px;left:0;right:0;background:rgba(10,8,6,0.98);padding:24px 20px;border-bottom:1px solid rgba(201,168,76,0.1);gap:18px;z-index:99;backdrop-filter:blur(12px)}
+
+    /* ── REGISTER MODAL ── */
+    .reg-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999;display:none;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
+    .reg-overlay.open{display:flex}
+    .reg-modal{background:linear-gradient(180deg,#1a1108 0%,#0f0c09 100%);border:1px solid rgba(201,168,76,0.2);border-radius:18px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;position:relative;padding:36px 32px 32px;box-shadow:0 40px 100px rgba(0,0,0,0.7)}
+    .reg-close{position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(240,236,228,0.35);font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;transition:color 0.2s}
+    .reg-close:hover{color:var(--gold)}
+    .reg-header{text-align:center;margin-bottom:28px}
+    .reg-header h2{font-family:'Cormorant Garamond',serif;font-size:28px;color:#fff8ee;margin-bottom:6px}
+    .reg-header p{font-size:13px;color:rgba(240,236,228,0.45);line-height:1.6}
+    .reg-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:30px}
+    .reg-step{display:flex;flex-direction:column;align-items:center;gap:5px}
+    .reg-step-dot{width:30px;height:30px;border-radius:50%;border:2px solid rgba(201,168,76,0.25);background:rgba(201,168,76,0.06);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:rgba(240,236,228,0.3);transition:all 0.3s}
+    .reg-step.active .reg-step-dot{border-color:var(--gold);background:rgba(201,168,76,0.18);color:var(--gold)}
+    .reg-step.done .reg-step-dot{border-color:var(--green);background:rgba(46,125,94,0.2);color:#5dd6a8}
+    .reg-step-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(240,236,228,0.3);transition:color 0.3s}
+    .reg-step.active .reg-step-label{color:var(--gold)}
+    .reg-step.done .reg-step-label{color:#5dd6a8}
+    .reg-step-line{flex:1;height:1px;background:rgba(201,168,76,0.15);min-width:40px;margin:0 6px;margin-bottom:18px}
+    .reg-label{display:block;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(240,236,228,0.45);margin-bottom:6px;font-weight:600}
+    .reg-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.18);border-radius:8px;padding:12px 14px;color:#f0ece4;font-size:14px;font-family:'Jost',sans-serif;outline:none;transition:border-color 0.2s;box-sizing:border-box}
+    .reg-input:focus{border-color:rgba(201,168,76,0.5)}
+    .reg-input::placeholder{color:rgba(240,236,228,0.2)}
+    .reg-input option{background:#1a1108;color:#f0ece4}
+    .reg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .reg-field{margin-bottom:14px}
+    .reg-hint{font-size:11px;color:var(--gold);margin-top:5px;opacity:0.8}
+    .reg-toggle{display:flex;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:8px;overflow:hidden;margin-bottom:14px}
+    .reg-toggle-btn{flex:1;padding:10px;font-size:13px;font-family:'Jost',sans-serif;cursor:pointer;border:none;background:none;color:rgba(240,236,228,0.4);transition:all 0.2s}
+    .reg-toggle-btn.active{background:rgba(201,168,76,0.18);color:var(--gold);font-weight:600}
+    .reg-checks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+    .reg-check-item input{display:none}
+    .reg-check-item label{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;border:1px solid rgba(201,168,76,0.18);font-size:12px;color:rgba(240,236,228,0.5);cursor:pointer;transition:all 0.2s;user-select:none}
+    .reg-check-item input:checked + label{border-color:var(--gold);background:rgba(201,168,76,0.15);color:var(--gold)}
+    .reg-btn{width:100%;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#1a1108;padding:14px;border-radius:8px;font-size:14px;font-weight:700;letter-spacing:0.04em;border:none;cursor:pointer;font-family:'Jost',sans-serif;transition:all 0.2s;margin-top:6px}
+    .reg-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,168,76,0.35)}
+    .reg-btn:disabled{opacity:0.55;cursor:not-allowed}
+    .reg-back{background:none;border:none;color:rgba(240,236,228,0.35);font-size:13px;font-family:'Jost',sans-serif;cursor:pointer;padding:10px 0;text-decoration:underline;text-underline-offset:3px}
+    .reg-back:hover{color:var(--gold)}
+    .reg-error{background:rgba(220,50,50,0.12);border:1px solid rgba(220,50,50,0.3);border-radius:6px;padding:10px 14px;font-size:13px;color:#ff8080;margin-bottom:14px;display:none}
+    .reg-success-icon{font-size:56px;margin-bottom:16px}
+    .reg-success h3{font-family:'Cormorant Garamond',serif;font-size:26px;color:#fff8ee;margin-bottom:10px}
+    .reg-success p{font-size:14px;color:rgba(240,236,228,0.55);line-height:1.7;margin-bottom:8px}
+    .reg-next-list{list-style:none;margin:18px 0;padding:0;display:flex;flex-direction:column;gap:10px}
+    .reg-next-list li{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:rgba(240,236,228,0.5)}
+    .reg-next-list li span:first-child{width:22px;height:22px;border-radius:50%;background:rgba(201,168,76,0.12);display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:var(--gold);flex-shrink:0;margin-top:1px}
+    @media(max-width:600px){.reg-modal{padding:28px 18px 24px}.reg-row{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -482,7 +529,7 @@
             <li><span class="fw-check">✓</span><span data-en="Track profile views & likes" data-ar="تابعي مشاهدات وإعجابات ملفك">Track profile views & likes</span></li>
             <li><span class="fw-check">✓</span><span data-en="Set your own expected salary" data-ar="حددي راتبك المتوقع بنفسك">Set your own expected salary</span></li>
           </ul>
-          <a href="/register" class="btn-gold" data-en="Register as a Maid →" data-ar="→ سجّلي كعاملة">Register as a Maid →</a>
+          <button onclick="openRegisterModal()" class="btn-gold" style="border:none;cursor:pointer;" data-en="Register as a Maid →" data-ar="→ سجّلي كعاملة">Register as a Maid →</button>
         </div>
       </div>
     </div>
@@ -591,6 +638,132 @@
   </div>
 </footer>
 
+<!-- REGISTER MODAL -->
+<div class="reg-overlay" id="regOverlay">
+  <div class="reg-modal" id="regModal">
+    <button class="reg-close" onclick="closeRegisterModal()">✕</button>
+
+    <div class="reg-header">
+      <div style="font-size:36px;margin-bottom:10px">👑</div>
+      <h2 data-en="Join Servix as a Maid" data-ar="انضمي إلى سيرفيكس كعاملة">Join Servix as a Maid</h2>
+      <p data-en="Create your profile and start getting discovered by families across Egypt" data-ar="أنشئي ملفك وابدئي في الظهور للعائلات في مصر">Create your profile and start getting discovered by families across Egypt</p>
+    </div>
+
+    <div class="reg-steps">
+      <div class="reg-step active" id="stepDot1"><div class="reg-step-dot">1</div><div class="reg-step-label" data-en="Account" data-ar="الحساب">Account</div></div>
+      <div class="reg-step-line"></div>
+      <div class="reg-step" id="stepDot2"><div class="reg-step-dot">2</div><div class="reg-step-label" data-en="Profile" data-ar="الملف">Profile</div></div>
+      <div class="reg-step-line"></div>
+      <div class="reg-step" id="stepDot3"><div class="reg-step-dot">✓</div><div class="reg-step-label" data-en="Done" data-ar="تم">Done</div></div>
+    </div>
+
+    <div class="reg-error" id="regError"></div>
+
+    <!-- STEP 1: Account -->
+    <div id="regStep1">
+      <div class="reg-row">
+        <div class="reg-field"><label class="reg-label" data-en="First Name" data-ar="الاسم الأول">First Name</label><input class="reg-input" id="r_fname" placeholder="Amara" required/></div>
+        <div class="reg-field"><label class="reg-label" data-en="Last Name" data-ar="اسم العائلة">Last Name</label><input class="reg-input" id="r_lname" placeholder="Diallo" required/></div>
+      </div>
+      <div class="reg-field"><label class="reg-label" data-en="Email Address" data-ar="البريد الإلكتروني">Email Address</label><input class="reg-input" id="r_email" type="email" placeholder="you@email.com" required/></div>
+      <div class="reg-field"><label class="reg-label" data-en="Phone Number" data-ar="رقم الهاتف">Phone Number</label><input class="reg-input" id="r_phone" type="tel" placeholder="+20 10 0000 0000" required/></div>
+      <div class="reg-field"><label class="reg-label" data-en="Password" data-ar="كلمة المرور">Password</label><input class="reg-input" id="r_pass" type="password" placeholder="Min 8 characters" required/></div>
+      <button class="reg-btn" onclick="regStep1Next()">Continue →</button>
+    </div>
+
+    <!-- STEP 2: Profile -->
+    <div id="regStep2" style="display:none">
+      <div class="reg-row">
+        <div class="reg-field">
+          <label class="reg-label" data-en="Nationality" data-ar="الجنسية">Nationality</label>
+          <select class="reg-input" id="r_nat" onchange="updateOriginAndFee()">
+            <option value="">Select...</option>
+            <option>Ethiopian</option><option>Kenyan</option><option>Ugandan</option><option>Sudanese</option>
+            <option>Filipino</option><option>Malaysian</option><option>Indonesian</option>
+            <option>Egyptian</option><option>Other</option>
+          </select>
+        </div>
+        <div class="reg-field">
+          <label class="reg-label" data-en="Age" data-ar="العمر">Age</label>
+          <input class="reg-input" id="r_age" type="number" placeholder="25" min="18" max="60"/>
+        </div>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label" data-en="Origin" data-ar="الأصل">Origin</label>
+        <div class="reg-toggle" id="r_origin_toggle">
+          <button class="reg-toggle-btn active" onclick="setOrigin('local')" id="originLocal" data-en="🇪🇬 Local (Egypt)" data-ar="🇪🇬 محلية (مصر)">🇪🇬 Local (Egypt)</button>
+          <button class="reg-toggle-btn" onclick="setOrigin('foreign')" id="originForeign" data-en="✈️ Foreign" data-ar="✈️ أجنبية">✈️ Foreign</button>
+        </div>
+      </div>
+      <div class="reg-row">
+        <div class="reg-field">
+          <label class="reg-label" data-en="Experience (years)" data-ar="الخبرة (سنوات)">Experience (years)</label>
+          <input class="reg-input" id="r_exp" type="number" placeholder="3" min="0" max="40"/>
+        </div>
+        <div class="reg-field">
+          <label class="reg-label" data-en="Expected Salary (EGP/mo)" data-ar="الراتب المتوقع (جنيه/شهر)">Expected Salary (EGP/mo)</label>
+          <input class="reg-input" id="r_salary" type="number" placeholder="5000"/>
+          <div class="reg-hint" id="salaryHint" style="display:none"></div>
+        </div>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label" data-en="Area / Governorate" data-ar="المنطقة / المحافظة">Area / Governorate</label>
+        <select class="reg-input" id="r_area">
+          <option value="">Select area...</option>
+          <option>Cairo</option><option>Giza</option><option>Alexandria</option><option>6th of October</option>
+          <option>New Cairo</option><option>Heliopolis</option><option>Maadi</option><option>Zamalek</option>
+          <option>Nasr City</option><option>Sharm El-Sheikh</option><option>Hurghada</option><option>Other</option>
+        </select>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label" data-en="Languages Spoken" data-ar="اللغات المتحدثة">Languages Spoken</label>
+        <div class="reg-checks">
+          <div class="reg-check-item"><input type="checkbox" id="l_ar" value="Arabic"/><label for="l_ar">🇪🇬 Arabic</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="l_en" value="English"/><label for="l_en">🇬🇧 English</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="l_fr" value="French"/><label for="l_fr">🇫🇷 French</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="l_am" value="Amharic"/><label for="l_am">🇪🇹 Amharic</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="l_sw" value="Swahili"/><label for="l_sw">🌍 Swahili</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="l_ph" value="Filipino"/><label for="l_ph">🇵🇭 Filipino</label></div>
+        </div>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label" data-en="Skills" data-ar="المهارات">Skills</label>
+        <div class="reg-checks">
+          <div class="reg-check-item"><input type="checkbox" id="s_cook" value="Cooking"/><label for="s_cook">🍳 Cooking</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="s_clean" value="Cleaning"/><label for="s_clean">🧹 Cleaning</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="s_child" value="Childcare"/><label for="s_child">👶 Childcare</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="s_elder" value="Eldercare"/><label for="s_elder">👴 Eldercare</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="s_laund" value="Laundry"/><label for="s_laund">👕 Laundry</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="s_iron" value="Ironing"/><label for="s_iron">🔥 Ironing</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="s_drive" value="Driving"/><label for="s_drive">🚗 Driving</label></div>
+          <div class="reg-check-item"><input type="checkbox" id="s_pet" value="Pet Care"/><label for="s_pet">🐾 Pet Care</label></div>
+        </div>
+      </div>
+      <div class="reg-field">
+        <label class="reg-label" data-en="Short Bio (optional)" data-ar="نبذة قصيرة (اختياري)">Short Bio (optional)</label>
+        <textarea class="reg-input" id="r_bio" rows="3" placeholder="Tell families a little about yourself and your experience..." style="resize:vertical;min-height:72px"></textarea>
+      </div>
+      <button class="reg-btn" id="regSubmitBtn" onclick="regSubmit()">Create My Profile →</button>
+      <div style="text-align:center;margin-top:10px">
+        <button class="reg-back" onclick="regGoBack()">← Back</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Success -->
+    <div id="regStep3" style="display:none;text-align:center" class="reg-success">
+      <div class="reg-success-icon">🎉</div>
+      <h3 data-en="You're on the List!" data-ar="أنتِ في القائمة!">You're on the List!</h3>
+      <p data-en="Your profile has been submitted and is pending review by our team." data-ar="تم تقديم ملفك وهو قيد المراجعة من قِبل فريقنا.">Your profile has been submitted and is pending review by our team.</p>
+      <ul class="reg-next-list">
+        <li><span>1</span><span data-en="Our team will review your profile within 24–48 hours" data-ar="سيراجع فريقنا ملفك خلال 24-48 ساعة">Our team will review your profile within 24–48 hours</span></li>
+        <li><span>2</span><span data-en="You'll receive an email once approved" data-ar="ستصلك رسالة بريد إلكتروني عند الموافقة">You'll receive an email once approved</span></li>
+        <li><span>3</span><span data-en="Download the Servix app to complete your setup" data-ar="حملي تطبيق سيرفيكس لإتمام إعدادك">Download the Servix app to complete your setup</span></li>
+      </ul>
+      <button onclick="closeRegisterModal()" class="reg-btn" style="margin-top:8px">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 var lang = 'en';
 
@@ -625,6 +798,132 @@ window.addEventListener('scroll', function() {
   nav.style.padding = window.scrollY > 40 ? '10px 48px' : '14px 48px';
   if (window.innerWidth <= 900) nav.style.padding = window.scrollY > 40 ? '10px 20px' : '12px 20px';
 });
+
+// ── REGISTER MODAL ──
+var regOrigin = 'local';
+
+function openRegisterModal() {
+  document.getElementById('regOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeRegisterModal() {
+  document.getElementById('regOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('regOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeRegisterModal();
+});
+
+function setOrigin(val) {
+  regOrigin = val;
+  document.getElementById('originLocal').classList.toggle('active', val === 'local');
+  document.getElementById('originForeign').classList.toggle('active', val === 'foreign');
+}
+
+function updateOriginAndFee() {
+  var nat = (document.getElementById('r_nat').value || '').toLowerCase();
+  var highFee = ['malaysian','indonesian'].includes(nat);
+  var hint = document.getElementById('salaryHint');
+  if (highFee) {
+    hint.style.display = 'block';
+    hint.textContent = '★ Servix subscription for your nationality: EGP 1,000/month';
+  } else {
+    hint.style.display = 'none';
+  }
+  // auto-set origin
+  var local = ['egyptian'];
+  setOrigin(local.includes(nat) ? 'local' : 'foreign');
+}
+
+function showRegError(msg) {
+  var el = document.getElementById('regError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideRegError() {
+  document.getElementById('regError').style.display = 'none';
+}
+
+function regStep1Next() {
+  hideRegError();
+  var fname = document.getElementById('r_fname').value.trim();
+  var lname = document.getElementById('r_lname').value.trim();
+  var email = document.getElementById('r_email').value.trim();
+  var phone = document.getElementById('r_phone').value.trim();
+  var pass  = document.getElementById('r_pass').value;
+  if (!fname || !lname) return showRegError('Please enter your full name.');
+  if (!email || !email.includes('@')) return showRegError('Please enter a valid email address.');
+  if (!phone) return showRegError('Please enter your phone number.');
+  if (pass.length < 8) return showRegError('Password must be at least 8 characters.');
+  document.getElementById('regStep1').style.display = 'none';
+  document.getElementById('regStep2').style.display = 'block';
+  document.getElementById('stepDot1').classList.remove('active');
+  document.getElementById('stepDot1').classList.add('done');
+  document.getElementById('stepDot2').classList.add('active');
+  document.getElementById('regModal').scrollTop = 0;
+}
+
+function regGoBack() {
+  hideRegError();
+  document.getElementById('regStep2').style.display = 'none';
+  document.getElementById('regStep1').style.display = 'block';
+  document.getElementById('stepDot2').classList.remove('active');
+  document.getElementById('stepDot1').classList.remove('done');
+  document.getElementById('stepDot1').classList.add('active');
+}
+
+async function regSubmit() {
+  hideRegError();
+  var btn = document.getElementById('regSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  var fname = document.getElementById('r_fname').value.trim();
+  var lname = document.getElementById('r_lname').value.trim();
+  var email = document.getElementById('r_email').value.trim();
+  var phone = document.getElementById('r_phone').value.trim();
+  var pass  = document.getElementById('r_pass').value;
+  var nat   = document.getElementById('r_nat').value;
+  var age   = document.getElementById('r_age').value;
+  var exp   = document.getElementById('r_exp').value;
+  var sal   = document.getElementById('r_salary').value;
+  var area  = document.getElementById('r_area').value;
+  var bio   = document.getElementById('r_bio').value.trim();
+  var langs = Array.from(document.querySelectorAll('.reg-checks input[id^="l_"]:checked')).map(function(el){return el.value;});
+  var skills = Array.from(document.querySelectorAll('.reg-checks input[id^="s_"]:checked')).map(function(el){return el.value;});
+  try {
+    var r1 = await fetch('https://api.servix.world/api/auth/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name: fname+' '+lname, email: email, password: pass, phone: phone, role: 'maid' })
+    });
+    var d1 = await r1.json();
+    if (!r1.ok) throw new Error(d1.message || 'Registration failed');
+    var token = d1.token;
+    var maidBody = { nationality: nat, origin: regOrigin, bio: bio };
+    if (age) maidBody.age = parseInt(age);
+    if (exp) maidBody.yearsExperience = parseInt(exp);
+    if (sal) maidBody.expectedSalary = parseInt(sal);
+    if (area) maidBody.area = area;
+    if (langs.length) maidBody.languages = langs;
+    if (skills.length) maidBody.skills = skills;
+    await fetch('https://api.servix.world/api/maids', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body: JSON.stringify(maidBody)
+    });
+    document.getElementById('regStep2').style.display = 'none';
+    document.getElementById('regStep3').style.display = 'block';
+    document.getElementById('stepDot2').classList.remove('active');
+    document.getElementById('stepDot2').classList.add('done');
+    document.getElementById('stepDot3').classList.add('done');
+    document.getElementById('regModal').scrollTop = 0;
+  } catch(err) {
+    showRegError(err.message || 'Something went wrong. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Create My Profile →';
+  }
+}
 
 // Scroll reveal
 var observer = new IntersectionObserver(function(entries) {
