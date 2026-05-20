@@ -33,7 +33,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 // Maid screens
 import MaidDashScreen from '../screens/maid/MaidDashScreen';
 import EditProfileScreen from '../screens/maid/EditProfileScreen';
-import { AnalyticsScreen, EditHWProfileScreen, SupportScreen } from '../screens/screens';
+import { AnalyticsScreen, EditHWProfileScreen, SupportScreen, PaymentHistoryScreen } from '../screens/screens';
 
 const Stack = createStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -48,9 +48,10 @@ const TabIcon = ({ icon, focused, label }) => (
 function HWProfileStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown:false }}>
-      <Stack.Screen name="HWProfile"      component={HWProfileScreen}/>
-      <Stack.Screen name="EditHWProfile"  component={EditHWProfileScreen}/>
-      <Stack.Screen name="Support"        component={SupportScreen}/>
+      <Stack.Screen name="HWProfile"       component={HWProfileScreen}/>
+      <Stack.Screen name="EditHWProfile"   component={EditHWProfileScreen}/>
+      <Stack.Screen name="Support"         component={SupportScreen}/>
+      <Stack.Screen name="PaymentHistory"  component={PaymentHistoryScreen}/>
     </Stack.Navigator>
   );
 }
@@ -85,10 +86,11 @@ function BrowseStack() {
 function MaidHomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown:false }}>
-      <Stack.Screen name="MaidDash"    component={MaidDashScreen}/>
-      <Stack.Screen name="Analytics"   component={AnalyticsScreen}/>
-      <Stack.Screen name="Support"     component={SupportScreen}/>
-      <Stack.Screen name="EditProfile" component={EditProfileScreen}/>
+      <Stack.Screen name="MaidDash"       component={MaidDashScreen}/>
+      <Stack.Screen name="Analytics"      component={AnalyticsScreen}/>
+      <Stack.Screen name="Support"        component={SupportScreen}/>
+      <Stack.Screen name="EditProfile"    component={EditProfileScreen}/>
+      <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen}/>
     </Stack.Navigator>
   );
 }

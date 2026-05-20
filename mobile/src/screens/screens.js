@@ -2,9 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { LANGUAGES } from '../utils/i18n';
-import { notificationsAPI } from '../services/api';
+import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI } from '../services/api';
+import { useFocusEffect } from '@react-navigation/native';
+import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../utils/theme';
 
 export function NotificationsScreen({ navigation }) {
@@ -96,7 +98,6 @@ export function PaymentResultScreen({ route, navigation }) {
 // ─── ChatsListScreen ───
 export function ChatsListScreen({ navigation }) {
   const [chats, setChats] = useState([]);
-  const { chatsAPI } = require('../services/api');
   useEffect(() => { chatsAPI.getMyChats().then(r=>setChats(r.data.chats)).catch(()=>{}); }, []);
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
@@ -125,10 +126,7 @@ export function ChatsListScreen({ navigation }) {
 export function SavedScreen({ navigation }) {
   const [maids, setMaids] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { maidsAPI } = require('../services/api');
-  const { useFocusEffect } = require('@react-navigation/native');
 
-  // Refetch every time this tab comes into focus
   useFocusEffect(
     React.useCallback(() => {
       setLoading(true);
@@ -207,8 +205,6 @@ function LanguageModal({ visible, onClose }) {
 
 // ─── HWProfileScreen ───
 export function HWProfileScreen({ navigation }) {
-  const useAuthStore = require('../store/authStore').default;
-  const Toast = require('react-native-toast-message').default;
   const { user, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
 
@@ -216,11 +212,10 @@ export function HWProfileScreen({ navigation }) {
     { icon:'❤️', title:'Saved Maids',   color:'',    onPress: () => navigation.navigate('Saved') },
     { icon:'💬', title:'Messages',       color:'',    onPress: () => navigation.navigate('Chats') },
     { icon:'✅', title:'Approval Flow',  color:'',    onPress: () => navigation.navigate('Browse', { screen:'Approval' }) },
-    { icon:'💳', title:'Payments',       color:'',    onPress: () => Toast.show({ type:'info', text1:'Coming soon' }) },
+    { icon:'💳', title:'Payments',       color:'',    onPress: () => navigation.navigate('PaymentHistory') },
     { icon:'🔔', title:'Notifications',  color:'',    onPress: () => navigation.navigate('Alerts') },
     { icon:'🌐', title:'Language',       color:'',    onPress: () => setLangVisible(true) },
     { icon:'🎫', title:'Support',        color:'',    onPress: () => navigation.navigate('Support') },
-    { icon:'🔒', title:'Security',       color:'',    onPress: () => Toast.show({ type:'info', text1:'Coming soon' }) },
     { icon:'🚪', title:'Sign Out',       color:'red', onPress: logout },
   ];
 
@@ -253,9 +248,6 @@ export function HWProfileScreen({ navigation }) {
 
 // ─── MaidDashScreen ───
 export function MaidDashScreen({ navigation }) {
-  const useAuthStore = require('../store/authStore').default;
-  const { useFocusEffect } = require('@react-navigation/native');
-  const { maidsAPI } = require('../services/api');
   const { user, profile, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
   const [stats, setStats] = useState({ views: 0, likes: 0, chats: 0 });
@@ -280,7 +272,11 @@ export function MaidDashScreen({ navigation }) {
             <View style={{ backgroundColor:'rgba(46,125,94,0.2)', borderWidth:1, borderColor:'rgba(46,125,94,0.35)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
               <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#5dd6a8' }}>Active Subscription</Text>
             </View>
-            <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:COLORS.gold, paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}><Text style={{ fontSize:9, color:COLORS.gold, fontWeight:'700' }}>Annual</Text></View>
+            {profile?.subscription?.plan && profile.subscription.plan !== 'none' && (
+              <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:COLORS.gold, paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}>
+                <Text style={{ fontSize:9, color:COLORS.gold, fontWeight:'700', textTransform:'capitalize' }}>{profile.subscription.plan}</Text>
+              </View>
+            )}
           </View>
           <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center', marginBottom:8 }}><Text style={{ fontSize:28 }}>👩🏿</Text></View>
           <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
@@ -297,14 +293,14 @@ export function MaidDashScreen({ navigation }) {
         <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
           {[
             ['💬','Messages', `${stats.chats} active`],
-            ['💳','Subscription','Annual · Dec 2025'],
+            ['💳','Payments', profile?.subscription?.plan ? `${profile.subscription.plan} · ${profile.subscription.status}` : 'View history'],
             ['📊','Analytics', `${stats.views} views · ${stats.likes} likes`],
             ['🌐','Language',''],
             ['🔔','Notifications',''],
             ['🎫','Support','Contact us anytime'],
             ['🚪','Sign Out','']
           ].map(([icon,title,sub])=>(
-            <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : undefined}
+            <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : title==='Payments' ? () => navigation.navigate('PaymentHistory') : undefined}
               style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
               <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
               <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: title==='Sign Out'?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
@@ -323,8 +319,7 @@ export function ApprovalScreen({ route, navigation }) {
   const STEPS = [
     { title:'Initial Chat', desc:'Connected via in-app chat and voice notes.', state:'done', time:'Today 10:15 AM' },
     { title:'Profile Review', desc:'Reviewed full profile and references.', state:'done', time:'Today 10:30 AM' },
-    { title:'Voice Interview', desc:'Confirm fit via voice call interview.', state:'active', time:'In progress' },
-    { title:'Final Approval', desc:'Confirm hire and proceed to payment.', state:'pending', time:'Pending' },
+    { title:'Final Approval', desc:'Confirm hire and proceed to payment.', state:'active', time:'In progress' },
     { title:'Commission Payment', desc:'Pay one-time commission to finalise.', state:'pending', time:'Pending' },
   ];
   const stateColors = { done:'#2e7d5e', active:COLORS.gold, pending:COLORS.border };
@@ -375,9 +370,6 @@ export function ApprovalScreen({ route, navigation }) {
 
 // ─── SupportScreen ───
 export function SupportScreen({ navigation }) {
-  const useAuthStore = require('../store/authStore').default;
-  const Toast = require('react-native-toast-message').default;
-  const { supportAPI } = require('../services/api');
   const { user } = useAuthStore();
 
   const [subject, setSubject]   = useState('');
@@ -478,8 +470,6 @@ export function SupportScreen({ navigation }) {
 
 // ─── EditHWProfileScreen ───
 export function EditHWProfileScreen({ navigation }) {
-  const useAuthStore = require('../store/authStore').default;
-  const Toast = require('react-native-toast-message').default;
   const { authAPI, hwAPI } = require('../services/api');
   const { user, init } = useAuthStore();
 
@@ -548,7 +538,6 @@ export function EditHWProfileScreen({ navigation }) {
 
 // ─── AnalyticsScreen ───
 export function AnalyticsScreen({ navigation }) {
-  const { maidsAPI } = require('../services/api');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -599,6 +588,73 @@ export function AnalyticsScreen({ navigation }) {
               ))}
             </View>
           </ScrollView>
+      }
+    </View>
+  );
+}
+
+// ─── PaymentHistoryScreen ───
+export function PaymentHistoryScreen({ navigation }) {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    paymentsAPI.getHistory()
+      .then(r => setPayments(r.data?.payments || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statusColor = { completed:'#2e7d5e', pending:'#c9a84c', failed:'#e05555', refunded:'#888' };
+  const methodIcon  = { fawry:'🏧', vodafone_cash:'📱', instapay:'💸', amazon_pay:'🛒' };
+
+  return (
+    <View style={{ flex:1, backgroundColor:COLORS.cream }}>
+      <View style={{ backgroundColor:'#1a1108', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+        </TouchableOpacity>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Payments</Text>
+        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>Subscriptions & commissions</Text>
+      </View>
+      {loading
+        ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
+            <ActivityIndicator size="large" color={COLORS.gold}/>
+          </View>
+        : <FlatList
+            data={payments}
+            keyExtractor={i => i._id}
+            contentContainerStyle={{ padding:14 }}
+            removeClippedSubviews
+            renderItem={({ item }) => (
+              <View style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:14, marginBottom:10, borderLeftWidth:3, borderLeftColor: statusColor[item.status] || COLORS.gold }}>
+                <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
+                  <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
+                    <Text style={{ fontSize:22 }}>{methodIcon[item.method] || '💳'}</Text>
+                    <View>
+                      <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark, textTransform:'capitalize' }}>{item.type}</Text>
+                      <Text style={{ fontSize:11, color:COLORS.muted }}>{(item.method||'').replace('_',' ')}</Text>
+                    </View>
+                  </View>
+                  <View style={{ alignItems:'flex-end' }}>
+                    <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.gold }}>EGP {(item.amount||0).toLocaleString()}</Text>
+                    <View style={{ backgroundColor:`${statusColor[item.status]||'#888'}20`, paddingHorizontal:8, paddingVertical:2, borderRadius:10, marginTop:3 }}>
+                      <Text style={{ fontSize:10, color: statusColor[item.status]||'#888', textTransform:'uppercase', letterSpacing:0.5 }}>{item.status}</Text>
+                    </View>
+                  </View>
+                </View>
+                {item.subscriptionPlan && <Text style={{ fontSize:11, color:COLORS.muted, marginBottom:2 }}>Plan: {item.subscriptionPlan}</Text>}
+                <Text style={{ fontSize:10, color:COLORS.muted }}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+              </View>
+            )}
+            ListEmptyComponent={
+              <View style={{ alignItems:'center', marginTop:80 }}>
+                <Text style={{ fontSize:40, marginBottom:12 }}>💳</Text>
+                <Text style={{ fontSize:15, color:COLORS.dark, fontFamily:FONTS.display }}>No payments yet</Text>
+                <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4 }}>Your transactions will appear here</Text>
+              </View>
+            }
+          />
       }
     </View>
   );

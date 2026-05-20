@@ -68,16 +68,6 @@ export function SplashScreen({ navigation }) {
         <Text style={styles.btnOutlineTxt}>Sign In</Text>
       </TouchableOpacity>
 
-      <View style={styles.dividerRow}>
-        <View style={styles.divLine}/><Text style={styles.divTxt}>or continue with</Text><View style={styles.divLine}/>
-      </View>
-
-      <View style={styles.socialRow}>
-        <TouchableOpacity style={styles.socialBtn}
-          onPress={() => navigation.navigate('Login', { role, social: 'Google' })}>
-          <Text style={styles.socialTxt}>🔵 Google</Text>
-        </TouchableOpacity>
-      </View>
     </LinearGradient>
   );
 }
@@ -102,7 +92,7 @@ const styles = StyleSheet.create({
   roleToggle:         { flexDirection:'row', backgroundColor:'rgba(255,255,255,0.07)', borderRadius:6, padding:3, marginBottom:18, width:'100%' },
   roleBtn:            { flex:1, paddingVertical:10, borderRadius:4, alignItems:'center' },
   roleBtnActive:      { backgroundColor:'rgba(201,168,76,0.22)' },
-  roleTxt:            { fontSize:13, color:'rgba(232,201,122,0.45)', fontFamily:FONTS.bodyMedium },
+  roleTxt:            { fontSize:13, color:'rgba(232,201,122,0.45)' },
   roleTxtActive:      { color:'#e8c97a' },
   btnGold:            { width:'100%', padding:15, borderRadius:5, alignItems:'center', marginBottom:10, backgroundColor:'#c9a84c' },
   btnGoldTxt:         { fontSize:14, fontWeight:'700', color:'#1a1108', letterSpacing:0.5, fontFamily:FONTS.bodySemiBold },

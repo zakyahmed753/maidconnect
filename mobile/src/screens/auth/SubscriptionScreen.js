@@ -6,12 +6,26 @@ import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
 import { useTranslation } from '../../utils/i18n';
+import { maidsAPI } from '../../services/api';
 
 export default function SubscriptionScreen({ navigation }) {
   const { t } = useTranslation();
   const completeAuth = useAuthStore(s => s.completeAuth);
-  const [selected, setSelected] = useState('annual');
+  const { profile } = useAuthStore();
+  const [selected, setSelected] = useState('monthly');
   const [skipping, setSkipping] = useState(false);
+  const [nationality, setNationality] = useState(profile?.nationality || '');
+
+  useEffect(() => {
+    if (!nationality) {
+      maidsAPI.getMyProfile()
+        .then(r => setNationality(r.data?.maid?.nationality || ''))
+        .catch(() => {});
+    }
+  }, []);
+
+  const isHighFee = ['malaysia', 'indonesia'].includes((nationality || '').toLowerCase());
+  const monthlyPrice = isHighFee ? 1000 : 600;
 
   const handleSkip = async () => {
     setSkipping(true);
@@ -39,8 +53,13 @@ export default function SubscriptionScreen({ navigation }) {
   };
 
   const PLANS = [
-    { id:'monthly', name: t('monthly_plan'), price:'EGP 450',  per:'/month', features:['Active profile listing','Up to 5 photos','Voice messaging','Basic analytics'] },
-    { id:'annual',  name: t('annual_plan'),  price:'EGP 3,900', per:'/year', popular:true, features:['Active profile all year','Unlimited photos','Voice messaging','Priority listing','Full analytics','Save 30% vs monthly'] },
+    {
+      id: 'monthly',
+      name: 'Monthly Plan',
+      price: `EGP ${monthlyPrice.toLocaleString()}`,
+      per: '/month',
+      features: ['Active profile listing', 'Up to 5 photos', 'Chat messaging', 'Basic analytics', 'Priority support'],
+    },
   ];
 
   return (
