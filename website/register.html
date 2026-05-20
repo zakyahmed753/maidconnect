@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Join Servix — Maid Registration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600;700&family=DM+Mono&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f0c09;min-height:100vh;font-family:'Jost',sans-serif;color:#f0ece4}
+
+  /* ── Header ── */
+  .header{padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2a2a2a}
+  .logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#e8c97a;text-decoration:none}
+  .logo span{font-size:10px;display:block;color:#555;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace;font-weight:400}
+  .back-link{font-size:13px;color:#666;text-decoration:none;transition:color .2s}
+  .back-link:hover{color:#e8c97a}
+
+  /* ── Progress bar ── */
+  .progress-wrap{padding:24px 0 0;max-width:560px;margin:0 auto;padding-left:24px;padding-right:24px}
+  .progress-steps{display:flex;align-items:center;gap:0;margin-bottom:8px}
+  .step-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .3s}
+  .step-dot.done{background:#c9a84c;color:#1a1108}
+  .step-dot.active{background:#e8c97a;color:#1a1108;box-shadow:0 0 0 3px rgba(232,201,122,.25)}
+  .step-dot.pending{background:#222;color:#555;border:1.5px solid #2a2a2a}
+  .step-line{flex:1;height:2px;background:#2a2a2a;transition:background .3s}
+  .step-line.done{background:#c9a84c}
+  .step-labels{display:flex;justify-content:space-between;margin-top:6px}
+  .step-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#555;text-align:center;flex:1}
+  .step-label.active{color:#e8c97a}
+  .step-label.done{color:#c9a84c}
+
+  /* ── Form card ── */
+  .form-wrap{max-width:560px;margin:24px auto 60px;padding:0 24px}
+  .form-card{background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .step-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#fff8ee;margin-bottom:4px}
+  .step-sub{font-size:13px;color:#666;margin-bottom:28px;line-height:1.5}
+
+  /* ── Fields ── */
+  .field{margin-bottom:18px}
+  .field label{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:6px;font-weight:600}
+  .field label .ar{font-size:11px;color:#555;letter-spacing:0;text-transform:none;margin-left:6px;font-family:sans-serif}
+  .field input,.field select,.field textarea{width:100%;padding:12px 14px;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:6px;color:#f0ece4;font-size:14px;font-family:'Jost',sans-serif;outline:none;transition:border-color .2s;appearance:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:#c9a84c}
+  .field input::placeholder,.field textarea::placeholder{color:#444}
+  .field textarea{resize:vertical;min-height:90px}
+  .field select option{background:#1e1e1e}
+  .field .hint{font-size:11px;color:#555;margin-top:5px}
+
+  /* ── Two col ── */
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:480px){.row-2{grid-template-columns:1fr}}
+
+  /* ── Checkboxes ── */
+  .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  @media(max-width:400px){.check-grid{grid-template-columns:1fr}}
+  .check-item{display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1.5px solid #2a2a2a;border-radius:6px;padding:9px 12px;cursor:pointer;transition:all .2s;user-select:none}
+  .check-item:hover{border-color:#c9a84c40}
+  .check-item.checked{border-color:#c9a84c;background:rgba(201,168,76,.08)}
+  .check-item input{display:none}
+  .check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid #444;background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+  .check-item.checked .check-box{background:#c9a84c;border-color:#c9a84c}
+  .check-tick{color:#1a1108;font-size:10px;font-weight:700;display:none}
+  .check-item.checked .check-tick{display:block}
+  .check-label{font-size:13px;color:#bbb;transition:color .2s}
+  .check-item.checked .check-label{color:#e8c97a}
+
+  /* ── Origin toggle ── */
+  .origin-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+  .origin-btn{padding:12px;border:1.5px solid #2a2a2a;border-radius:6px;background:#1a1a1a;color:#666;font-size:13px;font-family:'Jost',sans-serif;cursor:pointer;text-align:center;transition:all .2s}
+  .origin-btn.selected{border-color:#c9a84c;background:rgba(201,168,76,.1);color:#e8c97a}
+
+  /* ── Buttons ── */
+  .btn-row{display:flex;gap:10px;margin-top:28px}
+  .btn-next{flex:1;padding:14px;background:linear-gradient(135deg,#c9a84c,#e8c97a);border:none;border-radius:6px;color:#1a1108;font-size:14px;font-weight:700;font-family:'Jost',sans-serif;cursor:pointer;letter-spacing:.04em;transition:opacity .2s}
+  .btn-next:hover{opacity:.9}
+  .btn-next:disabled{opacity:.5;cursor:not-allowed}
+  .btn-back{padding:14px 20px;background:none;border:1.5px solid #2a2a2a;border-radius:6px;color:#666;font-size:14px;font-family:'Jost',sans-serif;cursor:pointer;transition:all .2s}
+  .btn-back:hover{border-color:#555;color:#aaa}
+
+  /* ── Error ── */
+  .err-msg{background:rgba(220,50,50,.1);border:1px solid rgba(220,50,50,.3);border-radius:6px;padding:12px 14px;font-size:13px;color:#ff8080;margin-bottom:18px;display:none}
+  .err-msg.show{display:block}
+
+  /* ── Success ── */
+  .success-wrap{text-align:center;padding:16px 0}
+  .success-icon{font-size:60px;margin-bottom:20px;display:block}
+  .success-title{font-family:'Cormorant Garamond',serif;font-size:30px;color:#fff8ee;margin-bottom:10px}
+  .success-sub{font-size:14px;color:#888;line-height:1.7;margin-bottom:28px}
+  .success-ref{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:16px;margin-bottom:24px}
+  .success-ref p{font-size:11px;color:#888;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+  .success-ref strong{font-size:15px;color:#e8c97a;word-break:break-all}
+  .success-steps{text-align:left;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:18px;margin-bottom:24px}
+  .success-steps h4{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:12px}
+  .success-step{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+  .success-step-num{width:22px;height:22px;border-radius:50%;background:#c9a84c;color:#1a1108;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .success-step p{font-size:13px;color:#aaa;line-height:1.5}
+  .btn-home{display:inline-block;padding:13px 28px;background:linear-gradient(135deg,#c9a84c,#e8c97a);border-radius:6px;color:#1a1108;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:.04em}
+
+  /* ── Loading spinner ── */
+  .spinner{width:20px;height:20px;border:2.5px solid rgba(26,17,8,.3);border-top-color:#1a1108;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── Divider ── */
+  .divider{height:1px;background:#2a2a2a;margin:20px 0}
+
+  /* ── Password strength ── */
+  .pw-strength{height:3px;border-radius:2px;margin-top:6px;transition:all .3s;background:#2a2a2a}
+  .pw-hint{font-size:11px;margin-top:4px;transition:color .3s}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="logo">Servix <span>Premium Domestic Staffing</span></a>
+  <a href="/" class="back-link">← Back to Home</a>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-steps">
+    <div class="step-dot active" id="dot1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot pending" id="dot2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot pending" id="dot3">✓</div>
+  </div>
+  <div class="step-labels">
+    <span class="step-label active" id="lbl1">Account</span>
+    <span class="step-label" id="lbl2">Profile</span>
+    <span class="step-label" id="lbl3">Done</span>
+  </div>
+</div>
+
+<div class="form-wrap">
+  <div class="form-card">
+    <div id="err" class="err-msg"></div>
+
+    <!-- ── Step 1: Account ── -->
+    <div id="step1">
+      <div class="step-title">Create Your Account</div>
+      <div class="step-sub">Join Servix and start receiving hire requests from verified households in Egypt.</div>
+
+      <div class="field">
+        <label>Full Name <span class="ar">الاسم الكامل</span></label>
+        <input type="text" id="name" placeholder="e.g. Maria Santos" autocomplete="name"/>
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="you@email.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Phone Number <span class="ar">رقم الهاتف</span></label>
+        <input type="tel" id="phone" placeholder="+20 1XX XXX XXXX or +63 XXX XXX XXXX"/>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Min. 6 characters" autocomplete="new-password" oninput="checkPw(this.value)"/>
+          <div class="pw-strength" id="pwBar"></div>
+          <div class="pw-hint" id="pwHint" style="color:#555">Enter a password</div>
+        </div>
+        <div class="field">
+          <label>Confirm Password</label>
+          <input type="password" id="confirm" placeholder="Repeat password" autocomplete="new-password"/>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-next" onclick="goStep2()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 2: Profile ── -->
+    <div id="step2" style="display:none">
+      <div class="step-title">Your Work Profile</div>
+      <div class="step-sub">This information will be shown to potential employers. Fill in as accurately as possible.</div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Nationality <span class="ar">الجنسية</span></label>
+          <select id="nationality" onchange="autoOrigin()">
+            <option value="">Select nationality…</option>
+            <optgroup label="Asian">
+              <option value="Filipino">Filipino 🇵🇭</option>
+              <option value="Indonesian">Indonesian 🇮🇩</option>
+              <option value="Malaysian">Malaysian 🇲🇾</option>
+              <option value="Sri Lankan">Sri Lankan 🇱🇰</option>
+              <option value="Indian">Indian 🇮🇳</option>
+              <option value="Bangladeshi">Bangladeshi 🇧🇩</option>
+              <option value="Nepalese">Nepalese 🇳🇵</option>
+            </optgroup>
+            <optgroup label="African">
+              <option value="Ethiopian">Ethiopian 🇪🇹</option>
+              <option value="Kenyan">Kenyan 🇰🇪</option>
+              <option value="Ugandan">Ugandan 🇺🇬</option>
+              <option value="Ghanaian">Ghanaian 🇬🇭</option>
+              <option value="Nigerian">Nigerian 🇳🇬</option>
+              <option value="Tanzanian">Tanzanian 🇹🇿</option>
+              <option value="Sudanese">Sudanese 🇸🇩</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="Egyptian">Egyptian 🇪🇬</option>
+              <option value="Other">Other</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Origin</label>
+          <div class="origin-row">
+            <button type="button" class="origin-btn selected" id="originAfrican" onclick="selectOrigin('african')">🌍 African</button>
+            <button type="button" class="origin-btn" id="originAsian" onclick="selectOrigin('asian')">🌏 Asian</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Age <span class="ar">العمر</span></label>
+          <input type="number" id="age" placeholder="e.g. 28" min="18" max="60"/>
+        </div>
+        <div class="field">
+          <label>Years of Experience <span class="ar">سنوات الخبرة</span></label>
+          <input type="number" id="experience" placeholder="e.g. 3" min="0" max="40"/>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label>Expected Salary (EGP/month) <span class="ar">الراتب المتوقع</span></label>
+          <input type="number" id="salary" placeholder="e.g. 3000" min="500"/>
+          <div class="hint" id="salaryHint" style="color:#888;font-size:11px;margin-top:5px"></div>
+        </div>
+        <div class="field">
+          <label>Area in Egypt (if based here) <span class="ar">المنطقة في مصر</span></label>
+          <input type="text" id="area" placeholder="e.g. Cairo, Maadi, Zamalek"/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Languages Spoken <span class="ar">اللغات</span></label>
+        <div class="check-grid" id="langGrid"></div>
+      </div>
+
+      <div class="field">
+        <label>Skills <span class="ar">المهارات</span></label>
+        <div class="check-grid" id="skillGrid"></div>
+      </div>
+
+      <div class="field">
+        <label>Short Bio <span class="ar">نبذة عنك</span> <span style="color:#555;font-size:10px;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <textarea id="bio" placeholder="Tell employers about your experience, personality, and what makes you a great housekeeper…"></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="showStep(1)">← Back</button>
+        <button class="btn-next" id="submitBtn" onclick="submit()">Submit Profile →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Success ── -->
+    <div id="step3" style="display:none">
+      <div class="success-wrap">
+        <span class="success-icon">🎉</span>
+        <div class="success-title">Profile Submitted!</div>
+        <div class="success-sub">Your profile is now under review by the Servix team. We'll contact you within 24–48 hours.</div>
+
+        <div class="success-ref">
+          <p>Registered email</p>
+          <strong id="successEmail"></strong>
+        </div>
+
+        <div class="success-steps">
+          <h4>What happens next?</h4>
+          <div class="success-step">
+            <div class="success-step-num">1</div>
+            <p><strong style="color:#f0ece4">Review</strong> — Our team reviews your profile within 24–48 hours.</p>
+          </div>
+          <div class="success-step">
+            <div class="success-step-num">2</div>
+            <p><strong style="color:#f0ece4">Contact</strong> — We'll call or WhatsApp you to confirm details and collect your ID photo.</p>
+          </div>
+          <div class="success-step">
+            <div class="success-step-num">3</div>
+            <p><strong style="color:#f0ece4">App Launch</strong> — When Servix launches, download the app and log in with your email and password.</p>
+          </div>
+          <div class="success-step">
+            <div class="success-step-num">4</div>
+            <p><strong style="color:#f0ece4">Get Hired</strong> — Receive chat requests and hire offers from verified households.</p>
+          </div>
+        </div>
+
+        <a href="/" class="btn-home">← Back to Home</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = 'https://api.servix.world/api';
+let authToken = null;
+let selectedOrigin = 'african';
+
+const LANGS  = ['Arabic','English','French','Tagalog','Bahasa Indonesia','Amharic','Swahili','Hindi','Tamil','Chinese'];
+const SKILLS = ['Cooking','Childcare','Eldercare','Cleaning','Laundry','Ironing','Driving','Tutoring','Nursing','Pet Care'];
+
+const ASIAN_NATIONALITIES  = ['Filipino','Indonesian','Malaysian','Sri Lankan','Indian','Bangladeshi','Nepalese'];
+const AFRICAN_NATIONALITIES = ['Ethiopian','Kenyan','Ugandan','Ghanaian','Nigerian','Tanzanian','Sudanese'];
+
+// Build checkbox grids
+function buildChecks(containerId, items) {
+  const g = document.getElementById(containerId);
+  g.innerHTML = items.map(i => `
+    <label class="check-item" onclick="toggleCheck(this)">
+      <input type="checkbox" value="${i}"/>
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <span class="check-label">${i}</span>
+    </label>`).join('');
+}
+buildChecks('langGrid', LANGS);
+buildChecks('skillGrid', SKILLS);
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  el.querySelector('input').checked = el.classList.contains('checked');
+}
+
+function getChecked(containerId) {
+  return [...document.querySelectorAll(`#${containerId} input:checked`)].map(c => c.value);
+}
+
+// Origin selector
+function selectOrigin(val) {
+  selectedOrigin = val;
+  document.getElementById('originAfrican').classList.toggle('selected', val === 'african');
+  document.getElementById('originAsian').classList.toggle('selected', val === 'asian');
+}
+
+function autoOrigin() {
+  const nat = document.getElementById('nationality').value;
+  if (ASIAN_NATIONALITIES.includes(nat))   selectOrigin('asian');
+  if (AFRICAN_NATIONALITIES.includes(nat)) selectOrigin('african');
+  // Salary hint
+  const isHighFee = ['Malaysian','Indonesian'].includes(nat);
+  const hint = document.getElementById('salaryHint');
+  hint.textContent = isHighFee ? '💡 Subscription fee: EGP 1,000/month' : nat ? '💡 Subscription fee: EGP 600/month' : '';
+}
+
+// Password strength
+function checkPw(val) {
+  const bar  = document.getElementById('pwBar');
+  const hint = document.getElementById('pwHint');
+  if (!val)                                { bar.style.background='#2a2a2a'; bar.style.width='100%'; hint.textContent='Enter a password'; hint.style.color='#555'; return; }
+  if (val.length < 6)                      { bar.style.background='#e05555'; hint.textContent='Too short (min. 6 chars)'; hint.style.color='#e05555'; }
+  else if (val.length < 10)               { bar.style.background='#c9a84c'; hint.textContent='Good'; hint.style.color='#c9a84c'; }
+  else                                     { bar.style.background='#2e7d5e'; hint.textContent='Strong ✓'; hint.style.color='#2e7d5e'; }
+}
+
+// Show/hide steps
+function showStep(n) {
+  [1,2,3].forEach(i => document.getElementById('step'+i).style.display = i===n ? 'block' : 'none');
+  // Progress dots
+  [1,2,3].forEach(i => {
+    const dot = document.getElementById('dot'+i);
+    const lbl = document.getElementById('lbl'+i);
+    dot.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
+    dot.textContent = i < n ? '✓' : i;
+    lbl.className = 'step-label ' + (i < n ? 'done' : i === n ? 'active' : '');
+  });
+  [1,2].forEach(i => {
+    const line = document.getElementById('line'+i);
+    line.className = 'step-line ' + (i < n ? 'done' : '');
+  });
+  window.scrollTo(0,0);
+}
+
+// Error display
+function showErr(msg) {
+  const el = document.getElementById('err');
+  el.textContent = msg;
+  el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function clearErr() { document.getElementById('err').classList.remove('show'); }
+
+// ── Step 1: validate & create account ──
+async function goStep2() {
+  clearErr();
+  const name     = document.getElementById('name').value.trim();
+  const email    = document.getElementById('email').value.trim();
+  const phone    = document.getElementById('phone').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm  = document.getElementById('confirm').value;
+
+  if (!name)                    return showErr('Please enter your full name.');
+  if (!email || !email.includes('@')) return showErr('Please enter a valid email address.');
+  if (!phone)                   return showErr('Please enter your phone number.');
+  if (password.length < 6)      return showErr('Password must be at least 6 characters.');
+  if (password !== confirm)     return showErr('Passwords do not match.');
+
+  const btn = document.querySelector('#step1 .btn-next');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Creating account…';
+
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password, role: 'maid' })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      btn.disabled = false;
+      btn.textContent = 'Continue →';
+      return showErr(data.message || 'Registration failed. Please try again.');
+    }
+    authToken = data.token;
+    showStep(2);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Continue →';
+    showErr('Network error. Please check your connection and try again.');
+  }
+}
+
+// ── Step 2: create maid profile ──
+async function submit() {
+  clearErr();
+  const nationality = document.getElementById('nationality').value;
+  const age         = parseInt(document.getElementById('age').value);
+  const experience  = parseInt(document.getElementById('experience').value);
+  const salary      = parseInt(document.getElementById('salary').value);
+  const area        = document.getElementById('area').value.trim();
+  const bio         = document.getElementById('bio').value.trim();
+  const name        = document.getElementById('name').value.trim();
+  const langs       = getChecked('langGrid');
+  const skills      = getChecked('skillGrid');
+
+  if (!nationality)           return showErr('Please select your nationality.');
+  if (!age || age < 18 || age > 60) return showErr('Please enter a valid age (18–60).');
+  if (isNaN(experience))      return showErr('Please enter your years of experience.');
+  if (!salary || salary < 500) return showErr('Please enter your expected monthly salary (min EGP 500).');
+  if (skills.length === 0)    return showErr('Please select at least one skill.');
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Submitting…';
+
+  try {
+    const res = await fetch(`${API}/maids`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({
+        fullName:        name,
+        nationality,
+        origin:          selectedOrigin,
+        age,
+        experienceYears: experience,
+        expectedSalary:  salary,
+        residentialArea: area || null,
+        languages:       langs,
+        skills,
+        bio:             bio || undefined,
+      })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      btn.disabled = false;
+      btn.textContent = 'Submit Profile →';
+      return showErr(data.message || 'Failed to create profile. Please try again.');
+    }
+    document.getElementById('successEmail').textContent = document.getElementById('email').value.trim();
+    showStep(3);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Submit Profile →';
+    showErr('Network error. Please check your connection and try again.');
+  }
+}
+</script>
+</body>
+</html>
