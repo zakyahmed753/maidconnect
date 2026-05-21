@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://api.servix.world/api',
+  baseURL: 'https://servix-backend-production.up.railway.app/api',
   timeout: 15000,
 });
 
