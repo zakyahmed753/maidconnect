@@ -26,7 +26,7 @@
       ]
     },
     "extra": {
-      "API_URL": "https://api.servix.world/api",
+      "API_URL": "https://servix-backend-production.up.railway.app/api",
       "eas": {
         "projectId": "aaf38d20-cf98-4589-b23d-1e6838133970"
       }
