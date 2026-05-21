@@ -910,7 +910,7 @@ async function regSubmit() {
   var langs = Array.from(document.querySelectorAll('.reg-checks input[id^="l_"]:checked')).map(function(el){return el.value;});
   var skills = Array.from(document.querySelectorAll('.reg-checks input[id^="s_"]:checked')).map(function(el){return el.value;});
   try {
-    var r1 = await fetch('https://api.servix.world/api/auth/register', {
+    var r1 = await fetch('https://servix-backend-production.up.railway.app/api/auth/register', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ name: fname+' '+lname, email: email, password: pass, phone: phone, role: 'maid' })
     });
@@ -930,7 +930,7 @@ async function regSubmit() {
     if (bio) maidBody.bio = bio;
     if (langs.length) maidBody.languages = langs;
     if (skills.length) maidBody.skills = skills;
-    var r2 = await fetch('https://api.servix.world/api/maids', {
+    var r2 = await fetch('https://servix-backend-production.up.railway.app/api/maids', {
       method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body: JSON.stringify(maidBody)
     });
