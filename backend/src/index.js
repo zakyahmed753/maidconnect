@@ -24,7 +24,16 @@ const io = new Server(server, {
 app.set('io', io);
 
 // ── Middleware ──
-app.use(helmet({ crossOriginResourcePolicy: false }));
+// Raw CORS headers before everything — ensures preflight always passes
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+app.use(helmet({ crossOriginResourcePolicy: false, contentSecurityPolicy: false }));
 
 app.use(cors({
   origin: '*',
