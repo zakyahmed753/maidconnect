@@ -53,7 +53,7 @@ messageSchema.index({ chat: 1, createdAt: -1 });
 const paymentSchema = new mongoose.Schema({
   user:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   type:        { type: String, enum: ['subscription','commission'], required: true },
-  method:      { type: String, enum: ['fawry','vodafone_cash','instapay','amazon_pay'], required: true },
+  method:      { type: String, enum: ['fawry','vodafone_cash','instapay','amazon_pay','paymob'], required: true },
   amount:      { type: Number, required: true }, // EGP
   amountUSD:   { type: Number },
   currency:    { type: String, default: 'EGP' },

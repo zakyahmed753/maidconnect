@@ -48,15 +48,13 @@ export function NotificationsScreen({ navigation }) {
 
 // ─── PaymentResultScreen ───
 export function PaymentResultScreen({ route, navigation }) {
-  const { type, fawryRef, amount, paymentId } = route.params || {};
+  const { amount, paymentId } = route.params || {};
   const completeAuth = useAuthStore(s => s.completeAuth);
   const [completing, setCompleting] = useState(false);
 
   const handleGoHome = async () => {
     setCompleting(true);
     try {
-      // Finalize auth — reads token from SecureStore, sets Zustand state,
-      // which triggers AppNavigator to switch to the correct home screen.
       await completeAuth();
     } catch {
       setCompleting(false);
@@ -64,29 +62,21 @@ export function PaymentResultScreen({ route, navigation }) {
   };
 
   return (
-    <View style={{ flex:1, backgroundColor: type==='fawry' ? '#0a1a0f' : '#0a1208', alignItems:'center', justifyContent:'center', padding:28 }}>
-      <Text style={{ fontSize:60, marginBottom:16 }}>{type==='fawry' ? '🏧' : '🎉'}</Text>
-      <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff8ee', textAlign:'center', marginBottom:8 }}>
-        {type==='fawry' ? 'Fawry Code Ready!' : 'Payment Initiated!'}
+    <View style={{ flex:1, backgroundColor:'#0a1208', alignItems:'center', justifyContent:'center', padding:28 }}>
+      <Text style={{ fontSize:64, marginBottom:16 }}>🎉</Text>
+      <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff8ee', textAlign:'center', marginBottom:10 }}>
+        Payment Submitted!
       </Text>
-      {type==='fawry' && <>
-        <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:20, marginBottom:24 }}>
-          Pay at any Fawry outlet using this reference number:
-        </Text>
-        <View style={{ backgroundColor:'rgba(201,168,76,0.15)', borderWidth:1.5, borderColor:COLORS.gold, borderRadius:8, padding:16, marginBottom:24, width:'100%', alignItems:'center' }}>
-          <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Fawry Reference</Text>
-          <Text style={{ fontFamily:FONTS.display, fontSize:30, color:'#e8c97a' }}>{fawryRef || '---'}</Text>
-          <Text style={{ fontSize:12, color:'rgba(232,201,122,0.5)', marginTop:4 }}>EGP {amount?.toLocaleString()}</Text>
-        </View>
-        <Text style={{ fontSize:11, color:'rgba(255,255,255,0.35)', textAlign:'center', lineHeight:18 }}>
-          Valid for 48 hours. You'll receive a confirmation notification once payment is processed.
-        </Text>
-      </>}
-      {type !== 'fawry' && <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', marginBottom:24 }}>
-        You'll be redirected to complete payment. Check your notifications for confirmation.
-      </Text>}
+      <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:22, marginBottom:28 }}>
+        Your payment of EGP {amount?.toLocaleString()} is being processed by Paymob.{'\n'}
+        You'll receive a notification once it's confirmed.
+      </Text>
+      <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
+        <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Amount Paid</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#e8c97a' }}>EGP {amount?.toLocaleString()}</Text>
+      </View>
       <TouchableOpacity onPress={handleGoHome} disabled={completing}
-        style={{ marginTop:28, backgroundColor:COLORS.gold, paddingHorizontal:28, paddingVertical:14, borderRadius:5, opacity: completing ? 0.6 : 1 }}>
+        style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, opacity: completing ? 0.6 : 1 }}>
         <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
           {completing ? 'Loading…' : 'Go to Home →'}
         </Text>

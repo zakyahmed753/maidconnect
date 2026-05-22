@@ -3,273 +3,160 @@ const axios = require('axios');
 const { v4: uuidv4 } = require('uuid');
 const { Payment, Notification } = require('../models/index');
 const Maid = require('../models/Maid');
-const { HouseWife } = require('../models/index');
 
-// ── EGP conversion rate (update as needed) ──
-const USD_TO_EGP = 49;
+const PAYMOB_BASE = 'https://accept.paymob.com/api';
 
-// ── Subscription prices in EGP ──
+// Prices in piasters (EGP × 100) — Paymob requires piasters
 const PRICES = {
-  subscription_monthly: Math.round(9 * USD_TO_EGP),   // ~441 EGP
-  subscription_annual:  Math.round(79 * USD_TO_EGP),  // ~3871 EGP
+  subscription_monthly: 44100,  // 441 EGP
+  subscription_annual:  387100, // 3871 EGP
 };
+const COMMISSION_RATE = 0.20;
 
-const COMMISSION_RATE = 0.20; // 20%
+// ── Paymob 3-step auth flow ──
+async function paymobAuth() {
+  const res = await axios.post(`${PAYMOB_BASE}/auth/tokens`, {
+    api_key: process.env.PAYMOB_API_KEY,
+  });
+  return res.data.token;
+}
+
+async function createPaymobOrder(authToken, amountCents, merchantOrderId) {
+  const res = await axios.post(`${PAYMOB_BASE}/ecommerce/orders`, {
+    auth_token: authToken,
+    delivery_needed: false,
+    amount_cents: amountCents,
+    currency: 'EGP',
+    merchant_order_id: merchantOrderId,
+    items: [],
+  });
+  return res.data.id;
+}
+
+async function createPaymentKey(authToken, orderId, amountCents, billingData) {
+  const res = await axios.post(`${PAYMOB_BASE}/acceptance/payment_keys`, {
+    auth_token: authToken,
+    amount_cents: amountCents,
+    expiration: 3600,
+    order_id: orderId,
+    billing_data: billingData,
+    currency: 'EGP',
+    integration_id: parseInt(process.env.PAYMOB_INTEGRATION_ID),
+    lock_order_when_paid: false,
+  });
+  return res.data.token;
+}
 
 // ─────────────────────────────────────────────
-// 1. FAWRY PAYMENT
+// INITIATE PAYMOB PAYMENT
+// POST /api/payments/paymob/initiate
 // ─────────────────────────────────────────────
-exports.initFawry = async (req, res) => {
+exports.initiatePaymob = async (req, res) => {
   try {
     const { type, plan, maidProfileId, chatId } = req.body;
-    const merchantRefNum = uuidv4();
+    const merchantOrderId = uuidv4();
 
-    let amount, description;
+    let amountCents, description;
     if (type === 'subscription') {
-      amount = PRICES[`subscription_${plan}`];
-      description = `MaidConnect ${plan} subscription`;
+      amountCents = PRICES[`subscription_${plan}`];
+      description = `Servix ${plan} subscription`;
     } else if (type === 'commission') {
       const maid = await Maid.findById(maidProfileId);
-      amount = Math.round(maid.expectedSalary * USD_TO_EGP * COMMISSION_RATE);
-      description = `Hiring commission for ${maid.fullName}`;
+      if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+      amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
+      description = `Commission for ${maid.fullName}`;
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid payment type' });
     }
 
-    // Create pending payment record
     const payment = await Payment.create({
-      user: req.user._id, type, method: 'fawry',
-      amount, currency: 'EGP',
-      amountUSD: Math.round(amount / USD_TO_EGP),
-      maidProfile: maidProfileId, hireRef: chatId,
-      subscriptionPlan: plan, merchantRefNum,
+      user: req.user._id,
+      type,
+      method: 'paymob',
+      amount: amountCents / 100,
+      currency: 'EGP',
+      maidProfile: maidProfileId || null,
+      hireRef: chatId || null,
+      subscriptionPlan: plan || null,
+      merchantRefNum: merchantOrderId,
       commissionRate: type === 'commission' ? COMMISSION_RATE * 100 : null,
     });
 
-    // Build Fawry signature
-    // Signature = MD5(merchantCode + merchantRefNum + customerProfileId + returnUrl + amount + securityKey)
-    const signatureStr = `${process.env.FAWRY_MERCHANT_CODE}${merchantRefNum}${req.user._id}${amount.toFixed(2)}${process.env.FAWRY_SECURITY_KEY}`;
-    const signature = crypto.createHash('md5').update(signatureStr).digest('hex');
-
-    const fawryPayload = {
-      merchantCode:      process.env.FAWRY_MERCHANT_CODE,
-      merchantRefNum,
-      customerProfileId: req.user._id.toString(),
-      customerEmail:     req.user.email,
-      paymentMethod:     'PayAtFawry', // or 'CARD', 'VALU', etc.
-      amount:            amount.toFixed(2),
-      currencyCode:      'EGP',
-      language:          'ar-eg',
-      chargeItems: [{
-        itemId:      payment._id.toString(),
-        description,
-        price:       amount.toFixed(2),
-        quantity:    1
-      }],
-      signature,
-      returnUrl: `${process.env.FRONTEND_URL}/payment/callback`,
-      authCaptureModePayment: false
+    const billingData = {
+      first_name:      (req.user.name || 'Customer').split(' ')[0],
+      last_name:       (req.user.name || 'User').split(' ')[1] || 'User',
+      email:           req.user.email,
+      phone_number:    req.user.phone || '+20000000000',
+      apartment:       'NA', floor: 'NA', street: 'NA',
+      building:        'NA', shipping_method: 'NA',
+      postal_code:     'NA', city: 'Cairo',
+      country:         'EG', state: 'Cairo',
     };
 
-    const fawryRes = await axios.post(
-      `${process.env.FAWRY_BASE_URL}/charge/request`,
-      fawryPayload
-    );
+    const authToken  = await paymobAuth();
+    const orderId    = await createPaymobOrder(authToken, amountCents, merchantOrderId);
+    const paymentKey = await createPaymentKey(authToken, orderId, amountCents, billingData);
 
     await Payment.findByIdAndUpdate(payment._id, {
-      gatewayRef: fawryRes.data.referenceNumber,
-      fawryRefNum: fawryRes.data.referenceNumber,
-      gatewayResponse: fawryRes.data
+      gatewayRef: String(orderId),
+      gatewayResponse: { paymobOrderId: orderId },
     });
 
     res.json({
       success: true,
       paymentId: payment._id,
-      fawryRefNum: fawryRes.data.referenceNumber,
-      amount, currency: 'EGP',
-      message: 'Pay at any Fawry outlet using this reference number'
+      paymentKey,
+      iframeUrl: `https://accept.paymob.com/api/acceptance/iframes/${process.env.PAYMOB_IFRAME_ID}?payment_token=${paymentKey}`,
+      amount: amountCents / 100,
+      currency: 'EGP',
+      description,
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    console.error('Paymob initiate error:', err.response?.data || err.message);
+    res.status(500).json({ success: false, message: err.response?.data?.message || err.message });
   }
 };
 
 // ─────────────────────────────────────────────
-// 2. VODAFONE CASH
+// PAYMOB WEBHOOK CALLBACK
+// POST /api/payments/paymob/callback
 // ─────────────────────────────────────────────
-exports.initVodafoneCash = async (req, res) => {
+exports.paymobCallback = async (req, res) => {
   try {
-    const { type, plan, maidProfileId, chatId, phoneNumber } = req.body;
-    const merchantRefNum = uuidv4();
-
-    let amount;
-    if (type === 'subscription') {
-      amount = PRICES[`subscription_${plan}`];
-    } else {
-      const maid = await Maid.findById(maidProfileId);
-      amount = Math.round(maid.expectedSalary * USD_TO_EGP * COMMISSION_RATE);
-    }
-
-    const payment = await Payment.create({
-      user: req.user._id, type, method: 'vodafone_cash',
-      amount, currency: 'EGP', amountUSD: Math.round(amount / USD_TO_EGP),
-      maidProfile: maidProfileId, hireRef: chatId,
-      subscriptionPlan: plan, merchantRefNum
-    });
-
-    // Vodafone Cash API call
-    const vcRes = await axios.post(`${process.env.VODAFONE_BASE_URL}/payment/initiate`, {
-      merchantId:       process.env.VODAFONE_MERCHANT_ID,
-      merchantPassword: process.env.VODAFONE_MERCHANT_PASSWORD,
-      amount:           amount.toString(),
-      merchantRefNum,
-      msisdn:           phoneNumber,  // customer vodafone number
-      lang:             'ar',
-      returnUrl:        `${process.env.FRONTEND_URL}/payment/callback`
-    });
-
-    await Payment.findByIdAndUpdate(payment._id, {
-      gatewayRef: vcRes.data.transactionId,
-      gatewayResponse: vcRes.data
-    });
-
-    res.json({
-      success: true,
-      paymentId: payment._id,
-      transactionId: vcRes.data.transactionId,
-      redirectUrl: vcRes.data.redirectUrl,
-      amount, currency: 'EGP'
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-// 3. INSTAPAY
-// ─────────────────────────────────────────────
-exports.initInstaPay = async (req, res) => {
-  try {
-    const { type, plan, maidProfileId, chatId } = req.body;
-    const merchantRefNum = uuidv4();
-
-    let amount;
-    if (type === 'subscription') {
-      amount = PRICES[`subscription_${plan}`];
-    } else {
-      const maid = await Maid.findById(maidProfileId);
-      amount = Math.round(maid.expectedSalary * USD_TO_EGP * COMMISSION_RATE);
-    }
-
-    const payment = await Payment.create({
-      user: req.user._id, type, method: 'instapay',
-      amount, currency: 'EGP', amountUSD: Math.round(amount / USD_TO_EGP),
-      maidProfile: maidProfileId, hireRef: chatId,
-      subscriptionPlan: plan, merchantRefNum
-    });
-
-    const ipRes = await axios.post(`${process.env.INSTAPAY_BASE_URL}/payment/create`, {
-      apiKey:      process.env.INSTAPAY_API_KEY,
-      amount:      amount / 100, // InstaPay uses pounds
-      currency:    'EGP',
-      referenceId: merchantRefNum,
-      description: `MaidConnect ${type}`,
-      callbackUrl: `${process.env.FRONTEND_URL}/payment/callback`,
-      customerEmail: req.user.email
-    }, {
-      headers: { Authorization: `Bearer ${process.env.INSTAPAY_API_KEY}` }
-    });
-
-    await Payment.findByIdAndUpdate(payment._id, {
-      gatewayRef: ipRes.data.paymentId,
-      gatewayResponse: ipRes.data
-    });
-
-    res.json({
-      success: true,
-      paymentId: payment._id,
-      paymentUrl: ipRes.data.paymentUrl,
-      amount, currency: 'EGP'
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-// 4. AMAZON PAY
-// ─────────────────────────────────────────────
-exports.initAmazonPay = async (req, res) => {
-  try {
-    const { type, plan, maidProfileId, chatId } = req.body;
-    const merchantRefNum = uuidv4();
-
-    let amount;
-    if (type === 'subscription') {
-      amount = PRICES[`subscription_${plan}`];
-    } else {
-      const maid = await Maid.findById(maidProfileId);
-      amount = Math.round(maid.expectedSalary * USD_TO_EGP * COMMISSION_RATE);
-    }
-
-    const payment = await Payment.create({
-      user: req.user._id, type, method: 'amazon_pay',
-      amount, currency: 'EGP', amountUSD: Math.round(amount / USD_TO_EGP),
-      maidProfile: maidProfileId, hireRef: chatId,
-      subscriptionPlan: plan, merchantRefNum
-    });
-
-    // Amazon Pay Create Charge Permission
-    const amzRes = await axios.post(
-      `https://pay-api.amazon.${process.env.AMAZON_PAY_REGION}/v2/chargePermissions`,
-      {
-        webCheckoutDetails: {
-          checkoutReviewReturnUrl: `${process.env.FRONTEND_URL}/payment/callback`,
-          checkoutResultReturnUrl: `${process.env.FRONTEND_URL}/payment/result`
-        },
-        storeId: process.env.AMAZON_PAY_MERCHANT_ID,
-        chargeAmount: { amount: (amount / 100).toFixed(2), currencyCode: 'EGP' },
-        merchantMetadata: { merchantReferenceId: merchantRefNum }
-      },
-      {
-        headers: {
-          'x-amz-pay-Idempotency-Key': merchantRefNum,
-          Authorization: `Bearer ${process.env.AMAZON_PAY_ACCESS_KEY}`
-        }
+    // Verify HMAC if secret is configured
+    if (process.env.PAYMOB_HMAC_SECRET) {
+      const { hmac } = req.query;
+      const obj = req.body.obj || {};
+      const fields = [
+        obj.amount_cents, obj.created_at, obj.currency,
+        obj.error_occured, obj.has_parent_transaction, obj.id,
+        obj.integration_id, obj.is_3d_secure, obj.is_auth,
+        obj.is_capture, obj.is_refunded, obj.is_standalone_payment,
+        obj.is_voided, obj.order?.id, obj.owner, obj.pending,
+        obj.source_data?.pan, obj.source_data?.sub_type,
+        obj.source_data?.type, obj.success,
+      ];
+      const calculated = crypto
+        .createHmac('sha512', process.env.PAYMOB_HMAC_SECRET)
+        .update(fields.join(''))
+        .digest('hex');
+      if (calculated !== hmac) {
+        return res.status(401).json({ success: false, message: 'Invalid HMAC' });
       }
-    );
+    }
 
-    await Payment.findByIdAndUpdate(payment._id, {
-      gatewayRef: amzRes.data.chargePermissionId,
-      gatewayResponse: amzRes.data
-    });
+    const obj = req.body.obj || {};
+    const merchantOrderId = obj.order?.merchant_order_id;
+    const success = obj.success === true || obj.success === 'true';
 
-    res.json({
-      success: true,
-      paymentId: payment._id,
-      amazonPayUrl: amzRes.data.webCheckoutDetails?.amazonPayRedirectUrl,
-      amount, currency: 'EGP'
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
-
-// ─────────────────────────────────────────────
-// 5. PAYMENT CALLBACK / WEBHOOK
-// ─────────────────────────────────────────────
-exports.paymentCallback = async (req, res) => {
-  try {
-    const { merchantRefNum, paymentStatus, referenceNumber } = req.body;
-
-    const payment = await Payment.findOne({ merchantRefNum });
+    const payment = await Payment.findOne({ merchantRefNum: merchantOrderId });
     if (!payment) return res.status(404).json({ success: false });
 
-    if (paymentStatus === 'PAID' || paymentStatus === 'success' || paymentStatus === 'COMPLETED') {
+    if (success) {
       payment.status = 'completed';
       payment.paidAt = Date.now();
-      payment.gatewayRef = referenceNumber || payment.gatewayRef;
+      payment.gatewayRef = String(obj.order?.id || payment.gatewayRef);
       await payment.save();
-
-      // Activate subscription or confirm hire
       await handlePaymentSuccess(payment);
     } else {
       payment.status = 'failed';
@@ -278,10 +165,14 @@ exports.paymentCallback = async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
+    console.error('Paymob callback error:', err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+// ─────────────────────────────────────────────
+// SHARED: activate subscription / confirm hire
+// ─────────────────────────────────────────────
 async function handlePaymentSuccess(payment) {
   if (payment.type === 'subscription') {
     const now = new Date();
@@ -292,26 +183,25 @@ async function handlePaymentSuccess(payment) {
       endDate.setMonth(endDate.getMonth() + 1);
     }
     await Maid.findOneAndUpdate({ user: payment.user }, {
-      'subscription.plan': payment.subscriptionPlan,
-      'subscription.status': 'active',
+      'subscription.plan':      payment.subscriptionPlan,
+      'subscription.status':    'active',
       'subscription.startDate': now,
-      'subscription.endDate': endDate,
-      'subscription.paymentId': payment._id
+      'subscription.endDate':   endDate,
+      'subscription.paymentId': payment._id,
     });
     await Notification.create({
       user: payment.user, type: 'subscription',
       title: '🎉 Subscription Activated!',
-      body: `Your ${payment.subscriptionPlan} subscription is now active.`
+      body: `Your ${payment.subscriptionPlan} subscription is now active.`,
     });
   } else if (payment.type === 'commission') {
-    // Mark maid as hired
     const { HouseWife, Chat } = require('../models/index');
     const hw = await HouseWife.findOne({ user: payment.user });
     if (hw && payment.maidProfile) {
       hw.hiredMaids.push({
         maid: payment.maidProfile,
         commissionPaid: true,
-        commissionAmount: payment.amount
+        commissionAmount: payment.amount,
       });
       await hw.save();
     }
@@ -321,12 +211,12 @@ async function handlePaymentSuccess(payment) {
     await Notification.create({
       user: payment.user, type: 'hire_confirmed',
       title: '🎉 Hire Confirmed!',
-      body: 'Commission paid. The maid has been officially hired!'
+      body: 'Commission paid. The maid has been officially hired!',
     });
   }
 }
 
-// ── Get Payment History ──
+// ── Payment history ──
 exports.getHistory = async (req, res) => {
   try {
     const payments = await Payment.find({ user: req.user._id })
@@ -338,7 +228,7 @@ exports.getHistory = async (req, res) => {
   }
 };
 
-// ── Check Payment Status ──
+// ── Check individual payment status ──
 exports.checkStatus = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);

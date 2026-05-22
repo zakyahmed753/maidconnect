@@ -61,12 +61,9 @@ export const chatsAPI = {
 };
 
 export const paymentsAPI = {
-  fawry:        (data) => api.post('/payments/fawry', data),
-  vodafoneCash: (data) => api.post('/payments/vodafone-cash', data),
-  instapay:     (data) => api.post('/payments/instapay', data),
-  amazonPay:    (data) => api.post('/payments/amazon-pay', data),
-  getHistory:   ()     => api.get('/payments/history'),
-  checkStatus:  (id)   => api.get(`/payments/${id}/status`),
+  initiatePaymob: (data) => api.post('/payments/paymob/initiate', data),
+  getHistory:     ()     => api.get('/payments/history'),
+  checkStatus:    (id)   => api.get(`/payments/${id}/status`),
 };
 
 export const supportAPI = {
