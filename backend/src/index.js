@@ -4,7 +4,6 @@ dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -23,8 +22,7 @@ const io = new Server(server, {
 // Attach io to app for use in controllers
 app.set('io', io);
 
-// ── Middleware ──
-// Raw CORS headers before everything — ensures preflight always passes
+// ── CORS — must be first, before helmet or anything else ──
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
@@ -34,12 +32,6 @@ app.use((req, res, next) => {
 });
 
 app.use(helmet({ crossOriginResourcePolicy: false, contentSecurityPolicy: false }));
-
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
