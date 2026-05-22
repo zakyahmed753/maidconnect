@@ -26,7 +26,7 @@ export default function RegisterScreen({ navigation }) {
   const { t } = useTranslation();
   const [form, setForm] = useState({
     name:'', email:'', password:'', phone:'', nationality:'', age:'',
-    experienceYears:'', expectedSalary:'', bio:'', skills:[], idNumber:'',
+    experienceYears:'', expectedSalary:'', bio:'', skills:[], languages:[], idNumber:'',
   });
   const [photos, setPhotos] = useState([]);
   const [idPhoto, setIdPhoto] = useState(null); // passport photo (non-Egyptian only)
@@ -35,8 +35,19 @@ export default function RegisterScreen({ navigation }) {
 
   const isEgyptian = form.nationality === 'Egypt';
 
-  const SKILLS = ['Cooking','Childcare','Eldercare','Cleaning','Laundry','Ironing'];
+  const SKILLS = ['Cooking','Childcare','Eldercare','Cleaning','Laundry','Ironing','Driving','Pet Care'];
+  const LANGUAGES = ['Arabic','English','French','Amharic','Swahili','Filipino'];
   const toggleSkill = (s) => setForm(f => ({ ...f, skills: f.skills.includes(s) ? f.skills.filter(x=>x!==s) : [...f.skills, s] }));
+  const toggleLang = (l) => setForm(f => ({ ...f, languages: f.languages.includes(l) ? f.languages.filter(x=>x!==l) : [...f.languages, l] }));
+
+  const getOrigin = (nat) => {
+    if (nat === 'Egypt') return 'egyptian';
+    const african = ['Ethiopia','Kenya','Uganda','Tanzania','Sudan','South Sudan','Ghana','Nigeria','Cameroon','Côte d\'Ivoire','Senegal','Somalia','Rwanda','Burundi','Madagascar','Congo','Mozambique','Zimbabwe','Zambia','Malawi','Togo','Sierra Leone','Eritrea','Guinea','Morocco'];
+    if (african.includes(nat)) return 'african';
+    const asian = ['Philippines','Indonesia','Malaysia','Sri Lanka','India','Bangladesh','Nepal','Vietnam','Myanmar'];
+    if (asian.includes(nat)) return 'asian';
+    return 'other';
+  };
 
   const pickPhoto = async () => {
     if (photos.length >= 5) return Toast.show({ type:'info', text1: t('max_photos') });
@@ -59,6 +70,7 @@ export default function RegisterScreen({ navigation }) {
     }
 
     if (!form.nationality) return Toast.show({ type:'error', text1: 'Select nationality' });
+    if (!form.bio.trim()) return Toast.show({ type:'error', text1: 'Bio is required' });
 
     // ID validation
     if (isEgyptian) {
@@ -88,11 +100,12 @@ export default function RegisterScreen({ navigation }) {
         fullName: form.name,
         age: ageNum,
         nationality: form.nationality,
-        origin: ['Ethiopia','Kenya','Ghana','Nigeria','Guinea','Congo','Ivory Coast','Uganda','Tanzania','Cameroon','Senegal','Sudan','Somalia'].includes(form.nationality) ? 'african' : 'asian',
+        origin: getOrigin(form.nationality),
         experienceYears: Number(form.experienceYears),
         expectedSalary: Number(form.expectedSalary),
         bio: form.bio,
         skills: form.skills,
+        languages: form.languages,
         photos: uploadedPhotos,
       });
 
@@ -185,8 +198,18 @@ export default function RegisterScreen({ navigation }) {
         )}
 
 
-        <Text style={styles.label}>{t('bio')}</Text>
+        <Text style={styles.label}>{t('bio')} *</Text>
         <TextInput style={[styles.input, { height:80, textAlignVertical:'top' }]} value={form.bio} onChangeText={v=>upd('bio',v)} multiline placeholder="Describe your experience…" placeholderTextColor={COLORS.muted}/>
+
+        <Text style={styles.label}>Languages Spoken</Text>
+        <View style={styles.skillsWrap}>
+          {LANGUAGES.map(l => (
+            <TouchableOpacity key={l} onPress={() => toggleLang(l)}
+              style={[styles.skillChip, form.languages.includes(l) && styles.skillChipOn]}>
+              <Text style={[styles.skillTxt, form.languages.includes(l) && styles.skillTxtOn]}>{l}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <Text style={styles.label}>{t('skills')}</Text>
         <View style={styles.skillsWrap}>

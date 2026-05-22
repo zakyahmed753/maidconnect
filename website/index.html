@@ -678,9 +678,15 @@
           <label class="reg-label" data-en="Nationality" data-ar="الجنسية">Nationality</label>
           <select class="reg-input" id="r_nat" onchange="updateOriginAndFee()">
             <option value="">Select...</option>
-            <option>Ethiopian</option><option>Kenyan</option><option>Ugandan</option><option>Sudanese</option>
-            <option>Filipino</option><option>Malaysian</option><option>Indonesian</option>
-            <option>Egyptian</option><option>Other</option>
+            <option>Bangladesh</option><option>Burundi</option><option>Cameroon</option><option>Congo</option>
+            <option>Côte d'Ivoire</option><option>Egypt</option><option>Eritrea</option><option>Ethiopia</option>
+            <option>Ghana</option><option>Guinea</option><option>India</option><option>Indonesia</option>
+            <option>Kenya</option><option>Madagascar</option><option>Malawi</option><option>Malaysia</option>
+            <option>Morocco</option><option>Mozambique</option><option>Myanmar</option><option>Nepal</option>
+            <option>Nigeria</option><option>Philippines</option><option>Rwanda</option><option>Senegal</option>
+            <option>Sierra Leone</option><option>Somalia</option><option>South Sudan</option><option>Sri Lanka</option>
+            <option>Sudan</option><option>Tanzania</option><option>Togo</option><option>Uganda</option>
+            <option>Vietnam</option><option>Zambia</option><option>Zimbabwe</option><option>Other</option>
           </select>
         </div>
         <div class="reg-field">
@@ -707,15 +713,6 @@
         </div>
       </div>
       <div class="reg-field">
-        <label class="reg-label" data-en="Area / Governorate" data-ar="المنطقة / المحافظة">Area / Governorate</label>
-        <select class="reg-input" id="r_area">
-          <option value="">Select area...</option>
-          <option>Cairo</option><option>Giza</option><option>Alexandria</option><option>6th of October</option>
-          <option>New Cairo</option><option>Heliopolis</option><option>Maadi</option><option>Zamalek</option>
-          <option>Nasr City</option><option>Sharm El-Sheikh</option><option>Hurghada</option><option>Other</option>
-        </select>
-      </div>
-      <div class="reg-field">
         <label class="reg-label" data-en="Languages Spoken" data-ar="اللغات المتحدثة">Languages Spoken</label>
         <div class="reg-checks">
           <div class="reg-check-item"><input type="checkbox" id="l_ar" value="Arabic"/><label for="l_ar">🇪🇬 Arabic</label></div>
@@ -740,7 +737,7 @@
         </div>
       </div>
       <div class="reg-field">
-        <label class="reg-label" data-en="Short Bio (optional)" data-ar="نبذة قصيرة (اختياري)">Short Bio (optional)</label>
+        <label class="reg-label" data-en="Short Bio *" data-ar="نبذة قصيرة *">Short Bio *</label>
         <textarea class="reg-input" id="r_bio" rows="3" placeholder="Tell families a little about yourself and your experience..." style="resize:vertical;min-height:72px"></textarea>
       </div>
       <button class="reg-btn" id="regSubmitBtn" onclick="regSubmit()">Create My Profile →</button>
@@ -823,18 +820,19 @@ function setOrigin(val) {
 }
 
 function getNatOrigin(nat) {
-  var n = (nat || '').toLowerCase();
-  if (n === 'egyptian') return 'egyptian';
-  var asian = ['filipino','malaysian','indonesian'];
-  if (asian.includes(n)) return 'asian';
-  var african = ['ethiopian','kenyan','ugandan','sudanese'];
-  if (african.includes(n)) return 'african';
+  if (nat === 'Egypt') return 'egyptian';
+  var african = ['Ethiopia','Kenya','Uganda','Tanzania','Sudan','South Sudan','Ghana','Nigeria','Cameroon',
+    "Côte d'Ivoire",'Senegal','Somalia','Rwanda','Burundi','Madagascar','Congo','Mozambique','Zimbabwe',
+    'Zambia','Malawi','Togo','Sierra Leone','Eritrea','Guinea','Morocco'];
+  if (african.includes(nat)) return 'african';
+  var asian = ['Philippines','Indonesia','Malaysia','Sri Lanka','India','Bangladesh','Nepal','Vietnam','Myanmar'];
+  if (asian.includes(nat)) return 'asian';
   return 'other';
 }
 
 function updateOriginAndFee() {
   var nat = document.getElementById('r_nat').value || '';
-  var highFee = ['Malaysian','Indonesian'].includes(nat);
+  var highFee = ['Malaysia','Indonesia'].includes(nat);
   var hint = document.getElementById('salaryHint');
   if (highFee) {
     hint.style.display = 'block';
@@ -895,18 +893,18 @@ async function regSubmit() {
   var age   = document.getElementById('r_age').value;
   var exp   = document.getElementById('r_exp').value;
   var sal   = document.getElementById('r_salary').value;
+  var bio   = document.getElementById('r_bio').value.trim();
   if (!nat) return showRegError('Please select your nationality.');
   if (!age) return showRegError('Please enter your age.');
   if (!exp && exp !== '0') return showRegError('Please enter your years of experience.');
   if (!sal) return showRegError('Please enter your expected salary.');
+  if (!bio) return showRegError('Please write a short bio.');
   var btn = document.getElementById('regSubmitBtn');
   btn.disabled = true;
   btn.textContent = 'Submitting...';
   var email = document.getElementById('r_email').value.trim();
   var phone = document.getElementById('r_phone').value.trim();
   var pass  = document.getElementById('r_pass').value;
-  var area  = document.getElementById('r_area').value;
-  var bio   = document.getElementById('r_bio').value.trim();
   var langs = Array.from(document.querySelectorAll('.reg-checks input[id^="l_"]:checked')).map(function(el){return el.value;});
   var skills = Array.from(document.querySelectorAll('.reg-checks input[id^="s_"]:checked')).map(function(el){return el.value;});
   try {
@@ -926,8 +924,7 @@ async function regSubmit() {
       experienceYears: parseInt(exp),
       expectedSalary: parseInt(sal)
     };
-    if (area) maidBody.residentialArea = area;
-    if (bio) maidBody.bio = bio;
+    maidBody.bio = bio;
     if (langs.length) maidBody.languages = langs;
     if (skills.length) maidBody.skills = skills;
     var r2 = await fetch('https://servix-backend-production.up.railway.app/api/maids', {
