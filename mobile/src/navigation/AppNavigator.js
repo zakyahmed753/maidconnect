@@ -115,7 +115,7 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown:false, cardStyle:{ backgroundColor:COLORS.cream } }}>
         {!token ? (
-          // Auth flow (unauthenticated + mid-registration before completeAuth)
+          // Unauthenticated + mid-registration (completeAuth not yet called)
           <>
             <Stack.Screen name="Splash"             component={SplashScreen}/>
             <Stack.Screen name="Login"              component={LoginScreen}/>
@@ -127,11 +127,21 @@ export default function AppNavigator() {
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
           </>
-        ) : user?.role === 'maid' && profile?.verificationStatus === 'pending' ? (
-          // Maid logged back in while still awaiting identity verification
+        ) : user?.role === 'maid' && profile && (
+            profile.verificationStatus === 'pending' ||
+            profile.approvalStatus !== 'approved'
+          ) ? (
+          // Maid awaiting admin approval
           <>
             <Stack.Screen name="PendingApproval"    component={PendingApprovalScreen}/>
             <Stack.Screen name="SelfieVerification" component={SelfieVerificationScreen}/>
+            <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
+            <Stack.Screen name="Payment"            component={PaymentScreen}/>
+            <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
+          </>
+        ) : user?.role === 'maid' && profile?.subscription?.status !== 'active' ? (
+          // Approved but subscription not yet paid — go straight to subscription
+          <>
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>

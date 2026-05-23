@@ -191,6 +191,58 @@ exports.submitVerification = async (req, res) => {
   }
 };
 
+// ── Submit Review (housewife only, must have hired the maid) ──
+exports.submitReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const maidId = req.params.id;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be 1–5' });
+    }
+
+    const { HouseWife, Review } = require('../models/index');
+
+    const hw = await HouseWife.findOne({ user: req.user._id });
+    const wasHired = hw?.hiredMaids?.some(h => h.maid.toString() === maidId && h.commissionPaid);
+    if (!wasHired) {
+      return res.status(403).json({ success: false, message: 'You can only review a maid you have hired' });
+    }
+
+    // Upsert — one review per housewife per maid
+    const review = await Review.findOneAndUpdate(
+      { maid: maidId, housewife: req.user._id },
+      { rating, comment, createdAt: new Date() },
+      { upsert: true, new: true }
+    );
+
+    // Recalculate average rating on the maid document
+    const allReviews = await Review.find({ maid: maidId });
+    const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+    await Maid.findByIdAndUpdate(maidId, {
+      rating: Math.round(avg * 10) / 10,
+      reviewCount: allReviews.length
+    });
+
+    res.json({ success: true, review });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Get Reviews for a Maid ──
+exports.getMaidReviews = async (req, res) => {
+  try {
+    const { Review } = require('../models/index');
+    const reviews = await Review.find({ maid: req.params.id })
+      .populate('housewife', 'name')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, reviews });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Add Photo to Maid Profile ──
 exports.addPhoto = async (req, res) => {
   try {

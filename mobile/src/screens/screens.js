@@ -11,7 +11,11 @@ import { COLORS, FONTS } from '../utils/theme';
 
 export function NotificationsScreen({ navigation }) {
   const [notifs, setNotifs] = useState([]);
-  useEffect(() => { notificationsAPI.getAll().then(r => setNotifs(r.data.notifications)).catch(()=>{}); }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      notificationsAPI.getAll().then(r => setNotifs(r.data.notifications || [])).catch(()=>{});
+    }, [])
+  );
 
   const markRead = async (id) => {
     await notificationsAPI.markRead(id);
@@ -531,12 +535,15 @@ export function AnalyticsScreen({ navigation }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    maidsAPI.getMyProfile()
-      .then(r => setStats(r.data?.maid?.stats || {}))
-      .catch(() => setStats({}))
-      .finally(() => setLoading(false));
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoading(true);
+      maidsAPI.getMyProfile()
+        .then(r => setStats(r.data?.maid?.stats || {}))
+        .catch(() => setStats({}))
+        .finally(() => setLoading(false));
+    }, [])
+  );
 
   const rows = [
     { icon:'👁️', label:'Profile Views',   value: stats?.views     ?? 0 },
@@ -596,7 +603,7 @@ export function PaymentHistoryScreen({ navigation }) {
   }, []);
 
   const statusColor = { completed:'#2e7d5e', pending:'#c9a84c', failed:'#e05555', refunded:'#888' };
-  const methodIcon  = { fawry:'🏧', vodafone_cash:'📱', instapay:'💸', amazon_pay:'🛒' };
+  const methodIcon  = { fawry:'🏧', vodafone_cash:'📱', instapay:'💸', amazon_pay:'🛒', paymob:'💳' };
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>

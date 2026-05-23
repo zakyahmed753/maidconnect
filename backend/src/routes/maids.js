@@ -13,5 +13,7 @@ router.post('/me/photos',              protect, maidOnly, mc.addPhoto);
 router.post('/me/verification',        protect, maidOnly, mc.submitVerification);
 router.delete('/me/photos/:photoId',   protect, maidOnly, mc.deletePhoto);
 router.post('/:id/like',               protect, mc.toggleLike);
+router.post('/:id/reviews',            protect, mc.submitReview);
+router.get('/:id/reviews',             protect, mc.getMaidReviews);
 
 module.exports = router;

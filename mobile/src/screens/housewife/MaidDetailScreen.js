@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { maidsAPI, chatsAPI } from '../../services/api';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
@@ -8,10 +8,39 @@ export default function MaidDetailScreen({ route, navigation }) {
   const { maid } = route.params;
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reviewModal, setReviewModal] = useState(false);
+  const [reviewStar, setReviewStar] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    maidsAPI.getReviews(maid._id)
+      .then(r => setReviews(r.data?.reviews || []))
+      .catch(() => {});
+  }, []);
 
   const handleLike = async () => {
     try { await maidsAPI.toggleLike(maid._id); setLiked(l => !l); }
     catch { Toast.show({ type:'error', text1:'Failed' }); }
+  };
+
+  const handleReviewSubmit = async () => {
+    if (reviewStar === 0) return Toast.show({ type: 'error', text1: 'Please select a star rating' });
+    setReviewLoading(true);
+    try {
+      await maidsAPI.submitReview(maid._id, { rating: reviewStar, comment: reviewComment.trim() });
+      Toast.show({ type: 'success', text1: 'Review submitted!' });
+      setReviewModal(false);
+      setReviewStar(0);
+      setReviewComment('');
+      const r = await maidsAPI.getReviews(maid._id);
+      setReviews(r.data?.reviews || []);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to submit review' });
+    } finally {
+      setReviewLoading(false);
+    }
   };
 
   const handleOpenChat = async () => {
@@ -88,8 +117,65 @@ export default function MaidDetailScreen({ route, navigation }) {
               {maid.languages.map(l=><View key={l} style={styles.skillPill}><Text style={styles.skillTxt}>{l}</Text></View>)}
             </View>
           </>}
+
+          {/* Reviews section */}
+          <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:16 }}>
+            <Text style={styles.secTitle}>Reviews</Text>
+            <TouchableOpacity onPress={() => setReviewModal(true)} style={{ backgroundColor:COLORS.gold, paddingHorizontal:12, paddingVertical:5, borderRadius:4 }}>
+              <Text style={{ fontSize:11, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>✍️ Write Review</Text>
+            </TouchableOpacity>
+          </View>
+          {reviews.length === 0
+            ? <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:8 }}>No reviews yet. Be the first!</Text>
+            : reviews.map(rv => (
+              <View key={rv._id} style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, marginBottom:8 }}>
+                <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:4 }}>
+                  <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark }}>{rv.housewife?.name || 'Customer'}</Text>
+                  <Text style={{ fontSize:13, color:COLORS.gold }}>{'⭐'.repeat(rv.rating)}</Text>
+                </View>
+                {rv.comment ? <Text style={{ fontSize:12, color:COLORS.muted, lineHeight:18 }}>{rv.comment}</Text> : null}
+                <Text style={{ fontSize:10, color:COLORS.muted, marginTop:4 }}>{new Date(rv.createdAt).toLocaleDateString()}</Text>
+              </View>
+            ))
+          }
         </View>
       </ScrollView>
+
+      {/* Review Modal */}
+      <Modal visible={reviewModal} transparent animationType="slide" onRequestClose={() => setReviewModal(false)}>
+        <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':'height'}>
+          <TouchableOpacity style={{ flex:1, backgroundColor:'rgba(0,0,0,0.5)' }} activeOpacity={1} onPress={() => setReviewModal(false)}/>
+          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:24, paddingBottom:Platform.OS==='ios'?40:24 }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>Rate {maid.fullName}</Text>
+            <Text style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>Only available after hiring this maid</Text>
+            <View style={{ flexDirection:'row', justifyContent:'center', gap:12, marginBottom:20 }}>
+              {[1,2,3,4,5].map(s => (
+                <TouchableOpacity key={s} onPress={() => setReviewStar(s)}>
+                  <Text style={{ fontSize:36, opacity: s <= reviewStar ? 1 : 0.25 }}>⭐</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:6, padding:12, fontSize:14, color:COLORS.text, backgroundColor:COLORS.cream, height:100, textAlignVertical:'top', marginBottom:16 }}
+              placeholder="Share your experience (optional)…"
+              placeholderTextColor={COLORS.muted}
+              value={reviewComment}
+              onChangeText={setReviewComment}
+              multiline
+            />
+            <TouchableOpacity
+              style={{ backgroundColor:COLORS.gold, padding:14, borderRadius:6, alignItems:'center', opacity: reviewLoading ? 0.6 : 1 }}
+              onPress={handleReviewSubmit}
+              disabled={reviewLoading}
+            >
+              {reviewLoading
+                ? <ActivityIndicator color={COLORS.dark}/>
+                : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>Submit Review</Text>
+              }
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Action bar */}
       <View style={styles.actionBar}>

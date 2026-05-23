@@ -48,8 +48,10 @@ export const maidsAPI = {
   updateProfile:(data)   => api.put('/maids/me', data),
   addPhoto:         (data) => api.post('/maids/me/photos', data),
   submitVerification:(data) => api.post('/maids/me/verification', data),
-  toggleLike:   (id)     => api.post(`/maids/${id}/like`),
-  getSaved:     ()       => api.get('/maids/saved/list'),
+  toggleLike:    (id)     => api.post(`/maids/${id}/like`),
+  getSaved:      ()       => api.get('/maids/saved/list'),
+  submitReview:  (id, data) => api.post(`/maids/${id}/reviews`, data),
+  getReviews:    (id)     => api.get(`/maids/${id}/reviews`),
 };
 
 export const chatsAPI = {
