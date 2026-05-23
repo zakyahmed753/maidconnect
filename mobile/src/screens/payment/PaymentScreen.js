@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StyleSheet, StatusBar, ActivityIndicator, Linking
+  StyleSheet, StatusBar, ActivityIndicator, Linking, AppState
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { paymentsAPI } from '../../services/api';
+import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 
@@ -13,33 +14,112 @@ const PLANS = {
   annual:  { label: 'Annual',   price: 3871, period: '/year', badge: 'Save 27%' },
 };
 
+const POLL_INTERVAL = 2000; // 2s between checks
+const POLL_ATTEMPTS = 8;    // up to 16s total
+
 export default function PaymentScreen({ route, navigation }) {
   const { type, plan, maidProfileId, chatId, amount, maidName } = route.params || {};
-  const [loading, setLoading] = useState(false);
+  const [loading,  setLoading]  = useState(false);
+  const [checking, setChecking] = useState(false);
+
+  const pendingPaymentId = useRef(null);
+  const appStateRef      = useRef(AppState.currentState);
+  const pollTimer        = useRef(null);
+  const completeAuth     = useAuthStore(s => s.completeAuth);
+  const user             = useAuthStore(s => s.user);
 
   const displayAmount = amount || (plan ? PLANS[plan]?.price : 0);
-  const planInfo = plan ? PLANS[plan] : null;
+  const planInfo      = plan ? PLANS[plan] : null;
+
+  // Poll backend until payment is confirmed or all attempts exhausted
+  const pollStatus = (paymentId) => {
+    let attempts = 0;
+    setChecking(true);
+
+    const check = async () => {
+      attempts++;
+      try {
+        const res    = await paymentsAPI.checkStatus(paymentId);
+        const status = res.data?.status;
+
+        if (status === 'completed') {
+          clearTimeout(pollTimer.current);
+          await completeAuth();
+          // For housewife: also pop back to Browse since AppNavigator won't auto-switch
+          if (user?.role === 'housewife') {
+            navigation.navigate('Browse');
+          }
+          setChecking(false);
+          return;
+        }
+
+        if (status === 'failed') {
+          clearTimeout(pollTimer.current);
+          setChecking(false);
+          Toast.show({ type: 'error', text1: 'Payment failed', text2: 'Please try again.' });
+          return;
+        }
+
+        // Still pending — retry if attempts remain
+        if (attempts < POLL_ATTEMPTS) {
+          pollTimer.current = setTimeout(check, POLL_INTERVAL);
+        } else {
+          // Exhausted all attempts — payment may still process via webhook
+          setChecking(false);
+          Toast.show({
+            type: 'info',
+            text1: 'Payment is being processed',
+            text2: "You'll get a notification once confirmed.",
+            visibilityTime: 5000,
+          });
+        }
+      } catch {
+        if (attempts < POLL_ATTEMPTS) {
+          pollTimer.current = setTimeout(check, POLL_INTERVAL);
+        } else {
+          setChecking(false);
+          Toast.show({ type: 'error', text1: 'Could not verify payment', text2: 'Check your payment history.' });
+        }
+      }
+    };
+
+    check();
+  };
+
+  // Detect when user returns from Paymob browser tab
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      const wasBackground = appStateRef.current.match(/inactive|background/);
+      appStateRef.current = nextState;
+
+      if (wasBackground && nextState === 'active' && pendingPaymentId.current) {
+        const paymentId = pendingPaymentId.current;
+        pendingPaymentId.current = null;
+        pollStatus(paymentId);
+      }
+    });
+
+    return () => {
+      sub.remove();
+      clearTimeout(pollTimer.current);
+    };
+  }, []);
 
   const handlePay = async () => {
     setLoading(true);
     try {
       const res = await paymentsAPI.initiatePaymob({ type, plan, maidProfileId, chatId });
-      const { iframeUrl, paymentId, amount: paidAmount } = res.data;
-
-      // Open Paymob hosted payment page
+      const { iframeUrl, paymentId } = res.data;
+      pendingPaymentId.current = paymentId;
       await Linking.openURL(iframeUrl);
-
-      navigation.replace('PaymentResult', {
-        type: 'paymob',
-        amount: paidAmount,
-        paymentId,
-      });
     } catch (err) {
       Toast.show({ type: 'error', text1: err.response?.data?.message || 'Payment initiation failed' });
     } finally {
       setLoading(false);
     }
   };
+
+  const isDisabled = loading || checking;
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
@@ -107,17 +187,24 @@ export default function PaymentScreen({ route, navigation }) {
           <Text style={styles.secureTxt}>PCI DSS compliant · Payments processed by Paymob</Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.payBtn, loading && { opacity: 0.6 }]}
-          onPress={handlePay}
-          disabled={loading}
-        >
-          {loading
-            ? <ActivityIndicator color={COLORS.dark} />
-            : <Text style={styles.payBtnTxt}>Pay EGP {displayAmount?.toLocaleString()} →</Text>}
-        </TouchableOpacity>
+        {checking ? (
+          <View style={styles.checkingBox}>
+            <ActivityIndicator color={COLORS.gold} style={{ marginRight: 10 }} />
+            <Text style={styles.checkingTxt}>Verifying payment…</Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.payBtn, isDisabled && { opacity: 0.6 }]}
+            onPress={handlePay}
+            disabled={isDisabled}
+          >
+            {loading
+              ? <ActivityIndicator color={COLORS.dark} />
+              : <Text style={styles.payBtnTxt}>Pay EGP {displayAmount?.toLocaleString()} →</Text>}
+          </TouchableOpacity>
+        )}
 
-        <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()} disabled={isDisabled}>
           <Text style={styles.cancelTxt}>Cancel</Text>
         </TouchableOpacity>
 
@@ -150,6 +237,8 @@ const styles = StyleSheet.create({
   testDesc:    { fontSize: 11, color: '#78350f', lineHeight: 16 },
   secureRow:   { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 18 },
   secureTxt:   { fontSize: 11, color: COLORS.muted, flex: 1 },
+  checkingBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 6, padding: 16, marginBottom: 10 },
+  checkingTxt: { fontSize: 14, color: COLORS.muted, fontFamily: FONTS.bodySemiBold },
   payBtn:      { backgroundColor: COLORS.gold, padding: 16, borderRadius: 6, alignItems: 'center', marginBottom: 10 },
   payBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: COLORS.dark, letterSpacing: 0.5 },
   cancelBtn:   { alignItems: 'center', padding: 12 },

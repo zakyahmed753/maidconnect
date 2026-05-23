@@ -55,6 +55,35 @@ export function PaymentResultScreen({ route, navigation }) {
   const { amount, paymentId } = route.params || {};
   const completeAuth = useAuthStore(s => s.completeAuth);
   const [completing, setCompleting] = useState(false);
+  const [status, setStatus]         = useState('verifying'); // verifying | completed | failed
+  const pollTimer = React.useRef(null);
+
+  // Auto-verify as soon as screen mounts
+  React.useEffect(() => {
+    if (!paymentId) { setStatus('completed'); return; }
+    let attempts = 0;
+    const check = async () => {
+      attempts++;
+      try {
+        const res = await paymentsAPI.checkStatus(paymentId);
+        if (res.data?.status === 'completed') {
+          setStatus('completed');
+          return;
+        }
+        if (res.data?.status === 'failed') {
+          setStatus('failed');
+          return;
+        }
+      } catch {}
+      if (attempts < 8) {
+        pollTimer.current = setTimeout(check, 2000);
+      } else {
+        setStatus('completed'); // allow manual tap anyway
+      }
+    };
+    check();
+    return () => clearTimeout(pollTimer.current);
+  }, [paymentId]);
 
   const handleGoHome = async () => {
     setCompleting(true);
@@ -69,22 +98,29 @@ export function PaymentResultScreen({ route, navigation }) {
     <View style={{ flex:1, backgroundColor:'#0a1208', alignItems:'center', justifyContent:'center', padding:28 }}>
       <Text style={{ fontSize:64, marginBottom:16 }}>🎉</Text>
       <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff8ee', textAlign:'center', marginBottom:10 }}>
-        Payment Submitted!
+        Payment Confirmed!
       </Text>
       <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:22, marginBottom:28 }}>
-        Your payment of EGP {amount?.toLocaleString()} is being processed by Paymob.{'\n'}
-        You'll receive a notification once it's confirmed.
+        Your payment of EGP {amount?.toLocaleString()} was successful.{'\n'}
+        Your subscription is now active.
       </Text>
       <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
         <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Amount Paid</Text>
         <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#e8c97a' }}>EGP {amount?.toLocaleString()}</Text>
       </View>
-      <TouchableOpacity onPress={handleGoHome} disabled={completing}
-        style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, opacity: completing ? 0.6 : 1 }}>
-        <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
-          {completing ? 'Loading…' : 'Go to Home →'}
-        </Text>
-      </TouchableOpacity>
+      {status === 'verifying' ? (
+        <View style={{ flexDirection:'row', alignItems:'center', gap:10 }}>
+          <ActivityIndicator color={COLORS.gold}/>
+          <Text style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>Verifying payment…</Text>
+        </View>
+      ) : (
+        <TouchableOpacity onPress={handleGoHome} disabled={completing}
+          style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, opacity: completing ? 0.6 : 1 }}>
+          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
+            {completing ? 'Loading…' : 'Go to Home →'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

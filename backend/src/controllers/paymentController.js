@@ -229,12 +229,34 @@ exports.getHistory = async (req, res) => {
 };
 
 // ── Check individual payment status ──
+// If still pending, actively query Paymob to get the real result
 exports.checkStatus = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
     if (!payment || !payment.user.equals(req.user._id)) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
     }
+
+    if (payment.status === 'pending' && payment.gatewayRef) {
+      try {
+        const authToken = await paymobAuth();
+        const orderRes  = await axios.get(
+          `${PAYMOB_BASE}/ecommerce/orders/${payment.gatewayRef}`,
+          { params: { token: authToken } }
+        );
+        const order = orderRes.data;
+
+        if (order.paid_amount_cents > 0 || order.is_payment_locked) {
+          payment.status = 'completed';
+          payment.paidAt = payment.paidAt || Date.now();
+          await payment.save();
+          await handlePaymentSuccess(payment);
+        }
+      } catch {
+        // Paymob query failed — return whatever we have in DB
+      }
+    }
+
     res.json({ success: true, status: payment.status, payment });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
