@@ -128,26 +128,56 @@ export function PaymentResultScreen({ route, navigation }) {
 // ─── ChatsListScreen ───
 export function ChatsListScreen({ navigation }) {
   const [chats, setChats] = useState([]);
+  const user    = useAuthStore(s => s.user);
+  const profile = useAuthStore(s => s.profile);
   useEffect(() => { chatsAPI.getMyChats().then(r=>setChats(r.data.chats)).catch(()=>{}); }, []);
+
+  const isSubscribed = () => {
+    if (user?.role !== 'housewife') return true;
+    const sub = profile?.subscription;
+    return sub && sub.status === 'active' && sub.endDate && new Date(sub.endDate) > new Date();
+  };
+
+  const handleOpenChat = (item, other) => {
+    if (!isSubscribed()) {
+      navigation.navigate('Browse', { screen: 'CustomerSubscription', params: {} });
+      return;
+    }
+    navigation.navigate('Chat', { chatId: item._id, maidName: other?.fullName || other?.name });
+  };
+
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <View style={styles.topBar}><Text style={styles.pageTitle}>Messages</Text></View>
-      <FlatList data={chats} keyExtractor={i=>i._id}
-        renderItem={({ item }) => {
-          const other = item.maidProfile || item.maid;
-          return (
-            <TouchableOpacity style={styles.chatItem} onPress={() => navigation.navigate('Chat', { chatId:item._id, maidName: other?.fullName || other?.name })}>
-              <View style={styles.chatAva}><Text style={{ fontSize:20 }}>👩</Text></View>
-              <View style={{ flex:1 }}>
-                <Text style={styles.chatName}>{other?.fullName || other?.name || 'Chat'}</Text>
-                <Text style={styles.chatLast} numberOfLines={1}>{item.lastMessage?.content || (item.lastMessage?.type==='voice'?'🎙 Voice note':'No messages yet')}</Text>
-              </View>
-              <Text style={styles.chatTime}>{item.lastMessageAt ? new Date(item.lastMessageAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</Text>
-            </TouchableOpacity>
-          );
-        }}
-        ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>No chats yet</Text>}
-      />
+      {user?.role === 'housewife' && !isSubscribed() ? (
+        <View style={{ flex:1, alignItems:'center', justifyContent:'center', padding:30 }}>
+          <Text style={{ fontSize:40, marginBottom:14 }}>💬</Text>
+          <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, textAlign:'center', marginBottom:8 }}>Subscribe to Access Messages</Text>
+          <Text style={{ fontSize:13, color:COLORS.muted, textAlign:'center', lineHeight:20, marginBottom:24 }}>Chat with maids and manage your hiring process with a monthly subscription.</Text>
+          <TouchableOpacity
+            style={{ backgroundColor:COLORS.gold, paddingHorizontal:28, paddingVertical:13, borderRadius:6 }}
+            onPress={() => navigation.navigate('Browse', { screen:'CustomerSubscription', params:{} })}>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>Subscribe — EGP 1,000/mo</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList data={chats} keyExtractor={i=>i._id}
+          renderItem={({ item }) => {
+            const other = item.maidProfile || item.maid;
+            return (
+              <TouchableOpacity style={styles.chatItem} onPress={() => handleOpenChat(item, other)}>
+                <View style={styles.chatAva}><Text style={{ fontSize:20 }}>👩</Text></View>
+                <View style={{ flex:1 }}>
+                  <Text style={styles.chatName}>{other?.fullName || other?.name || 'Chat'}</Text>
+                  <Text style={styles.chatLast} numberOfLines={1}>{item.lastMessage?.content || 'No messages yet'}</Text>
+                </View>
+                <Text style={styles.chatTime}>{item.lastMessageAt ? new Date(item.lastMessageAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : ''}</Text>
+              </TouchableOpacity>
+            );
+          }}
+          ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>No chats yet</Text>}
+        />
+      )}
     </View>
   );
 }
@@ -345,53 +375,77 @@ export function MaidDashScreen({ navigation }) {
 
 // ─── ApprovalScreen ───
 export function ApprovalScreen({ route, navigation }) {
-  const { chatId, maidName } = route.params || {};
+  const { chatId, maidName, maidProfileId } = route.params || {};
+  const [maid, setMaid] = useState(null);
+
+  useEffect(() => {
+    if (maidProfileId) {
+      maidsAPI.getOne(maidProfileId).then(r => setMaid(r.data.maid)).catch(() => {});
+    }
+  }, [maidProfileId]);
+
   const STEPS = [
-    { title:'Initial Chat', desc:'Connected via in-app chat and voice notes.', state:'done', time:'Today 10:15 AM' },
-    { title:'Profile Review', desc:'Reviewed full profile and references.', state:'done', time:'Today 10:30 AM' },
-    { title:'Final Approval', desc:'Confirm hire and proceed to payment.', state:'active', time:'In progress' },
-    { title:'Commission Payment', desc:'Pay one-time commission to finalise.', state:'pending', time:'Pending' },
+    { title: 'Initial Chat',        desc: 'Connected via in-app messaging.',            state: 'done' },
+    { title: 'Profile Review',      desc: 'Reviewed full profile and references.',       state: 'done' },
+    { title: 'Final Approval',      desc: 'Confirm hire and proceed to payment.',        state: 'active' },
+    { title: 'Commission Payment',  desc: 'Pay one-time commission to finalise hire.',   state: 'pending' },
   ];
-  const stateColors = { done:'#2e7d5e', active:COLORS.gold, pending:COLORS.border };
+  const stateColors = { done: '#2e7d5e', active: COLORS.gold, pending: COLORS.border };
+
+  const salary     = maid?.expectedSalary || 0;
+  const commission = Math.round(salary * 0.2);
+
   return (
-    <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={{ backgroundColor:'#1a1108', padding:18, paddingTop:54 }}>
-        <TouchableOpacity onPress={()=>navigation.goBack()}><Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text></TouchableOpacity>
-        <Text style={{ fontSize:10, color:'rgba(232,201,122,0.5)', letterSpacing:1, textTransform:'uppercase', marginTop:10 }}>Hire Request</Text>
-        <Text style={{ fontFamily:FONTS.display, fontSize:20, color:'#fff8ee', marginTop:3 }}>{maidName || 'Maid'}</Text>
+    <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
+      <View style={{ backgroundColor: '#1a1108', padding: 18, paddingTop: 54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 }}>Hire Request</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: '#fff8ee', marginTop: 3 }}>{maidName || 'Maid'}</Text>
       </View>
-      <View style={{ flex:1, padding:18 }}>
-        <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.gold, marginBottom:14, fontFamily:FONTS.bodySemiBold }}>Approval Progress</Text>
+      <View style={{ flex: 1, padding: 18 }}>
+        <Text style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.gold, marginBottom: 14, fontFamily: FONTS.bodySemiBold }}>Approval Progress</Text>
         {STEPS.map((s, i) => (
-          <View key={i} style={{ flexDirection:'row', gap:12, marginBottom:18 }}>
-            <View style={{ alignItems:'center' }}>
-              <View style={{ width:32, height:32, borderRadius:16, backgroundColor:stateColors[s.state], alignItems:'center', justifyContent:'center', borderWidth:s.state==='pending'?1.5:0, borderColor:COLORS.border }}>
-                <Text style={{ fontSize:12, color: s.state==='pending'?COLORS.muted:'#fff' }}>{s.state==='done'?'✓':s.state==='active'?'▶':String(i+1)}</Text>
+          <View key={i} style={{ flexDirection: 'row', gap: 12, marginBottom: 18 }}>
+            <View style={{ alignItems: 'center' }}>
+              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: stateColors[s.state], alignItems: 'center', justifyContent: 'center', borderWidth: s.state === 'pending' ? 1.5 : 0, borderColor: COLORS.border }}>
+                <Text style={{ fontSize: 12, color: s.state === 'pending' ? COLORS.muted : '#fff' }}>
+                  {s.state === 'done' ? '✓' : s.state === 'active' ? '▶' : String(i + 1)}
+                </Text>
               </View>
-              {i < STEPS.length-1 && <View style={{ width:1.5, flex:1, backgroundColor:COLORS.border, marginVertical:3 }}/>}
+              {i < STEPS.length - 1 && <View style={{ width: 1.5, flex: 1, backgroundColor: COLORS.border, marginVertical: 3 }} />}
             </View>
-            <View style={{ flex:1, paddingTop:4 }}>
-              <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark }}>{s.title}</Text>
-              <Text style={{ fontSize:11, color:COLORS.muted, marginTop:2, lineHeight:16 }}>{s.desc}</Text>
-              <Text style={{ fontSize:10, color:COLORS.gold, marginTop:3, fontFamily:FONTS.body }}>{s.time}</Text>
+            <View style={{ flex: 1, paddingTop: 4 }}>
+              <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.dark }}>{s.title}</Text>
+              <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2, lineHeight: 16 }}>{s.desc}</Text>
             </View>
           </View>
         ))}
-        <View style={{ backgroundColor:'#fff9f0', borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:14, borderLeftWidth:3, borderLeftColor:COLORS.gold, marginBottom:16 }}>
-          <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.dark, marginBottom:8 }}>💰 Commission Summary</Text>
-          {[['Maid Monthly Salary','$400.00'],['Commission Rate','20%'],['Commission Due','$80.00']].map(([l,v])=>(
-            <View key={l} style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:4 }}>
-              <Text style={{ fontSize:12, color:COLORS.muted }}>{l}</Text>
-              <Text style={{ fontSize:12, fontWeight:'700', color: l.includes('Due')?COLORS.gold:COLORS.dark }}>{v}</Text>
-            </View>
-          ))}
-        </View>
-        <TouchableOpacity style={{ backgroundColor:'#2e7d5e', padding:14, borderRadius:5, alignItems:'center', marginBottom:10 }}
-          onPress={() => navigation.navigate('Payment', { type:'commission', chatId, maidName, amount:3920 })}>
-          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff' }}>✅ Approve & Pay Commission</Text>
+
+        {salary > 0 && (
+          <View style={{ backgroundColor: '#fff9f0', borderWidth: 1, borderColor: COLORS.border, borderRadius: 7, padding: 14, borderLeftWidth: 3, borderLeftColor: COLORS.gold, marginBottom: 16 }}>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: COLORS.dark, marginBottom: 8 }}>💰 Commission Summary</Text>
+            {[
+              ['Maid Monthly Salary', `EGP ${salary.toLocaleString()}`],
+              ['Commission Rate',     '20%'],
+              ['Commission Due',      `EGP ${commission.toLocaleString()}`],
+            ].map(([l, v]) => (
+              <View key={l} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontSize: 12, color: COLORS.muted }}>{l}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: l.includes('Due') ? COLORS.gold : COLORS.dark }}>{v}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={{ backgroundColor: '#2e7d5e', padding: 14, borderRadius: 5, alignItems: 'center', marginBottom: 10 }}
+          onPress={() => navigation.navigate('Payment', { type: 'commission', chatId, maidName, maidProfileId })}>
+          <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>✅ Approve & Pay Commission</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={{ padding:14, borderRadius:5, alignItems:'center', borderWidth:1, borderColor:COLORS.border }}>
-          <Text style={{ fontSize:14, color:COLORS.red }}>✗ Decline — Not the Right Fit</Text>
+        <TouchableOpacity style={{ padding: 14, borderRadius: 5, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border }}>
+          <Text style={{ fontSize: 14, color: COLORS.red }}>✗ Decline — Not the Right Fit</Text>
         </TouchableOpacity>
       </View>
     </View>
