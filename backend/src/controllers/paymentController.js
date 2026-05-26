@@ -101,7 +101,7 @@ exports.initiatePaymob = async (req, res) => {
       description = `Commission for ${maid.fullName}`;
 
     } else {
-      return res.status(400).json({ success: false, message: 'Invalid payment type' });
+      return res.status(400).json({ success: false, message: `Invalid payment type: "${type}". Allowed: subscription, customer_subscription, commission` });
     }
 
     const payment = await Payment.create({

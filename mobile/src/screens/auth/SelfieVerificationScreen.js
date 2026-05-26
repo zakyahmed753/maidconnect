@@ -5,10 +5,12 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { maidsAPI, uploadAPI } from '../../services/api';
+import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
 
 export default function SelfieVerificationScreen({ route, navigation }) {
   const { isEgyptian, idNumber, idPhotoUri, passportNumber, passportPhotoUri } = route.params || {};
+  const completeAuth = useAuthStore(s => s.completeAuth);
   const resolvedIdNumber = idNumber || passportNumber;
   const resolvedIdPhotoUri = idPhotoUri || passportPhotoUri;
   const needsPassportPhoto = !isEgyptian && !resolvedIdPhotoUri; // resubmission for non-Egyptian
@@ -80,7 +82,13 @@ export default function SelfieVerificationScreen({ route, navigation }) {
         selfiePublicId,
       });
 
-      navigation.reset({ index: 0, routes: [{ name: 'PendingApproval' }] });
+      const isNewRegistration = !useAuthStore.getState().user;
+      await completeAuth();
+      // For new registrations, AppNavigator auto-switches to pending-approval stack.
+      // For resubmissions (already authenticated), go back to PendingApproval.
+      if (!isNewRegistration) {
+        navigation.goBack();
+      }
     } catch (err) {
       Toast.show({ type: 'error', text1: err.response?.data?.message || 'Submission failed' });
     } finally { setLoading(false); }
