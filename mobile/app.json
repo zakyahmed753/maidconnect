@@ -17,7 +17,7 @@
         "backgroundColor": "#1a1108"
       },
       "package": "com.servix.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "permissions": [
         "RECORD_AUDIO",
         "READ_EXTERNAL_STORAGE",
