@@ -11,7 +11,9 @@ export default function SelfieVerificationScreen({ route, navigation }) {
   const { isEgyptian, idNumber, idPhotoUri, passportNumber, passportPhotoUri } = route.params || {};
   const resolvedIdNumber = idNumber || passportNumber;
   const resolvedIdPhotoUri = idPhotoUri || passportPhotoUri;
+  const needsPassportPhoto = !isEgyptian && !resolvedIdPhotoUri; // resubmission for non-Egyptian
   const [selfieUri, setSelfieUri] = useState(null);
+  const [resubmitPassportUri, setResubmitPassportUri] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const takeSelfie = async () => {
@@ -39,14 +41,27 @@ export default function SelfieVerificationScreen({ route, navigation }) {
     if (!res.canceled) setSelfieUri(res.assets[0].uri);
   };
 
+  const pickPassportPhoto = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.9,
+    });
+    if (!res.canceled) setResubmitPassportUri(res.assets[0].uri);
+  };
+
   const handleSubmit = async () => {
     if (!selfieUri) return Toast.show({ type: 'error', text1: 'Take or upload a selfie first' });
+    if (needsPassportPhoto && !resubmitPassportUri) {
+      return Toast.show({ type: 'error', text1: 'Upload your passport photo first' });
+    }
     setLoading(true);
     try {
       // Upload ID photo (passport only — not needed for Egyptians)
       let passportPhotoUrl = null, passportPhotoPublicId = null;
-      if (!isEgyptian && resolvedIdPhotoUri) {
-        const pRes = await uploadAPI.image(resolvedIdPhotoUri);
+      const passportUri = resolvedIdPhotoUri || resubmitPassportUri;
+      if (!isEgyptian && passportUri) {
+        const pRes = await uploadAPI.image(passportUri);
         passportPhotoUrl = pRes.data.url;
         passportPhotoPublicId = pRes.data.publicId;
       }
@@ -93,6 +108,17 @@ export default function SelfieVerificationScreen({ route, navigation }) {
             <Text key={tip} style={styles.infoItem}>• {tip}</Text>
           ))}
         </View>
+
+        {/* Passport re-upload — only for non-Egyptian resubmission */}
+        {needsPassportPhoto && (
+          <View style={styles.infoBox}>
+            <Text style={styles.infoTitle}>🪪 Re-upload Passport Photo</Text>
+            <Text style={styles.infoItem}>Your previous passport photo upload failed. Please upload it again.</Text>
+            <TouchableOpacity style={[styles.galleryBtn, { marginTop: 10, marginBottom: 0 }]} onPress={pickPassportPhoto}>
+              <Text style={styles.galleryBtnTxt}>{resubmitPassportUri ? '✅ Passport photo selected — tap to change' : '📎  Upload Passport Photo'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Selfie preview */}
         {selfieUri ? (

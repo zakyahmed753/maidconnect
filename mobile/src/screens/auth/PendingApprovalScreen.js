@@ -14,6 +14,7 @@ export default function PendingApprovalScreen({ navigation }) {
   const [status, setStatus] = useState('pending');
   const [note, setNote]     = useState('');
   const [checking, setChecking] = useState(false);
+  const [maidData, setMaidData] = useState(null);
   const completeAuth = useAuthStore(s => s.completeAuth);
   const timerRef = useRef(null);
 
@@ -22,6 +23,7 @@ export default function PendingApprovalScreen({ navigation }) {
     try {
       const res = await maidsAPI.getMyProfile();
       const maid = res.data.maid;
+      setMaidData(maid);
       const verif    = maid?.verificationStatus;
       const approval = maid?.approvalStatus;
       const n        = maid?.verificationNote || maid?.approvalNote || '';
@@ -111,7 +113,14 @@ export default function PendingApprovalScreen({ navigation }) {
         )}
 
         {status === 'rejected' && (
-          <TouchableOpacity style={styles.resubmitBtn} onPress={() => navigation.navigate('SelfieVerification', {})}>
+          <TouchableOpacity style={styles.resubmitBtn} onPress={() => {
+            const isEgyptian = !!maidData?.nationalId;
+            navigation.navigate('SelfieVerification', {
+              isEgyptian,
+              idNumber:       isEgyptian ? maidData?.nationalId   : undefined,
+              passportNumber: isEgyptian ? undefined : maidData?.passport?.number,
+            });
+          }}>
             <Text style={styles.resubmitBtnTxt}>{t('resubmit')}</Text>
           </TouchableOpacity>
         )}
