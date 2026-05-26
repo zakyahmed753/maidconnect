@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "MaidConnect",
+    "slug": "maidconnect",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1108"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.maidconnect.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "MaidConnect needs microphone access to send voice notes.",
+        "NSPhotoLibraryUsageDescription": "MaidConnect needs photo access to upload your profile photos.",
+        "NSCameraUsageDescription": "MaidConnect needs camera access to take profile photos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1108"
+      },
+      "package": "com.maidconnect.app",
+      "versionCode": 1,
+      "permissions": [
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA",
+        "NOTIFICATIONS"
+      ]
+    },
+    "web": { "favicon": "./assets/favicon.png" },
+      "extra": {
+  "API_URL": "http://192.168.1.5:5001/api",
+  "eas": { "projectId": "your-eas-project-id" }
+},    },
+    "plugins": [
+      ["expo-notifications", { "icon": "./assets/notification-icon.png", "color": "#c9a84c" }]
+    ]
+  }
+}

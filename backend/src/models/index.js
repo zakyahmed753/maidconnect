@@ -13,6 +13,16 @@ const houseWifeSchema = new mongoose.Schema({
     commissionPaid: { type: Boolean, default: false },
     commissionAmount: { type: Number }
   }],
+  subscription: {
+    status:    { type: String, enum: ['none','active','expired'], default: 'none' },
+    startDate: { type: Date },
+    endDate:   { type: Date },
+    paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
+  },
+  freeVacancy: {
+    available:  { type: Boolean, default: false },
+    expiresAt:  { type: Date },
+  },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -52,7 +62,7 @@ messageSchema.index({ chat: 1, createdAt: -1 });
 // ── Payment ──
 const paymentSchema = new mongoose.Schema({
   user:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  type:        { type: String, enum: ['subscription','commission'], required: true },
+  type:        { type: String, enum: ['subscription','commission','customer_subscription'], required: true },
   method:      { type: String, enum: ['fawry','vodafone_cash','instapay','amazon_pay','paymob'], required: true },
   amount:      { type: Number, required: true }, // EGP
   amountUSD:   { type: Number },

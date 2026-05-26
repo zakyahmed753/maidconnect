@@ -17,6 +17,7 @@ import PendingApprovalScreen from '../screens/auth/PendingApprovalScreen';
 import SubscriptionScreen from '../screens/auth/SubscriptionScreen';
 import PaymentScreen from '../screens/payment/PaymentScreen';
 import PaymentResultScreen from '../screens/payment/PaymentResultScreen';
+import CustomerSubscriptionScreen from '../screens/housewife/CustomerSubscriptionScreen';
 
 // Housewife screens
 import BrowseScreen  from '../screens/housewife/BrowseScreen';
@@ -79,6 +80,7 @@ function BrowseStack() {
       <Stack.Screen name="Approval"    component={ApprovalScreen}/>
       <Stack.Screen name="Payment"     component={PaymentScreen}/>
       <Stack.Screen name="PaymentResult" component={PaymentResultScreen}/>
+      <Stack.Screen name="CustomerSubscription" component={CustomerSubscriptionScreen}/>
     </Stack.Navigator>
   );
 }

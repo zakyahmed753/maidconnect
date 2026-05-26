@@ -36,8 +36,9 @@ export const authAPI = {
 };
 
 export const hwAPI = {
-  getProfile:    ()     => api.get('/housewives/me'),
-  updateProfile: (data) => api.put('/housewives/me', data),
+  getProfile:          ()     => api.get('/housewives/me'),
+  updateProfile:       (data) => api.put('/housewives/me', data),
+  getSubscriptionStatus: ()   => api.get('/housewives/me'),
 };
 
 export const maidsAPI = {
@@ -63,9 +64,11 @@ export const chatsAPI = {
 };
 
 export const paymentsAPI = {
-  initiatePaymob: (data) => api.post('/payments/paymob/initiate', data),
-  getHistory:     ()     => api.get('/payments/history'),
-  checkStatus:    (id)   => api.get(`/payments/${id}/status`),
+  initiatePaymob:              (data) => api.post('/payments/paymob/initiate', data),
+  initiateCustomerSubscription: ()    => api.post('/payments/paymob/initiate', { type: 'customer_subscription' }),
+  returnMaid:                  (data) => api.post('/payments/return-maid', data),
+  getHistory:                  ()     => api.get('/payments/history'),
+  checkStatus:                 (id)   => api.get(`/payments/${id}/status`),
 };
 
 export const supportAPI = {

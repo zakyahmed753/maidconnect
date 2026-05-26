@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { maidsAPI, chatsAPI } from '../../services/api';
+import { maidsAPI, chatsAPI, hwAPI, paymentsAPI } from '../../services/api';
+import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 
@@ -13,11 +14,19 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [reviewComment, setReviewComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const user = useAuthStore(s => s.user);
+  const [isHired, setIsHired] = useState(false);
 
   useEffect(() => {
     maidsAPI.getReviews(maid._id)
       .then(r => setReviews(r.data?.reviews || []))
       .catch(() => {});
+    hwAPI.getProfile().then(r => {
+      const hired = (r.data?.profile?.hiredMaids || []).some(h =>
+        h.maid === maid._id || h.maid?._id === maid._id
+      );
+      setIsHired(hired);
+    }).catch(() => {});
   }, []);
 
   const handleLike = async () => {
@@ -49,8 +58,18 @@ export default function MaidDetailScreen({ route, navigation }) {
       const res = await chatsAPI.startChat({ maidUserId: maid.user?._id || maid.user, maidProfileId: maid._id });
       navigation.navigate('Chat', { chatId: res.data.chat._id, maidName: maid.fullName });
     } catch (err) {
-      Toast.show({ type:'error', text1: err.response?.data?.message || 'Failed to open chat' });
-    } finally { setLoading(false); }
+      if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
+        navigation.navigate('CustomerSubscription', {
+          maidUserId: maid.user?._id || maid.user,
+          maidProfileId: maid._id,
+          maidName: maid.fullName,
+        });
+      } else {
+        Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to open chat' });
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -121,9 +140,11 @@ export default function MaidDetailScreen({ route, navigation }) {
           {/* Reviews section */}
           <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:16 }}>
             <Text style={styles.secTitle}>Reviews</Text>
-            <TouchableOpacity onPress={() => setReviewModal(true)} style={{ backgroundColor:COLORS.gold, paddingHorizontal:12, paddingVertical:5, borderRadius:4 }}>
-              <Text style={{ fontSize:11, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>✍️ Write Review</Text>
-            </TouchableOpacity>
+            {isHired && (
+              <TouchableOpacity onPress={() => setReviewModal(true)} style={{ backgroundColor:COLORS.gold, paddingHorizontal:12, paddingVertical:5, borderRadius:4 }}>
+                <Text style={{ fontSize:11, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>✍️ Write Review</Text>
+              </TouchableOpacity>
+            )}
           </View>
           {reviews.length === 0
             ? <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:8 }}>No reviews yet. Be the first!</Text>

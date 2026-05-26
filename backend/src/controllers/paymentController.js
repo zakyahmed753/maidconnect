@@ -1,19 +1,22 @@
 const crypto = require('crypto');
-const axios = require('axios');
+const axios  = require('axios');
 const { v4: uuidv4 } = require('uuid');
-const { Payment, Notification } = require('../models/index');
+const { Payment, Notification, HouseWife } = require('../models/index');
 const Maid = require('../models/Maid');
 
 const PAYMOB_BASE = 'https://accept.paymob.com/api';
 
-// Prices in piasters (EGP × 100) — Paymob requires piasters
-const PRICES = {
-  subscription_monthly: 44100,  // 441 EGP
-  subscription_annual:  387100, // 3871 EGP
-};
+// Nationality → monthly piasters
+function getMaidPriceCents(nationality = '') {
+  const n = nationality.toLowerCase();
+  if (n.includes('philip') || n.includes('filip')) return 100000; // 1000 EGP
+  if (n.includes('indonesia') || n.includes('ethiopia')) return 80000; // 800 EGP
+  return 50000; // 500 EGP
+}
+
+const CUSTOMER_SUBSCRIPTION_CENTS = 100000; // 1000 EGP
 const COMMISSION_RATE = 0.20;
 
-// ── Paymob 3-step auth flow ──
 async function paymobAuth() {
   const res = await axios.post(`${PAYMOB_BASE}/auth/tokens`, {
     api_key: process.env.PAYMOB_API_KEY,
@@ -57,14 +60,46 @@ exports.initiatePaymob = async (req, res) => {
     const merchantOrderId = uuidv4();
 
     let amountCents, description;
+
     if (type === 'subscription') {
-      amountCents = PRICES[`subscription_${plan}`];
-      description = `Servix ${plan} subscription`;
+      // Maid paying for their own subscription
+      const maidProfile = await Maid.findOne({ user: req.user._id });
+      if (!maidProfile) return res.status(404).json({ success: false, message: 'Maid profile not found' });
+      amountCents = getMaidPriceCents(maidProfile.nationality);
+      description = `Servix monthly subscription`;
+
+    } else if (type === 'customer_subscription') {
+      // Customer/housewife paying for platform access
+      amountCents = CUSTOMER_SUBSCRIPTION_CENTS;
+      description = 'Servix customer monthly subscription';
+
     } else if (type === 'commission') {
       const maid = await Maid.findById(maidProfileId);
       if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+
+      // Check free vacancy
+      const hw = await HouseWife.findOne({ user: req.user._id });
+      if (hw?.freeVacancy?.available && hw.freeVacancy.expiresAt > new Date()) {
+        // Use free vacancy — skip payment
+        await HouseWife.findOneAndUpdate({ user: req.user._id }, {
+          'freeVacancy.available': false,
+          $push: { hiredMaids: { maid: maid._id, commissionPaid: true, commissionAmount: 0 } }
+        });
+        if (chatId) {
+          const { Chat } = require('../models/index');
+          await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'hired' });
+        }
+        await Notification.create({
+          user: req.user._id, type: 'hire_confirmed',
+          title: '🎉 Hire Confirmed (Free Replacement)!',
+          body: `${maid.fullName} has been hired using your free replacement vacancy.`,
+        });
+        return res.json({ success: true, freeVacancyUsed: true, amount: 0 });
+      }
+
       amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
       description = `Commission for ${maid.fullName}`;
+
     } else {
       return res.status(400).json({ success: false, message: 'Invalid payment type' });
     }
@@ -77,7 +112,7 @@ exports.initiatePaymob = async (req, res) => {
       currency: 'EGP',
       maidProfile: maidProfileId || null,
       hireRef: chatId || null,
-      subscriptionPlan: plan || null,
+      subscriptionPlan: type === 'subscription' ? 'monthly' : null,
       merchantRefNum: merchantOrderId,
       commissionRate: type === 'commission' ? COMMISSION_RATE * 100 : null,
     });
@@ -87,10 +122,9 @@ exports.initiatePaymob = async (req, res) => {
       last_name:       (req.user.name || 'User').split(' ')[1] || 'User',
       email:           req.user.email,
       phone_number:    req.user.phone || '+20000000000',
-      apartment:       'NA', floor: 'NA', street: 'NA',
-      building:        'NA', shipping_method: 'NA',
-      postal_code:     'NA', city: 'Cairo',
-      country:         'EG', state: 'Cairo',
+      apartment: 'NA', floor: 'NA', street: 'NA',
+      building:  'NA', shipping_method: 'NA',
+      postal_code: 'NA', city: 'Cairo', country: 'EG', state: 'Cairo',
     };
 
     const authToken  = await paymobAuth();
@@ -123,7 +157,6 @@ exports.initiatePaymob = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.paymobCallback = async (req, res) => {
   try {
-    // Verify HMAC if secret is configured
     if (process.env.PAYMOB_HMAC_SECRET) {
       const { hmac } = req.query;
       const obj = req.body.obj || {};
@@ -177,13 +210,9 @@ async function handlePaymentSuccess(payment) {
   if (payment.type === 'subscription') {
     const now = new Date();
     const endDate = new Date(now);
-    if (payment.subscriptionPlan === 'annual') {
-      endDate.setFullYear(endDate.getFullYear() + 1);
-    } else {
-      endDate.setMonth(endDate.getMonth() + 1);
-    }
+    endDate.setMonth(endDate.getMonth() + 1);
     await Maid.findOneAndUpdate({ user: payment.user }, {
-      'subscription.plan':      payment.subscriptionPlan,
+      'subscription.plan':      'monthly',
       'subscription.status':    'active',
       'subscription.startDate': now,
       'subscription.endDate':   endDate,
@@ -192,8 +221,25 @@ async function handlePaymentSuccess(payment) {
     await Notification.create({
       user: payment.user, type: 'subscription',
       title: '🎉 Subscription Activated!',
-      body: `Your ${payment.subscriptionPlan} subscription is now active.`,
+      body: 'Your monthly subscription is now active.',
     });
+
+  } else if (payment.type === 'customer_subscription') {
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setMonth(endDate.getMonth() + 1);
+    await HouseWife.findOneAndUpdate({ user: payment.user }, {
+      'subscription.status':    'active',
+      'subscription.startDate': now,
+      'subscription.endDate':   endDate,
+      'subscription.paymentId': payment._id,
+    });
+    await Notification.create({
+      user: payment.user, type: 'subscription',
+      title: '🎉 Subscription Activated!',
+      body: 'You can now chat with maids and start hiring.',
+    });
+
   } else if (payment.type === 'commission') {
     const { HouseWife, Chat } = require('../models/index');
     const hw = await HouseWife.findOne({ user: payment.user });
@@ -216,6 +262,39 @@ async function handlePaymentSuccess(payment) {
   }
 }
 
+// ─────────────────────────────────────────────
+// RETURN MAID — gives free replacement vacancy
+// POST /api/payments/return-maid
+// ─────────────────────────────────────────────
+exports.returnMaid = async (req, res) => {
+  try {
+    const { maidProfileId, chatId } = req.body;
+    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days
+
+    await HouseWife.findOneAndUpdate({ user: req.user._id }, {
+      'freeVacancy.available': true,
+      'freeVacancy.expiresAt': expiresAt,
+      // Remove from hiredMaids
+      $pull: { hiredMaids: { maid: maidProfileId } },
+    });
+
+    if (chatId) {
+      const { Chat } = require('../models/index');
+      await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'chatting' });
+    }
+
+    await Notification.create({
+      user: req.user._id, type: 'system',
+      title: 'Free Replacement Available',
+      body: 'You have 3 days to select a new maid at no extra commission cost.',
+    });
+
+    res.json({ success: true, freeVacancyExpiresAt: expiresAt });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Payment history ──
 exports.getHistory = async (req, res) => {
   try {
@@ -228,8 +307,7 @@ exports.getHistory = async (req, res) => {
   }
 };
 
-// ── Check individual payment status ──
-// If still pending, actively query Paymob to get the real result
+// ── Check individual payment status (with Paymob verification) ──
 exports.checkStatus = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id);
@@ -245,16 +323,13 @@ exports.checkStatus = async (req, res) => {
           { params: { token: authToken } }
         );
         const order = orderRes.data;
-
         if (order.paid_amount_cents > 0 || order.is_payment_locked) {
           payment.status = 'completed';
           payment.paidAt = payment.paidAt || Date.now();
           await payment.save();
           await handlePaymentSuccess(payment);
         }
-      } catch {
-        // Paymob query failed — return whatever we have in DB
-      }
+      } catch {}
     }
 
     res.json({ success: true, status: payment.status, payment });
