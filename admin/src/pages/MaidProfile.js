@@ -62,7 +62,7 @@ const Section = ({ title, children }) => (
   </div>
 );
 
-const DocImage = ({ label, url, fallback }) => (
+const DocImage = ({ label, url, fallback, optional }) => (
   <div style={{ flex: 1 }}>
     <Label>{label}</Label>
     {url ? (
@@ -73,7 +73,8 @@ const DocImage = ({ label, url, fallback }) => (
     ) : (
       <div style={{ width: '100%', height: 180, background: G.card, borderRadius: 6, border: `1px dashed ${G.border2}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6 }}>
         <div style={{ fontSize: 28 }}>{fallback || '📄'}</div>
-        <div style={{ fontSize: 11, color: G.muted }}>Not submitted</div>
+        <div style={{ fontSize: 11, color: G.muted }}>{optional ? 'Not required' : 'Not submitted'}</div>
+        {!optional && <div style={{ fontSize: 9, color: '#f0a05080', textAlign: 'center', maxWidth: 120 }}>Maid needs to resubmit verification</div>}
       </div>
     )}
   </div>
@@ -94,7 +95,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
     setFetching(true);
     adminAPI.getMaid(initialMaid._id)
       .then(r => setMaid(r.data.maid))
-      .catch(() => {})
+      .catch(() => toast.error('Failed to load maid details'))
       .finally(() => setFetching(false));
   }, [initialMaid?._id]);
 
@@ -277,16 +278,22 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
           {/* ── DOCUMENTS TAB ── */}
           {activeTab === 'documents' && (
             <div>
+              {/* Show warning if docs are missing */}
+              {!maid.selfie?.photo?.url && !maid.passport?.photo?.url && (
+                <div style={{ background: '#f0a05015', border: '1px solid #f0a05040', borderRadius: 6, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#f0a050' }}>
+                  ⚠️ No documents on file — maid submitted before image upload was configured, or upload failed. Ask them to resubmit verification from the app.
+                </div>
+              )}
               <Section title="Identity Verification">
                 <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-                  <DocImage label="Passport Photo" url={maid.passport?.photo?.url} fallback="🛂" />
-                  <DocImage label="Selfie with Passport" url={maid.selfie?.photo?.url} fallback="🤳" />
-                  <DocImage label="Residence Permit" url={maid.residencePermit?.url} fallback="📋" />
+                  <DocImage label={maid.nationalId ? 'National ID (Egyptian)' : 'Passport Photo'} url={maid.passport?.photo?.url} fallback="🛂" optional={!!maid.nationalId} />
+                  <DocImage label="Selfie" url={maid.selfie?.photo?.url} fallback="🤳" />
+                  <DocImage label="Residence Permit" url={maid.residencePermit?.url} fallback="📋" optional />
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-                  <Field label="Passport Number" value={maid.passport?.number} mono />
-                  <Field label="National ID"     value={maid.nationalId} mono />
+                  <Field label="Passport Number" value={maid.passport?.number || (maid.nationalId ? 'N/A (Egyptian ID)' : null)} mono />
+                  <Field label="National ID (Egyptian)" value={maid.nationalId} mono />
                   <Field label="Passport Submitted"   value={maid.passport?.submittedAt   ? new Date(maid.passport.submittedAt).toLocaleString()   : null} />
                   <Field label="Selfie Submitted"     value={maid.selfie?.submittedAt     ? new Date(maid.selfie.submittedAt).toLocaleString()     : null} />
                   <Field label="Permit Submitted"     value={maid.residencePermit?.submittedAt ? new Date(maid.residencePermit.submittedAt).toLocaleString() : null} />
