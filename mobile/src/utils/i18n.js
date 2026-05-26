@@ -101,6 +101,16 @@ const T = {
 
     // Tab labels
     tab_browse: 'Browse', tab_saved: 'Saved', tab_chats: 'Chats', tab_alerts: 'Alerts', tab_me: 'Me', tab_home: 'Home',
+
+    // Filters
+    filter_all: 'All', filter_available: 'Available', filter_top_rated: 'Top Rated',
+    filter_african: 'African', filter_asian: 'Asian', filter_cooking: 'Cooking',
+    filter_childcare: 'Childcare', filter_eldercare: 'Eldercare',
+    filter_title: 'Filters', filter_salary: 'Salary Range (EGP)',
+    filter_min: 'Min', filter_max: 'Max', filter_age: 'Age Range',
+    filter_exp: 'Min Experience', filter_sort: 'Sort By',
+    filter_newest: 'Newest', filter_top_rated_sort: 'Top Rated', filter_highest_salary: 'Highest Salary',
+    filter_reset: 'Reset', filter_apply: 'Apply Filters', filter_any: 'Any',
   },
 
   ar: {
@@ -203,6 +213,16 @@ const T = {
 
     // Tab labels
     tab_browse: 'تصفح', tab_saved: 'محفوظ', tab_chats: 'رسائل', tab_alerts: 'تنبيهات', tab_me: 'أنا', tab_home: 'الرئيسية',
+
+    // Filters
+    filter_all: 'الكل', filter_available: 'متاحة', filter_top_rated: 'الأعلى تقييماً',
+    filter_african: 'أفريقية', filter_asian: 'آسيوية', filter_cooking: 'طبخ',
+    filter_childcare: 'رعاية أطفال', filter_eldercare: 'رعاية مسنين',
+    filter_title: 'التصفية', filter_salary: 'نطاق الراتب (جنيه)',
+    filter_min: 'أدنى', filter_max: 'أقصى', filter_age: 'نطاق العمر',
+    filter_exp: 'أدنى خبرة', filter_sort: 'ترتيب حسب',
+    filter_newest: 'الأحدث', filter_top_rated_sort: 'الأعلى تقييماً', filter_highest_salary: 'أعلى راتب',
+    filter_reset: 'إعادة تعيين', filter_apply: 'تطبيق التصفية', filter_any: 'الكل',
   },
 
   fr: {
@@ -305,6 +325,16 @@ const T = {
 
     // Tab labels
     tab_browse: 'Parcourir', tab_saved: 'Sauvegardés', tab_chats: 'Messages', tab_alerts: 'Alertes', tab_me: 'Moi', tab_home: 'Accueil',
+
+    // Filters
+    filter_all: 'Tous', filter_available: 'Disponible', filter_top_rated: 'Mieux notés',
+    filter_african: 'Africaine', filter_asian: 'Asiatique', filter_cooking: 'Cuisine',
+    filter_childcare: 'Garde enfants', filter_eldercare: 'Soins seniors',
+    filter_title: 'Filtres', filter_salary: 'Salaire (EGP)',
+    filter_min: 'Min', filter_max: 'Max', filter_age: "Tranche d'âge",
+    filter_exp: 'Expérience min', filter_sort: 'Trier par',
+    filter_newest: 'Plus récent', filter_top_rated_sort: 'Mieux notés', filter_highest_salary: 'Salaire élevé',
+    filter_reset: 'Réinitialiser', filter_apply: 'Appliquer', filter_any: 'Tout',
   },
 
   ha: {
@@ -407,6 +437,16 @@ const T = {
 
     // Tab labels
     tab_browse: 'Bincike', tab_saved: 'Ajiye', tab_chats: 'Saƙonni', tab_alerts: 'Sanarwa', tab_me: 'Ni', tab_home: 'Gida',
+
+    // Filters
+    filter_all: 'Duka', filter_available: 'Akwai', filter_top_rated: 'Mafi kyau',
+    filter_african: 'Afirka', filter_asian: 'Asiya', filter_cooking: 'Girki',
+    filter_childcare: 'Kula yara', filter_eldercare: 'Kula tsofaffi',
+    filter_title: 'Tace', filter_salary: 'Albashi (EGP)',
+    filter_min: 'Kadan', filter_max: 'Yawa', filter_age: 'Shekaru',
+    filter_exp: 'Gogagge', filter_sort: 'Tsari',
+    filter_newest: 'Sabon', filter_top_rated_sort: 'Mafi kyau', filter_highest_salary: 'Babban albashi',
+    filter_reset: 'Sifili', filter_apply: 'Amfani', filter_any: 'Kowane',
   },
 };
 

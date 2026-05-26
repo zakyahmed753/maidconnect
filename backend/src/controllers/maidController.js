@@ -38,7 +38,7 @@ exports.getAllMaids = async (req, res) => {
   try {
     const {
       origin, nationality, skills, minSalary, maxSalary,
-      minAge, maxAge, minExp, isAvailable,
+      minAge, maxAge, minExp, isAvailable, name,
       page = 1, limit = 20, sort = 'createdAt'
     } = req.query;
 
@@ -71,11 +71,14 @@ exports.getAllMaids = async (req, res) => {
       if (maxAge) filter.age.$lte = Number(maxAge);
     }
     if (minExp) filter.experienceYears = { $gte: Number(minExp) };
+    if (name) filter.fullName = new RegExp(name.trim(), 'i');
 
+    const ALLOWED_SORT = ['createdAt', 'rating', 'expectedSalary', 'experienceYears'];
+    const sortField = ALLOWED_SORT.includes(sort) ? sort : 'createdAt';
     const total = await Maid.countDocuments(filter);
     const maids = await Maid.find(filter)
       .populate('user', 'name email lastSeen')
-      .sort({ [sort]: -1 })
+      .sort({ [sortField]: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
