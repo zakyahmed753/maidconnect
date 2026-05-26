@@ -112,7 +112,7 @@ exports.initiatePaymob = async (req, res) => {
       currency: 'EGP',
       maidProfile: maidProfileId || null,
       hireRef: chatId || null,
-      subscriptionPlan: type === 'subscription' ? 'monthly' : null,
+      subscriptionPlan: (type === 'subscription' || type === 'customer_subscription') ? 'monthly' : undefined,
       merchantRefNum: merchantOrderId,
       commissionRate: type === 'commission' ? COMMISSION_RATE * 100 : null,
     });
