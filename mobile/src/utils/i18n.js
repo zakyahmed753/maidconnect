@@ -98,6 +98,9 @@ const T = {
 
     // Maid dash
     views: 'Views', likes: 'Likes', chats_stat: 'Chats',
+
+    // Tab labels
+    tab_browse: 'Browse', tab_saved: 'Saved', tab_chats: 'Chats', tab_alerts: 'Alerts', tab_me: 'Me', tab_home: 'Home',
   },
 
   ar: {
@@ -197,6 +200,9 @@ const T = {
 
     // Maid dash
     views: 'مشاهدات', likes: 'إعجابات', chats_stat: 'محادثات',
+
+    // Tab labels
+    tab_browse: 'تصفح', tab_saved: 'محفوظ', tab_chats: 'رسائل', tab_alerts: 'تنبيهات', tab_me: 'أنا', tab_home: 'الرئيسية',
   },
 
   fr: {
@@ -296,6 +302,9 @@ const T = {
 
     // Maid dash
     views: 'Vues', likes: 'J\'aime', chats_stat: 'Chats',
+
+    // Tab labels
+    tab_browse: 'Parcourir', tab_saved: 'Sauvegardés', tab_chats: 'Messages', tab_alerts: 'Alertes', tab_me: 'Moi', tab_home: 'Accueil',
   },
 
   ha: {
@@ -395,6 +404,9 @@ const T = {
 
     // Maid dash
     views: 'Kallon', likes: 'Son', chats_stat: 'Tattaunawa',
+
+    // Tab labels
+    tab_browse: 'Bincike', tab_saved: 'Ajiye', tab_chats: 'Saƙonni', tab_alerts: 'Sanarwa', tab_me: 'Ni', tab_home: 'Gida',
   },
 };
 

@@ -18,12 +18,17 @@ export default function RegisterHousewifeScreen({ navigation }) {
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = async () => {
-    if (!form.name || !form.email || !form.password) {
+    if (!form.name || !form.email || !form.password || !form.phone) {
       return Toast.show({ type: 'error', text1: t('fill_required') });
+    }
+    const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
+    const normalizedPhone = form.phone.trim().replace(/\s|-/g, '');
+    if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
+      return Toast.show({ type: 'error', text1: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
     }
     setLoading(true);
     try {
-      await register({ ...form, role: 'housewife' });
+      await register({ ...form, phone: normalizedPhone, role: 'housewife' });
       // Populate Zustand so AppNavigator switches to HouseWifeTabs automatically
       await completeAuth();
     } catch (err) {
@@ -35,7 +40,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
     [t('full_name') + ' *', 'name',     'default'],
     [t('email') + ' *',     'email',    'email-address'],
     [t('password') + ' *',  'password', 'default'],
-    [t('phone'),             'phone',    'phone-pad'],
+    [t('phone') + ' *',      'phone',    'phone-pad'],
   ];
 
   return (

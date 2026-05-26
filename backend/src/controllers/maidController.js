@@ -47,12 +47,13 @@ exports.getAllMaids = async (req, res) => {
       isHired: false,
     };
 
-    // Exclude maids blocked (rejected hire) for this housewife
+    // Exclude maids blocked (rejected hire) or already hired for this housewife
     if (req.user?.role === 'housewife') {
-      const hw = await HouseWife.findOne({ user: req.user._id }).select('blockedMaids');
-      if (hw?.blockedMaids?.length) {
-        filter._id = { $nin: hw.blockedMaids };
-      }
+      const hw = await HouseWife.findOne({ user: req.user._id }).select('blockedMaids hiredMaids');
+      const excluded = [];
+      if (hw?.blockedMaids?.length) excluded.push(...hw.blockedMaids.map(id => String(id)));
+      if (hw?.hiredMaids?.length)   excluded.push(...hw.hiredMaids.map(h => String(h.maid)));
+      if (excluded.length) filter._id = { $nin: excluded };
     }
 
     if (origin)      filter.origin = origin;
@@ -340,8 +341,8 @@ exports.respondHireRequest = async (req, res) => {
           { $push: { hiredMaids: { maid: maid._id, commissionPaid: false, commissionAmount: 0 } } }
         );
       }
-      // Mark maid unavailable
-      await Maid.findByIdAndUpdate(maid._id, { isAvailable: false });
+      // Mark maid unavailable and hired
+      await Maid.findByIdAndUpdate(maid._id, { isAvailable: false, isHired: true });
 
       // Update chat if linked
       if (request.chatId) {

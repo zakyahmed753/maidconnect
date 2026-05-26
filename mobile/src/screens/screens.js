@@ -296,6 +296,7 @@ export function HWProfileScreen({ navigation }) {
   const MENU = [
     { icon:'❤️', title: t('menu_saved'),         color:'',    onPress: () => navigation.navigate('Saved') },
     { icon:'💬', title: t('menu_messages'),       color:'',    onPress: () => navigation.navigate('Chats') },
+    { icon:'👑', title: 'My Hired Maid',          color:'',    onPress: () => navigation.navigate('HiredMaids') },
     { icon:'💳', title: t('menu_payments'),       color:'',    onPress: () => navigation.navigate('PaymentHistory') },
     { icon:'🔔', title: t('menu_notifications'),  color:'',    onPress: () => navigation.navigate('Alerts') },
     { icon:'🌐', title: t('language'),            color:'',    onPress: () => setLangVisible(true) },

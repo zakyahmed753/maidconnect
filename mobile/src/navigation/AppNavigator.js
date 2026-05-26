@@ -6,6 +6,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
 import useAuthStore from '../store/authStore';
 import { COLORS } from '../utils/theme';
+import { useTranslation } from '../utils/i18n';
+import HiredMaidsScreen from '../screens/housewife/HiredMaidsScreen';
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -43,12 +45,15 @@ import { AnalyticsScreen, EditHWProfileScreen, SupportScreen, PaymentHistoryScre
 const Stack = createStackNavigator();
 const Tab   = createBottomTabNavigator();
 
-const TabIcon = ({ icon, focused, label }) => (
-  <View style={{ alignItems:'center', gap:3 }}>
-    <Text style={{ fontSize:20 }}>{icon}</Text>
-    <Text style={{ fontSize:8, letterSpacing:0.8, textTransform:'uppercase', color: focused ? COLORS.gold : COLORS.muted, fontWeight: focused ? '700' : '400' }}>{label}</Text>
-  </View>
-);
+const TabIcon = ({ icon, focused, labelKey }) => {
+  const { t } = useTranslation();
+  return (
+    <View style={{ alignItems:'center', gap:3 }}>
+      <Text style={{ fontSize:20 }}>{icon}</Text>
+      <Text style={{ fontSize:8, letterSpacing:0.8, textTransform:'uppercase', color: focused ? COLORS.gold : COLORS.muted, fontWeight: focused ? '700' : '400' }}>{t(labelKey)}</Text>
+    </View>
+  );
+};
 
 function HWProfileStack() {
   return (
@@ -57,6 +62,7 @@ function HWProfileStack() {
       <Stack.Screen name="EditHWProfile"   component={EditHWProfileScreen}/>
       <Stack.Screen name="Support"         component={SupportScreen}/>
       <Stack.Screen name="PaymentHistory"  component={PaymentHistoryScreen}/>
+      <Stack.Screen name="HiredMaids"      component={HiredMaidsScreen}/>
     </Stack.Navigator>
   );
 }
@@ -66,11 +72,11 @@ function HouseWifeTabs() {
   const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
-      <Tab.Screen name="Browse"  component={BrowseStack}   options={{ tabBarIcon:({focused})=><TabIcon icon="🔍" focused={focused} label="Browse"/> }}/>
-      <Tab.Screen name="Saved"   component={SavedScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="❤️" focused={focused} label="Saved"/> }}/>
-      <Tab.Screen name="Chats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
-      <Tab.Screen name="Alerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} label="Alerts"/> }}/>
-      <Tab.Screen name="Me"      component={HWProfileStack} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} label="Me"/> }}/>
+      <Tab.Screen name="Browse"  component={BrowseStack}   options={{ tabBarIcon:({focused})=><TabIcon icon="🔍" focused={focused} labelKey="tab_browse"/> }}/>
+      <Tab.Screen name="Saved"   component={SavedScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="❤️" focused={focused} labelKey="tab_saved"/> }}/>
+      <Tab.Screen name="Chats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
+      <Tab.Screen name="Alerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} labelKey="tab_alerts"/> }}/>
+      <Tab.Screen name="Me"      component={HWProfileStack} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} labelKey="tab_me"/> }}/>
     </Tab.Navigator>
   );
 }
@@ -108,9 +114,9 @@ function MaidTabs() {
   const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
-      <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} label="Home"/> }}/>
-      <Tab.Screen name="MaidChats"  component={ChatsListScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} label="Chats"/> }}/>
-      <Tab.Screen name="MaidAlerts" component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} label="Alerts"/> }}/>
+      <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} labelKey="tab_home"/> }}/>
+      <Tab.Screen name="MaidChats"  component={ChatsListScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
+      <Tab.Screen name="MaidAlerts" component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} labelKey="tab_alerts"/> }}/>
     </Tab.Navigator>
   );
 }
@@ -147,8 +153,11 @@ export default function AppNavigator() {
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
           </>
-        ) : user?.role === 'maid' && profile?.subscription?.status !== 'active' ? (
-          // Approved but subscription not yet paid — go straight to subscription
+        ) : user?.role === 'maid' && (
+            profile?.subscription?.status !== 'active' ||
+            (profile?.subscription?.endDate && new Date(profile.subscription.endDate) < new Date())
+          ) ? (
+          // Approved but subscription not yet paid or expired — go straight to subscription
           <>
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>

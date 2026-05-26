@@ -279,7 +279,7 @@ exports.returnMaid = async (req, res) => {
 
     // Restore maid to available so she appears in browse again
     if (maidProfileId) {
-      await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true });
+      await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true, isHired: false });
     }
 
     if (chatId) {

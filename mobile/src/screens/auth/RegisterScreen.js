@@ -72,6 +72,15 @@ export default function RegisterScreen({ navigation }) {
     if (!form.nationality) return Toast.show({ type:'error', text1: 'Select nationality' });
     if (!form.bio.trim()) return Toast.show({ type:'error', text1: 'Bio is required' });
 
+    if (!form.phone || !form.phone.trim()) {
+      return Toast.show({ type: 'error', text1: 'Phone number is required' });
+    }
+    const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
+    const phoneNorm = form.phone.trim().replace(/\s|-/g, '');
+    if (!EGYPTIAN_PHONE.test(phoneNorm)) {
+      return Toast.show({ type: 'error', text1: 'Phone must be a valid Egyptian number (e.g. 01012345678)' });
+    }
+
     // ID validation
     if (isEgyptian) {
       const idCheck = validateNationalId(form.idNumber);
@@ -84,7 +93,7 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await register({ ...form, role:'maid' });
+      await register({ ...form, phone: phoneNorm, role:'maid' });
 
       const uploadedPhotos = [];
       try {
@@ -136,7 +145,7 @@ export default function RegisterScreen({ navigation }) {
         {/* Basic fields */}
         {[['Full Name','name','default'],['Email','email','email-address'],['Password','password','default'],['Phone','phone','phone-pad']].map(([label, key, kb]) => (
           <View key={key}>
-            <Text style={styles.label}>{t(key === 'name' ? 'full_name' : key)}</Text>
+            <Text style={styles.label}>{t(key === 'name' ? 'full_name' : key)}{key === 'phone' ? ' *' : ''}</Text>
             <TextInput style={styles.input} value={form[key]} onChangeText={v=>upd(key,v)}
               placeholder={label} placeholderTextColor={COLORS.muted}
               keyboardType={kb} secureTextEntry={key==='password'} autoCapitalize="none"/>

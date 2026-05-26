@@ -18,7 +18,20 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: conflictMsg });
     }
 
-    const user = await User.create({ name, email, password, phone, role });
+    if (!phone || !phone.trim()) {
+      return res.status(400).json({ success: false, message: 'Phone number is required' });
+    }
+    const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
+    const normalizedPhone = phone.trim().replace(/\s|-/g, '');
+    if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
+      return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
+    }
+    const phoneExists = await User.findOne({ phone: normalizedPhone });
+    if (phoneExists) {
+      return res.status(400).json({ success: false, message: 'This phone number is already registered' });
+    }
+
+    const user = await User.create({ name, email, password, phone: normalizedPhone, role });
 
     // Create role-specific profile
     if (role === 'housewife') {
@@ -95,6 +108,15 @@ exports.getMe = async (req, res) => {
     } else if (user.role === 'housewife') {
       profile = await HouseWife.findOne({ user: user._id });
     }
+
+    // Auto-expire maid subscription if past end date
+    if (profile && user.role === 'maid' && profile.subscription?.status === 'active' && profile.subscription?.endDate) {
+      if (new Date(profile.subscription.endDate) < new Date()) {
+        await Maid.findByIdAndUpdate(profile._id, { 'subscription.status': 'expired' });
+        profile.subscription.status = 'expired';
+      }
+    }
+
     res.json({ success: true, user: user.toSafeObject(), profile });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
