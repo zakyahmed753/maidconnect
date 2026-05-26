@@ -9,9 +9,11 @@ import io from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import Toast from 'react-native-toast-message';
+import useAuthStore from '../../store/authStore';
 
 export default function ChatScreen({ route, navigation }) {
   const { chatId, maidName } = route.params || {};
+  const { user } = useAuthStore();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,17 @@ export default function ChatScreen({ route, navigation }) {
     socketRef.current = socket;
     socket.emit('join_chat', chatId);
     socket.on('new_message', (msg) => {
-      setMessages(prev => [...prev, msg]);
+      setMessages(prev => {
+        // Replace optimistic temp message if this is our own confirmed message
+        const isOwn = String(msg.sender?._id) === String(user?._id);
+        if (isOwn) {
+          const withoutTemp = prev.filter(m => !m._isTemp);
+          // Avoid duplicate if already confirmed
+          const alreadyExists = withoutTemp.some(m => m._id === msg._id);
+          return alreadyExists ? withoutTemp : [...withoutTemp, msg];
+        }
+        return [...prev, msg];
+      });
       listRef.current?.scrollToEnd({ animated: true });
     });
   };
@@ -47,14 +59,33 @@ export default function ChatScreen({ route, navigation }) {
   const sendText = async () => {
     if (!text.trim()) return;
     const content = text.trim();
+    const tempId = `temp_${Date.now()}`;
     setText('');
+
+    // Show immediately — optimistic update
+    const optimistic = {
+      _id: tempId,
+      _isTemp: true,
+      content,
+      type: 'text',
+      sender: { _id: user?._id, role: user?.role },
+      createdAt: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, optimistic]);
+    listRef.current?.scrollToEnd({ animated: true });
+
     try {
       await chatsAPI.sendMessage({ chatId, type: 'text', content });
-    } catch { Toast.show({ type: 'error', text1: 'Failed to send' }); setText(content); }
+      // Socket will deliver the confirmed message and strip the temp one
+    } catch {
+      Toast.show({ type: 'error', text1: 'Failed to send' });
+      setText(content);
+      setMessages(prev => prev.filter(m => m._id !== tempId));
+    }
   };
 
   const renderMessage = ({ item }) => {
-    const isMe = item.sender?.role === 'housewife' || item.sender?._id === 'me';
+    const isMe = String(item.sender?._id) === String(user?._id);
     if (item.type === 'voice') {
       return (
         <View style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
