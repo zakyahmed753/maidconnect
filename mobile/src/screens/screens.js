@@ -3,13 +3,14 @@ import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { LANGUAGES } from '../utils/i18n';
+import { LANGUAGES, useTranslation } from '../utils/i18n';
 import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI } from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../utils/theme';
 
 export function NotificationsScreen({ navigation }) {
+  const { t } = useTranslation();
   const [notifs, setNotifs] = useState([]);
   useFocusEffect(
     React.useCallback(() => {
@@ -28,9 +29,9 @@ export function NotificationsScreen({ navigation }) {
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <StatusBar barStyle="dark-content"/>
       <View style={styles.topBar}>
-        <Text style={styles.pageTitle}>Notifications</Text>
+        <Text style={styles.pageTitle}>{t('notifications_title')}</Text>
         <TouchableOpacity onPress={() => notificationsAPI.markAll().then(() => setNotifs(n=>n.map(x=>({...x,isRead:true}))))}>
-          <Text style={{ fontSize:12, color:COLORS.gold, fontFamily:FONTS.bodySemiBold }}>Mark all read</Text>
+          <Text style={{ fontSize:12, color:COLORS.gold, fontFamily:FONTS.bodySemiBold }}>{t('mark_all_read')}</Text>
         </TouchableOpacity>
       </View>
       <FlatList data={notifs} keyExtractor={i=>i._id}
@@ -127,6 +128,7 @@ export function PaymentResultScreen({ route, navigation }) {
 
 // ─── ChatsListScreen ───
 export function ChatsListScreen({ navigation }) {
+  const { t } = useTranslation();
   const [chats, setChats] = useState([]);
   const user    = useAuthStore(s => s.user);
   const profile = useAuthStore(s => s.profile);
@@ -169,16 +171,16 @@ export function ChatsListScreen({ navigation }) {
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={styles.topBar}><Text style={styles.pageTitle}>Messages</Text></View>
+      <View style={styles.topBar}><Text style={styles.pageTitle}>{t('chats_title')}</Text></View>
       {user?.role === 'housewife' && !isSubscribed() ? (
         <View style={{ flex:1, alignItems:'center', justifyContent:'center', padding:30 }}>
           <Text style={{ fontSize:40, marginBottom:14 }}>💬</Text>
-          <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, textAlign:'center', marginBottom:8 }}>Subscribe to Access Messages</Text>
-          <Text style={{ fontSize:13, color:COLORS.muted, textAlign:'center', lineHeight:20, marginBottom:24 }}>Chat with maids and manage your hiring process with a monthly subscription.</Text>
+          <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, textAlign:'center', marginBottom:8 }}>{t('subscribe_chat_title')}</Text>
+          <Text style={{ fontSize:13, color:COLORS.muted, textAlign:'center', lineHeight:20, marginBottom:24 }}>{t('subscribe_chat_body')}</Text>
           <TouchableOpacity
             style={{ backgroundColor:COLORS.gold, paddingHorizontal:28, paddingVertical:13, borderRadius:6 }}
             onPress={() => navigation.navigate('Browse', { screen:'CustomerSubscription', params:{} })}>
-            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>Subscribe — EGP 1,000/mo</Text>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{t('subscribe_btn')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -196,7 +198,7 @@ export function ChatsListScreen({ navigation }) {
               </TouchableOpacity>
             );
           }}
-          ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>No chats yet</Text>}
+          ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>{t('no_chats')}</Text>}
         />
       )}
     </View>
@@ -205,6 +207,7 @@ export function ChatsListScreen({ navigation }) {
 
 // ─── SavedScreen ───
 export function SavedScreen({ navigation }) {
+  const { t } = useTranslation();
   const [maids, setMaids] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -220,7 +223,7 @@ export function SavedScreen({ navigation }) {
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={styles.topBar}><Text style={styles.pageTitle}>Saved Maids ❤️</Text></View>
+      <View style={styles.topBar}><Text style={styles.pageTitle}>{t('saved_title')}</Text></View>
       {loading
         ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
             <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.gold, borderTopColor:'transparent' }}/>
@@ -253,7 +256,7 @@ export function SavedScreen({ navigation }) {
                 <Text style={{ fontSize:18 }}>❤️</Text>
               </TouchableOpacity>
             )}
-            ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>No saved maids yet</Text>}
+            ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>{t('no_saved_maids')}</Text>}
           />
       }
     </View>
@@ -286,18 +289,18 @@ function LanguageModal({ visible, onClose }) {
 
 // ─── HWProfileScreen ───
 export function HWProfileScreen({ navigation }) {
+  const { t } = useTranslation();
   const { user, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
 
   const MENU = [
-    { icon:'❤️', title:'Saved Maids',   color:'',    onPress: () => navigation.navigate('Saved') },
-    { icon:'💬', title:'Messages',       color:'',    onPress: () => navigation.navigate('Chats') },
-    { icon:'✅', title:'Approval Flow',  color:'',    onPress: () => navigation.navigate('Browse', { screen:'Approval' }) },
-    { icon:'💳', title:'Payments',       color:'',    onPress: () => navigation.navigate('PaymentHistory') },
-    { icon:'🔔', title:'Notifications',  color:'',    onPress: () => navigation.navigate('Alerts') },
-    { icon:'🌐', title:'Language',       color:'',    onPress: () => setLangVisible(true) },
-    { icon:'🎫', title:'Support',        color:'',    onPress: () => navigation.navigate('Support') },
-    { icon:'🚪', title:'Sign Out',       color:'red', onPress: logout },
+    { icon:'❤️', title: t('menu_saved'),         color:'',    onPress: () => navigation.navigate('Saved') },
+    { icon:'💬', title: t('menu_messages'),       color:'',    onPress: () => navigation.navigate('Chats') },
+    { icon:'💳', title: t('menu_payments'),       color:'',    onPress: () => navigation.navigate('PaymentHistory') },
+    { icon:'🔔', title: t('menu_notifications'),  color:'',    onPress: () => navigation.navigate('Alerts') },
+    { icon:'🌐', title: t('language'),            color:'',    onPress: () => setLangVisible(true) },
+    { icon:'🎫', title: t('menu_support'),        color:'',    onPress: () => navigation.navigate('Support') },
+    { icon:'🚪', title: t('menu_sign_out'),       color:'red', onPress: logout },
   ];
 
   return (
@@ -307,7 +310,7 @@ export function HWProfileScreen({ navigation }) {
         <View style={{ backgroundColor:'#3d2203', padding:20, paddingTop:54, paddingBottom:20 }}>
           <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:12 }}>
             <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:28 }}>👩</Text></View>
-            <TouchableOpacity onPress={() => navigation.navigate('EditHWProfile')} style={{ borderWidth:1, borderColor:'rgba(201,168,76,0.35)', paddingHorizontal:14, paddingVertical:8, borderRadius:4, alignSelf:'flex-start' }}><Text style={{ fontSize:12, color:'#e8c97a' }}>✏️ Edit</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('EditHWProfile')} style={{ borderWidth:1, borderColor:'rgba(201,168,76,0.35)', paddingHorizontal:14, paddingVertical:8, borderRadius:4, alignSelf:'flex-start' }}><Text style={{ fontSize:12, color:'#e8c97a' }}>{t('edit_btn')}</Text></TouchableOpacity>
           </View>
           <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{user?.name || 'Customer'}</Text>
           <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', fontFamily:FONTS.body, marginTop:2 }}>{user?.email}</Text>
@@ -329,6 +332,7 @@ export function HWProfileScreen({ navigation }) {
 
 // ─── MaidDashScreen ───
 export function MaidDashScreen({ navigation }) {
+  const { t } = useTranslation();
   const { user, profile, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
   const [stats, setStats] = useState({ views: 0, likes: 0, chats: 0 });
@@ -364,7 +368,7 @@ export function MaidDashScreen({ navigation }) {
           <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
         </View>
         <View style={{ flexDirection:'row', gap:10, padding:14 }}>
-          {[[String(stats.views),'Views'],[String(stats.likes),'Likes'],[String(stats.chats),'Chats']].map(([n,l])=>(
+          {[[String(stats.views),t('views')],[String(stats.likes),t('likes')],[String(stats.chats),t('chats_stat')]].map(([n,l])=>(
             <View key={l} style={{ flex:1, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, alignItems:'center' }}>
               <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.gold }}>{n}</Text>
               <Text style={{ fontSize:9, textTransform:'uppercase', letterSpacing:0.5, color:COLORS.muted, marginTop:2 }}>{l}</Text>
@@ -394,27 +398,17 @@ export function MaidDashScreen({ navigation }) {
   );
 }
 
-// ─── ApprovalScreen ───
+// ─── ApprovalScreen ─── (kept for navigation compatibility — hire is now done from maid profile)
 export function ApprovalScreen({ route, navigation }) {
-  const { chatId, maidName, maidProfileId } = route.params || {};
-  const [maid, setMaid] = useState(null);
-
-  useEffect(() => {
-    if (maidProfileId) {
-      maidsAPI.getOne(maidProfileId).then(r => setMaid(r.data.maid)).catch(() => {});
-    }
-  }, [maidProfileId]);
+  const { t } = useTranslation();
+  const { maidName } = route.params || {};
 
   const STEPS = [
-    { title: 'Initial Chat',        desc: 'Connected via in-app messaging.',            state: 'done' },
-    { title: 'Profile Review',      desc: 'Reviewed full profile and references.',       state: 'done' },
-    { title: 'Final Approval',      desc: 'Confirm hire and proceed to payment.',        state: 'active' },
-    { title: 'Commission Payment',  desc: 'Pay one-time commission to finalise hire.',   state: 'pending' },
+    { title: 'Chat with Maid',   desc: 'Open a chat from the maid\'s profile.',      state: 'done' },
+    { title: 'Review Profile',   desc: 'Check experience, skills, and references.',   state: 'done' },
+    { title: 'Hire the Maid',    desc: 'Tap "Hire this Maid" on her profile page.',   state: 'active' },
   ];
-  const stateColors = { done: '#2e7d5e', active: COLORS.gold, pending: COLORS.border };
-
-  const salary     = maid?.expectedSalary || 0;
-  const commission = Math.round(salary * 0.2);
+  const stateColors = { done: '#2e7d5e', active: COLORS.gold };
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
@@ -422,17 +416,17 @@ export function ApprovalScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 }}>Hire Request</Text>
-        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: '#fff8ee', marginTop: 3 }}>{maidName || 'Maid'}</Text>
+        <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 }}>Hire Flow</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: '#fff8ee', marginTop: 3 }}>{maidName || 'How to Hire'}</Text>
       </View>
       <View style={{ flex: 1, padding: 18 }}>
-        <Text style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.gold, marginBottom: 14, fontFamily: FONTS.bodySemiBold }}>Approval Progress</Text>
+        <Text style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.gold, marginBottom: 14, fontFamily: FONTS.bodySemiBold }}>Steps to Hire</Text>
         {STEPS.map((s, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: 12, marginBottom: 18 }}>
             <View style={{ alignItems: 'center' }}>
-              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: stateColors[s.state], alignItems: 'center', justifyContent: 'center', borderWidth: s.state === 'pending' ? 1.5 : 0, borderColor: COLORS.border }}>
-                <Text style={{ fontSize: 12, color: s.state === 'pending' ? COLORS.muted : '#fff' }}>
-                  {s.state === 'done' ? '✓' : s.state === 'active' ? '▶' : String(i + 1)}
+              <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: stateColors[s.state] || COLORS.border, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 12, color: '#fff' }}>
+                  {s.state === 'done' ? '✓' : '▶'}
                 </Text>
               </View>
               {i < STEPS.length - 1 && <View style={{ width: 1.5, flex: 1, backgroundColor: COLORS.border, marginVertical: 3 }} />}
@@ -443,30 +437,15 @@ export function ApprovalScreen({ route, navigation }) {
             </View>
           </View>
         ))}
-
-        {salary > 0 && (
-          <View style={{ backgroundColor: '#fff9f0', borderWidth: 1, borderColor: COLORS.border, borderRadius: 7, padding: 14, borderLeftWidth: 3, borderLeftColor: COLORS.gold, marginBottom: 16 }}>
-            <Text style={{ fontSize: 12, fontWeight: '700', color: COLORS.dark, marginBottom: 8 }}>💰 Commission Summary</Text>
-            {[
-              ['Maid Monthly Salary', `EGP ${salary.toLocaleString()}`],
-              ['Commission Rate',     '20%'],
-              ['Commission Due',      `EGP ${commission.toLocaleString()}`],
-            ].map(([l, v]) => (
-              <View key={l} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={{ fontSize: 12, color: COLORS.muted }}>{l}</Text>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: l.includes('Due') ? COLORS.gold : COLORS.dark }}>{v}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
+        <View style={{ backgroundColor: '#fff9f0', borderWidth: 1, borderColor: COLORS.border, borderRadius: 7, padding: 14, borderLeftWidth: 3, borderLeftColor: COLORS.gold, marginTop: 8 }}>
+          <Text style={{ fontSize: 13, color: COLORS.dark, lineHeight: 20 }}>
+            👑 To hire a maid, open her profile from Browse and tap <Text style={{ fontWeight:'700' }}>"Hire this Maid"</Text>. She will be marked as unavailable until you release the vacancy.
+          </Text>
+        </View>
         <TouchableOpacity
-          style={{ backgroundColor: '#2e7d5e', padding: 14, borderRadius: 5, alignItems: 'center', marginBottom: 10 }}
-          onPress={() => navigation.navigate('Payment', { type: 'commission', chatId, maidName, maidProfileId, amount: commission })}>
-          <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>✅ Approve & Pay Commission — EGP {commission.toLocaleString()}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={{ padding: 14, borderRadius: 5, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border }}>
-          <Text style={{ fontSize: 14, color: COLORS.red }}>✗ Decline — Not the Right Fit</Text>
+          style={{ backgroundColor: COLORS.gold, padding: 14, borderRadius: 5, alignItems: 'center', marginTop: 20 }}
+          onPress={() => navigation.navigate('BrowseMain')}>
+          <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark }}>🔍 Browse Maids</Text>
         </TouchableOpacity>
       </View>
     </View>

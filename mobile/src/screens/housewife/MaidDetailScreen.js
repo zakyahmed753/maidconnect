@@ -4,11 +4,14 @@ import { maidsAPI, chatsAPI, hwAPI, paymentsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from '../../utils/i18n';
 
 export default function MaidDetailScreen({ route, navigation }) {
   const { maid } = route.params;
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hireLoading, setHireLoading] = useState(false);
   const [reviewModal, setReviewModal] = useState(false);
   const [reviewStar, setReviewStar] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
@@ -23,16 +26,37 @@ export default function MaidDetailScreen({ route, navigation }) {
       .then(r => setReviews(r.data?.reviews || []))
       .catch(() => {});
     hwAPI.getProfile().then(r => {
-      const hired = (r.data?.profile?.hiredMaids || []).some(h =>
+      const hw = r.data?.profile;
+      const hired = (hw?.hiredMaids || []).some(h =>
         h.maid === maid._id || h.maid?._id === maid._id
       );
       setIsHired(hired);
+      // Sync saved/liked state from server
+      const isSaved = (hw?.savedMaids || []).some(s =>
+        s === maid._id || s?._id === maid._id
+      );
+      setLiked(isSaved);
     }).catch(() => {});
   }, []);
 
   const handleLike = async () => {
-    try { await maidsAPI.toggleLike(maid._id); setLiked(l => !l); }
-    catch { Toast.show({ type:'error', text1:'Failed' }); }
+    const next = !liked;
+    setLiked(next);
+    try { await maidsAPI.toggleLike(maid._id); }
+    catch { setLiked(!next); Toast.show({ type:'error', text1: t('save_failed') }); }
+  };
+
+  const handleHire = async () => {
+    setHireLoading(true);
+    try {
+      await hwAPI.hireMaid({ maidProfileId: maid._id });
+      setIsHired(true);
+      Toast.show({ type:'success', text1: t('hire_success') });
+    } catch (err) {
+      Toast.show({ type:'error', text1: err.response?.data?.message || t('hire_failed') });
+    } finally {
+      setHireLoading(false);
+    }
   };
 
   const handleReviewSubmit = async () => {
@@ -60,7 +84,6 @@ export default function MaidDetailScreen({ route, navigation }) {
   });
 
   const handleOpenChat = async () => {
-    // Client-side gate: housewife must have active subscription
     if (user?.role === 'housewife') {
       const sub = profile?.subscription;
       const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
@@ -88,13 +111,13 @@ export default function MaidDetailScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding:4 }}>
           <Text style={{ fontSize:22, color:COLORS.muted }}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Profile</Text>
+        <Text style={styles.topBarTitle}>{t('profile_title')}</Text>
         <TouchableOpacity onPress={handleLike}>
           <Text style={{ fontSize:22 }}>{liked ? '❤️' : '🤍'}</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom:100 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom:130 }}>
         {/* Photo gallery */}
         <View style={styles.gallery}>
           <View style={[styles.galMain, { backgroundColor: maid.origin==='african'?'#2d1a0a':'#1a0d2e' }]}>
@@ -121,10 +144,10 @@ export default function MaidDetailScreen({ route, navigation }) {
             <Text style={styles.originTxt}>{maid.nationality} · {maid.age} yrs · ⭐{maid.rating?.toFixed(1)||'—'} ({maid.reviewCount||0} reviews)</Text>
           </View>
 
-          <Text style={styles.secTitle}>About</Text>
+          <Text style={styles.secTitle}>{t('about')}</Text>
           <Text style={styles.bio}>{maid.bio || 'No bio provided.'}</Text>
 
-          <Text style={styles.secTitle}>Details</Text>
+          <Text style={styles.secTitle}>{t('details')}</Text>
           <View style={styles.infoGrid}>
             {[['Experience',`${maid.experienceYears} Years`],['Expected Salary',`EGP ${(maid.expectedSalary||0).toLocaleString()}/mo`],['Age',`${maid.age} years`],['Origin',maid.nationality]].map(([l,v])=>(
               <View key={l} style={styles.infoBox}>
@@ -134,13 +157,13 @@ export default function MaidDetailScreen({ route, navigation }) {
             ))}
           </View>
 
-          <Text style={styles.secTitle}>Skills</Text>
+          <Text style={styles.secTitle}>{t('skills')}</Text>
           <View style={styles.skillsWrap}>
             {(maid.skills||[]).map(s => <View key={s} style={styles.skillPill}><Text style={styles.skillTxt}>{s}</Text></View>)}
           </View>
 
           {(maid.languages||[]).length > 0 && <>
-            <Text style={styles.secTitle}>Languages</Text>
+            <Text style={styles.secTitle}>{t('languages_spoken')}</Text>
             <View style={styles.skillsWrap}>
               {maid.languages.map(l=><View key={l} style={styles.skillPill}><Text style={styles.skillTxt}>{l}</Text></View>)}
             </View>
@@ -148,15 +171,15 @@ export default function MaidDetailScreen({ route, navigation }) {
 
           {/* Reviews section */}
           <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:16 }}>
-            <Text style={styles.secTitle}>Reviews</Text>
+            <Text style={styles.secTitle}>{t('reviews_section')}</Text>
             {isHired && (
               <TouchableOpacity onPress={() => setReviewModal(true)} style={{ backgroundColor:COLORS.gold, paddingHorizontal:12, paddingVertical:5, borderRadius:4 }}>
-                <Text style={{ fontSize:11, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>✍️ Write Review</Text>
+                <Text style={{ fontSize:11, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>{t('write_review')}</Text>
               </TouchableOpacity>
             )}
           </View>
           {reviews.length === 0
-            ? <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:8 }}>No reviews yet. Be the first!</Text>
+            ? <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:8 }}>{t('no_reviews_yet')}</Text>
             : reviews.map(rv => (
               <View key={rv._id} style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, marginBottom:8 }}>
                 <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:4 }}>
@@ -200,7 +223,7 @@ export default function MaidDetailScreen({ route, navigation }) {
             >
               {reviewLoading
                 ? <ActivityIndicator color={COLORS.dark}/>
-                : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>Submit Review</Text>
+                : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{t('submit_review')}</Text>
               }
             </TouchableOpacity>
           </View>
@@ -209,12 +232,30 @@ export default function MaidDetailScreen({ route, navigation }) {
 
       {/* Action bar */}
       <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.btnSecondary} onPress={handleLike}>
-          <Text style={styles.btnSecondaryTxt}>{liked ? '❤️ Saved' : '🤍 Save'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.btnPrimary, loading && { opacity:0.6 }]} onPress={handleOpenChat} disabled={loading}>
-          <Text style={styles.btnPrimaryTxt}>{loading ? 'Opening…' : '💬 Open Chat'}</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
+          <TouchableOpacity style={styles.btnSecondary} onPress={handleLike}>
+            <Text style={styles.btnSecondaryTxt}>{liked ? '❤️ Saved' : '🤍 Save'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.btnChat, loading && { opacity:0.6 }]} onPress={handleOpenChat} disabled={loading}>
+            <Text style={styles.btnPrimaryTxt}>{loading ? t('opening') : `💬 ${t('open_chat')}`}</Text>
+          </TouchableOpacity>
+        </View>
+        {isHired ? (
+          <View style={[styles.btnHire, { backgroundColor:'#2e7d5e' }]}>
+            <Text style={styles.btnPrimaryTxt}>{t('already_hired')}</Text>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={[styles.btnHire, hireLoading && { opacity:0.6 }]}
+            onPress={handleHire}
+            disabled={hireLoading}
+          >
+            {hireLoading
+              ? <ActivityIndicator color={COLORS.dark}/>
+              : <Text style={styles.btnPrimaryTxt}>👑 {t('hire_this_maid')}</Text>
+            }
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -242,9 +283,10 @@ const styles = StyleSheet.create({
   skillsWrap:  { flexDirection:'row', flexWrap:'wrap', gap:7 },
   skillPill:   { paddingHorizontal:12, paddingVertical:6, backgroundColor:'#f4ede0', borderRadius:20, borderWidth:1, borderColor:COLORS.border },
   skillTxt:    { fontSize:12, color:COLORS.brown },
-  actionBar:   { position:'absolute', bottom:0, left:0, right:0, flexDirection:'row', gap:10, padding:14, paddingBottom:28, backgroundColor:COLORS.surface, borderTopWidth:1, borderTopColor:COLORS.border },
+  actionBar:   { position:'absolute', bottom:0, left:0, right:0, padding:14, paddingBottom:28, backgroundColor:COLORS.surface, borderTopWidth:1, borderTopColor:COLORS.border },
   btnSecondary:{ flex:1, padding:13, borderRadius:6, borderWidth:1.5, borderColor:COLORS.border, alignItems:'center', backgroundColor:COLORS.cream },
   btnSecondaryTxt:{ fontFamily:FONTS.bodyMedium, fontSize:14, color:COLORS.brown },
-  btnPrimary:  { flex:1, padding:13, borderRadius:6, backgroundColor:COLORS.gold, alignItems:'center' },
+  btnChat:     { flex:1, padding:13, borderRadius:6, backgroundColor:COLORS.gold, alignItems:'center' },
+  btnHire:     { width:'100%', padding:14, borderRadius:6, backgroundColor:COLORS.gold, alignItems:'center' },
   btnPrimaryTxt:{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark },
 });

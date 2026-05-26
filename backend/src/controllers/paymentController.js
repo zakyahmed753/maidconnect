@@ -274,9 +274,13 @@ exports.returnMaid = async (req, res) => {
     await HouseWife.findOneAndUpdate({ user: req.user._id }, {
       'freeVacancy.available': true,
       'freeVacancy.expiresAt': expiresAt,
-      // Remove from hiredMaids
       $pull: { hiredMaids: { maid: maidProfileId } },
     });
+
+    // Restore maid to available so she appears in browse again
+    if (maidProfileId) {
+      await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true });
+    }
 
     if (chatId) {
       const { Chat } = require('../models/index');

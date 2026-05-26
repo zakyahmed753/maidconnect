@@ -4,6 +4,7 @@ import {
   ScrollView, Image, ActivityIndicator, RefreshControl, StatusBar
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 import { maidsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
@@ -130,8 +131,8 @@ export default function BrowseScreen({ navigation }) {
 
   useEffect(() => { setLoading(true); fetchMaids(true); }, [activeFilter]);
 
-  // Load saved IDs on mount and after each refresh
-  useEffect(() => { loadSavedIds(); }, []);
+  // Reload saved IDs each time this screen gains focus (handles returning from MaidDetailScreen)
+  useFocusEffect(React.useCallback(() => { loadSavedIds(); }, [loadSavedIds]));
 
   const onRefresh = () => {
     setRefreshing(true);

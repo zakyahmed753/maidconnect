@@ -39,6 +39,7 @@ export const hwAPI = {
   getProfile:          ()     => api.get('/housewives/me'),
   updateProfile:       (data) => api.put('/housewives/me', data),
   getSubscriptionStatus: ()   => api.get('/housewives/me'),
+  hireMaid:            (data) => api.post('/housewives/hire', data),
 };
 
 export const maidsAPI = {

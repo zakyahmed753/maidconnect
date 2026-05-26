@@ -68,6 +68,36 @@ const T = {
     // Settings / Language
     language: 'Language', change_language: 'Change Language',
     lang_en: 'English', lang_ar: 'Arabic', lang_fr: 'French', lang_ha: 'Hausa',
+
+    // MaidDetail
+    open_chat: 'Open Chat', opening: 'Opening…',
+    hire_this_maid: 'Hire this Maid', already_hired: 'Already Hired ✅',
+    hire_success: 'Maid hired successfully!', hire_failed: 'Failed to hire',
+    about: 'About', details: 'Details', languages_spoken: 'Languages',
+    reviews_section: 'Reviews', no_reviews_yet: 'No reviews yet. Be the first!',
+    write_review: '✍️ Write Review', submit_review: 'Submit Review',
+    profile_title: 'Profile',
+
+    // HW Profile menu
+    menu_saved: 'Saved Maids', menu_messages: 'Messages',
+    menu_payments: 'Payments', menu_notifications: 'Notifications',
+    menu_support: 'Support', menu_sign_out: 'Sign Out',
+    edit_btn: '✏️ Edit', edit_profile: 'Edit Profile',
+
+    // Notifications
+    notifications_title: 'Notifications', mark_all_read: 'Mark all read',
+
+    // Chats
+    chats_title: 'Messages', no_chats: 'No chats yet',
+    subscribe_chat_title: 'Subscribe to Access Messages',
+    subscribe_chat_body: 'Chat with maids and manage your hiring process with a monthly subscription.',
+    subscribe_btn: 'Subscribe — EGP 1,000/mo',
+
+    // Saved
+    saved_title: 'Saved Maids ❤️', no_saved_maids: 'No saved maids yet',
+
+    // Maid dash
+    views: 'Views', likes: 'Likes', chats_stat: 'Chats',
   },
 
   ar: {
@@ -137,6 +167,36 @@ const T = {
     // Settings / Language
     language: 'اللغة', change_language: 'تغيير اللغة',
     lang_en: 'الإنجليزية', lang_ar: 'العربية', lang_fr: 'الفرنسية', lang_ha: 'الهوسا',
+
+    // MaidDetail
+    open_chat: 'فتح المحادثة', opening: 'جارٍ الفتح…',
+    hire_this_maid: 'توظيف هذه العاملة', already_hired: 'تم التوظيف ✅',
+    hire_success: 'تم توظيف العاملة بنجاح!', hire_failed: 'فشل التوظيف',
+    about: 'نبذة', details: 'التفاصيل', languages_spoken: 'اللغات',
+    reviews_section: 'التقييمات', no_reviews_yet: 'لا توجد تقييمات بعد. كن الأول!',
+    write_review: '✍️ كتابة تقييم', submit_review: 'إرسال التقييم',
+    profile_title: 'الملف الشخصي',
+
+    // HW Profile menu
+    menu_saved: 'العمالة المحفوظة', menu_messages: 'الرسائل',
+    menu_payments: 'المدفوعات', menu_notifications: 'الإشعارات',
+    menu_support: 'الدعم', menu_sign_out: 'تسجيل الخروج',
+    edit_btn: '✏️ تعديل', edit_profile: 'تعديل الملف الشخصي',
+
+    // Notifications
+    notifications_title: 'الإشعارات', mark_all_read: 'تحديد الكل كمقروء',
+
+    // Chats
+    chats_title: 'الرسائل', no_chats: 'لا محادثات بعد',
+    subscribe_chat_title: 'اشترك للوصول إلى الرسائل',
+    subscribe_chat_body: 'تحدث مع العمالة وأدر عملية التوظيف باشتراك شهري.',
+    subscribe_btn: 'اشتراك — 1,000 جنيه/شهر',
+
+    // Saved
+    saved_title: 'العمالة المحفوظة ❤️', no_saved_maids: 'لا توجد عمالة محفوظة بعد',
+
+    // Maid dash
+    views: 'مشاهدات', likes: 'إعجابات', chats_stat: 'محادثات',
   },
 
   fr: {
@@ -206,6 +266,36 @@ const T = {
     // Settings / Language
     language: 'Langue', change_language: 'Changer de langue',
     lang_en: 'Anglais', lang_ar: 'Arabe', lang_fr: 'Français', lang_ha: 'Haoussa',
+
+    // MaidDetail
+    open_chat: 'Ouvrir le chat', opening: 'Ouverture…',
+    hire_this_maid: 'Embaucher cette employée', already_hired: 'Déjà embauchée ✅',
+    hire_success: 'Employée embauchée avec succès!', hire_failed: "Échec de l'embauche",
+    about: 'À propos', details: 'Détails', languages_spoken: 'Langues',
+    reviews_section: 'Avis', no_reviews_yet: 'Pas encore d\'avis. Soyez le premier!',
+    write_review: '✍️ Écrire un avis', submit_review: 'Soumettre l\'avis',
+    profile_title: 'Profil',
+
+    // HW Profile menu
+    menu_saved: 'Profils sauvegardés', menu_messages: 'Messages',
+    menu_payments: 'Paiements', menu_notifications: 'Notifications',
+    menu_support: 'Support', menu_sign_out: 'Se déconnecter',
+    edit_btn: '✏️ Modifier', edit_profile: 'Modifier le profil',
+
+    // Notifications
+    notifications_title: 'Notifications', mark_all_read: 'Tout marquer comme lu',
+
+    // Chats
+    chats_title: 'Messages', no_chats: 'Aucune conversation',
+    subscribe_chat_title: "S'abonner pour accéder aux messages",
+    subscribe_chat_body: 'Discutez avec les employées et gérez votre processus d\'embauche.',
+    subscribe_btn: "S'abonner — 1 000 EGP/mois",
+
+    // Saved
+    saved_title: 'Profils sauvegardés ❤️', no_saved_maids: 'Aucun profil sauvegardé',
+
+    // Maid dash
+    views: 'Vues', likes: 'J\'aime', chats_stat: 'Chats',
   },
 
   ha: {
@@ -275,6 +365,36 @@ const T = {
     // Settings / Language
     language: 'Harshe', change_language: 'Canza harshe',
     lang_en: 'Turanci', lang_ar: 'Larabci', lang_fr: 'Faransanci', lang_ha: 'Hausa',
+
+    // MaidDetail
+    open_chat: 'Buɗe tattaunawa', opening: 'Ana buɗewa…',
+    hire_this_maid: 'Ɗauki wannan ma\'aikata', already_hired: 'An ɗauka ✅',
+    hire_success: 'An ɗauki ma\'aikata!', hire_failed: 'Ɗaukar ya kasa',
+    about: 'Game da', details: 'Bayani', languages_spoken: 'Harsunan da ake magana',
+    reviews_section: 'Bita', no_reviews_yet: 'Babu bita tukuna. Ku zama na farko!',
+    write_review: '✍️ Rubuta bita', submit_review: 'Aika bita',
+    profile_title: 'Bayanin martaba',
+
+    // HW Profile menu
+    menu_saved: "Ma'aikata da aka ajiye", menu_messages: 'Saƙonni',
+    menu_payments: 'Biyan kuɗi', menu_notifications: 'Sanarwa',
+    menu_support: 'Tallafi', menu_sign_out: 'Fita',
+    edit_btn: '✏️ Gyara', edit_profile: 'Gyara bayanin martaba',
+
+    // Notifications
+    notifications_title: 'Sanarwa', mark_all_read: 'Alama duka an karanta',
+
+    // Chats
+    chats_title: 'Saƙonni', no_chats: 'Babu tattaunawa tukuna',
+    subscribe_chat_title: 'Yi rajista don samun damar saƙonni',
+    subscribe_chat_body: 'Yi hira da ma\'aikata kuma sarrafa tsarin ɗaukar ma\'aikata.',
+    subscribe_btn: 'Yi rajista — EGP 1,000/wata',
+
+    // Saved
+    saved_title: "Ma'aikata da aka adana ❤️", no_saved_maids: "Babu ma'aikata da aka adana tukuna",
+
+    // Maid dash
+    views: 'Kallon', likes: 'Son', chats_stat: 'Tattaunawa',
   },
 };
 
