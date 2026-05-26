@@ -462,8 +462,8 @@ export function ApprovalScreen({ route, navigation }) {
 
         <TouchableOpacity
           style={{ backgroundColor: '#2e7d5e', padding: 14, borderRadius: 5, alignItems: 'center', marginBottom: 10 }}
-          onPress={() => navigation.navigate('Payment', { type: 'commission', chatId, maidName, maidProfileId })}>
-          <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>✅ Approve & Pay Commission</Text>
+          onPress={() => navigation.navigate('Payment', { type: 'commission', chatId, maidName, maidProfileId, amount: commission })}>
+          <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>✅ Approve & Pay Commission — EGP {commission.toLocaleString()}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={{ padding: 14, borderRadius: 5, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border }}>
           <Text style={{ fontSize: 14, color: COLORS.red }}>✗ Decline — Not the Right Fit</Text>

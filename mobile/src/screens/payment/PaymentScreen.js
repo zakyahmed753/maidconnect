@@ -28,7 +28,8 @@ export default function PaymentScreen({ route, navigation }) {
   const completeAuth     = useAuthStore(s => s.completeAuth);
   const user             = useAuthStore(s => s.user);
 
-  const displayAmount = amount || (plan ? PLANS[plan]?.price : 0);
+  const [backendAmount, setBackendAmount] = useState(null);
+  const displayAmount = backendAmount || amount || (plan ? PLANS[plan]?.price : 0);
   const planInfo      = plan ? PLANS[plan] : null;
 
   // Poll backend until payment is confirmed or all attempts exhausted
@@ -109,7 +110,8 @@ export default function PaymentScreen({ route, navigation }) {
     setLoading(true);
     try {
       const res = await paymentsAPI.initiatePaymob({ type, plan, maidProfileId, chatId });
-      const { iframeUrl, paymentId } = res.data;
+      const { iframeUrl, paymentId, amount: returnedAmount } = res.data;
+      if (returnedAmount) setBackendAmount(returnedAmount);
       pendingPaymentId.current = paymentId;
       await Linking.openURL(iframeUrl);
     } catch (err) {
@@ -142,7 +144,9 @@ export default function PaymentScreen({ route, navigation }) {
             <Text style={styles.rowKey}>
               {type === 'subscription'
                 ? `${planInfo?.label ?? plan} Subscription`
-                : `Commission — ${maidName}`}
+                : type === 'customer_subscription'
+                ? 'Customer Platform Subscription'
+                : `Commission — ${maidName || 'Maid'}`}
             </Text>
             {planInfo?.badge && (
               <View style={styles.badge}><Text style={styles.badgeTxt}>{planInfo.badge}</Text></View>
