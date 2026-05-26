@@ -14,7 +14,8 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [reviewComment, setReviewComment] = useState('');
   const [reviewLoading, setReviewLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
-  const user = useAuthStore(s => s.user);
+  const user    = useAuthStore(s => s.user);
+  const profile = useAuthStore(s => s.profile);
   const [isHired, setIsHired] = useState(false);
 
   useEffect(() => {
@@ -52,18 +53,26 @@ export default function MaidDetailScreen({ route, navigation }) {
     }
   };
 
+  const goToSubscription = () => navigation.navigate('CustomerSubscription', {
+    maidUserId:    maid.user?._id || maid.user,
+    maidProfileId: maid._id,
+    maidName:      maid.fullName,
+  });
+
   const handleOpenChat = async () => {
+    // Client-side gate: housewife must have active subscription
+    if (user?.role === 'housewife') {
+      const sub = profile?.subscription;
+      const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
+      if (!active) { goToSubscription(); return; }
+    }
     setLoading(true);
     try {
       const res = await chatsAPI.startChat({ maidUserId: maid.user?._id || maid.user, maidProfileId: maid._id });
       navigation.navigate('Chat', { chatId: res.data.chat._id, maidName: maid.fullName });
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
-        navigation.navigate('CustomerSubscription', {
-          maidUserId: maid.user?._id || maid.user,
-          maidProfileId: maid._id,
-          maidName: maid.fullName,
-        });
+        goToSubscription();
       } else {
         Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to open chat' });
       }
