@@ -20,6 +20,7 @@ export default function MaidDetailScreen({ route, navigation }) {
   const user    = useAuthStore(s => s.user);
   const profile = useAuthStore(s => s.profile);
   const [isHired, setIsHired] = useState(false);
+  const [hireRequestSent, setHireRequestSent] = useState(false); // pending maid approval
 
   useEffect(() => {
     maidsAPI.getReviews(maid._id)
@@ -31,6 +32,9 @@ export default function MaidDetailScreen({ route, navigation }) {
         h.maid === maid._id || h.maid?._id === maid._id
       );
       setIsHired(hired);
+      // Check for pending hire request
+      const pending = (r.data?.pendingHireRequests || []);
+      setHireRequestSent(pending.includes(maid._id));
       // Sync saved/liked state from server
       const isSaved = (hw?.savedMaids || []).some(s =>
         s === maid._id || s?._id === maid._id
@@ -50,8 +54,8 @@ export default function MaidDetailScreen({ route, navigation }) {
     setHireLoading(true);
     try {
       await hwAPI.hireMaid({ maidProfileId: maid._id });
-      setIsHired(true);
-      Toast.show({ type:'success', text1: t('hire_success') });
+      setHireRequestSent(true);
+      Toast.show({ type:'success', text1: '👑 Request Sent!', text2: 'Waiting for the maid to approve.' });
     } catch (err) {
       Toast.show({ type:'error', text1: err.response?.data?.message || t('hire_failed') });
     } finally {
@@ -243,6 +247,10 @@ export default function MaidDetailScreen({ route, navigation }) {
         {isHired ? (
           <View style={[styles.btnHire, { backgroundColor:'#2e7d5e' }]}>
             <Text style={styles.btnPrimaryTxt}>{t('already_hired')}</Text>
+          </View>
+        ) : hireRequestSent ? (
+          <View style={[styles.btnHire, { backgroundColor:'#3d2203', borderWidth:1.5, borderColor:COLORS.gold }]}>
+            <Text style={[styles.btnPrimaryTxt, { color:COLORS.gold }]}>⏳ Request Sent — Awaiting Approval</Text>
           </View>
         ) : (
           <TouchableOpacity

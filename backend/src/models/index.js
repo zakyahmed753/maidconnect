@@ -6,7 +6,8 @@ const houseWifeSchema = new mongoose.Schema({
   fullName:{ type: String, required: true },
   country: { type: String, default: 'Egypt' },
   city:    { type: String },
-  savedMaids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Maid' }],
+  savedMaids:   [{ type: mongoose.Schema.Types.ObjectId, ref: 'Maid' }],
+  blockedMaids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Maid' }],
   hiredMaids: [{
     maid:      { type: mongoose.Schema.Types.ObjectId, ref: 'Maid' },
     hiredAt:   { type: Date, default: Date.now },
@@ -95,7 +96,7 @@ const notificationSchema = new mongoose.Schema({
   user:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   type:    {
     type: String,
-    enum: ['like','chat','approval','payment','new_maid','hire_confirmed','subscription','system'],
+    enum: ['like','chat','approval','payment','new_maid','hire_confirmed','hire_request','hire_rejected','subscription','system'],
     required: true
   },
   title:   { type: String, required: true },
@@ -106,6 +107,18 @@ const notificationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 notificationSchema.index({ user: 1, isRead: 1 });
+
+// ── Hire Request ──
+const hireRequestSchema = new mongoose.Schema({
+  housewife:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  hwProfile:   { type: mongoose.Schema.Types.ObjectId, ref: 'HouseWife' },
+  maid:        { type: mongoose.Schema.Types.ObjectId, ref: 'Maid', required: true },
+  chatId:      { type: mongoose.Schema.Types.ObjectId, ref: 'Chat' },
+  status:      { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  respondedAt: { type: Date },
+  createdAt:   { type: Date, default: Date.now },
+});
+hireRequestSchema.index({ housewife: 1, maid: 1 });
 
 // ── Review ──
 const reviewSchema = new mongoose.Schema({
@@ -134,11 +147,12 @@ const supportTicketSchema = new mongoose.Schema({
 supportTicketSchema.index({ user: 1, createdAt: -1 });
 
 module.exports = {
-  HouseWife:      mongoose.model('HouseWife', houseWifeSchema),
-  SupportTicket:  mongoose.model('SupportTicket', supportTicketSchema),
+  HouseWife:    mongoose.model('HouseWife', houseWifeSchema),
+  SupportTicket:mongoose.model('SupportTicket', supportTicketSchema),
   Chat:         mongoose.model('Chat', chatSchema),
   Message:      mongoose.model('Message', messageSchema),
   Payment:      mongoose.model('Payment', paymentSchema),
   Notification: mongoose.model('Notification', notificationSchema),
-  Review:       mongoose.model('Review', reviewSchema)
+  Review:       mongoose.model('Review', reviewSchema),
+  HireRequest:  mongoose.model('HireRequest', hireRequestSchema),
 };

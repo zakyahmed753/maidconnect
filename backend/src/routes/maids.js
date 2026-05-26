@@ -6,6 +6,8 @@ const { protect, maidOnly } = require('../middleware/auth');
 router.get('/',                        protect, mc.getAllMaids);
 router.get('/saved/list',              protect, mc.getSavedMaids);
 router.get('/me',                      protect, maidOnly, mc.getMyProfile);
+router.get('/hire-requests',           protect, maidOnly, mc.getHireRequests);
+router.put('/hire-requests/:id/respond', protect, maidOnly, mc.respondHireRequest);
 router.get('/:id',                     protect, mc.getMaid);
 router.post('/',                       protect, maidOnly, mc.createProfile);
 router.put('/me',                      protect, maidOnly, mc.updateProfile);

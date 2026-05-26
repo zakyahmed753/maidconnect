@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, ActivityIndicator, Platform } from 'react-native';
 import * as Font from 'expo-font';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import {
   CormorantGaramond_400Regular,
   CormorantGaramond_600SemiBold,
@@ -15,16 +17,53 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import AppNavigator from './src/navigation/AppNavigator';
+import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
 import useAuthStore from './src/store/authStore';
 import useLangStore from './src/store/langStore';
+import { authAPI } from './src/services/api';
 import { COLORS } from './src/utils/theme';
+
+// Show notifications while app is foregrounded
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+async function registerForPushNotifications() {
+  try {
+    const { status: existing } = await Notifications.getPermissionsAsync();
+    let finalStatus = existing;
+    if (existing !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') return null;
+
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    const token = tokenData.data;
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#C9A84C',
+      });
+    }
+    return token;
+  } catch { return null; }
+}
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = React.useState(false);
   const init = useAuthStore(s => s.init);
   const loading = useAuthStore(s => s.loading);
   const initLang = useLangStore(s => s.init);
+  const notifResponseListener = useRef();
 
   useEffect(() => {
     async function load() {
@@ -40,8 +79,28 @@ export default function App() {
       });
       setFontsLoaded(true);
       await init();
+
+      // Register push token and save to backend
+      const token = await registerForPushNotifications();
+      if (token) {
+        try { await authAPI.updateMe({ fcmToken: token }); } catch {}
+      }
     }
     load();
+
+    // Navigate when user taps a notification
+    notifResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      if (data?.screen === 'HireRequest' && navigationRef.isReady()) {
+        navigationRef.navigate('MaidHome', { screen: 'HireRequest' });
+      }
+    });
+
+    return () => {
+      if (notifResponseListener.current) {
+        Notifications.removeNotificationSubscription(notifResponseListener.current);
+      }
+    };
   }, []);
 
   if (!fontsLoaded || loading) {

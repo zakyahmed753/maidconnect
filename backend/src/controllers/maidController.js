@@ -1,6 +1,8 @@
 const Maid = require('../models/Maid');
 const User = require('../models/User');
-const { HouseWife, Notification } = require('../models/index');
+const { HouseWife, Notification, HireRequest } = require('../models/index');
+const { sendEmail, hireApprovedEmailToCustomer, hireRejectedEmailToCustomer } = require('../utils/email');
+const { sendPush } = require('../utils/push');
 
 // ── Create / Update Maid Profile ──
 exports.createProfile = async (req, res) => {
@@ -44,6 +46,14 @@ exports.getAllMaids = async (req, res) => {
       approvalStatus: 'approved',
       isHired: false,
     };
+
+    // Exclude maids blocked (rejected hire) for this housewife
+    if (req.user?.role === 'housewife') {
+      const hw = await HouseWife.findOne({ user: req.user._id }).select('blockedMaids');
+      if (hw?.blockedMaids?.length) {
+        filter._id = { $nin: hw.blockedMaids };
+      }
+    }
 
     if (origin)      filter.origin = origin;
     if (nationality) filter.nationality = new RegExp(nationality, 'i');
@@ -204,7 +214,7 @@ exports.submitReview = async (req, res) => {
     const { HouseWife, Review } = require('../models/index');
 
     const hw = await HouseWife.findOne({ user: req.user._id });
-    const wasHired = hw?.hiredMaids?.some(h => h.maid.toString() === maidId && h.commissionPaid);
+    const wasHired = hw?.hiredMaids?.some(h => h.maid.toString() === maidId);
     if (!wasHired) {
       return res.status(403).json({ success: false, message: 'You can only review a maid you have hired' });
     }
@@ -269,6 +279,133 @@ exports.deletePhoto = async (req, res) => {
     maid.photos = maid.photos.filter(p => p._id.toString() !== req.params.photoId);
     await maid.save();
     res.json({ success: true, photos: maid.photos });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Get Hire Requests (maid sees incoming requests) ──
+exports.getHireRequests = async (req, res) => {
+  try {
+    const maid = await Maid.findOne({ user: req.user._id });
+    if (!maid) return res.status(404).json({ success: false });
+
+    const requests = await HireRequest.find({ maid: maid._id, status: 'pending' })
+      .populate('housewife', 'name email phone')
+      .populate('hwProfile', 'fullName city country')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, requests });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Respond to Hire Request (maid approves or rejects) ──
+exports.respondHireRequest = async (req, res) => {
+  try {
+    const { action } = req.body; // 'approve' | 'reject'
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'action must be approve or reject' });
+    }
+
+    const request = await HireRequest.findById(req.params.id)
+      .populate('housewife', 'name email fcmToken')
+      .populate('maid');
+
+    if (!request) return res.status(404).json({ success: false, message: 'Request not found' });
+
+    // Verify this request belongs to the authenticated maid
+    const maid = await Maid.findOne({ user: req.user._id });
+    if (!maid || String(request.maid._id) !== String(maid._id)) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    request.status = action === 'approve' ? 'approved' : 'rejected';
+    request.respondedAt = new Date();
+    await request.save();
+
+    const hwUser = request.housewife;
+    const maidName = maid.fullName;
+
+    if (action === 'approve') {
+      // Add maid to housewife's hiredMaids
+      const alreadyHired = await HouseWife.findOne({
+        user: hwUser._id,
+        'hiredMaids.maid': maid._id
+      });
+      if (!alreadyHired) {
+        await HouseWife.findOneAndUpdate(
+          { user: hwUser._id },
+          { $push: { hiredMaids: { maid: maid._id, commissionPaid: false, commissionAmount: 0 } } }
+        );
+      }
+      // Mark maid unavailable
+      await Maid.findByIdAndUpdate(maid._id, { isAvailable: false });
+
+      // Update chat if linked
+      if (request.chatId) {
+        const { Chat } = require('../models/index');
+        await Chat.findByIdAndUpdate(request.chatId, { approvalStatus: 'hired' });
+      }
+
+      // Notify customer (in-app + push + email)
+      await Notification.create({
+        user: hwUser._id,
+        type: 'hire_confirmed',
+        title: '🎉 Hire Confirmed!',
+        body: `${maidName} accepted your hire request!`,
+      });
+      await sendPush({
+        token: hwUser.fcmToken,
+        title: '🎉 Hire Confirmed!',
+        body: `${maidName} accepted your hire request.`,
+        data: { screen: 'Home' },
+      });
+      await sendEmail({
+        to: hwUser.email,
+        subject: `Hire Confirmed — ${maidName} accepted! — Servix`,
+        html: hireApprovedEmailToCustomer(hwUser.name, maidName),
+      });
+
+      // Maid also gets in-app notification
+      await Notification.create({
+        user: req.user._id,
+        type: 'hire_confirmed',
+        title: '🎉 You\'re Hired!',
+        body: `Congratulations! You accepted the hire request from ${hwUser.name}.`,
+      });
+
+      res.json({ success: true, action: 'approved' });
+
+    } else {
+      // Reject — block this maid from appearing to this housewife again
+      await HouseWife.findOneAndUpdate(
+        { user: hwUser._id },
+        { $addToSet: { blockedMaids: maid._id } }
+      );
+
+      // Notify customer
+      await Notification.create({
+        user: hwUser._id,
+        type: 'hire_rejected',
+        title: 'Hire Request Declined',
+        body: `${maidName} declined your hire request. Browse other maids to find the right fit.`,
+      });
+      await sendPush({
+        token: hwUser.fcmToken,
+        title: 'Hire Request Declined',
+        body: `${maidName} declined your request.`,
+        data: { screen: 'Browse' },
+      });
+      await sendEmail({
+        to: hwUser.email,
+        subject: `Hire Request Declined — Servix`,
+        html: hireRejectedEmailToCustomer(hwUser.name, maidName),
+      });
+
+      res.json({ success: true, action: 'rejected' });
+    }
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

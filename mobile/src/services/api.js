@@ -54,6 +54,8 @@ export const maidsAPI = {
   getSaved:      ()       => api.get('/maids/saved/list'),
   submitReview:  (id, data) => api.post(`/maids/${id}/reviews`, data),
   getReviews:    (id)     => api.get(`/maids/${id}/reviews`),
+  getHireRequests:    ()           => api.get('/maids/hire-requests'),
+  respondHireRequest: (id, action) => api.put(`/maids/hire-requests/${id}/respond`, { action }),
 };
 
 export const chatsAPI = {

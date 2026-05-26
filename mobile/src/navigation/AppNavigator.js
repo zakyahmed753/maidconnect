@@ -1,11 +1,13 @@
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
 import useAuthStore from '../store/authStore';
 import { COLORS } from '../utils/theme';
+
+export const navigationRef = createNavigationContainerRef();
 
 // Auth screens
 import SplashScreen  from '../screens/auth/SplashScreen';
@@ -34,6 +36,8 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 // Maid screens
 import MaidDashScreen from '../screens/maid/MaidDashScreen';
 import EditProfileScreen from '../screens/maid/EditProfileScreen';
+import HireRequestScreen from '../screens/maid/HireRequestScreen';
+import HiredCelebrationScreen from '../screens/maid/HiredCelebrationScreen';
 import { AnalyticsScreen, EditHWProfileScreen, SupportScreen, PaymentHistoryScreen } from '../screens/screens';
 
 const Stack = createStackNavigator();
@@ -88,11 +92,13 @@ function BrowseStack() {
 function MaidHomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown:false }}>
-      <Stack.Screen name="MaidDash"       component={MaidDashScreen}/>
-      <Stack.Screen name="Analytics"      component={AnalyticsScreen}/>
-      <Stack.Screen name="Support"        component={SupportScreen}/>
-      <Stack.Screen name="EditProfile"    component={EditProfileScreen}/>
-      <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen}/>
+      <Stack.Screen name="MaidDash"          component={MaidDashScreen}/>
+      <Stack.Screen name="Analytics"         component={AnalyticsScreen}/>
+      <Stack.Screen name="Support"           component={SupportScreen}/>
+      <Stack.Screen name="EditProfile"       component={EditProfileScreen}/>
+      <Stack.Screen name="PaymentHistory"    component={PaymentHistoryScreen}/>
+      <Stack.Screen name="HireRequest"       component={HireRequestScreen}/>
+      <Stack.Screen name="HiredCelebration"  component={HiredCelebrationScreen}/>
     </Stack.Navigator>
   );
 }
@@ -114,7 +120,7 @@ export default function AppNavigator() {
   const { token, user, profile } = useAuthStore();
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown:false, cardStyle:{ backgroundColor:COLORS.cream } }}>
         {!token ? (
           // Unauthenticated + mid-registration (completeAuth not yet called)
