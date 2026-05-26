@@ -130,7 +130,28 @@ export function ChatsListScreen({ navigation }) {
   const [chats, setChats] = useState([]);
   const user    = useAuthStore(s => s.user);
   const profile = useAuthStore(s => s.profile);
-  useEffect(() => { chatsAPI.getMyChats().then(r=>setChats(r.data.chats)).catch(()=>{}); }, []);
+  const socketRef = React.useRef(null);
+
+  const loadChats = () => chatsAPI.getMyChats().then(r => setChats(r.data.chats || [])).catch(() => {});
+
+  // Refresh list whenever screen is focused (e.g. returning from ChatScreen)
+  useFocusEffect(React.useCallback(() => { loadChats(); }, []));
+
+  // Real-time: listen for new_chat_message on personal user room
+  useEffect(() => {
+    let socket;
+    (async () => {
+      const SecureStore = require('expo-secure-store');
+      const Constants   = require('expo-constants').default;
+      const io          = require('socket.io-client').default;
+      const token = await SecureStore.getItemAsync('maidconnect_token');
+      const BASE  = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'https://api.servix.world';
+      socket = io(BASE, { auth: { token }, transports: ['websocket'] });
+      socketRef.current = socket;
+      socket.on('new_chat_message', () => loadChats());
+    })();
+    return () => { socket?.disconnect(); };
+  }, []);
 
   const isSubscribed = () => {
     if (user?.role !== 'housewife') return true;

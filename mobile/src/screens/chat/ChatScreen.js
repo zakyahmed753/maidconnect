@@ -35,7 +35,7 @@ export default function ChatScreen({ route, navigation }) {
   const connectSocket = async () => {
     const token = await SecureStore.getItemAsync('maidconnect_token');
     const BASE = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'http://192.168.1.16:5001';
-    const socket = io(BASE, { auth: { token } });
+    const socket = io(BASE, { auth: { token }, transports: ['websocket'] });
     socketRef.current = socket;
     socket.emit('join_chat', chatId);
     socket.on('new_message', (msg) => {

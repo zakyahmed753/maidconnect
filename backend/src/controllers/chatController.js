@@ -118,12 +118,11 @@ exports.sendMessage = async (req, res) => {
 
     const populated = await Message.findById(message._id).populate('sender', 'name avatar role');
 
-    // Emit via Socket.IO
+    // Emit via Socket.IO — to chat room (both users inside ChatScreen) AND to recipient's personal room (for list updates)
     const io = req.app.get('io');
     io.to(`chat_${chatId}`).emit('new_message', populated);
-
-    // Notify recipient
     const recipientId = chat.housewife.equals(req.user._id) ? chat.maid : chat.housewife;
+    io.to(`user_${recipientId}`).emit('new_chat_message', { chatId, message: populated });
     await Notification.create({
       user: recipientId,
       type: 'chat',
