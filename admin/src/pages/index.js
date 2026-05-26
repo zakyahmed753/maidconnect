@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import MaidProfile from './MaidProfile';
 
 const CARD = { background:'#161616', border:'1px solid #222', borderRadius:8, overflow:'hidden', marginBottom:10 };
 const statusColors = { pending:'#f0a050', approved:'#5dd6a8', rejected:'#ff6b6b', suspended:'#888' };
@@ -13,82 +14,98 @@ const Pill = ({ status }) => (
 );
 
 export function Maids() {
-  const [maids, setMaids] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [maids,       setMaids]       = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [search,      setSearch]      = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [selected,    setSelected]    = useState(null);
 
   useEffect(() => {
-    adminAPI.getMaids({ limit: 50 })
+    adminAPI.getMaids({ limit: 100 })
       .then(r => setMaids(r.data.maids))
       .catch(() => toast.error('Failed to load maids'))
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = maids.filter(m =>
-    m.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-    m.nationality?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = maids.filter(m => {
+    const matchSearch = !search || m.fullName?.toLowerCase().includes(search.toLowerCase()) || m.nationality?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = !filterStatus || m.approvalStatus === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
-  const handleSuspend = async (userId, isSuspended) => {
-    try {
-      await adminAPI.suspendUser(userId, { isSuspended: !isSuspended, reason: 'Suspended by admin' });
-      toast.success(isSuspended ? 'User unsuspended' : 'User suspended');
-      setMaids(prev => prev.map(m => m.user?._id === userId ? { ...m, user: { ...m.user, isSuspended: !isSuspended } } : m));
-    } catch { toast.error('Failed to update user'); }
+  const handleUpdate = (maidId, patch) => {
+    setMaids(prev => prev.map(m => m._id === maidId ? { ...m, ...patch } : m));
+    setSelected(prev => prev?._id === maidId ? { ...prev, ...patch } : prev);
   };
 
-  const handleToggleHired = async (maidId, isHired) => {
-    try {
-      await adminAPI.toggleHired(maidId);
-      toast.success(isHired ? 'Vacancy restored — maid visible again' : 'Maid marked as hired — hidden from browse');
-      setMaids(prev => prev.map(m => m._id === maidId ? { ...m, isHired: !isHired } : m));
-    } catch { toast.error('Failed to update hired status'); }
-  };
+  const statusColors = { pending:'#f0a050', approved:'#5dd6a8', rejected:'#ff6b6b', suspended:'#888' };
 
   return (
     <div style={{ fontFamily:"'Jost',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400&display=swap');`}</style>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
-        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'#666', letterSpacing:'0.1em', textTransform:'uppercase' }}>{filtered.length} maids</div>
+
+      {/* Filters */}
+      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'#666', letterSpacing:'0.1em', textTransform:'uppercase', marginRight:4 }}>{filtered.length} maids</div>
+        {['','pending','approved','rejected','suspended'].map(s => (
+          <button key={s} onClick={() => setFilterStatus(s)}
+            style={{ padding:'6px 12px', borderRadius:4, border:`1px solid ${filterStatus===s?'#c9a84c':'#2a2a2a'}`, background:filterStatus===s?'rgba(201,168,76,0.12)':'#161616', color:filterStatus===s?'#e8c97a':'#555', fontSize:11, cursor:'pointer', fontFamily:"'Jost',sans-serif", textTransform:'capitalize' }}>
+            {s || 'All'}
+          </button>
+        ))}
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or nationality…"
-          style={{ padding:'9px 14px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:5, color:'#f0ece4', fontSize:13, outline:'none', width:260, fontFamily:"'Jost',sans-serif" }}/>
+          style={{ marginLeft:'auto', padding:'8px 14px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:5, color:'#f0ece4', fontSize:13, outline:'none', width:240, fontFamily:"'Jost',sans-serif" }}/>
       </div>
+
       {loading && <div style={{ color:'#555', textAlign:'center', padding:40 }}>Loading…</div>}
+
       {filtered.map(maid => (
-        <div key={maid._id} style={CARD}>
+        <div key={maid._id} style={{ ...CARD, cursor:'pointer', transition:'border-color 0.15s' }}
+          onClick={() => setSelected(maid)}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#c9a84c40'}
+          onMouseLeave={e => e.currentTarget.style.borderColor = '#222'}>
           <div style={{ display:'flex', alignItems:'center', gap:13, padding:'13px 15px' }}>
-            <div style={{ width:40, height:40, borderRadius:'50%', background:'#2a2a2a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0, overflow:'hidden', border:'1px solid #333' }}>
+            {/* Avatar */}
+            <div style={{ width:44, height:44, borderRadius:'50%', background:'#2a2a2a', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0, overflow:'hidden', border:'1px solid #333' }}>
               {maid.photos?.[0]?.url ? <img src={maid.photos[0].url} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/> : '👩'}
             </div>
-            <div style={{ flex:1 }}>
+            {/* Info */}
+            <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:13, fontWeight:600, color:'#f0ece4' }}>{maid.fullName}</div>
               <div style={{ fontSize:11, color:'#555', marginTop:1 }}>{maid.nationality} · {maid.age}yrs · {maid.experienceYears}yr exp · EGP {(maid.expectedSalary||0).toLocaleString()}/mo</div>
               <div style={{ fontSize:10, color:'#333', fontFamily:"'DM Mono',monospace", marginTop:1 }}>{maid.user?.email}</div>
             </div>
-            <Pill status={maid.approvalStatus}/>
-            {maid.isHired && (
-              <span style={{ fontSize:9, letterSpacing:'0.07em', textTransform:'uppercase', padding:'3px 8px', borderRadius:3, fontWeight:700, background:'rgba(201,168,76,0.1)', color:'#c9a84c', border:'1px solid rgba(201,168,76,0.3)', marginLeft:4 }}>hired</span>
-            )}
-            <span style={{ fontSize:10, color: maid.user?.isSuspended ? '#ff6b6b' : '#5dd6a8', marginLeft:6 }}>
-              {maid.user?.isSuspended ? '🔴 Suspended' : '🟢 Active'}
-            </span>
-            <button onClick={() => handleToggleHired(maid._id, maid.isHired)}
-              style={{ padding:'6px 12px', background: maid.isHired ? 'rgba(93,214,168,0.08)' : 'rgba(201,168,76,0.08)', border:`1px solid ${maid.isHired ? 'rgba(93,214,168,0.25)' : 'rgba(201,168,76,0.25)'}`, borderRadius:4, color: maid.isHired ? '#5dd6a8' : '#c9a84c', fontSize:11, fontWeight:600, cursor:'pointer', marginLeft:4, fontFamily:"'Jost',sans-serif" }}>
-              {maid.isHired ? '✅ Remove Vacancy' : '💼 Mark Hired'}
-            </button>
-            <button onClick={() => handleSuspend(maid.user?._id, maid.user?.isSuspended)}
-              style={{ padding:'6px 12px', background:'rgba(255,107,107,0.08)', border:'1px solid rgba(255,107,107,0.2)', borderRadius:4, color:'#ff6b6b', fontSize:11, fontWeight:600, cursor:'pointer', marginLeft:4, fontFamily:"'Jost',sans-serif" }}>
-              {maid.user?.isSuspended ? 'Unsuspend' : 'Suspend'}
-            </button>
+            {/* Badges */}
+            <div style={{ display:'flex', gap:5, alignItems:'center', flexShrink:0, flexWrap:'wrap', justifyContent:'flex-end' }}>
+              <Pill status={maid.approvalStatus}/>
+              <span style={{ fontSize:9, padding:'3px 8px', borderRadius:3, fontWeight:700, background:`${statusColors[maid.verificationStatus]||'#888'}15`, color:statusColors[maid.verificationStatus]||'#888', border:`1px solid ${statusColors[maid.verificationStatus]||'#888'}30` }}>
+                id: {maid.verificationStatus || 'unverified'}
+              </span>
+              <span style={{ fontSize:9, padding:'3px 8px', borderRadius:3, fontWeight:700, background:'rgba(201,168,76,0.1)', color:'#c9a84c', border:'1px solid rgba(201,168,76,0.25)' }}>
+                sub: {maid.subscription?.status || 'none'}
+              </span>
+              {maid.user?.isSuspended && <span style={{ fontSize:9, color:'#ff6b6b' }}>🔴</span>}
+            </div>
+            <div style={{ fontSize:11, color:'#444', marginLeft:8 }}>→</div>
           </div>
+          {/* Skills row */}
           <div style={{ padding:'0 15px 10px', display:'flex', gap:4, flexWrap:'wrap' }}>
             {(maid.skills||[]).map(s => <span key={s} style={{ fontSize:9, color:'#555', background:'#1e1e1e', padding:'2px 6px', borderRadius:2 }}>{s}</span>)}
-            <span style={{ marginLeft:'auto', fontSize:9, color:'#444', fontFamily:"'DM Mono',monospace" }}>
-              Sub: {maid.subscription?.status || 'none'} · {maid.subscription?.plan || '—'}
+            <span style={{ marginLeft:'auto', fontSize:9, color:'#333', fontFamily:"'DM Mono',monospace" }}>
+              📷 {(maid.photos||[]).length} photos · ⭐ {maid.rating?.toFixed(1)||'0.0'}
             </span>
           </div>
         </div>
       ))}
+
+      {/* Profile Modal */}
+      {selected && (
+        <MaidProfile
+          maid={selected}
+          onClose={() => setSelected(null)}
+          onUpdate={handleUpdate}
+        />
+      )}
     </div>
   );
 }

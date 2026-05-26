@@ -24,14 +24,16 @@ api.interceptors.response.use(
 );
 
 export const adminAPI = {
-  getDashboard:       () => api.get('/admin/dashboard'),
-  getMaids:           (params) => api.get('/admin/maids', { params }),
-  updateMaidStatus:   (id, data) => api.put(`/admin/maids/${id}/status`, data),
-  getHouseWives:      (params) => api.get('/admin/housewives', { params }),
-  suspendUser:        (userId, data) => api.put(`/admin/users/${userId}/suspend`, data),
-  toggleHired:        (id) => api.put(`/admin/maids/${id}/hired`),
-  getPayments:        (params) => api.get('/admin/payments', { params }),
-  broadcast:          (data) => api.post('/admin/broadcast', data),
+  getDashboard:         () => api.get('/admin/dashboard'),
+  getMaids:             (params) => api.get('/admin/maids', { params }),
+  updateMaidStatus:     (id, data) => api.put(`/admin/maids/${id}/status`, data),
+  verifyIdentity:       (id, data) => api.put(`/admin/maids/${id}/verify`, data),
+  activateSubscription: (id, data) => api.put(`/admin/maids/${id}/subscription`, data),
+  getHouseWives:        (params) => api.get('/admin/housewives', { params }),
+  suspendUser:          (userId, data) => api.put(`/admin/users/${userId}/suspend`, data),
+  toggleHired:          (id) => api.put(`/admin/maids/${id}/hired`),
+  getPayments:          (params) => api.get('/admin/payments', { params }),
+  broadcast:            (data) => api.post('/admin/broadcast', data),
 };
 
 export const supportAPI = {
