@@ -73,6 +73,18 @@ exports.getAllMaids = async (req, res) => {
   }
 };
 
+// ── Get Single Maid (full detail) ──
+exports.getMaid = async (req, res) => {
+  try {
+    const maid = await Maid.findById(req.params.id)
+      .populate('user', 'name email phone createdAt isSuspended suspendReason');
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+    res.json({ success: true, maid });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Approve / Reject Maid ──
 exports.updateMaidStatus = async (req, res) => {
   try {

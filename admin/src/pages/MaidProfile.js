@@ -79,12 +79,24 @@ const DocImage = ({ label, url, fallback }) => (
   </div>
 );
 
-export default function MaidProfile({ maid, onClose, onUpdate }) {
-  const [approving, setApproving]   = useState(false);
-  const [verifying, setVerifying]   = useState(false);
-  const [noteText,  setNoteText]    = useState('');
-  const [activeTab, setActiveTab]   = useState('profile');
-  const [imgModal,  setImgModal]    = useState(null);
+export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
+  const [maid,      setMaid]      = useState(initialMaid);
+  const [fetching,  setFetching]  = useState(true);
+  const [approving, setApproving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [noteText,  setNoteText]  = useState('');
+  const [activeTab, setActiveTab] = useState('profile');
+  const [imgModal,  setImgModal]  = useState(null);
+
+  // Fetch full maid data on open to get passport/selfie/all fields
+  React.useEffect(() => {
+    if (!initialMaid?._id) return;
+    setFetching(true);
+    adminAPI.getMaid(initialMaid._id)
+      .then(r => setMaid(r.data.maid))
+      .catch(() => {})
+      .finally(() => setFetching(false));
+  }, [initialMaid?._id]);
 
   if (!maid) return null;
 
@@ -160,6 +172,7 @@ export default function MaidProfile({ maid, onClose, onUpdate }) {
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 22, fontWeight: 700, color: G.text }}>{maid.fullName}</span>
+              {fetching && <span style={{ fontSize: 10, color: G.muted, fontFamily: "'DM Mono',monospace" }}>loading…</span>}
               <Pill label={maid.approvalStatus} color={statusColors[maid.approvalStatus]} />
               <Pill label={`id: ${maid.verificationStatus}`} color={statusColors[maid.verificationStatus]} />
               {maid.user?.isSuspended && <Pill label="suspended" color={G.red} />}

@@ -26,6 +26,7 @@ api.interceptors.response.use(
 export const adminAPI = {
   getDashboard:         () => api.get('/admin/dashboard'),
   getMaids:             (params) => api.get('/admin/maids', { params }),
+  getMaid:              (id) => api.get(`/admin/maids/${id}`),
   updateMaidStatus:     (id, data) => api.put(`/admin/maids/${id}/status`, data),
   verifyIdentity:       (id, data) => api.put(`/admin/maids/${id}/verify`, data),
   activateSubscription: (id, data) => api.put(`/admin/maids/${id}/subscription`, data),

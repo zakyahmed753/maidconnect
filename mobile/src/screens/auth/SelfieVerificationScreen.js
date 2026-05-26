@@ -46,20 +46,15 @@ export default function SelfieVerificationScreen({ route, navigation }) {
       // Upload ID photo (passport only — not needed for Egyptians)
       let passportPhotoUrl = null, passportPhotoPublicId = null;
       if (!isEgyptian && resolvedIdPhotoUri) {
-        try {
-          const pRes = await uploadAPI.image(resolvedIdPhotoUri);
-          passportPhotoUrl = pRes.data.url;
-          passportPhotoPublicId = pRes.data.publicId;
-        } catch { /* Cloudinary not configured — skip */ }
+        const pRes = await uploadAPI.image(resolvedIdPhotoUri);
+        passportPhotoUrl = pRes.data.url;
+        passportPhotoPublicId = pRes.data.publicId;
       }
 
       // Upload selfie
-      let selfieUrl = null, selfiePublicId = null;
-      try {
-        const sRes = await uploadAPI.image(selfieUri);
-        selfieUrl = sRes.data.url;
-        selfiePublicId = sRes.data.publicId;
-      } catch { /* Cloudinary not configured — skip */ }
+      const sRes = await uploadAPI.image(selfieUri);
+      const selfieUrl = sRes.data.url;
+      const selfiePublicId = sRes.data.publicId;
 
       // Submit verification to backend
       await maidsAPI.submitVerification({

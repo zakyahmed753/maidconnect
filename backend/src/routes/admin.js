@@ -5,6 +5,7 @@ const { protect, adminOnly } = require('../middleware/auth');
 
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.get('/maids',                    protect, adminOnly, ac.getAllMaids);
+router.get('/maids/:id',               protect, adminOnly, ac.getMaid);
 router.put('/maids/:id/status',         protect, adminOnly, ac.updateMaidStatus);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
 router.put('/maids/:id/verify',         protect, adminOnly, ac.verifyIdentity);
