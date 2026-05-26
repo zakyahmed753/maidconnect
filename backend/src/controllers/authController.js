@@ -133,13 +133,17 @@ exports.updateFCMToken = async (req, res) => {
   }
 };
 
-// ── Update Profile (name, phone) ──
+// ── Update Profile (name, phone, fcmToken) ──
 exports.updateMe = async (req, res) => {
   try {
-    const { name, phone } = req.body;
+    const { name, phone, fcmToken } = req.body;
+    const update = { updatedAt: Date.now() };
+    if (name !== undefined) update.name = name;
+    if (phone !== undefined) update.phone = phone;
+    if (fcmToken !== undefined) update.fcmToken = fcmToken;
     const user = await User.findByIdAndUpdate(
       req.user._id,
-      { name, phone, updatedAt: Date.now() },
+      update,
       { new: true, runValidators: true }
     );
     res.json({ success: true, user: user.toSafeObject() });

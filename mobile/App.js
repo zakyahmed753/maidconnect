@@ -91,8 +91,16 @@ export default function App() {
     // Navigate when user taps a notification
     notifResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data;
-      if (data?.screen === 'HireRequest' && navigationRef.isReady()) {
+      if (!navigationRef.isReady()) return;
+      if (data?.screen === 'HireRequest') {
         navigationRef.navigate('MaidHome', { screen: 'HireRequest' });
+      } else if (data?.screen === 'Browse') {
+        navigationRef.navigate('HWMain', { screen: 'Browse' });
+      } else if (data?.screen === 'Home') {
+        navigationRef.navigate('HWMain', { screen: 'Browse' });
+      } else if (data?.chatId) {
+        // Navigate to the specific chat
+        navigationRef.navigate('HWMain', { screen: 'Chats' });
       }
     });
 
