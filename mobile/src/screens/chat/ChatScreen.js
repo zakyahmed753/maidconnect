@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
-  StyleSheet, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator
+  StyleSheet, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator, Keyboard
 } from 'react-native';
 import { chatsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -23,7 +23,11 @@ export default function ChatScreen({ route, navigation }) {
   useEffect(() => {
     loadMessages();
     connectSocket();
-    return () => { socketRef.current?.disconnect(); };
+    // Scroll to bottom when keyboard opens so input stays visible
+    const sub = Keyboard.addListener('keyboardDidShow', () => {
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    return () => { socketRef.current?.disconnect(); sub.remove(); };
   }, []);
 
   const loadMessages = async () => {
@@ -108,7 +112,7 @@ export default function ChatScreen({ route, navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
       <StatusBar barStyle="dark-content" />
       {/* Header */}
       <View style={styles.header}>
