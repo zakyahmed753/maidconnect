@@ -269,8 +269,20 @@ async function handlePaymentSuccess(payment) {
 exports.returnMaid = async (req, res) => {
   try {
     const { maidProfileId, chatId } = req.body;
-    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days
+    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
 
+    // Enforce 3-day return window: customer can only release within 3 days of hiring
+    const hw = await HouseWife.findOne({ user: req.user._id });
+    const hireEntry = hw?.hiredMaids?.find(h => String(h.maid) === String(maidProfileId));
+    if (!hireEntry) {
+      return res.status(404).json({ success: false, message: 'Maid not in your hired list' });
+    }
+    const hiredAt = hireEntry.hiredAt ? new Date(hireEntry.hiredAt) : new Date(0);
+    if (Date.now() - hiredAt.getTime() > THREE_DAYS) {
+      return res.status(403).json({ success: false, message: 'The 3-day return window has expired. You cannot release this maid until your next subscription period.' });
+    }
+
+    const expiresAt = new Date(Date.now() + THREE_DAYS);
     await HouseWife.findOneAndUpdate({ user: req.user._id }, {
       'freeVacancy.available': true,
       'freeVacancy.expiresAt': expiresAt,

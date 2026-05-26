@@ -6,6 +6,19 @@ import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
 
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+function daysLeftToReturn(hiredAt) {
+  if (!hiredAt) return 0;
+  const elapsed = Date.now() - new Date(hiredAt).getTime();
+  return Math.max(0, Math.ceil((THREE_DAYS_MS - elapsed) / (24 * 60 * 60 * 1000)));
+}
+
+function canRelease(hiredAt) {
+  if (!hiredAt) return false;
+  return Date.now() - new Date(hiredAt).getTime() < THREE_DAYS_MS;
+}
+
 export default function HiredMaidsScreen({ navigation }) {
   const { t } = useTranslation();
   const [hired, setHired] = useState([]);
@@ -114,15 +127,21 @@ export default function HiredMaidsScreen({ navigation }) {
                     onPress={() => navigation.navigate('Browse', { screen: 'Chat', params: { maidName } })}>
                     <Text style={styles.btnChatTxt}>💬 Chat</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.btnReturn, isReturning && { opacity: 0.5 }]}
-                    onPress={() => handleReturn(maidId, maidName)}
-                    disabled={isReturning}>
-                    {isReturning
-                      ? <ActivityIndicator size="small" color={COLORS.red} />
-                      : <Text style={styles.btnReturnTxt}>↩ Release Vacancy</Text>
-                    }
-                  </TouchableOpacity>
+                  {canRelease(item.hiredAt) ? (
+                    <TouchableOpacity
+                      style={[styles.btnReturn, isReturning && { opacity: 0.5 }]}
+                      onPress={() => handleReturn(maidId, maidName)}
+                      disabled={isReturning}>
+                      {isReturning
+                        ? <ActivityIndicator size="small" color="#e05555" />
+                        : <Text style={styles.btnReturnTxt}>↩ Release ({daysLeftToReturn(item.hiredAt)}d left)</Text>
+                      }
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.btnLocked}>
+                      <Text style={styles.btnLockedTxt}>🔒 Return window closed</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             );
@@ -130,7 +149,7 @@ export default function HiredMaidsScreen({ navigation }) {
 
           <View style={styles.infoBox}>
             <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 18 }}>
-              💡 When you release a vacancy, your maid becomes available for other customers. You receive a <Text style={{ color: COLORS.gold, fontWeight: '600' }}>free replacement</Text> valid for 3 days.
+              💡 You can release a maid <Text style={{ color: COLORS.gold, fontWeight: '600' }}>within 3 days of hiring</Text> and get a free replacement. After 3 days the return window closes and the hire is locked until your next subscription period.
             </Text>
           </View>
         </ScrollView>
@@ -155,7 +174,9 @@ const styles = StyleSheet.create({
   infoVal:     { fontSize: 11, color: COLORS.dark, fontWeight: '500', flex: 1, textAlign: 'right' },
   btnChat:     { flex: 1, padding: 11, borderRadius: 7, borderWidth: 1.5, borderColor: COLORS.gold, alignItems: 'center' },
   btnChatTxt:  { fontSize: 13, fontWeight: '600', color: COLORS.gold },
-  btnReturn:   { flex: 2, padding: 11, borderRadius: 7, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
-  btnReturnTxt:{ fontSize: 13, fontWeight: '600', color: '#e05555' },
+  btnReturn:    { flex: 2, padding: 11, borderRadius: 7, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
+  btnReturnTxt: { fontSize: 13, fontWeight: '600', color: '#e05555' },
+  btnLocked:    { flex: 2, padding: 11, borderRadius: 7, backgroundColor: '#f5f5f5', borderWidth: 1.5, borderColor: '#ddd', alignItems: 'center' },
+  btnLockedTxt: { fontSize: 12, color: COLORS.muted },
   infoBox:     { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14, marginTop: 4 },
 });
