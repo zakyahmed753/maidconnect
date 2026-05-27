@@ -60,6 +60,22 @@ const messageSchema = new mongoose.Schema({
 });
 messageSchema.index({ chat: 1, createdAt: -1 });
 
+// ── Coupon ──
+const couponSchema = new mongoose.Schema({
+  code:          { type: String, required: true, unique: true },
+  type:          { type: String, enum: ['referral', 'admin'], required: true },
+  discountType:  { type: String, enum: ['percentage', 'fixed'], required: true },
+  discountValue: { type: Number, required: true },
+  maidRef:       { type: mongoose.Schema.Types.ObjectId, ref: 'Maid' },
+  usedBy:        [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  maxUses:       { type: Number, default: null },
+  usesCount:     { type: Number, default: 0 },
+  isActive:      { type: Boolean, default: true },
+  expiresAt:     { type: Date },
+  createdBy:     { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  createdAt:     { type: Date, default: Date.now },
+});
+
 // ── Payment ──
 const paymentSchema = new mongoose.Schema({
   user:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -77,15 +93,19 @@ const paymentSchema = new mongoose.Schema({
   // Payment gateway data
   gatewayRef:      { type: String },
   gatewayResponse: { type: mongoose.Schema.Types.Mixed },
-  fawryRefNum:     { type: String },    // Fawry reference number
+  fawryRefNum:     { type: String },
   merchantRefNum:  { type: String, default: () => require('uuid').v4() },
 
   // Subscription details
   subscriptionPlan: { type: String, enum: ['monthly','annual'] },
 
   // Commission details
-  commissionRate: { type: Number },  // percentage
+  commissionRate: { type: Number },
   maidSalary:     { type: Number },
+
+  // Coupon / discount
+  couponCode:     { type: String },
+  couponDiscount: { type: Number, default: 0 },
 
   paidAt:    { type: Date },
   createdAt: { type: Date, default: Date.now }
@@ -155,4 +175,5 @@ module.exports = {
   Notification: mongoose.model('Notification', notificationSchema),
   Review:       mongoose.model('Review', reviewSchema),
   HireRequest:  mongoose.model('HireRequest', hireRequestSchema),
+  Coupon:       mongoose.model('Coupon', couponSchema),
 };

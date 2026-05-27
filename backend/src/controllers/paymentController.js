@@ -56,10 +56,10 @@ async function createPaymentKey(authToken, orderId, amountCents, billingData) {
 // ─────────────────────────────────────────────
 exports.initiatePaymob = async (req, res) => {
   try {
-    const { type, plan, maidProfileId, chatId } = req.body;
+    const { type, plan, maidProfileId, chatId, couponCode } = req.body;
     const merchantOrderId = uuidv4();
 
-    let amountCents, description;
+    let amountCents, description, appliedCouponCode, couponDiscount = 0;
 
     if (type === 'subscription') {
       // Maid paying for their own subscription
@@ -67,6 +67,17 @@ exports.initiatePaymob = async (req, res) => {
       if (!maidProfile) return res.status(404).json({ success: false, message: 'Maid profile not found' });
       amountCents = getMaidPriceCents(maidProfile.nationality);
       description = `Servix monthly subscription`;
+
+      // Apply coupon/referral discount
+      if (couponCode) {
+        const { applyDiscount } = require('./couponController');
+        const discountResult = await applyDiscount(req.user._id, couponCode.trim().toUpperCase(), amountCents / 100);
+        if (discountResult.valid) {
+          couponDiscount = discountResult.discountAmount;
+          amountCents = Math.max(100, amountCents - couponDiscount * 100);
+          appliedCouponCode = couponCode.trim().toUpperCase();
+        }
+      }
 
     } else if (type === 'customer_subscription') {
       // Customer/housewife paying for platform access
@@ -134,6 +145,8 @@ exports.initiatePaymob = async (req, res) => {
       subscriptionPlan: (type === 'subscription' || type === 'customer_subscription') ? 'monthly' : undefined,
       merchantRefNum: merchantOrderId,
       commissionRate: type === 'commission' ? COMMISSION_RATE * 100 : null,
+      couponCode: appliedCouponCode || undefined,
+      couponDiscount: couponDiscount || 0,
     });
 
     const billingData = {
@@ -237,6 +250,10 @@ async function handlePaymentSuccess(payment) {
       'subscription.endDate':   endDate,
       'subscription.paymentId': payment._id,
     });
+    if (payment.couponCode) {
+      const { applyUsage } = require('./couponController');
+      await applyUsage(payment.user, payment.couponCode, payment.amount);
+    }
     await Notification.create({
       user: payment.user, type: 'subscription',
       title: '🎉 Subscription Activated!',

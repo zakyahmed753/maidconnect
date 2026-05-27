@@ -18,7 +18,7 @@ const POLL_INTERVAL = 2000; // 2s between checks
 const POLL_ATTEMPTS = 8;    // up to 16s total
 
 export default function PaymentScreen({ route, navigation }) {
-  const { type, plan, maidProfileId, chatId, amount, maidName } = route.params || {};
+  const { type, plan, maidProfileId, chatId, amount, maidName, couponCode, discountedAmount } = route.params || {};
   const [loading,  setLoading]  = useState(false);
   const [checking, setChecking] = useState(false);
 
@@ -29,7 +29,7 @@ export default function PaymentScreen({ route, navigation }) {
   const user             = useAuthStore(s => s.user);
 
   const [backendAmount, setBackendAmount] = useState(null);
-  const displayAmount = backendAmount || amount || (plan ? PLANS[plan]?.price : 0);
+  const displayAmount = backendAmount || discountedAmount || amount || (plan ? PLANS[plan]?.price : 0);
   const planInfo      = plan ? PLANS[plan] : null;
 
   // Poll backend until payment is confirmed or all attempts exhausted
@@ -110,7 +110,7 @@ export default function PaymentScreen({ route, navigation }) {
   const handlePay = async () => {
     setLoading(true);
     try {
-      const res = await paymentsAPI.initiatePaymob({ type, plan, maidProfileId, chatId });
+      const res = await paymentsAPI.initiatePaymob({ type, plan, maidProfileId, chatId, couponCode });
       const { iframeUrl, paymentId, amount: returnedAmount } = res.data;
       if (returnedAmount) setBackendAmount(returnedAmount);
       pendingPaymentId.current = paymentId;
@@ -155,6 +155,14 @@ export default function PaymentScreen({ route, navigation }) {
               <View style={styles.badge}><Text style={styles.badgeTxt}>{planInfo.badge}</Text></View>
             )}
           </View>
+          {couponCode && (
+            <View style={styles.row}>
+              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🏷 Coupon: {couponCode}</Text>
+              <View style={[styles.badge, { backgroundColor: 'rgba(46,125,94,0.1)' }]}>
+                <Text style={[styles.badgeTxt, { color: '#2e7d5e' }]}>Discount applied</Text>
+              </View>
+            </View>
+          )}
           <View style={[styles.row, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Due</Text>
             <Text style={styles.totalAmount}>EGP {displayAmount?.toLocaleString()}</Text>

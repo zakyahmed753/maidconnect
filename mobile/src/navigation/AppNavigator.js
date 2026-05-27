@@ -40,6 +40,7 @@ import MaidDashScreen from '../screens/maid/MaidDashScreen';
 import EditProfileScreen from '../screens/maid/EditProfileScreen';
 import HireRequestScreen from '../screens/maid/HireRequestScreen';
 import HiredCelebrationScreen from '../screens/maid/HiredCelebrationScreen';
+import CouponScreen from '../screens/maid/CouponScreen';
 import { AnalyticsScreen, EditHWProfileScreen, SupportScreen, PaymentHistoryScreen } from '../screens/screens';
 
 const Stack = createStackNavigator();
@@ -107,6 +108,7 @@ function MaidHomeStack() {
       <Stack.Screen name="PaymentHistory"    component={PaymentHistoryScreen}/>
       <Stack.Screen name="HireRequest"       component={HireRequestScreen}/>
       <Stack.Screen name="HiredCelebration"  component={HiredCelebrationScreen}/>
+      <Stack.Screen name="Coupons"           component={CouponScreen}/>
     </Stack.Navigator>
   );
 }

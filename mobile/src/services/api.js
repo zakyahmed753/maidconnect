@@ -74,6 +74,14 @@ export const paymentsAPI = {
   checkStatus:                 (id)   => api.get(`/payments/${id}/status`),
 };
 
+export const couponsAPI = {
+  getMyCode:      ()           => api.get('/coupons/my-code'),
+  validate:       (data)       => api.post('/coupons/validate', data),
+  adminList:      ()           => api.get('/coupons'),
+  adminCreate:    (data)       => api.post('/coupons', data),
+  adminToggle:    (id)         => api.put(`/coupons/${id}/toggle`),
+};
+
 export const supportAPI = {
   create:   (data) => api.post('/support', data),
   getMine:  ()     => api.get('/support/mine'),

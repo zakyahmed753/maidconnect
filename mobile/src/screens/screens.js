@@ -381,13 +381,14 @@ export function MaidDashScreen({ navigation }) {
             ['👑','Hire Requests', 'View & respond to requests'],
             ['💬','Messages', `${stats.chats} active`],
             ['💳','Payments', profile?.subscription?.plan ? `${profile.subscription.plan} · ${profile.subscription.status}` : 'View history'],
+            ['🎁','Referrals', 'Share your code & earn rewards'],
             ['📊','Analytics', `${stats.views} views · ${stats.likes} likes`],
             ['🌐','Language',''],
             ['🔔','Notifications',''],
             ['🎫','Support','Contact us anytime'],
             ['🚪','Sign Out','']
           ].map(([icon,title,sub])=>(
-            <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : title==='Payments' ? () => navigation.navigate('PaymentHistory') : title==='Hire Requests' ? () => navigation.navigate('HireRequest') : undefined}
+            <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : title==='Payments' ? () => navigation.navigate('PaymentHistory') : title==='Hire Requests' ? () => navigation.navigate('HireRequest') : title==='Referrals' ? () => navigation.navigate('Coupons') : undefined}
               style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
               <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
               <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: title==='Sign Out'?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
