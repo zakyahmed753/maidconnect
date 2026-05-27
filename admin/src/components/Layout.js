@@ -10,6 +10,7 @@ const NAV = [
   { to: '/payments',     icon: '💳', label: 'Payments' },
   { to: '/notifications',icon: '🔔', label: 'Notifications' },
   { to: '/support',      icon: '🎫', label: 'Support' },
+  { to: '/coupons',      icon: '🏷', label: 'Coupons' },
 ];
 
 const S = {
