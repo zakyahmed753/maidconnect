@@ -100,8 +100,27 @@ exports.initiatePaymob = async (req, res) => {
       amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
       description = `Commission for ${maid.fullName}`;
 
+    } else if (type === 'release_fee') {
+      if (!maidProfileId) return res.status(400).json({ success: false, message: 'maidProfileId required' });
+      const maid = await Maid.findById(maidProfileId);
+      if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+
+      const hw = await HouseWife.findOne({ user: req.user._id });
+      const hireEntry = hw?.hiredMaids?.find(h => String(h.maid) === String(maidProfileId));
+      if (!hireEntry) return res.status(404).json({ success: false, message: 'Maid not in your hired list' });
+
+      const daysHired = (Date.now() - new Date(hireEntry.hiredAt || 0).getTime()) / (24 * 60 * 60 * 1000);
+      let penaltyPct;
+      if (daysHired <= 3)  return res.status(400).json({ success: false, message: 'Use free release during grace period' });
+      if (daysHired <= 7)  penaltyPct = 0.50;
+      else if (daysHired <= 30) penaltyPct = 0.70;
+      else                 penaltyPct = 1.00;
+
+      amountCents = Math.round(CUSTOMER_SUBSCRIPTION_CENTS * penaltyPct);
+      description = `Maid release fee (${Math.round(penaltyPct * 100)}% of subscription)`;
+
     } else {
-      return res.status(400).json({ success: false, message: `Invalid payment type: "${type}". Allowed: subscription, customer_subscription, commission` });
+      return res.status(400).json({ success: false, message: `Invalid payment type: "${type}". Allowed: subscription, customer_subscription, commission, release_fee` });
     }
 
     const payment = await Payment.create({
@@ -238,6 +257,24 @@ async function handlePaymentSuccess(payment) {
       user: payment.user, type: 'subscription',
       title: '🎉 Subscription Activated!',
       body: 'You can now chat with maids and start hiring.',
+    });
+
+  } else if (payment.type === 'release_fee') {
+    const maidProfileId = payment.maidProfile;
+    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + THREE_DAYS);
+    await HouseWife.findOneAndUpdate({ user: payment.user }, {
+      'freeVacancy.available': true,
+      'freeVacancy.expiresAt': expiresAt,
+      $pull: { hiredMaids: { maid: maidProfileId } },
+    });
+    if (maidProfileId) {
+      await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true, isHired: false });
+    }
+    await Notification.create({
+      user: payment.user, type: 'system',
+      title: '↩ Maid Released',
+      body: 'Your maid has been released. You have 3 days to hire a replacement.',
     });
 
   } else if (payment.type === 'commission') {

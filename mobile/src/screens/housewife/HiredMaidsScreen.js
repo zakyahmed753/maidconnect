@@ -7,26 +7,26 @@ import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
 
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
+const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
 
-function daysLeftToReturn(hiredAt) {
-  if (!hiredAt) return 0;
-  const elapsed = Date.now() - new Date(hiredAt).getTime();
-  return Math.max(0, Math.ceil((THREE_DAYS_MS - elapsed) / (24 * 60 * 60 * 1000)));
-}
-
-function canRelease(hiredAt) {
-  if (!hiredAt) return false;
-  return Date.now() - new Date(hiredAt).getTime() < THREE_DAYS_MS;
+function getReleasePenalty(hiredAt) {
+  const ms = Date.now() - new Date(hiredAt || 0).getTime();
+  if (ms <= THREE_DAYS_MS) return { pct: 0,   amount: 0,    isFree: true,  label: 'Free' };
+  if (ms <= WEEK_MS)       return { pct: 50,  amount: 500,  isFree: false, label: 'EGP 500 (50%)' };
+  if (ms <= MONTH_MS)      return { pct: 70,  amount: 700,  isFree: false, label: 'EGP 700 (70%)' };
+  return                          { pct: 100, amount: 1000, isFree: false, label: 'EGP 1,000 (100%)' };
 }
 
 export default function HiredMaidsScreen({ navigation }) {
   const { t } = useTranslation();
-  const [hired, setHired] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [hired, setHired]       = useState([]);
+  const [loading, setLoading]   = useState(true);
   const [returning, setReturning] = useState(null);
 
   useFocusEffect(
     React.useCallback(() => {
+      setLoading(true);
       hwAPI.getProfile()
         .then(r => setHired(r.data?.profile?.hiredMaids || []))
         .catch(() => {})
@@ -34,30 +34,64 @@ export default function HiredMaidsScreen({ navigation }) {
     }, [])
   );
 
-  const handleReturn = (maidId, maidName) => {
-    Alert.alert(
-      'Return Maid',
-      `Are you sure you want to release ${maidName}? She will become available for other customers again. You will get a free replacement vacancy for 3 days.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes, Return',
-          style: 'destructive',
-          onPress: async () => {
+  const handleRelease = (maidId, maidName, hiredAt) => {
+    const penalty = getReleasePenalty(hiredAt);
+
+    let title, message, confirmText;
+    if (penalty.isFree) {
+      title       = '↩ Release Maid — Free';
+      message     = `You're within the 3-day grace period.\n\nReleasing ${maidName} is FREE. You'll get 3 days to hire a free replacement.`;
+      confirmText = 'Release for Free';
+    } else if (penalty.pct === 50) {
+      title       = '↩ Release Maid — 50% Fee';
+      message     = `You're in the first week after the grace period.\n\nA release fee of EGP 500 (50% of subscription) applies.\n\nAfter payment you'll get 3 days to hire a replacement.`;
+      confirmText = 'Pay EGP 500 to Release';
+    } else if (penalty.pct === 70) {
+      title       = '↩ Release Maid — 70% Fee';
+      message     = `You're past the first week.\n\nA release fee of EGP 700 (70% of subscription) applies.\n\nAfter payment you'll get 3 days to hire a replacement.`;
+      confirmText = 'Pay EGP 700 to Release';
+    } else {
+      title       = '↩ Release Maid — Full Fee';
+      message     = `You're past the 30-day period.\n\nThe full subscription fee of EGP 1,000 is required to release ${maidName}.\n\nAfter payment you'll get 3 days to hire a replacement.`;
+      confirmText = 'Pay EGP 1,000 to Release';
+    }
+
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: confirmText,
+        style: penalty.isFree ? 'default' : 'destructive',
+        onPress: async () => {
+          if (penalty.isFree) {
             setReturning(maidId);
             try {
               await paymentsAPI.returnMaid({ maidProfileId: maidId });
               setHired(prev => prev.filter(h => (h.maid?._id || h.maid) !== maidId));
-              Toast.show({ type: 'success', text1: 'Vacancy released', text2: 'You have 3 days to hire a replacement at no extra cost.' });
+              Toast.show({ type: 'success', text1: 'Vacancy released', text2: 'You have 3 days to hire a replacement at no cost.' });
             } catch (err) {
-              Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to return maid' });
+              Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to release' });
             } finally {
               setReturning(null);
             }
-          },
+          } else {
+            navigation.navigate('Payment', {
+              type: 'release_fee',
+              maidProfileId: maidId,
+              maidName,
+              amount: penalty.amount,
+            });
+          }
         },
-      ]
-    );
+      },
+    ]);
+  };
+
+  const getPenaltyBadge = (hiredAt) => {
+    const penalty = getReleasePenalty(hiredAt);
+    if (penalty.isFree) return { text: '✓ Grace period — free return', color: '#2e7d5e', bg: 'rgba(46,125,94,0.1)' };
+    if (penalty.pct === 50) return { text: '⚠ Release fee: EGP 500 (50%)', color: '#b45309', bg: '#fffbeb' };
+    if (penalty.pct === 70) return { text: '⚠ Release fee: EGP 700 (70%)', color: '#b45309', bg: '#fffbeb' };
+    return { text: '⚠ Release fee: EGP 1,000 (100%)', color: '#b91c1c', bg: '#fef2f2' };
   };
 
   return (
@@ -90,10 +124,12 @@ export default function HiredMaidsScreen({ navigation }) {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {hired.map((item, idx) => {
-            const maid = item.maid || {};
-            const maidId = maid._id || item.maid;
-            const maidName = maid.fullName || 'Maid';
-            const isReturning = returning === maidId;
+            const maid      = item.maid || {};
+            const maidId    = maid._id || item.maid;
+            const maidName  = maid.fullName || 'Maid';
+            const isRet     = returning === maidId;
+            const badge     = getPenaltyBadge(item.hiredAt);
+
             return (
               <View key={String(maidId) + idx} style={styles.card}>
                 <View style={styles.cardTop}>
@@ -121,35 +157,31 @@ export default function HiredMaidsScreen({ navigation }) {
                   <Text style={styles.infoVal}>{(maid.skills || []).slice(0, 3).join(', ') || '—'}</Text>
                 </View>
 
-                <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
-                  <TouchableOpacity
-                    style={styles.btnChat}
-                    onPress={() => navigation.navigate('Browse', { screen: 'Chat', params: { maidName } })}>
-                    <Text style={styles.btnChatTxt}>💬 Chat</Text>
-                  </TouchableOpacity>
-                  {canRelease(item.hiredAt) ? (
-                    <TouchableOpacity
-                      style={[styles.btnReturn, isReturning && { opacity: 0.5 }]}
-                      onPress={() => handleReturn(maidId, maidName)}
-                      disabled={isReturning}>
-                      {isReturning
-                        ? <ActivityIndicator size="small" color="#e05555" />
-                        : <Text style={styles.btnReturnTxt}>↩ Release ({daysLeftToReturn(item.hiredAt)}d left)</Text>
-                      }
-                    </TouchableOpacity>
-                  ) : (
-                    <View style={styles.btnLocked}>
-                      <Text style={styles.btnLockedTxt}>🔒 Return window closed</Text>
-                    </View>
-                  )}
+                {/* Penalty badge */}
+                <View style={[styles.penaltyBadge, { backgroundColor: badge.bg }]}>
+                  <Text style={[styles.penaltyTxt, { color: badge.color }]}>{badge.text}</Text>
                 </View>
+
+                {/* Release button — always visible */}
+                <TouchableOpacity
+                  style={[styles.btnRelease, isRet && { opacity: 0.5 }]}
+                  onPress={() => handleRelease(maidId, maidName, item.hiredAt)}
+                  disabled={isRet}>
+                  {isRet
+                    ? <ActivityIndicator size="small" color="#e05555" />
+                    : <Text style={styles.btnReleaseTxt}>↩ Release Vacancy</Text>}
+                </TouchableOpacity>
               </View>
             );
           })}
 
           <View style={styles.infoBox}>
-            <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 18 }}>
-              💡 You can release a maid <Text style={{ color: COLORS.gold, fontWeight: '600' }}>within 3 days of hiring</Text> and get a free replacement. After 3 days the return window closes and the hire is locked until your next subscription period.
+            <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
+              💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Return policy:</Text>{'\n'}
+              • Days 0–3: Free release (grace period){'\n'}
+              • Days 4–7: EGP 500 release fee (50%){'\n'}
+              • Days 8–30: EGP 700 release fee (70%){'\n'}
+              • After 30 days: EGP 1,000 full fee (100%)
             </Text>
           </View>
         </ScrollView>
@@ -159,24 +191,22 @@ export default function HiredMaidsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header:      { backgroundColor: '#3d2203', padding: 20, paddingTop: 54 },
-  headerTitle: { fontFamily: FONTS.display, fontSize: 24, color: '#fff8ee', marginTop: 10 },
-  headerSub:   { fontSize: 11, color: 'rgba(232,201,122,0.45)', marginTop: 2 },
-  card:        { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#f0e8d8', elevation: 2, shadowColor: '#c9a84c', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
-  cardTop:     { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  avatar:      { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fef6e4', borderWidth: 2, borderColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
-  maidName:    { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
-  maidSub:     { fontSize: 11, color: COLORS.muted, marginTop: 2 },
-  maidSalary:  { fontSize: 12, color: COLORS.gold, fontWeight: '600', marginTop: 2 },
-  hiredBadge:  { backgroundColor: 'rgba(46,125,94,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(46,125,94,0.25)' },
-  infoRow:     { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#f5ede0' },
-  infoLabel:   { fontSize: 11, color: COLORS.muted },
-  infoVal:     { fontSize: 11, color: COLORS.dark, fontWeight: '500', flex: 1, textAlign: 'right' },
-  btnChat:     { flex: 1, padding: 11, borderRadius: 7, borderWidth: 1.5, borderColor: COLORS.gold, alignItems: 'center' },
-  btnChatTxt:  { fontSize: 13, fontWeight: '600', color: COLORS.gold },
-  btnReturn:    { flex: 2, padding: 11, borderRadius: 7, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
-  btnReturnTxt: { fontSize: 13, fontWeight: '600', color: '#e05555' },
-  btnLocked:    { flex: 2, padding: 11, borderRadius: 7, backgroundColor: '#f5f5f5', borderWidth: 1.5, borderColor: '#ddd', alignItems: 'center' },
-  btnLockedTxt: { fontSize: 12, color: COLORS.muted },
-  infoBox:     { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14, marginTop: 4 },
+  header:       { backgroundColor: '#3d2203', padding: 20, paddingTop: 54 },
+  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff8ee', marginTop: 10 },
+  headerSub:    { fontSize: 11, color: 'rgba(232,201,122,0.45)', marginTop: 2 },
+  card:         { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#f0e8d8', elevation: 2, shadowColor: '#c9a84c', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
+  cardTop:      { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  avatar:       { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fef6e4', borderWidth: 2, borderColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
+  maidName:     { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
+  maidSub:      { fontSize: 11, color: COLORS.muted, marginTop: 2 },
+  maidSalary:   { fontSize: 12, color: COLORS.gold, fontWeight: '600', marginTop: 2 },
+  hiredBadge:   { backgroundColor: 'rgba(46,125,94,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(46,125,94,0.25)' },
+  infoRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#f5ede0' },
+  infoLabel:    { fontSize: 11, color: COLORS.muted },
+  infoVal:      { fontSize: 11, color: COLORS.dark, fontWeight: '500', flex: 1, textAlign: 'right' },
+  penaltyBadge: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 7, marginTop: 10, marginBottom: 2 },
+  penaltyTxt:   { fontSize: 11, fontWeight: '600' },
+  btnRelease:   { marginTop: 12, padding: 13, borderRadius: 8, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
+  btnReleaseTxt:{ fontSize: 14, fontWeight: '700', color: '#e05555' },
+  infoBox:      { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14, marginTop: 4, marginBottom: 20 },
 });

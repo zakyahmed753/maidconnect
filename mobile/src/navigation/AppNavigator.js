@@ -63,6 +63,8 @@ function HWProfileStack() {
       <Stack.Screen name="Support"         component={SupportScreen}/>
       <Stack.Screen name="PaymentHistory"  component={PaymentHistoryScreen}/>
       <Stack.Screen name="HiredMaids"      component={HiredMaidsScreen}/>
+      <Stack.Screen name="Payment"         component={PaymentScreen}/>
+      <Stack.Screen name="PaymentResult"   component={PaymentResultScreen}/>
     </Stack.Navigator>
   );
 }

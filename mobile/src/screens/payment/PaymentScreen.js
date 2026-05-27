@@ -46,8 +46,9 @@ export default function PaymentScreen({ route, navigation }) {
         if (status === 'completed') {
           clearTimeout(pollTimer.current);
           await completeAuth();
-          // For housewife: also pop back to Browse since AppNavigator won't auto-switch
-          if (user?.role === 'housewife') {
+          if (type === 'release_fee') {
+            navigation.navigate('HiredMaids');
+          } else if (user?.role === 'housewife') {
             navigation.navigate('Browse');
           }
           setChecking(false);
@@ -146,6 +147,8 @@ export default function PaymentScreen({ route, navigation }) {
                 ? `${planInfo?.label ?? plan} Subscription`
                 : type === 'customer_subscription'
                 ? 'Customer Platform Subscription'
+                : type === 'release_fee'
+                ? `Release Fee — ${maidName || 'Maid'}`
                 : `Commission — ${maidName || 'Maid'}`}
             </Text>
             {planInfo?.badge && (
