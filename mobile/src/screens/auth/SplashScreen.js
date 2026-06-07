@@ -42,9 +42,11 @@ export function SplashScreen({ navigation }) {
         </TouchableOpacity>
       </Modal>
 
-      <Text style={styles.icon}>🏡</Text>
-      <Text style={styles.title}>Servix</Text>
-      <Text style={styles.subtitle}>PREMIUM DOMESTIC STAFFING</Text>
+      <View style={styles.logoBox}>
+        <Text style={styles.logoHouse}>🏡</Text>
+        <Text style={styles.title}>Servix</Text>
+        <Text style={styles.subtitle}>PREMIUM DOMESTIC STAFFING</Text>
+      </View>
 
       {/* Role toggle */}
       <View style={styles.roleToggle}>
@@ -86,9 +88,10 @@ const styles = StyleSheet.create({
   dropdownFlag:       { fontSize:18 },
   dropdownItemText:   { fontSize:14, color:COLORS.text, flex:1 },
   dropdownItemTextActive: { color:COLORS.gold, fontWeight:'700' },
-  icon:               { fontSize:54, marginBottom:14 },
-  title:              { fontFamily:FONTS.display, fontSize:40, color:'#e8c97a', textAlign:'center', lineHeight:46, marginBottom:6 },
-  subtitle:           { fontSize:10, color:'rgba(232,201,122,0.5)', letterSpacing:2, marginBottom:32, textAlign:'center' },
+  logoBox:            { alignItems:'center', marginBottom:32 },
+  logoHouse:          { fontSize:52, marginBottom:10 },
+  title:              { fontFamily:FONTS.display, fontSize:44, color:'#e8c97a', textAlign:'center', lineHeight:48, marginBottom:5 },
+  subtitle:           { fontSize:10, color:'rgba(201,168,76,0.55)', letterSpacing:3.5, textAlign:'center' },
   roleToggle:         { flexDirection:'row', backgroundColor:'rgba(255,255,255,0.07)', borderRadius:6, padding:3, marginBottom:18, width:'100%' },
   roleBtn:            { flex:1, paddingVertical:10, borderRadius:4, alignItems:'center' },
   roleBtnActive:      { backgroundColor:'rgba(201,168,76,0.22)' },
