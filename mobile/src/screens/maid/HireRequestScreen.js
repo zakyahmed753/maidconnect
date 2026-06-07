@@ -1,21 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  ActivityIndicator, StatusBar
+  ActivityIndicator, StatusBar, Modal
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 
-export default function HireRequestScreen({ navigation }) {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [responding, setResponding] = useState(null); // requestId being actioned
+function maskPhone(phone) {
+  if (!phone) return null;
+  const p = String(phone);
+  if (p.length < 6) return p;
+  return p.slice(0, 3) + '*'.repeat(p.length - 6) + p.slice(-3);
+}
 
-  useEffect(() => {
-    load();
-  }, []);
+export default function HireRequestScreen({ navigation }) {
+  const [requests,    setRequests]    = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [responding,  setResponding]  = useState(null);
+  const [profileModal, setProfileModal] = useState(null); // holds the req object to show
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [])
+  );
 
   const load = () => {
     setLoading(true);
@@ -40,7 +51,7 @@ export default function HireRequestScreen({ navigation }) {
         Toast.show({
           type: 'error',
           text1: 'Monthly limit reached',
-          text2: 'You have 2 hires this month. Renew subscription to accept more.',
+          text2: 'You have 2 hires this month. Renew to accept more.',
           visibilityTime: 5000,
         });
         navigation.navigate('PaymentHistory');
@@ -55,13 +66,71 @@ export default function HireRequestScreen({ navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
       <StatusBar barStyle="light-content" />
+
+      {/* Customer Profile Modal */}
+      <Modal visible={!!profileModal} transparent animationType="slide" onRequestClose={() => setProfileModal(null)}>
+        <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.55)', justifyContent:'flex-end' }}>
+          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:20, borderTopRightRadius:20, padding:24, paddingBottom:36 }}>
+
+            <View style={{ alignItems:'center', marginBottom:18 }}>
+              <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'#fef6e4', borderWidth:2, borderColor:COLORS.gold, alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+                <Text style={{ fontSize:30 }}>👤</Text>
+              </View>
+              <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.dark }}>
+                {profileModal?.housewife?.name || 'Customer'}
+              </Text>
+              {profileModal?.hwProfile?.subscription?.status === 'active' ? (
+                <View style={{ flexDirection:'row', alignItems:'center', gap:5, marginTop:4, backgroundColor:'rgba(46,125,94,0.1)', paddingHorizontal:10, paddingVertical:4, borderRadius:12 }}>
+                  <Text style={{ fontSize:11, color:'#2e7d5e', fontWeight:'700' }}>✓ Verified Subscriber</Text>
+                </View>
+              ) : (
+                <Text style={{ fontSize:11, color:COLORS.muted, marginTop:4 }}>Subscription status unknown</Text>
+              )}
+            </View>
+
+            {/* Info rows */}
+            {[
+              { label: 'Area', value: profileModal?.hwProfile?.residentialArea || profileModal?.hwProfile?.city || '—', icon: '📍' },
+              { label: 'Phone', value: maskPhone(profileModal?.housewife?.phone) || '—', icon: '📞' },
+              { label: 'Country', value: profileModal?.hwProfile?.country || 'Egypt', icon: '🌍' },
+              { label: 'Request date', value: profileModal ? new Date(profileModal.createdAt).toLocaleDateString([], { day:'numeric', month:'long', year:'numeric' }) : '—', icon: '🗓' },
+            ].map(({ label, value, icon }) => (
+              <View key={label} style={{ flexDirection:'row', alignItems:'center', gap:12, paddingVertical:12, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+                <Text style={{ fontSize:18, width:26 }}>{icon}</Text>
+                <Text style={{ fontSize:12, color:COLORS.muted, width:80 }}>{label}</Text>
+                <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'500', flex:1 }}>{value}</Text>
+              </View>
+            ))}
+
+            <View style={{ flexDirection:'row', gap:10, marginTop:20 }}>
+              <TouchableOpacity
+                style={[styles.btnReject, { flex:1 }]}
+                onPress={() => { setProfileModal(null); respond(profileModal._id, 'reject'); }}
+                disabled={!!responding}>
+                <Text style={styles.btnRejectTxt}>✗ Decline</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.btnApprove, { flex:2 }]}
+                onPress={() => { setProfileModal(null); respond(profileModal._id, 'approve'); }}
+                disabled={!!responding}>
+                <Text style={styles.btnApproveTxt}>✓ Accept Hire</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity onPress={() => setProfileModal(null)} style={{ alignItems:'center', marginTop:14 }}>
+              <Text style={{ fontSize:13, color:COLORS.muted }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1.2, textTransform: 'uppercase' }}>Incoming</Text>
         <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginTop: 2 }}>Hire Requests 👑</Text>
-        <Text style={{ fontSize: 12, color: 'rgba(232,201,122,0.45)', marginTop: 4 }}>Review and respond to each request</Text>
+        <Text style={{ fontSize: 12, color: 'rgba(232,201,122,0.45)', marginTop: 4 }}>Review customer profile before deciding</Text>
       </LinearGradient>
 
       {loading ? (
@@ -78,59 +147,71 @@ export default function HireRequestScreen({ navigation }) {
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16 }}>
-          {requests.map(req => (
-            <View key={req._id} style={styles.card}>
-              {/* Customer info */}
-              <View style={styles.cardHeader}>
-                <View style={styles.avatar}>
-                  <Text style={{ fontSize: 24 }}>👤</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.customerName}>{req.housewife?.name || 'Customer'}</Text>
-                  {req.hwProfile?.residentialArea ? (
-                    <Text style={styles.customerSub}>📍 {req.hwProfile.residentialArea}</Text>
-                  ) : null}
-                  {req.hwProfile?.subscription?.status === 'active' && (
-                    <Text style={{ fontSize: 10, color: '#2e7d5e', fontWeight: '600', marginTop: 2 }}>✓ Verified subscriber</Text>
-                  )}
-                  <Text style={styles.time}>Requested {new Date(req.createdAt).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}</Text>
-                </View>
-                <View style={styles.badge}>
-                  <Text style={{ fontSize: 9, color: COLORS.gold, fontWeight: '700', letterSpacing: 0.8 }}>PENDING</Text>
-                </View>
-              </View>
+          {requests.map(req => {
+            const hw = req.hwProfile;
+            const isSubscribed = hw?.subscription?.status === 'active';
+            return (
+              <View key={req._id} style={styles.card}>
 
-              <View style={styles.divider} />
+                {/* Customer summary row */}
+                <View style={styles.cardHeader}>
+                  <View style={styles.avatar}>
+                    <Text style={{ fontSize: 26 }}>👤</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.customerName}>{req.housewife?.name || 'Customer'}</Text>
+                    <Text style={styles.customerSub}>
+                      {hw?.residentialArea ? `📍 ${hw.residentialArea}` : hw?.city ? `📍 ${hw.city}` : '📍 Cairo'}
+                    </Text>
+                    <Text style={styles.time}>
+                      {new Date(req.createdAt).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems:'flex-end', gap:4 }}>
+                    <View style={styles.badge}>
+                      <Text style={{ fontSize: 9, color: COLORS.gold, fontWeight: '700', letterSpacing: 0.8 }}>PENDING</Text>
+                    </View>
+                    {isSubscribed && (
+                      <View style={{ backgroundColor:'rgba(46,125,94,0.1)', paddingHorizontal:6, paddingVertical:3, borderRadius:4 }}>
+                        <Text style={{ fontSize: 8, color: '#2e7d5e', fontWeight: '700' }}>✓ VERIFIED</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
 
-              <Text style={{ fontSize: 13, color: COLORS.muted, lineHeight: 20, marginBottom: 16 }}>
-                <Text style={{ color: COLORS.dark, fontWeight: '600' }}>{req.housewife?.name}</Text> wants to hire you as their domestic helper. Review and decide below.
-              </Text>
-
-              {/* Action buttons */}
-              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* View profile button */}
                 <TouchableOpacity
-                  style={[styles.btnReject, responding === req._id + 'reject' && { opacity: 0.5 }]}
-                  onPress={() => respond(req._id, 'reject')}
-                  disabled={!!responding}
-                >
-                  {responding === req._id + 'reject'
-                    ? <ActivityIndicator size="small" color={COLORS.red} />
-                    : <Text style={styles.btnRejectTxt}>✗ Decline</Text>
-                  }
+                  style={styles.viewProfileBtn}
+                  onPress={() => setProfileModal(req)}>
+                  <Text style={styles.viewProfileTxt}>👁 View Customer Profile</Text>
+                  <Text style={{ color: COLORS.gold, fontSize: 14 }}>→</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.btnApprove, responding === req._id + 'approve' && { opacity: 0.5 }]}
-                  onPress={() => respond(req._id, 'approve')}
-                  disabled={!!responding}
-                >
-                  {responding === req._id + 'approve'
-                    ? <ActivityIndicator size="small" color={COLORS.dark} />
-                    : <Text style={styles.btnApproveTxt}>✓ Accept Hire</Text>
-                  }
-                </TouchableOpacity>
+
+                <View style={styles.divider} />
+
+                {/* Action buttons */}
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <TouchableOpacity
+                    style={[styles.btnReject, responding === req._id + 'reject' && { opacity: 0.5 }]}
+                    onPress={() => respond(req._id, 'reject')}
+                    disabled={!!responding}>
+                    {responding === req._id + 'reject'
+                      ? <ActivityIndicator size="small" color={COLORS.red} />
+                      : <Text style={styles.btnRejectTxt}>✗ Decline</Text>}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.btnApprove, responding === req._id + 'approve' && { opacity: 0.5 }]}
+                    onPress={() => respond(req._id, 'approve')}
+                    disabled={!!responding}>
+                    {responding === req._id + 'approve'
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={styles.btnApproveTxt}>✓ Accept Hire</Text>}
+                  </TouchableOpacity>
+                </View>
+
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
       )}
     </View>
@@ -138,17 +219,19 @@ export default function HireRequestScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header:       { paddingHorizontal: 20, paddingTop: 54, paddingBottom: 22 },
-  card:         { backgroundColor: '#fff', borderRadius: 12, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#f0e8d8', shadowColor: '#c9a84c', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
-  cardHeader:   { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  avatar:       { width: 52, height: 52, borderRadius: 26, backgroundColor: '#fef6e4', borderWidth: 2, borderColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
-  customerName: { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
-  customerSub:  { fontSize: 11, color: COLORS.muted, marginTop: 1 },
-  time:         { fontSize: 10, color: COLORS.muted, marginTop: 3 },
-  badge:        { backgroundColor: 'rgba(201,168,76,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(201,168,76,0.3)' },
-  divider:      { height: 1, backgroundColor: '#f0e8d8', marginBottom: 12 },
-  btnReject:    { flex: 1, padding: 12, borderRadius: 8, borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
-  btnRejectTxt: { fontSize: 14, fontWeight: '600', color: '#e05555' },
-  btnApprove:   { flex: 2, padding: 12, borderRadius: 8, backgroundColor: '#2e7d5e', alignItems: 'center' },
-  btnApproveTxt:{ fontSize: 14, fontFamily: FONTS.bodySemiBold, color: '#fff' },
+  header:         { paddingHorizontal: 20, paddingTop: 54, paddingBottom: 22 },
+  card:           { backgroundColor: '#fff', borderRadius: 12, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#f0e8d8', shadowColor: '#c9a84c', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
+  cardHeader:     { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  avatar:         { width: 52, height: 52, borderRadius: 26, backgroundColor: '#fef6e4', borderWidth: 2, borderColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
+  customerName:   { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
+  customerSub:    { fontSize: 12, color: COLORS.muted, marginTop: 2 },
+  time:           { fontSize: 10, color: COLORS.muted, marginTop: 3 },
+  badge:          { backgroundColor: 'rgba(201,168,76,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(201,168,76,0.3)' },
+  viewProfileBtn: { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'#fef9ee', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, paddingHorizontal:14, paddingVertical:10, marginBottom:12 },
+  viewProfileTxt: { fontSize: 13, color: COLORS.dark, fontWeight: '600' },
+  divider:        { height: 1, backgroundColor: '#f0e8d8', marginBottom: 12 },
+  btnReject:      { flex: 1, padding: 12, borderRadius: 8, borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
+  btnRejectTxt:   { fontSize: 14, fontWeight: '600', color: '#e05555' },
+  btnApprove:     { flex: 2, padding: 12, borderRadius: 8, backgroundColor: '#2e7d5e', alignItems: 'center' },
+  btnApproveTxt:  { fontSize: 14, fontFamily: FONTS.bodySemiBold, color: '#fff' },
 });
