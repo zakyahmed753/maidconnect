@@ -284,6 +284,7 @@ async function handlePaymentSuccess(payment) {
       'freeVacancy.available': true,
       'freeVacancy.expiresAt': expiresAt,
       $pull: { hiredMaids: { maid: maidProfileId } },
+      $addToSet: { blockedMaids: maidProfileId },
     });
     if (maidProfileId) {
       await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true, isHired: false });
@@ -341,9 +342,10 @@ exports.returnMaid = async (req, res) => {
       'freeVacancy.available': true,
       'freeVacancy.expiresAt': expiresAt,
       $pull: { hiredMaids: { maid: maidProfileId } },
+      $addToSet: { blockedMaids: maidProfileId },
     });
 
-    // Restore maid to available so she appears in browse again
+    // Restore maid to available so she appears in browse for others
     if (maidProfileId) {
       await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true, isHired: false });
     }

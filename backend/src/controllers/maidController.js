@@ -81,14 +81,50 @@ exports.getAllMaids = async (req, res) => {
     if (minExp) filter.experienceYears = { $gte: Number(minExp) };
     if (name) filter.fullName = new RegExp(name.trim(), 'i');
 
+    const NEARBY_MAP = {
+      'Maadi':          ['New Cairo','Heliopolis','Garden City'],
+      'Zamalek':        ['Garden City','Dokki','Mohandessin','Heliopolis'],
+      'New Cairo':      ['Maadi','Heliopolis','Rehab City','Madinaty'],
+      'Heliopolis':     ['New Cairo','Nasr City','Zamalek'],
+      'Sheikh Zayed':   ['6th of October','Mohandessin','Dokki'],
+      '6th of October': ['Sheikh Zayed','Mohandessin'],
+      'Nasr City':      ['Heliopolis','New Cairo'],
+      'Dokki':          ['Mohandessin','Zamalek','Sheikh Zayed'],
+      'Mohandessin':    ['Dokki','Zamalek','Sheikh Zayed'],
+      'Garden City':    ['Maadi','Zamalek'],
+      'Rehab City':     ['New Cairo','Madinaty'],
+      'Madinaty':       ['New Cairo','Rehab City'],
+    };
+
     const ALLOWED_SORT = ['createdAt', 'rating', 'expectedSalary', 'experienceYears'];
     const sortField = ALLOWED_SORT.includes(sort) ? sort : 'createdAt';
-    const total = await Maid.countDocuments(filter);
-    const maids = await Maid.find(filter)
+
+    // Fetch all matching maids (no skip/limit yet — sort in JS for area priority)
+    const allMaids = await Maid.find(filter)
       .populate('user', 'name email lastSeen')
-      .sort({ [sortField]: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+      .sort({ [sortField]: -1 });
+
+    // Smart area-based sort for housewife customers
+    const customerArea = (req.user?.role === 'housewife')
+      ? (await (async () => { const hw2 = await HouseWife.findOne({ user: req.user._id }).select('residentialArea'); return hw2?.residentialArea; })())
+      : null;
+
+    if (customerArea) {
+      const nearby = NEARBY_MAP[customerArea] || [];
+      allMaids.sort((a, b) => {
+        const score = (m) => {
+          if (m.areasServed?.includes(customerArea)) return 0;
+          if (nearby.some(n => m.areasServed?.includes(n))) return 1;
+          return 2;
+        };
+        const diff = score(a) - score(b);
+        if (diff !== 0) return diff;
+        return (b.rating || 0) - (a.rating || 0);
+      });
+    }
+
+    const total = allMaids.length;
+    const maids = allMaids.slice((Number(page) - 1) * Number(limit), Number(page) * Number(limit));
 
     // Increment view counts (batch)
     const maidIds = maids.map(m => m._id);
@@ -97,7 +133,7 @@ exports.getAllMaids = async (req, res) => {
     res.json({
       success: true,
       maids,
-      pagination: { total, page: Number(page), pages: Math.ceil(total / limit) }
+      pagination: { total, page: Number(page), pages: Math.ceil(total / Number(limit)) }
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -198,6 +234,8 @@ exports.submitVerification = async (req, res) => {
       submittedAt: new Date()
     };
     maid.verificationStatus = 'pending';
+    // Allow rejected maids to re-enter the review queue
+    if (maid.approvalStatus === 'rejected') maid.approvalStatus = 'pending';
     await maid.save();
 
     // Notify admins (create a system notification)

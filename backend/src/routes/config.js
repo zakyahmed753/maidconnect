@@ -9,7 +9,7 @@ const ALL_AREAS = [
   '6th of October', 'Garden City', 'Rehab City', 'Madinaty',
   'Shorouk', 'Gesr El Suez', 'Other',
 ];
-const DEFAULT_ACTIVE = ['Maadi', 'Zamalek', 'New Cairo', 'Heliopolis'];
+const DEFAULT_ACTIVE = ['Maadi', 'Zamalek', 'New Cairo', 'Heliopolis', 'Sheikh Zayed', '6th of October'];
 
 // GET /api/config/areas — public
 router.get('/areas', async (req, res) => {
