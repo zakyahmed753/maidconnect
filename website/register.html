@@ -58,8 +58,7 @@
   .check-item{display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1.5px solid #2a2a2a;border-radius:6px;padding:9px 12px;cursor:pointer;transition:all .2s;user-select:none}
   .check-item:hover{border-color:#c9a84c40}
   .check-item.checked{border-color:#c9a84c;background:rgba(201,168,76,.08)}
-  .check-item input{display:none}
-  .check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid #444;background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+  .check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid #444;background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;flex-shrink:0}
   .check-item.checked .check-box{background:#c9a84c;border-color:#c9a84c}
   .check-tick{color:#1a1108;font-size:10px;font-weight:700;display:none}
   .check-item.checked .check-tick{display:block}
@@ -113,7 +112,10 @@
 <body>
 
 <div class="header">
-  <a href="/" class="logo">Servix <span>Premium Domestic Staffing</span></a>
+  <a href="/" class="logo" style="display:flex;align-items:center;gap:8px;text-decoration:none">
+    <img src="assets/logo-square.svg" alt="Servix" style="height:36px;width:36px;border-radius:8px"/>
+    <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:#e8c97a">Servix</span>
+  </a>
   <a href="/" class="back-link">← Back to Home</a>
 </div>
 
@@ -232,8 +234,24 @@
           <div class="hint" id="salaryHint" style="color:#888;font-size:11px;margin-top:5px"></div>
         </div>
         <div class="field">
-          <label>Area in Egypt (if based here) <span class="ar">المنطقة في مصر</span></label>
-          <input type="text" id="area" placeholder="e.g. Cairo, Maadi, Zamalek"/>
+          <label>Area you will work in <span class="ar">المنطقة</span></label>
+          <select id="area">
+            <option value="">Select area…</option>
+            <option value="Maadi">Maadi ✓</option>
+            <option value="Zamalek">Zamalek ✓</option>
+            <option value="New Cairo">New Cairo ✓</option>
+            <option value="Heliopolis">Heliopolis ✓</option>
+            <option value="Sheikh Zayed">Sheikh Zayed ✓</option>
+            <option value="6th of October">6th of October ✓</option>
+            <option value="Nasr City">Nasr City</option>
+            <option value="Dokki">Dokki</option>
+            <option value="Mohandessin">Mohandessin</option>
+            <option value="Garden City">Garden City</option>
+            <option value="Rehab City">Rehab City</option>
+            <option value="Madinaty">Madinaty</option>
+            <option value="Other">Other</option>
+          </select>
+          <div class="hint">✓ = available at launch · Others coming soon</div>
         </div>
       </div>
 
@@ -274,19 +292,23 @@
           <h4>What happens next?</h4>
           <div class="success-step">
             <div class="success-step-num">1</div>
-            <p><strong style="color:#f0ece4">Review</strong> — Our team reviews your profile within 24–48 hours.</p>
+            <p><strong style="color:#f0ece4">Admin Review</strong> — Our team reviews your profile within 24 hours.</p>
           </div>
           <div class="success-step">
             <div class="success-step-num">2</div>
-            <p><strong style="color:#f0ece4">Contact</strong> — We'll call or WhatsApp you to confirm details and collect your ID photo.</p>
+            <p><strong style="color:#f0ece4">Download the App</strong> — Once approved, download Servix and log in with your email and password.</p>
           </div>
           <div class="success-step">
             <div class="success-step-num">3</div>
-            <p><strong style="color:#f0ece4">App Launch</strong> — When Servix launches, download the app and log in with your email and password.</p>
+            <p><strong style="color:#f0ece4">Upload ID &amp; Selfie</strong> — In the app, upload your passport (or national ID) and a selfie for identity verification.</p>
           </div>
           <div class="success-step">
             <div class="success-step-num">4</div>
-            <p><strong style="color:#f0ece4">Get Hired</strong> — Receive chat requests and hire offers from verified households.</p>
+            <p><strong style="color:#f0ece4">Pay Subscription</strong> — Complete the subscription payment inside the app. Your profile goes live immediately after.</p>
+          </div>
+          <div class="success-step">
+            <div class="success-step-num">5</div>
+            <p><strong style="color:#f0ece4">Get Hired</strong> — Families browse your profile, chat with you directly, and send hire requests.</p>
           </div>
         </div>
 
@@ -308,26 +330,24 @@ const SKILLS = ['Cooking','Childcare','Eldercare','Cleaning','Laundry','Ironing'
 const ASIAN_NATIONALITIES  = ['Filipino','Indonesian','Malaysian','Sri Lankan','Indian','Bangladeshi','Nepalese'];
 const AFRICAN_NATIONALITIES = ['Ethiopian','Kenyan','Ugandan','Ghanaian','Nigerian','Tanzanian','Sudanese'];
 
-// Build checkbox grids
+// Build checkbox grids — use div (not label) to avoid native double-toggle
 function buildChecks(containerId, items) {
   const g = document.getElementById(containerId);
   g.innerHTML = items.map(i => `
-    <label class="check-item" onclick="toggleCheck(this)">
-      <input type="checkbox" value="${i}"/>
+    <div class="check-item" data-value="${i}" onclick="toggleCheck(this)">
       <div class="check-box"><span class="check-tick">✓</span></div>
       <span class="check-label">${i}</span>
-    </label>`).join('');
+    </div>`).join('');
 }
 buildChecks('langGrid', LANGS);
 buildChecks('skillGrid', SKILLS);
 
 function toggleCheck(el) {
   el.classList.toggle('checked');
-  el.querySelector('input').checked = el.classList.contains('checked');
 }
 
 function getChecked(containerId) {
-  return [...document.querySelectorAll(`#${containerId} input:checked`)].map(c => c.value);
+  return [...document.querySelectorAll(`#${containerId} .check-item.checked`)].map(c => c.dataset.value);
 }
 
 // Origin selector
@@ -341,10 +361,8 @@ function autoOrigin() {
   const nat = document.getElementById('nationality').value;
   if (ASIAN_NATIONALITIES.includes(nat))   selectOrigin('asian');
   if (AFRICAN_NATIONALITIES.includes(nat)) selectOrigin('african');
-  // Salary hint
-  const isHighFee = ['Malaysian','Indonesian'].includes(nat);
-  const hint = document.getElementById('salaryHint');
-  hint.textContent = isHighFee ? '💡 Subscription fee: EGP 1,000/month' : nat ? '💡 Subscription fee: EGP 600/month' : '';
+  // clear old hints
+  document.getElementById('salaryHint').textContent = '';
 }
 
 // Password strength
