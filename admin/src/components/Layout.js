@@ -46,24 +46,26 @@ export default function Layout() {
       {/* Sidebar */}
       <div style={S.sidebar}>
         <div style={S.logo}>
-          <svg viewBox="0 0 690 330" style={{ width:140, height:67, display:'block', marginBottom:2 }} xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#D4A843"/><stop offset="100%" stopColor="#C49A2A"/></linearGradient>
-              <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#2A1800"/><stop offset="100%" stopColor="#3D2000"/></linearGradient>
-            </defs>
-            <rect width="680" height="320" rx="16" fill="url(#bg)"/>
-            <g transform="translate(130,160)">
-              <rect x="-28" y="-18" width="56" height="42" rx="3" fill="#E8B87A" opacity="0.9"/>
-              <polygon points="-38,-18 0,-54 38,-18" fill="#C0503A" opacity="0.95"/>
-              <rect x="-9" y="6" width="18" height="18" rx="2" fill="#A0622A"/>
-              <rect x="-24" y="-10" width="14" height="12" rx="2" fill="#6AABCC" opacity="0.85"/>
-              <rect x="10" y="-10" width="14" height="12" rx="2" fill="#6AABCC" opacity="0.85"/>
-              <ellipse cx="-46" cy="-4" rx="18" ry="20" fill="#5A9E3A" opacity="0.95"/>
-              <ellipse cx="46" cy="4" rx="14" ry="16" fill="#4A8E2A" opacity="0.9"/>
-            </g>
-            <text x="212" y="148" fontFamily="Georgia,serif" fontSize="78" fontWeight="700" fill="url(#gg)" letterSpacing="-1">Servix</text>
-            <text x="214" y="178" fontFamily="Arial,sans-serif" fontSize="13" fill="#C49A2A" opacity="0.8" letterSpacing="4">PREMIUM DOMESTIC STAFFING</text>
-          </svg>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
+            <svg viewBox="0 0 1024 1024" style={{ width:38, height:38, borderRadius:9, flexShrink:0 }} xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#D4A843"/><stop offset="100%" stopColor="#C49A2A"/></linearGradient>
+                <linearGradient id="bg2" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#2A1800"/><stop offset="100%" stopColor="#3D2000"/></linearGradient>
+              </defs>
+              <rect width="1024" height="1024" rx="60" fill="url(#bg2)"/>
+              <g transform="translate(512,420) scale(3.2)">
+                <rect x="-28" y="-18" width="56" height="42" rx="3" fill="#E8B87A" opacity="0.9"/>
+                <polygon points="-38,-18 0,-54 38,-18" fill="#C0503A" opacity="0.95"/>
+                <rect x="-9" y="6" width="18" height="18" rx="2" fill="#A0622A"/>
+                <rect x="-24" y="-10" width="14" height="12" rx="2" fill="#6AABCC" opacity="0.85"/>
+                <rect x="10" y="-10" width="14" height="12" rx="2" fill="#6AABCC" opacity="0.85"/>
+                <ellipse cx="-46" cy="-4" rx="18" ry="20" fill="#5A9E3A" opacity="0.95"/>
+                <ellipse cx="46" cy="4" rx="14" ry="16" fill="#4A8E2A" opacity="0.9"/>
+              </g>
+              <text x="512" y="720" fontFamily="Georgia,serif" fontSize="160" fontWeight="700" fill="url(#gg)" textAnchor="middle" letterSpacing="-2">Servix</text>
+            </svg>
+            <div style={S.logoT}>Servix</div>
+          </div>
           <div style={S.logoS}>Admin Panel</div>
         </div>
         <nav style={S.nav}>

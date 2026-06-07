@@ -20,8 +20,9 @@
 
     /* ── NAV ── */
     nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;background:rgba(15,12,9,0.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
-    .logo{display:flex;align-items:center;text-decoration:none}
-    .logo img{height:44px;width:auto}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .logo img{height:44px;width:44px;border-radius:10px}
+    .logo-text{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold-l);font-weight:700;letter-spacing:.02em}
     .launch-pill{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
     .nav-cta{background:var(--gold);color:var(--dark2);padding:10px 22px;border-radius:7px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.03em;transition:all .2s}
     .nav-cta:hover{background:var(--gold-l);transform:translateY(-1px)}
@@ -113,7 +114,8 @@
 <!-- NAV -->
 <nav>
   <a class="logo" href="/">
-    <img src="assets/logo.svg" alt="Servix" height="44"/>
+    <img src="assets/logo-square.svg" alt="Servix"/>
+    <span class="logo-text">Servix</span>
   </a>
   <span class="launch-pill">🗓 Launching July 1, 2026</span>
   <a class="nav-cta" href="register.html">Apply as a Maid →</a>
@@ -277,7 +279,7 @@
 <!-- FOOTER -->
 <footer>
   <div>
-    <img src="assets/logo.svg" alt="Servix" height="36" style="margin-bottom:6px"/>
+    <img src="assets/logo-square.svg" alt="Servix" height="40" style="border-radius:8px;margin-bottom:8px"/>
     <div class="foot-text">© 2026 Servix · Cairo, Egypt · Launching July 1, 2026</div>
   </div>
   <ul class="foot-links">
