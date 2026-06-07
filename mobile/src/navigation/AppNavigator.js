@@ -146,7 +146,6 @@ export default function AppNavigator() {
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
-            <Stack.Screen name="AreaSelect"         component={AreaSelectScreen}/>
           </>
         ) : user?.role === 'maid' && profile && (
             profile.verificationStatus === 'pending' ||
@@ -159,7 +158,6 @@ export default function AppNavigator() {
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
-            <Stack.Screen name="AreaSelect"         component={AreaSelectScreen}/>
           </>
         ) : user?.role === 'maid' && (
             profile?.subscription?.status !== 'active' ||
