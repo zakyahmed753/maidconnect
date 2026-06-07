@@ -231,27 +231,70 @@ export default function MaidDetailScreen({ route, navigation }) {
           </>}
 
           {/* Reviews section */}
-          <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:16 }}>
-            <Text style={styles.secTitle}>{t('reviews_section')}</Text>
+          <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginTop:20, marginBottom:12 }}>
+            <Text style={styles.secTitle}>{t('reviews_section')} {reviews.length > 0 ? `(${reviews.length})` : ''}</Text>
             {isHired && (
-              <TouchableOpacity onPress={() => setReviewModal(true)} style={{ backgroundColor:COLORS.gold, paddingHorizontal:12, paddingVertical:5, borderRadius:4 }}>
-                <Text style={{ fontSize:11, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>{t('write_review')}</Text>
+              <TouchableOpacity onPress={() => setReviewModal(true)} style={{ backgroundColor:COLORS.gold, paddingHorizontal:12, paddingVertical:6, borderRadius:6 }}>
+                <Text style={{ fontSize:11, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>✏️ {t('write_review')}</Text>
               </TouchableOpacity>
             )}
           </View>
-          {reviews.length === 0
-            ? <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:8 }}>{t('no_reviews_yet')}</Text>
-            : reviews.map(rv => (
-              <View key={rv._id} style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, marginBottom:8 }}>
-                <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:4 }}>
-                  <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark }}>{rv.housewife?.name || 'Customer'}</Text>
-                  <Text style={{ fontSize:13, color:COLORS.gold }}>{'⭐'.repeat(rv.rating)}</Text>
+
+          {reviews.length > 0 && (() => {
+            const avg = (reviews.reduce((s,r) => s + r.rating, 0) / reviews.length).toFixed(1);
+            const counts = [5,4,3,2,1].map(s => ({ star:s, count: reviews.filter(r=>r.rating===s).length }));
+            return (
+              <View style={{ backgroundColor:COLORS.surface, borderRadius:12, borderWidth:1, borderColor:COLORS.border, padding:16, marginBottom:14, flexDirection:'row', gap:16, alignItems:'center' }}>
+                <View style={{ alignItems:'center', minWidth:64 }}>
+                  <Text style={{ fontFamily:FONTS.display, fontSize:42, color:COLORS.gold, lineHeight:48 }}>{avg}</Text>
+                  <Text style={{ fontSize:18, marginTop:2 }}>{'⭐'.repeat(Math.round(Number(avg)))}</Text>
+                  <Text style={{ fontSize:10, color:COLORS.muted, marginTop:3 }}>{reviews.length} review{reviews.length!==1?'s':''}</Text>
                 </View>
-                {rv.comment ? <Text style={{ fontSize:12, color:COLORS.muted, lineHeight:18 }}>{rv.comment}</Text> : null}
-                <Text style={{ fontSize:10, color:COLORS.muted, marginTop:4 }}>{new Date(rv.createdAt).toLocaleDateString()}</Text>
+                <View style={{ flex:1 }}>
+                  {counts.map(({ star, count }) => (
+                    <View key={star} style={{ flexDirection:'row', alignItems:'center', gap:6, marginBottom:4 }}>
+                      <Text style={{ fontSize:10, color:COLORS.muted, width:10 }}>{star}</Text>
+                      <Text style={{ fontSize:10 }}>⭐</Text>
+                      <View style={{ flex:1, height:6, backgroundColor:COLORS.border, borderRadius:3, overflow:'hidden' }}>
+                        <View style={{ height:'100%', width: reviews.length ? `${(count/reviews.length)*100}%` : '0%', backgroundColor:COLORS.gold, borderRadius:3 }}/>
+                      </View>
+                      <Text style={{ fontSize:10, color:COLORS.muted, width:16, textAlign:'right' }}>{count}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
-            ))
-          }
+            );
+          })()}
+
+          {reviews.length === 0 ? (
+            <View style={{ backgroundColor:COLORS.surface, borderRadius:10, borderWidth:1, borderColor:COLORS.border, padding:20, alignItems:'center', marginBottom:8 }}>
+              <Text style={{ fontSize:28, marginBottom:8 }}>💬</Text>
+              <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'600' }}>No reviews yet</Text>
+              <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4, textAlign:'center' }}>Be the first to leave a review after hiring</Text>
+            </View>
+          ) : reviews.map(rv => (
+            <View key={rv._id} style={{ backgroundColor:'#fff', borderWidth:1, borderColor:COLORS.border, borderRadius:12, padding:16, marginBottom:10, shadowColor:'#c9a84c', shadowOpacity:0.05, shadowRadius:4, elevation:1 }}>
+              <View style={{ flexDirection:'row', alignItems:'center', gap:10, marginBottom:10 }}>
+                <View style={{ width:38, height:38, borderRadius:19, backgroundColor:'#fef6e4', borderWidth:1.5, borderColor:COLORS.gold, alignItems:'center', justifyContent:'center' }}>
+                  <Text style={{ fontSize:18 }}>👤</Text>
+                </View>
+                <View style={{ flex:1 }}>
+                  <Text style={{ fontSize:14, fontWeight:'700', color:COLORS.dark }}>{rv.housewife?.name || 'Customer'}</Text>
+                  <Text style={{ fontSize:10, color:COLORS.muted }}>{new Date(rv.createdAt).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}</Text>
+                </View>
+                <View style={{ flexDirection:'row', gap:2 }}>
+                  {[1,2,3,4,5].map(s => (
+                    <Text key={s} style={{ fontSize:16, color: s <= rv.rating ? '#f59e0b' : '#e5e7eb' }}>★</Text>
+                  ))}
+                </View>
+              </View>
+              {rv.comment ? (
+                <Text style={{ fontSize:14, color:COLORS.text, lineHeight:21, fontStyle:'italic' }}>"{rv.comment}"</Text>
+              ) : (
+                <Text style={{ fontSize:12, color:COLORS.muted, fontStyle:'italic' }}>No comment left</Text>
+              )}
+            </View>
+          ))}
         </View>
       </ScrollView>
 
