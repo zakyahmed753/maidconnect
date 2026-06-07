@@ -107,6 +107,27 @@
   /* ── Password strength ── */
   .pw-strength{height:3px;border-radius:2px;margin-top:6px;transition:all .3s;background:#2a2a2a}
   .pw-hint{font-size:11px;margin-top:4px;transition:color .3s}
+
+  /* ── Upload ── */
+  .upload-zone{border:2px dashed #2a2a2a;border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:#111;position:relative}
+  .upload-zone:hover{border-color:#c9a84c60;background:#161616}
+  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .upload-zone p{font-size:13px;color:#555;margin-top:6px}
+  .upload-zone .icon{font-size:28px;display:block;margin-bottom:4px}
+  .upload-zone.has-file{border-color:#c9a84c;background:rgba(201,168,76,.06)}
+  .upload-zone.has-file p{color:#c9a84c}
+  .photo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .photo-slot{border:2px dashed #2a2a2a;border-radius:8px;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;background:#111;transition:all .2s}
+  .photo-slot:hover{border-color:#c9a84c60}
+  .photo-slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .photo-slot img{width:100%;height:100%;object-fit:cover;border-radius:6px}
+  .photo-slot .ph-label{font-size:11px;color:#555;text-align:center;line-height:1.4}
+  .photo-slot.filled{border-color:#c9a84c}
+  .id-type-row{display:flex;gap:10px;margin-top:8px;margin-bottom:14px}
+  .id-type-btn{flex:1;padding:12px;border:1.5px solid #2a2a2a;border-radius:6px;background:#1a1a1a;color:#666;font-size:13px;font-family:'Jost',sans-serif;cursor:pointer;text-align:center;transition:all .2s}
+  .id-type-btn.selected{border-color:#c9a84c;background:rgba(201,168,76,.1);color:#e8c97a}
+  .upload-progress{height:3px;border-radius:2px;background:#2a2a2a;margin-top:8px;overflow:hidden}
+  .upload-progress-bar{height:100%;background:#c9a84c;border-radius:2px;transition:width .3s;width:0%}
 </style>
 </head>
 <body>
@@ -125,12 +146,15 @@
     <div class="step-line" id="line1"></div>
     <div class="step-dot pending" id="dot2">2</div>
     <div class="step-line" id="line2"></div>
-    <div class="step-dot pending" id="dot3">✓</div>
+    <div class="step-dot pending" id="dot3">3</div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-dot pending" id="dot4">✓</div>
   </div>
   <div class="step-labels">
     <span class="step-label active" id="lbl1">Account</span>
     <span class="step-label" id="lbl2">Profile</span>
-    <span class="step-label" id="lbl3">Done</span>
+    <span class="step-label" id="lbl3">Photos & ID</span>
+    <span class="step-label" id="lbl4">Done</span>
   </div>
 </div>
 
@@ -272,16 +296,96 @@
 
       <div class="btn-row">
         <button class="btn-back" onclick="showStep(1)">← Back</button>
-        <button class="btn-next" id="submitBtn" onclick="submit()">Submit Profile →</button>
+        <button class="btn-next" id="submitBtn" onclick="goStep3()">Continue →</button>
       </div>
     </div>
 
-    <!-- ── Step 3: Success ── -->
+    <!-- ── Step 3: Photos & ID ── -->
     <div id="step3" style="display:none">
+      <div class="step-title">Photos & Identity</div>
+      <div class="step-sub">Upload your profile photos and ID document. This helps families trust you and speeds up verification.</div>
+
+      <!-- Profile Photos -->
+      <div class="field">
+        <label>Profile Photos <span style="color:#e05555">*</span> <span class="ar">صور الملف الشخصي</span></label>
+        <p style="font-size:12px;color:#666;margin-bottom:10px">Upload exactly 3 clear photos of yourself (face visible, good lighting)</p>
+        <div class="photo-grid">
+          <div class="photo-slot" id="slot0" onclick="document.getElementById('photoFile0').click()">
+            <input type="file" id="photoFile0" accept="image/*" onchange="previewPhoto(0,this)" style="display:none"/>
+            <div class="ph-label">📷<br/>Photo 1<br/><span style="font-size:9px;color:#444">Required</span></div>
+          </div>
+          <div class="photo-slot" id="slot1" onclick="document.getElementById('photoFile1').click()">
+            <input type="file" id="photoFile1" accept="image/*" onchange="previewPhoto(1,this)" style="display:none"/>
+            <div class="ph-label">📷<br/>Photo 2<br/><span style="font-size:9px;color:#444">Required</span></div>
+          </div>
+          <div class="photo-slot" id="slot2" onclick="document.getElementById('photoFile2').click()">
+            <input type="file" id="photoFile2" accept="image/*" onchange="previewPhoto(2,this)" style="display:none"/>
+            <div class="ph-label">📷<br/>Photo 3<br/><span style="font-size:9px;color:#444">Required</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ID Type -->
+      <div class="field">
+        <label>Identity Document <span style="color:#e05555">*</span></label>
+        <div class="id-type-row">
+          <button type="button" class="id-type-btn selected" id="idTypeEgyptian" onclick="selectIdType('egyptian')">🇪🇬 Egyptian National ID</button>
+          <button type="button" class="id-type-btn" id="idTypePassport" onclick="selectIdType('passport')">🌍 Passport</button>
+        </div>
+
+        <!-- Egyptian ID fields -->
+        <div id="egyptianFields">
+          <div class="field">
+            <label>National ID Number</label>
+            <input type="text" id="nationalId" placeholder="14-digit national ID number" maxlength="14"/>
+          </div>
+        </div>
+
+        <!-- Passport fields -->
+        <div id="passportFields" style="display:none">
+          <div class="field">
+            <label>Passport Number</label>
+            <input type="text" id="passportNumber" placeholder="e.g. A12345678"/>
+          </div>
+          <div class="field">
+            <label>Passport Photo</label>
+            <div class="upload-zone" id="passportZone">
+              <input type="file" id="passportFile" accept="image/*" onchange="markUploaded('passportZone','passportFile',this)"/>
+              <span class="icon">🪪</span>
+              <strong style="font-size:13px;color:#bbb">Upload passport photo</strong>
+              <p>Clear photo of the photo page · JPG or PNG</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selfie -->
+      <div class="field">
+        <label>Selfie Photo <span style="color:#e05555">*</span> <span class="ar">صورة سيلفي</span></label>
+        <div class="upload-zone" id="selfieZone">
+          <input type="file" id="selfieFile" accept="image/*" onchange="markUploaded('selfieZone','selfieFile',this)"/>
+          <span class="icon">🤳</span>
+          <strong style="font-size:13px;color:#bbb">Upload a selfie</strong>
+          <p>Hold your ID next to your face if possible</p>
+        </div>
+      </div>
+
+      <div class="upload-progress" id="uploadProgressBar" style="display:none">
+        <div class="upload-progress-bar" id="uploadProgressFill"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="showStep(2)">← Back</button>
+        <button class="btn-next" id="uploadSubmitBtn" onclick="submitAll()">Submit Application →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 4: Success ── -->
+    <div id="step4" style="display:none">
       <div class="success-wrap">
         <span class="success-icon">🎉</span>
         <div class="success-title">Profile Submitted!</div>
-        <div class="success-sub">Your profile is now under review by the Servix team. We'll contact you within 24–48 hours.</div>
+        <div class="success-sub">Your profile, photos and ID are submitted. Our team will review within 24 hours.</div>
 
         <div class="success-ref">
           <p>Registered email</p>
@@ -377,18 +481,21 @@ function checkPw(val) {
 
 // Show/hide steps
 function showStep(n) {
-  [1,2,3].forEach(i => document.getElementById('step'+i).style.display = i===n ? 'block' : 'none');
-  // Progress dots
-  [1,2,3].forEach(i => {
+  [1,2,3,4].forEach(i => {
+    const el = document.getElementById('step'+i);
+    if (el) el.style.display = i===n ? 'block' : 'none';
+  });
+  [1,2,3,4].forEach(i => {
     const dot = document.getElementById('dot'+i);
     const lbl = document.getElementById('lbl'+i);
+    if (!dot) return;
     dot.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
-    dot.textContent = i < n ? '✓' : i;
-    lbl.className = 'step-label ' + (i < n ? 'done' : i === n ? 'active' : '');
+    dot.textContent = i < n ? '✓' : i === 4 ? '✓' : i;
+    if (lbl) lbl.className = 'step-label ' + (i < n ? 'done' : i === n ? 'active' : '');
   });
-  [1,2].forEach(i => {
+  [1,2,3].forEach(i => {
     const line = document.getElementById('line'+i);
-    line.className = 'step-line ' + (i < n ? 'done' : '');
+    if (line) line.className = 'step-line ' + (i < n ? 'done' : '');
   });
   window.scrollTo(0,0);
 }
@@ -442,61 +549,189 @@ async function goStep2() {
   }
 }
 
-// ── Step 2: create maid profile ──
-async function submit() {
+// ── Step 2: create maid profile → go to Step 3 ──
+async function goStep3() {
   clearErr();
   const nationality = document.getElementById('nationality').value;
   const age         = parseInt(document.getElementById('age').value);
   const experience  = parseInt(document.getElementById('experience').value);
   const salary      = parseInt(document.getElementById('salary').value);
-  const area        = document.getElementById('area').value.trim();
+  const area        = document.getElementById('area').value;
   const bio         = document.getElementById('bio').value.trim();
   const name        = document.getElementById('name').value.trim();
   const langs       = getChecked('langGrid');
   const skills      = getChecked('skillGrid');
 
-  if (!nationality)           return showErr('Please select your nationality.');
+  if (!nationality)                return showErr('Please select your nationality.');
   if (!age || age < 18 || age > 60) return showErr('Please enter a valid age (18–60).');
-  if (isNaN(experience))      return showErr('Please enter your years of experience.');
-  if (!salary || salary < 500) return showErr('Please enter your expected monthly salary (min EGP 500).');
-  if (skills.length === 0)    return showErr('Please select at least one skill.');
+  if (isNaN(experience))            return showErr('Please enter your years of experience.');
+  if (!salary || salary < 500)      return showErr('Please enter your expected monthly salary (min EGP 500).');
+  if (skills.length === 0)          return showErr('Please select at least one skill.');
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Submitting…';
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
 
   try {
     const res = await fetch(`${API}/maids`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authToken}`
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
       body: JSON.stringify({
-        fullName:        name,
-        nationality,
-        origin:          selectedOrigin,
-        age,
-        experienceYears: experience,
-        expectedSalary:  salary,
-        residentialArea: area || null,
-        languages:       langs,
-        skills,
-        bio:             bio || undefined,
+        fullName: name, nationality, origin: selectedOrigin, age,
+        experienceYears: experience, expectedSalary: salary,
+        residentialArea: area || null, languages: langs, skills,
+        bio: bio || undefined,
       })
     });
     const data = await res.json();
     if (!data.success) {
-      btn.disabled = false;
-      btn.textContent = 'Submit Profile →';
-      return showErr(data.message || 'Failed to create profile. Please try again.');
+      btn.disabled = false; btn.textContent = 'Continue →';
+      return showErr(data.message || 'Failed to save profile.');
     }
-    document.getElementById('successEmail').textContent = document.getElementById('email').value.trim();
+    btn.disabled = false; btn.textContent = 'Continue →';
     showStep(3);
   } catch(e) {
+    btn.disabled = false; btn.textContent = 'Continue →';
+    showErr('Network error. Please check your connection.');
+  }
+}
+
+// ── Upload helpers ──
+let selectedIdType = 'egyptian';
+
+function selectIdType(type) {
+  selectedIdType = type;
+  document.getElementById('idTypeEgyptian').classList.toggle('selected', type === 'egyptian');
+  document.getElementById('idTypePassport').classList.toggle('selected', type === 'passport');
+  document.getElementById('egyptianFields').style.display  = type === 'egyptian' ? 'block' : 'none';
+  document.getElementById('passportFields').style.display  = type === 'passport'  ? 'block' : 'none';
+}
+
+function markUploaded(zoneId, fileId, input) {
+  const zone = document.getElementById(zoneId);
+  if (input.files[0]) {
+    zone.classList.add('has-file');
+    zone.querySelector('p').textContent = '✓ ' + input.files[0].name;
+  }
+}
+
+const photoFiles = [null, null, null];
+
+function previewPhoto(idx, input) {
+  if (!input.files[0]) return;
+  photoFiles[idx] = input.files[0];
+  const slot = document.getElementById('slot'+idx);
+  slot.classList.add('filled');
+  const reader = new FileReader();
+  reader.onload = e => {
+    slot.innerHTML = `<img src="${e.target.result}" alt="Photo ${idx+1}"/>`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function setProgress(pct) {
+  document.getElementById('uploadProgressBar').style.display = 'block';
+  document.getElementById('uploadProgressFill').style.width  = pct + '%';
+}
+
+async function uploadImage(file) {
+  const form = new FormData();
+  form.append('photo', file);
+  const res = await fetch(`${API}/upload/image`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${authToken}` },
+    body: form,
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.message || 'Upload failed');
+  return data; // { url, publicId }
+}
+
+// ── Step 3: upload photos + ID + selfie → submitVerification ──
+async function submitAll() {
+  clearErr();
+
+  // Validate profile photos
+  const missingPhoto = photoFiles.findIndex(f => !f);
+  if (missingPhoto !== -1) return showErr(`Please upload Photo ${missingPhoto + 1}.`);
+
+  // Validate selfie
+  const selfieInput = document.getElementById('selfieFile');
+  if (!selfieInput.files[0]) return showErr('Please upload a selfie photo.');
+
+  // Validate ID
+  if (selectedIdType === 'egyptian') {
+    const nid = document.getElementById('nationalId').value.trim();
+    if (!nid || nid.length < 10) return showErr('Please enter your national ID number.');
+  } else {
+    const pn = document.getElementById('passportNumber').value.trim();
+    if (!pn) return showErr('Please enter your passport number.');
+    if (!document.getElementById('passportFile').files[0]) return showErr('Please upload your passport photo.');
+  }
+
+  const btn = document.getElementById('uploadSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Uploading…';
+
+  try {
+    setProgress(5);
+
+    // 1. Upload 3 profile photos
+    const photoUrls = [];
+    for (let i = 0; i < 3; i++) {
+      const result = await uploadImage(photoFiles[i]);
+      photoUrls.push({ url: result.url, publicId: result.publicId, isPrimary: i === 0 });
+      setProgress(5 + (i + 1) * 15); // 20%, 35%, 50%
+    }
+
+    // 2. Upload selfie
+    const selfieResult = await uploadImage(selfieInput.files[0]);
+    setProgress(65);
+
+    // 3. Upload passport if needed
+    let passportPhotoUrl = null, passportPhotoPublicId = null;
+    if (selectedIdType === 'passport') {
+      const ppResult = await uploadImage(document.getElementById('passportFile').files[0]);
+      passportPhotoUrl      = ppResult.url;
+      passportPhotoPublicId = ppResult.publicId;
+    }
+    setProgress(80);
+
+    // 4. Add profile photos
+    for (const photo of photoUrls) {
+      await fetch(`${API}/maids/me/photos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(photo),
+      });
+    }
+    setProgress(90);
+
+    // 5. Submit verification
+    const verifyBody = {
+      selfieUrl:       selfieResult.url,
+      selfiePublicId:  selfieResult.publicId,
+    };
+    if (selectedIdType === 'egyptian') {
+      verifyBody.nationalId = document.getElementById('nationalId').value.trim();
+    } else {
+      verifyBody.passportNumber       = document.getElementById('passportNumber').value.trim();
+      verifyBody.passportPhotoUrl     = passportPhotoUrl;
+      verifyBody.passportPhotoPublicId= passportPhotoPublicId;
+    }
+    await fetch(`${API}/maids/me/verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify(verifyBody),
+    });
+    setProgress(100);
+
+    document.getElementById('successEmail').textContent = document.getElementById('email').value.trim();
+    showStep(4);
+  } catch(e) {
     btn.disabled = false;
-    btn.textContent = 'Submit Profile →';
-    showErr('Network error. Please check your connection and try again.');
+    btn.textContent = 'Submit Application →';
+    showErr(e.message || 'Upload failed. Please check your connection and try again.');
   }
 }
 </script>

@@ -14,8 +14,8 @@ const PLANS = {
   annual:  { label: 'Annual',   price: 3871, period: '/year', badge: 'Save 27%' },
 };
 
-const POLL_INTERVAL = 2000; // 2s between checks
-const POLL_ATTEMPTS = 8;    // up to 16s total
+const POLL_INTERVAL = 3000; // 3s between checks
+const POLL_ATTEMPTS = 20;   // up to 60s total — Paymob can be slow
 
 export default function PaymentScreen({ route, navigation }) {
   const { type, plan, maidProfileId, chatId, amount, maidName, couponCode, discountedAmount } = route.params || {};
@@ -46,12 +46,15 @@ export default function PaymentScreen({ route, navigation }) {
         if (status === 'completed') {
           clearTimeout(pollTimer.current);
           await completeAuth();
+          setChecking(false);
           if (type === 'release_fee') {
             navigation.navigate('HiredMaids');
           } else if (user?.role === 'housewife') {
+            // customer_subscription or commission — go to Browse
             navigation.navigate('Browse');
           }
-          setChecking(false);
+          // maid subscription: completeAuth() updates subscription.status → 'active'
+          // AppNavigator auto-switches to MaidTabs; no explicit navigate needed
           return;
         }
 
