@@ -76,12 +76,21 @@ export default function SubscriptionScreen({ navigation }) {
         token = await SecureStore.getItemAsync('maidconnect_token');
       } catch {}
     }
+    const fakeEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     useAuthStore.setState({
       token,
       user: store.user,
-      profile: store.profile
-        ? { ...store.profile, verificationStatus: 'verified', approvalStatus: 'approved' }
-        : { verificationStatus: 'verified', approvalStatus: 'approved' },
+      profile: {
+        ...(store.profile || {}),
+        verificationStatus: 'verified',
+        approvalStatus:     'approved',
+        subscription: {
+          status:    'active',
+          plan:      'monthly',
+          startDate: new Date().toISOString(),
+          endDate:   fakeEndDate,
+        },
+      },
     });
     setSkipping(false);
   };
