@@ -111,6 +111,16 @@ function MaidHomeStack() {
       <Stack.Screen name="HireRequest"       component={HireRequestScreen}/>
       <Stack.Screen name="HiredCelebration"  component={HiredCelebrationScreen}/>
       <Stack.Screen name="Coupons"           component={CouponScreen}/>
+      <Stack.Screen name="Chat"              component={ChatScreen}/>
+    </Stack.Navigator>
+  );
+}
+
+function MaidChatsStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown:false }}>
+      <Stack.Screen name="MaidChatsList" component={ChatsListScreen}/>
+      <Stack.Screen name="Chat"          component={ChatScreen}/>
     </Stack.Navigator>
   );
 }
@@ -121,7 +131,7 @@ function MaidTabs() {
   return (
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
       <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} labelKey="tab_home"/> }}/>
-      <Tab.Screen name="MaidChats"  component={ChatsListScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
+      <Tab.Screen name="MaidChats"  component={MaidChatsStack}    options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
       <Tab.Screen name="MaidAlerts" component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} labelKey="tab_alerts"/> }}/>
     </Tab.Navigator>
   );

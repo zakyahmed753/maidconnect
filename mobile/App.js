@@ -93,13 +93,10 @@ export default function App() {
       const data = response.notification.request.content.data;
       if (!navigationRef.isReady()) return;
       if (data?.screen === 'HireRequest') {
-        navigationRef.navigate('MaidHome', { screen: 'HireRequest' });
-      } else if (data?.screen === 'Browse') {
-        navigationRef.navigate('HWMain', { screen: 'Browse' });
-      } else if (data?.screen === 'Home') {
+        navigationRef.navigate('MaidMain', { screen: 'MaidHome', params: { screen: 'HireRequest' } });
+      } else if (data?.screen === 'Browse' || data?.screen === 'Home') {
         navigationRef.navigate('HWMain', { screen: 'Browse' });
       } else if (data?.chatId) {
-        // Navigate to the specific chat
         navigationRef.navigate('HWMain', { screen: 'Chats' });
       }
     });

@@ -342,6 +342,7 @@ export function MaidDashScreen({ navigation }) {
   const [areasModalVisible, setAreasModalVisible] = useState(false);
   const [selectedAreas, setSelectedAreas] = useState([]);
   const [savingAreas, setSavingAreas] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState(0);
 
   const ALL_CAIRO_AREAS = ['Maadi','Zamalek','New Cairo','Heliopolis','Nasr City','Dokki','Mohandessin','Sheikh Zayed','6th of October','Garden City','Rehab City','Madinaty','Shorouk','Other'];
 
@@ -355,6 +356,9 @@ export function MaidDashScreen({ navigation }) {
           setMaidProfile(m);
           setSelectedAreas(m?.areasServed || []);
         })
+        .catch(() => {});
+      maidsAPI.getHireRequests()
+        .then(r => setPendingRequests((r.data?.requests || []).length))
         .catch(() => {});
     }, [])
   );
@@ -436,6 +440,23 @@ export function MaidDashScreen({ navigation }) {
             </View>
           ))}
         </View>
+        {/* Pending hire requests banner */}
+        {pendingRequests > 0 && (
+          <TouchableOpacity onPress={() => navigation.navigate('HireRequest')}
+            style={{ marginHorizontal:14, marginBottom:10, backgroundColor:'#fff8ee', borderWidth:1.5, borderColor:COLORS.gold, borderRadius:8, padding:13, flexDirection:'row', alignItems:'center', gap:10 }}>
+            <Text style={{ fontSize:22 }}>👑</Text>
+            <View style={{ flex:1 }}>
+              <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>
+                {pendingRequests} Hire Request{pendingRequests > 1 ? 's' : ''} Waiting!
+              </Text>
+              <Text style={{ fontSize:11, color:COLORS.muted, marginTop:1 }}>Tap to review and accept or decline</Text>
+            </View>
+            <View style={{ backgroundColor:COLORS.gold, width:24, height:24, borderRadius:12, alignItems:'center', justifyContent:'center' }}>
+              <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.dark }}>{pendingRequests}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Areas prompt */}
         <TouchableOpacity onPress={() => setAreasModalVisible(true)}
           style={{ marginHorizontal:14, marginBottom:10, backgroundColor: (maidProfile?.areasServed?.length > 0) ? 'rgba(46,125,94,0.08)' : '#fffbeb', borderWidth:1, borderColor: (maidProfile?.areasServed?.length > 0) ? 'rgba(46,125,94,0.25)' : '#f59e0b', borderRadius:8, padding:12, flexDirection:'row', alignItems:'center', gap:10 }}>
@@ -453,7 +474,7 @@ export function MaidDashScreen({ navigation }) {
 
         <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
           {[
-            ['👑','Hire Requests', 'View & respond to requests'],
+            ['👑','Hire Requests', pendingRequests > 0 ? `${pendingRequests} pending — tap to review` : 'View & respond to requests'],
             ['💬','Messages', `${stats.chats} active`],
             ['💳','Payments', profile?.subscription?.plan ? `${profile.subscription.plan} · ${profile.subscription.status}` : 'View history'],
             ['🎁','Referrals', 'Share your code & earn rewards'],
