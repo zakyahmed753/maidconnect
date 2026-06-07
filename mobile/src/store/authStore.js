@@ -1,18 +1,24 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import { authAPI } from '../services/api';
+import { authAPI, configAPI } from '../services/api';
 
 const useAuthStore = create((set, get) => ({
-  token:   null,
-  user:    null,
-  profile: null,
-  loading: false,
+  token:       null,
+  user:        null,
+  profile:     null,
+  loading:     false,
+  activeAreas: [],
+  allAreas:    [],
 
   // Load persisted session
   init: async () => {
     set({ loading: true });
     try {
-      const token = await SecureStore.getItemAsync('maidconnect_token');
+      const [token, areasRes] = await Promise.all([
+        SecureStore.getItemAsync('maidconnect_token'),
+        configAPI.getAreas().catch(() => ({ data: { activeAreas: [], allAreas: [] } })),
+      ]);
+      set({ activeAreas: areasRes.data.activeAreas, allAreas: areasRes.data.allAreas });
       if (token) {
         const res = await authAPI.getMe();
         set({ token, user: res.data.user, profile: res.data.profile, loading: false });
@@ -38,8 +44,11 @@ const useAuthStore = create((set, get) => ({
   completeAuth: async () => {
     const token = await SecureStore.getItemAsync('maidconnect_token');
     if (token) {
-      const me = await authAPI.getMe();
-      set({ token, user: me.data.user, profile: me.data.profile });
+      const [me, areasRes] = await Promise.all([
+        authAPI.getMe(),
+        configAPI.getAreas().catch(() => ({ data: { activeAreas: get().activeAreas, allAreas: get().allAreas } })),
+      ]);
+      set({ token, user: me.data.user, profile: me.data.profile, activeAreas: areasRes.data.activeAreas, allAreas: areasRes.data.allAreas });
     }
   },
 

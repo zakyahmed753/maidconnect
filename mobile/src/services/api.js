@@ -74,6 +74,11 @@ export const paymentsAPI = {
   checkStatus:                 (id)   => api.get(`/payments/${id}/status`),
 };
 
+export const configAPI = {
+  getAreas:    ()           => api.get('/config/areas'),
+  updateAreas: (activeAreas) => api.put('/config/areas', { activeAreas }),
+};
+
 export const couponsAPI = {
   getMyCode:      ()           => api.get('/coupons/my-code'),
   validate:       (data)       => api.post('/coupons/validate', data),

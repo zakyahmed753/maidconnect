@@ -12,8 +12,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
   const { t } = useTranslation();
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
   const [loading, setLoading] = useState(false);
-  const register     = useAuthStore(s => s.register);
-  const completeAuth = useAuthStore(s => s.completeAuth);
+  const register = useAuthStore(s => s.register);
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -29,8 +28,8 @@ export default function RegisterHousewifeScreen({ navigation }) {
     setLoading(true);
     try {
       await register({ ...form, phone: normalizedPhone, role: 'housewife' });
-      // Populate Zustand so AppNavigator switches to HouseWifeTabs automatically
-      await completeAuth();
+      // Don't call completeAuth yet — go to area selection first
+      navigation.navigate('AreaSelect');
     } catch (err) {
       Toast.show({ type: 'error', text1: err.response?.data?.message || t('registration_failed') });
     } finally { setLoading(false); }

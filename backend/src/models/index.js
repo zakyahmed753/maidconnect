@@ -2,10 +2,11 @@ const mongoose = require('mongoose');
 
 // ── HouseWife Profile ──
 const houseWifeSchema = new mongoose.Schema({
-  user:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
-  fullName:{ type: String, required: true },
-  country: { type: String, default: 'Egypt' },
-  city:    { type: String },
+  user:            { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
+  fullName:        { type: String, required: true },
+  country:         { type: String, default: 'Egypt' },
+  city:            { type: String },
+  residentialArea: { type: String, default: null },
   savedMaids:   [{ type: mongoose.Schema.Types.ObjectId, ref: 'Maid' }],
   blockedMaids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Maid' }],
   hiredMaids: [{
@@ -59,6 +60,13 @@ const messageSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 messageSchema.index({ chat: 1, createdAt: -1 });
+
+// ── App Config ──
+const configSchema = new mongoose.Schema({
+  key:       { type: String, required: true, unique: true },
+  value:     { type: mongoose.Schema.Types.Mixed },
+  updatedAt: { type: Date, default: Date.now },
+});
 
 // ── Coupon ──
 const couponSchema = new mongoose.Schema({
@@ -176,4 +184,5 @@ module.exports = {
   Review:       mongoose.model('Review', reviewSchema),
   HireRequest:  mongoose.model('HireRequest', hireRequestSchema),
   Coupon:       mongoose.model('Coupon', couponSchema),
+  Config:       mongoose.model('Config', configSchema),
 };

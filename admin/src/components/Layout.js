@@ -11,6 +11,7 @@ const NAV = [
   { to: '/notifications',icon: '🔔', label: 'Notifications' },
   { to: '/support',      icon: '🎫', label: 'Support' },
   { to: '/coupons',      icon: '🏷', label: 'Coupons' },
+  { to: '/areas',        icon: '📍', label: 'Areas' },
 ];
 
 const S = {

@@ -12,6 +12,7 @@ import Payments from './pages/Payments';
 import Notifications from './pages/Notifications';
 import SupportTickets from './pages/SupportTickets';
 import Coupons from './pages/Coupons';
+import Areas   from './pages/Areas';
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore(s => s.token);
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="notifications" element={<Notifications />} />
           <Route path="support"  element={<SupportTickets />} />
           <Route path="coupons" element={<Coupons />} />
+          <Route path="areas"   element={<Areas />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -75,6 +75,9 @@ const maidSchema = new mongoose.Schema({
   approvedBy:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedAt:      { type: Date },
 
+  // ── Service Areas ──
+  areasServed:   [{ type: String }],
+
   // ── Referral ──
   referralCode:  { type: String, unique: true, sparse: true },
   referralCount: { type: Number, default: 0 },

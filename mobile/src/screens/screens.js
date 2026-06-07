@@ -338,20 +338,80 @@ export function MaidDashScreen({ navigation }) {
   const [langVisible, setLangVisible] = useState(false);
   const [stats, setStats] = useState({ views: 0, likes: 0, chats: 0 });
 
+  const [maidProfile, setMaidProfile] = useState(null);
+  const [areasModalVisible, setAreasModalVisible] = useState(false);
+  const [selectedAreas, setSelectedAreas] = useState([]);
+  const [savingAreas, setSavingAreas] = useState(false);
+
+  const ALL_CAIRO_AREAS = ['Maadi','Zamalek','New Cairo','Heliopolis','Nasr City','Dokki','Mohandessin','Sheikh Zayed','6th of October','Garden City','Rehab City','Madinaty','Shorouk','Other'];
+
   useFocusEffect(
     React.useCallback(() => {
       maidsAPI.getMyProfile()
         .then(r => {
-          const s = r.data?.maid?.stats || {};
+          const m = r.data?.maid;
+          const s = m?.stats || {};
           setStats({ views: s.views || 0, likes: s.likes || 0, chats: s.chats || 0 });
+          setMaidProfile(m);
+          setSelectedAreas(m?.areasServed || []);
         })
         .catch(() => {});
     }, [])
   );
 
+  const saveAreas = async () => {
+    setSavingAreas(true);
+    try {
+      await maidsAPI.updateProfile({ areasServed: selectedAreas });
+      setMaidProfile(prev => ({ ...prev, areasServed: selectedAreas }));
+      setAreasModalVisible(false);
+      Toast.show({ type: 'success', text1: 'Service areas updated!' });
+    } catch {
+      Toast.show({ type: 'error', text1: 'Failed to save areas' });
+    } finally {
+      setSavingAreas(false);
+    }
+  };
+
+  const toggleArea = (area) => {
+    setSelectedAreas(prev => prev.includes(area) ? prev.filter(a => a !== area) : [...prev, area]);
+  };
+
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <LanguageModal visible={langVisible} onClose={() => setLangVisible(false)}/>
+
+      {/* Areas Modal */}
+      <Modal visible={areasModalVisible} transparent animationType="slide" onRequestClose={() => setAreasModalVisible(false)}>
+        <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
+          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:20, maxHeight:'80%' }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>Areas You Serve</Text>
+            <Text style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>Select all Cairo areas where you're available to work</Text>
+            <ScrollView style={{ marginBottom:16 }}>
+              {ALL_CAIRO_AREAS.map(area => {
+                const on = selectedAreas.includes(area);
+                return (
+                  <TouchableOpacity key={area} onPress={() => toggleArea(area)}
+                    style={{ flexDirection:'row', alignItems:'center', gap:12, paddingVertical:11, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+                    <View style={{ width:22, height:22, borderRadius:4, borderWidth:1.5, borderColor: on ? COLORS.gold : COLORS.border, backgroundColor: on ? COLORS.gold : 'transparent', alignItems:'center', justifyContent:'center' }}>
+                      {on && <Text style={{ color:COLORS.dark, fontSize:12, fontWeight:'700' }}>✓</Text>}
+                    </View>
+                    <Text style={{ fontSize:14, color: on ? COLORS.dark : COLORS.muted, fontWeight: on ? '600' : '400' }}>{area}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+            <TouchableOpacity onPress={saveAreas} disabled={savingAreas}
+              style={{ backgroundColor:COLORS.gold, padding:14, borderRadius:8, alignItems:'center', opacity: savingAreas ? 0.6 : 1 }}>
+              {savingAreas ? <ActivityIndicator color={COLORS.dark}/> : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>Save Areas ({selectedAreas.length} selected)</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setAreasModalVisible(false)} style={{ alignItems:'center', paddingTop:12 }}>
+              <Text style={{ fontSize:13, color:COLORS.muted }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false}>
         <View style={{ backgroundColor:'#1a1108', padding:20, paddingTop:54 }}>
           <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:10 }}>
@@ -376,6 +436,21 @@ export function MaidDashScreen({ navigation }) {
             </View>
           ))}
         </View>
+        {/* Areas prompt */}
+        <TouchableOpacity onPress={() => setAreasModalVisible(true)}
+          style={{ marginHorizontal:14, marginBottom:10, backgroundColor: (maidProfile?.areasServed?.length > 0) ? 'rgba(46,125,94,0.08)' : '#fffbeb', borderWidth:1, borderColor: (maidProfile?.areasServed?.length > 0) ? 'rgba(46,125,94,0.25)' : '#f59e0b', borderRadius:8, padding:12, flexDirection:'row', alignItems:'center', gap:10 }}>
+          <Text style={{ fontSize:20 }}>{maidProfile?.areasServed?.length > 0 ? '📍' : '⚠️'}</Text>
+          <View style={{ flex:1 }}>
+            <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark }}>
+              {maidProfile?.areasServed?.length > 0 ? `Service areas: ${maidProfile.areasServed.join(', ')}` : 'Set your service areas'}
+            </Text>
+            <Text style={{ fontSize:11, color:COLORS.muted, marginTop:1 }}>
+              {maidProfile?.areasServed?.length > 0 ? 'Tap to update' : 'Customers can only find you if your area is set'}
+            </Text>
+          </View>
+          <Text style={{ color:COLORS.muted }}>›</Text>
+        </TouchableOpacity>
+
         <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
           {[
             ['👑','Hire Requests', 'View & respond to requests'],

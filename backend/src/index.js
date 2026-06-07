@@ -51,6 +51,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/upload',   require('./routes/upload'));
 app.use('/api/support',  require('./routes/support'));
 app.use('/api/coupons',  require('./routes/coupons'));
+app.use('/api/config',   require('./routes/config'));
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));

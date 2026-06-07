@@ -41,6 +41,8 @@ import EditProfileScreen from '../screens/maid/EditProfileScreen';
 import HireRequestScreen from '../screens/maid/HireRequestScreen';
 import HiredCelebrationScreen from '../screens/maid/HiredCelebrationScreen';
 import CouponScreen from '../screens/maid/CouponScreen';
+import AreaSelectScreen from '../screens/housewife/AreaSelectScreen';
+import WaitlistScreen from '../screens/housewife/WaitlistScreen';
 import { AnalyticsScreen, EditHWProfileScreen, SupportScreen, PaymentHistoryScreen } from '../screens/screens';
 
 const Stack = createStackNavigator();
@@ -127,7 +129,7 @@ function MaidTabs() {
 
 // Root navigator
 export default function AppNavigator() {
-  const { token, user, profile } = useAuthStore();
+  const { token, user, profile, activeAreas } = useAuthStore();
 
   return (
     <NavigationContainer ref={navigationRef}>
@@ -144,6 +146,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
+            <Stack.Screen name="AreaSelect"         component={AreaSelectScreen}/>
           </>
         ) : user?.role === 'maid' && profile && (
             profile.verificationStatus === 'pending' ||
@@ -156,6 +159,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
+            <Stack.Screen name="AreaSelect"         component={AreaSelectScreen}/>
           </>
         ) : user?.role === 'maid' && (
             profile?.subscription?.status !== 'active' ||
@@ -169,6 +173,16 @@ export default function AppNavigator() {
           </>
         ) : user?.role === 'maid' ? (
           <Stack.Screen name="MaidMain" component={MaidTabs}/>
+        ) : !profile?.residentialArea ? (
+          // Housewife hasn't picked an area yet
+          <>
+            <Stack.Screen name="AreaSelect" component={AreaSelectScreen}/>
+          </>
+        ) : !activeAreas.includes(profile?.residentialArea) ? (
+          // Area not yet active — waitlist
+          <>
+            <Stack.Screen name="Waitlist" component={WaitlistScreen}/>
+          </>
         ) : (
           <Stack.Screen name="HWMain" component={HouseWifeTabs}/>
         )}

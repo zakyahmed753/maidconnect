@@ -47,13 +47,21 @@ exports.getAllMaids = async (req, res) => {
       isHired: false,
     };
 
-    // Exclude maids blocked (rejected hire) or already hired for this housewife
+    // Exclude maids blocked/hired; also filter by customer's residential area
     if (req.user?.role === 'housewife') {
-      const hw = await HouseWife.findOne({ user: req.user._id }).select('blockedMaids hiredMaids');
+      const hw = await HouseWife.findOne({ user: req.user._id }).select('blockedMaids hiredMaids residentialArea');
       const excluded = [];
       if (hw?.blockedMaids?.length) excluded.push(...hw.blockedMaids.map(id => String(id)));
       if (hw?.hiredMaids?.length)   excluded.push(...hw.hiredMaids.map(h => String(h.maid)));
       if (excluded.length) filter._id = { $nin: excluded };
+      // Only show maids who serve the customer's area (if area is set and maid has areas set)
+      if (hw?.residentialArea) {
+        filter.$or = [
+          { areasServed: hw.residentialArea },
+          { areasServed: { $size: 0 } },  // maids with no area set are shown to all
+          { areasServed: { $exists: false } },
+        ];
+      }
     }
 
     if (origin)      filter.origin = origin;

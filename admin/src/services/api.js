@@ -37,6 +37,11 @@ export const adminAPI = {
   broadcast:            (data) => api.post('/admin/broadcast', data),
 };
 
+export const configAPI = {
+  getAreas:    ()             => api.get('/config/areas'),
+  updateAreas: (activeAreas)  => api.put('/config/areas', { activeAreas }),
+};
+
 export const couponsAPI = {
   adminList:   ()     => api.get('/coupons'),
   adminCreate: (data) => api.post('/coupons', data),
