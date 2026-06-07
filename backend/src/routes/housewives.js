@@ -41,11 +41,21 @@ router.post('/hire', protect, async (req, res) => {
     const maid = await Maid.findById(maidProfileId).populate('user', 'name email fcmToken');
     if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
 
+    // ── Subscription guard — customer must have active subscription ──
+    const hwProfile = await HouseWife.findOne({ user: req.user._id });
+    const sub = hwProfile?.subscription;
+    const subActive = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
+    if (!subActive) {
+      return res.status(403).json({
+        success: false,
+        requiresSubscription: true,
+        message: 'An active subscription is required to send hire requests.',
+      });
+    }
+
     // Check for existing request
     const existing = await HireRequest.findOne({ housewife: req.user._id, maid: maidProfileId, status: 'pending' });
     if (existing) return res.json({ success: true, requestId: existing._id, alreadyPending: true });
-
-    const hwProfile = await HouseWife.findOne({ user: req.user._id });
     const request = await HireRequest.create({
       housewife: req.user._id,
       hwProfile: hwProfile?._id,

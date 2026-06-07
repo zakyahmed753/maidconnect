@@ -51,12 +51,18 @@ export default function MaidDetailScreen({ route, navigation }) {
   };
 
   const handleHire = async () => {
+    // Guard: active subscription required
+    const sub = profile?.subscription;
+    const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
+    if (!active) { goToSubscription(); return; }
+
     setHireLoading(true);
     try {
       await hwAPI.hireMaid({ maidProfileId: maid._id });
       setHireRequestSent(true);
       Toast.show({ type:'success', text1: '👑 Request Sent!', text2: 'Waiting for the maid to approve.' });
     } catch (err) {
+      if (err.response?.data?.requiresSubscription) { goToSubscription(); return; }
       Toast.show({ type:'error', text1: err.response?.data?.message || t('hire_failed') });
     } finally {
       setHireLoading(false);
