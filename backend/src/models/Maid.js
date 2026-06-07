@@ -78,6 +78,12 @@ const maidSchema = new mongoose.Schema({
   // ── Service Areas ──
   areasServed:   [{ type: String }],
 
+  // ── Monthly hire tracking (max 2 hires per subscription month) ──
+  monthlyHires: {
+    count: { type: Number, default: 0 },
+    month: { type: String, default: '' }, // "YYYY-MM"
+  },
+
   // ── Referral ──
   referralCode:  { type: String, unique: true, sparse: true },
   referralCount: { type: Number, default: 0 },

@@ -38,4 +38,30 @@ router.put('/areas', protect, adminOnly, async (req, res) => {
   }
 });
 
+// GET /api/config/terms — public
+router.get('/terms', async (req, res) => {
+  try {
+    const cfg = await Config.findOne({ key: 'termsUrl' });
+    res.json({ success: true, termsUrl: cfg?.value || null });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// PUT /api/config/terms — admin only
+router.put('/terms', protect, adminOnly, async (req, res) => {
+  try {
+    const { termsUrl } = req.body;
+    if (!termsUrl) return res.status(400).json({ success: false, message: 'termsUrl required' });
+    const cfg = await Config.findOneAndUpdate(
+      { key: 'termsUrl' },
+      { value: termsUrl, updatedAt: Date.now() },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, termsUrl: cfg.value });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

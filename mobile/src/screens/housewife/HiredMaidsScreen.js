@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { hwAPI, paymentsAPI } from '../../services/api';
+import { hwAPI, paymentsAPI, maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
@@ -20,9 +20,16 @@ function getReleasePenalty(hiredAt) {
 
 export default function HiredMaidsScreen({ navigation }) {
   const { t } = useTranslation();
-  const [hired, setHired]       = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [returning, setReturning] = useState(null);
+  const [hired, setHired]             = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [returning, setReturning]     = useState(null);
+
+  // Mandatory review before release
+  const [reviewModal, setReviewModal]     = useState(false);
+  const [reviewMaid, setReviewMaid]       = useState(null); // { maidId, maidName, hiredAt, maid._id }
+  const [reviewStar, setReviewStar]       = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -34,7 +41,37 @@ export default function HiredMaidsScreen({ navigation }) {
     }, [])
   );
 
-  const handleRelease = (maidId, maidName, hiredAt) => {
+  const handleRelease = (maidId, maidName, hiredAt, maidProfileId) => {
+    // Step 1: force review first
+    setReviewMaid({ maidId, maidName, hiredAt, maidProfileId });
+    setReviewStar(0);
+    setReviewComment('');
+    setReviewModal(true);
+  };
+
+  const submitReviewAndRelease = async () => {
+    if (reviewStar === 0) {
+      Toast.show({ type: 'error', text1: 'Please select a star rating before releasing' });
+      return;
+    }
+    setReviewLoading(true);
+    try {
+      // Submit review
+      await maidsAPI.submitReview(reviewMaid.maidProfileId, {
+        rating: reviewStar,
+        comment: reviewComment.trim(),
+      });
+      setReviewModal(false);
+      // Step 2: proceed with release
+      proceedRelease(reviewMaid.maidId, reviewMaid.maidName, reviewMaid.hiredAt);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to submit review' });
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const proceedRelease = (maidId, maidName, hiredAt) => {
     const penalty = getReleasePenalty(hiredAt);
 
     let title, message, confirmText;
@@ -96,6 +133,50 @@ export default function HiredMaidsScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
+
+      {/* Mandatory Review Modal */}
+      <Modal visible={reviewModal} transparent animationType="slide" onRequestClose={() => {}}>
+        <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
+          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:22 }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>
+              Rate {reviewMaid?.maidName}
+            </Text>
+            <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:16, lineHeight:19 }}>
+              A review is required before releasing the vacancy. Your feedback helps other families.
+            </Text>
+
+            {/* Stars */}
+            <View style={{ flexDirection:'row', gap:8, marginBottom:16, justifyContent:'center' }}>
+              {[1,2,3,4,5].map(s => (
+                <TouchableOpacity key={s} onPress={() => setReviewStar(s)}>
+                  <Text style={{ fontSize:34 }}>{s <= reviewStar ? '⭐' : '☆'}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:8, padding:12, fontSize:14, color:COLORS.text, backgroundColor:COLORS.cream, minHeight:80, textAlignVertical:'top', marginBottom:16 }}
+              placeholder="Share your experience (optional but appreciated)…"
+              placeholderTextColor={COLORS.muted}
+              value={reviewComment}
+              onChangeText={setReviewComment}
+              multiline
+            />
+
+            <TouchableOpacity
+              style={{ backgroundColor: reviewStar > 0 ? '#e05555' : COLORS.border, padding:14, borderRadius:8, alignItems:'center', marginBottom:10, opacity: reviewLoading ? 0.6 : 1 }}
+              onPress={submitReviewAndRelease}
+              disabled={reviewLoading}>
+              {reviewLoading
+                ? <ActivityIndicator color="#fff"/>
+                : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color: reviewStar > 0 ? '#fff' : COLORS.muted }}>
+                    Submit Review & Release Vacancy
+                  </Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
@@ -165,7 +246,7 @@ export default function HiredMaidsScreen({ navigation }) {
                 {/* Release button — always visible */}
                 <TouchableOpacity
                   style={[styles.btnRelease, isRet && { opacity: 0.5 }]}
-                  onPress={() => handleRelease(maidId, maidName, item.hiredAt)}
+                  onPress={() => handleRelease(maidId, maidName, item.hiredAt, maid._id)}
                   disabled={isRet}>
                   {isRet
                     ? <ActivityIndicator size="small" color="#e05555" />

@@ -342,7 +342,7 @@ exports.getHireRequests = async (req, res) => {
 
     const requests = await HireRequest.find({ maid: maid._id, status: 'pending' })
       .populate('housewife', 'name email phone')
-      .populate('hwProfile', 'fullName city country')
+      .populate('hwProfile', 'fullName city country residentialArea subscription')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, requests });
@@ -371,6 +371,20 @@ exports.respondHireRequest = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
+    if (action === 'approve') {
+      // ── Monthly hire limit: max 2 per subscription month ──
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const mh = maid.monthlyHires || { count: 0, month: '' };
+      const monthCount = mh.month === currentMonth ? mh.count : 0;
+      if (monthCount >= 2) {
+        return res.status(403).json({
+          success: false,
+          requiresResubscription: true,
+          message: 'You have reached your 2-hire monthly limit. Please renew your subscription to accept more hires this month.',
+        });
+      }
+    }
+
     request.status = action === 'approve' ? 'approved' : 'rejected';
     request.respondedAt = new Date();
     await request.save();
@@ -379,6 +393,12 @@ exports.respondHireRequest = async (req, res) => {
     const maidName = maid.fullName;
 
     if (action === 'approve') {
+      // Increment monthly hire count
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const mh = maid.monthlyHires || { count: 0, month: '' };
+      const newCount = mh.month === currentMonth ? mh.count + 1 : 1;
+      await Maid.findByIdAndUpdate(maid._id, { 'monthlyHires.count': newCount, 'monthlyHires.month': currentMonth });
+
       // Add maid to housewife's hiredMaids
       const alreadyHired = await HouseWife.findOne({
         user: hwUser._id,

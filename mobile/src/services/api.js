@@ -77,6 +77,8 @@ export const paymentsAPI = {
 export const configAPI = {
   getAreas:    ()           => api.get('/config/areas'),
   updateAreas: (activeAreas) => api.put('/config/areas', { activeAreas }),
+  getTerms:    ()           => api.get('/config/terms'),
+  updateTerms: (termsUrl)   => api.put('/config/terms', { termsUrl }),
 };
 
 export const couponsAPI = {

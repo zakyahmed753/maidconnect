@@ -23,13 +23,31 @@ export default function Areas() {
   const [activeAreas, setActiveAreas] = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [saving,      setSaving]      = useState(false);
+  const [termsUrl,    setTermsUrl]    = useState('');
+  const [savingTerms, setSavingTerms] = useState(false);
 
   useEffect(() => {
     configAPI.getAreas()
       .then(r => setActiveAreas(r.data.activeAreas || []))
       .catch(() => toast.error('Failed to load areas'))
       .finally(() => setLoading(false));
+    configAPI.getTerms()
+      .then(r => setTermsUrl(r.data.termsUrl || ''))
+      .catch(() => {});
   }, []);
+
+  const handleSaveTerms = async () => {
+    if (!termsUrl.trim()) return toast.error('Please enter a PDF URL');
+    setSavingTerms(true);
+    try {
+      await configAPI.updateTerms(termsUrl.trim());
+      toast.success('Terms & Conditions URL updated');
+    } catch {
+      toast.error('Failed to save');
+    } finally {
+      setSavingTerms(false);
+    }
+  };
 
   const toggle = (area) => {
     setActiveAreas(prev =>
@@ -87,7 +105,33 @@ export default function Areas() {
 
       <div style={{ fontSize:12, color:'#555', lineHeight:'18px', padding:'12px 0' }}>
         💡 Changes take effect immediately — customers re-check area status on next app open.
-        Customers in newly activated areas will be automatically routed to Browse.
+      </div>
+
+      {/* Terms & Conditions */}
+      <div style={{ ...S.card, marginTop:24 }}>
+        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, color:'#f0ece4', fontWeight:700, marginBottom:6 }}>
+          Terms & Conditions PDF
+        </div>
+        <div style={{ fontSize:12, color:'#555', marginBottom:14 }}>
+          Paste the URL of your hosted T&C PDF. This link is shown to customers before every hire request and updates in real-time on the app.
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <input
+            style={{ flex:1, padding:'9px 13px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:5, color:'#f0ece4', fontSize:13, outline:'none', fontFamily:"'Jost',sans-serif" }}
+            placeholder="https://your-domain.com/terms.pdf"
+            value={termsUrl}
+            onChange={e => setTermsUrl(e.target.value)}
+          />
+          <button onClick={handleSaveTerms} disabled={savingTerms}
+            style={{ ...S.saveBtn, opacity: savingTerms ? 0.6 : 1 }}>
+            {savingTerms ? 'Saving…' : 'Save URL'}
+          </button>
+        </div>
+        {termsUrl && (
+          <div style={{ marginTop:10, fontSize:12, color:'#c9a84c' }}>
+            Current: <a href={termsUrl} target="_blank" rel="noreferrer" style={{ color:'#c9a84c' }}>{termsUrl}</a>
+          </div>
+        )}
       </div>
     </div>
   );

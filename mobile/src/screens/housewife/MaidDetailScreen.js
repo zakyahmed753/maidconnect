@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { maidsAPI, chatsAPI, hwAPI, paymentsAPI } from '../../services/api';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Linking } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { maidsAPI, chatsAPI, hwAPI, paymentsAPI, configAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
@@ -19,29 +20,34 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [reviews, setReviews] = useState([]);
   const user    = useAuthStore(s => s.user);
   const profile = useAuthStore(s => s.profile);
-  const [isHired, setIsHired] = useState(false);
-  const [hireRequestSent, setHireRequestSent] = useState(false); // pending maid approval
+  const [isHired, setIsHired]               = useState(false);
+  const [hireRequestSent, setHireRequestSent] = useState(false);
+  const [termsModal, setTermsModal]           = useState(false);
+  const [termsAgreed, setTermsAgreed]         = useState(false);
+  const [termsUrl, setTermsUrl]               = useState(null);
 
-  useEffect(() => {
-    maidsAPI.getReviews(maid._id)
-      .then(r => setReviews(r.data?.reviews || []))
-      .catch(() => {});
-    hwAPI.getProfile().then(r => {
-      const hw = r.data?.profile;
-      const hired = (hw?.hiredMaids || []).some(h =>
-        h.maid === maid._id || h.maid?._id === maid._id
-      );
-      setIsHired(hired);
-      // Check for pending hire request
-      const pending = (r.data?.pendingHireRequests || []);
-      setHireRequestSent(pending.includes(maid._id));
-      // Sync saved/liked state from server
-      const isSaved = (hw?.savedMaids || []).some(s =>
-        s === maid._id || s?._id === maid._id
-      );
-      setLiked(isSaved);
-    }).catch(() => {});
-  }, []);
+  // Re-fetch on every focus so hire status stays fresh after maid approves
+  useFocusEffect(
+    useCallback(() => {
+      maidsAPI.getReviews(maid._id)
+        .then(r => setReviews(r.data?.reviews || []))
+        .catch(() => {});
+      hwAPI.getProfile().then(r => {
+        const hw = r.data?.profile;
+        const hired = (hw?.hiredMaids || []).some(h =>
+          h.maid === maid._id || h.maid?._id === maid._id
+        );
+        setIsHired(hired);
+        const pending = (r.data?.pendingHireRequests || []);
+        setHireRequestSent(pending.includes(maid._id));
+        const isSaved = (hw?.savedMaids || []).some(s =>
+          s === maid._id || s?._id === maid._id
+        );
+        setLiked(isSaved);
+      }).catch(() => {});
+      configAPI.getTerms().then(r => setTermsUrl(r.data?.termsUrl || null)).catch(() => {});
+    }, [maid._id])
+  );
 
   const handleLike = async () => {
     const next = !liked;
@@ -50,12 +56,22 @@ export default function MaidDetailScreen({ route, navigation }) {
     catch { setLiked(!next); Toast.show({ type:'error', text1: t('save_failed') }); }
   };
 
-  const handleHire = async () => {
+  const handleHire = () => {
     // Guard: active subscription required
     const sub = profile?.subscription;
     const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
     if (!active) { goToSubscription(); return; }
+    // Show T&C modal before sending request
+    setTermsAgreed(false);
+    setTermsModal(true);
+  };
 
+  const confirmHire = async () => {
+    if (!termsAgreed) {
+      Toast.show({ type: 'error', text1: 'Please agree to the Terms & Conditions' });
+      return;
+    }
+    setTermsModal(false);
     setHireLoading(true);
     try {
       await hwAPI.hireMaid({ maidProfileId: maid._id });
@@ -116,6 +132,41 @@ export default function MaidDetailScreen({ route, navigation }) {
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
+      {/* Terms & Conditions Modal */}
+      <Modal visible={termsModal} transparent animationType="slide" onRequestClose={() => setTermsModal(false)}>
+        <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
+          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:22 }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:8 }}>Terms & Conditions</Text>
+            <Text style={{ fontSize:13, color:COLORS.muted, lineHeight:20, marginBottom:16 }}>
+              Servix is a communication platform only. We connect customers with domestic service providers and are not responsible for the conduct, performance, or actions of any maid or customer. All agreements are between the two parties directly.
+            </Text>
+            {termsUrl && (
+              <TouchableOpacity onPress={() => Linking.openURL(termsUrl)} style={{ marginBottom:16 }}>
+                <Text style={{ fontSize:13, color:COLORS.gold, textDecorationLine:'underline' }}>📄 Read Full Terms & Conditions (PDF)</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={{ flexDirection:'row', alignItems:'center', gap:12, marginBottom:20, padding:12, borderRadius:8, backgroundColor: termsAgreed ? 'rgba(46,125,94,0.08)' : '#f8f5f0', borderWidth:1, borderColor: termsAgreed ? '#2e7d5e' : COLORS.border }}
+              onPress={() => setTermsAgreed(!termsAgreed)}>
+              <View style={{ width:22, height:22, borderRadius:4, borderWidth:1.5, borderColor: termsAgreed ? '#2e7d5e' : COLORS.border, backgroundColor: termsAgreed ? '#2e7d5e' : 'transparent', alignItems:'center', justifyContent:'center' }}>
+                {termsAgreed && <Text style={{ color:'#fff', fontSize:13, fontWeight:'700' }}>✓</Text>}
+              </View>
+              <Text style={{ fontSize:13, color:COLORS.text, flex:1 }}>I have read and agree to the Terms & Conditions</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ backgroundColor: termsAgreed ? COLORS.gold : COLORS.border, padding:14, borderRadius:8, alignItems:'center', marginBottom:10 }}
+              onPress={confirmHire} disabled={!termsAgreed}>
+              <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color: termsAgreed ? COLORS.dark : COLORS.muted }}>
+                👑 Confirm Hire Request
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setTermsModal(false)} style={{ alignItems:'center', padding:10 }}>
+              <Text style={{ fontSize:13, color:COLORS.muted }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <StatusBar barStyle="light-content"/>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding:4 }}>

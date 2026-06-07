@@ -32,11 +32,21 @@ export default function HireRequestScreen({ navigation }) {
       if (action === 'approve') {
         navigation.replace('HiredCelebration');
       } else {
-        Toast.show({ type: 'info', text1: 'Request declined', text2: 'This customer will no longer see you in their search.' });
+        Toast.show({ type: 'info', text1: 'Request declined' });
         setRequests(prev => prev.filter(r => r._id !== requestId));
       }
     } catch (err) {
-      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to respond' });
+      if (err.response?.data?.requiresResubscription) {
+        Toast.show({
+          type: 'error',
+          text1: 'Monthly limit reached',
+          text2: 'You have 2 hires this month. Renew subscription to accept more.',
+          visibilityTime: 5000,
+        });
+        navigation.navigate('PaymentHistory');
+      } else {
+        Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to respond' });
+      }
     } finally {
       setResponding(null);
     }
@@ -73,12 +83,17 @@ export default function HireRequestScreen({ navigation }) {
               {/* Customer info */}
               <View style={styles.cardHeader}>
                 <View style={styles.avatar}>
-                  <Text style={{ fontSize: 24 }}>👩</Text>
+                  <Text style={{ fontSize: 24 }}>👤</Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.customerName}>{req.housewife?.name || 'Customer'}</Text>
-                  <Text style={styles.customerSub}>{req.hwProfile?.city || ''}{req.hwProfile?.country ? ` · ${req.hwProfile.country}` : ''}</Text>
-                  <Text style={styles.time}>{new Date(req.createdAt).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}</Text>
+                  {req.hwProfile?.residentialArea ? (
+                    <Text style={styles.customerSub}>📍 {req.hwProfile.residentialArea}</Text>
+                  ) : null}
+                  {req.hwProfile?.subscription?.status === 'active' && (
+                    <Text style={{ fontSize: 10, color: '#2e7d5e', fontWeight: '600', marginTop: 2 }}>✓ Verified subscriber</Text>
+                  )}
+                  <Text style={styles.time}>Requested {new Date(req.createdAt).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}</Text>
                 </View>
                 <View style={styles.badge}>
                   <Text style={{ fontSize: 9, color: COLORS.gold, fontWeight: '700', letterSpacing: 0.8 }}>PENDING</Text>
