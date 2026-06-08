@@ -130,6 +130,20 @@ export function HouseWives() {
     } catch { toast.error('Failed'); }
   };
 
+  const handleDelete = async (userId, isDeleted) => {
+    if (!window.confirm(isDeleted ? 'Restore this account?' : 'Soft-delete this account? Only admin can restore it.')) return;
+    try {
+      if (isDeleted) {
+        await adminAPI.restoreUser(userId);
+        toast.success('Account restored');
+      } else {
+        await adminAPI.deleteUser(userId, { reason: 'Admin removed account' });
+        toast.success('Account deactivated');
+      }
+      setHws(prev => prev.map(h => h.user?._id === userId ? { ...h, user: { ...h.user, deletedAt: isDeleted ? null : new Date().toISOString() } } : h));
+    } catch { toast.error('Failed'); }
+  };
+
   return (
     <div style={{ fontFamily:"'Jost',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400&display=swap');`}</style>
@@ -145,13 +159,21 @@ export function HouseWives() {
                 {hw.savedMaids?.length||0} saved · {hw.hiredMaids?.length||0} hired · Joined {new Date(hw.createdAt).toLocaleDateString()}
               </div>
             </div>
-            <span style={{ fontSize:10, color: hw.user?.isSuspended ? '#ff6b6b' : '#5dd6a8' }}>
-              {hw.user?.isSuspended ? '🔴 Suspended' : '🟢 Active'}
-            </span>
-            <button onClick={() => handleSuspend(hw.user?._id, hw.user?.isSuspended)}
-              style={{ padding:'6px 12px', background:'rgba(255,107,107,0.08)', border:'1px solid rgba(255,107,107,0.2)', borderRadius:4, color:'#ff6b6b', fontSize:11, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
-              {hw.user?.isSuspended ? 'Unsuspend' : 'Suspend'}
-            </button>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4 }}>
+              <span style={{ fontSize:10, color: hw.user?.deletedAt ? '#888' : hw.user?.isSuspended ? '#ff6b6b' : '#5dd6a8' }}>
+                {hw.user?.deletedAt ? '⚫ Deleted' : hw.user?.isSuspended ? '🔴 Suspended' : '🟢 Active'}
+              </span>
+              <div style={{ display:'flex', gap:6 }}>
+                <button onClick={() => handleSuspend(hw.user?._id, hw.user?.isSuspended)}
+                  style={{ padding:'5px 10px', background:'rgba(255,107,107,0.08)', border:'1px solid rgba(255,107,107,0.2)', borderRadius:4, color:'#ff6b6b', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
+                  {hw.user?.isSuspended ? 'Unsuspend' : 'Suspend'}
+                </button>
+                <button onClick={() => handleDelete(hw.user?._id, !!hw.user?.deletedAt)}
+                  style={{ padding:'5px 10px', background: hw.user?.deletedAt ? 'rgba(93,214,168,0.08)' : 'rgba(80,80,80,0.12)', border:`1px solid ${hw.user?.deletedAt ? 'rgba(93,214,168,0.3)' : 'rgba(80,80,80,0.3)'}`, borderRadius:4, color: hw.user?.deletedAt ? '#5dd6a8' : '#888', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
+                  {hw.user?.deletedAt ? '↩ Restore' : '🗑 Delete'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ))}
@@ -162,13 +184,14 @@ export function HouseWives() {
 // ─── Payments.js ───
 export function Payments() {
   const [payments, setPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('');
+  const [loading,  setLoading]  = useState(true);
+  const [filter,   setFilter]   = useState('');
+  const [acting,   setActing]   = useState(null); // paymentId currently being confirmed/rejected
 
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const res = await adminAPI.getPayments({ status: filter || undefined, limit:50 });
+      const res = await adminAPI.getPayments({ status: filter || undefined, limit: 100 });
       setPayments(res.data.payments);
     } catch { toast.error('Failed to load payments'); }
     finally { setLoading(false); }
@@ -176,45 +199,129 @@ export function Payments() {
 
   useEffect(() => { fetchPayments(); }, [filter]);
 
-  const statusC = { completed:'#5dd6a8', pending:'#f0a050', failed:'#ff6b6b', refunded:'#888' };
-  const methodIcons = { fawry:'🏧', vodafone_cash:'📱', instapay:'💸', amazon_pay:'🛒' };
+  const handleConfirm = async (p) => {
+    if (!p.maidProfile?._id) return toast.error('No maid profile linked');
+    if (!window.confirm(`Confirm EGP ${p.amount?.toLocaleString()} cash payment from ${p.user?.name}?`)) return;
+    setActing(p._id);
+    try {
+      await adminAPI.offlinePayment(p.maidProfile._id, {
+        plan: p.subscriptionPlan || 'monthly',
+        amount: p.amount,
+        note: 'Confirmed via Payments page',
+      });
+      toast.success('Payment confirmed — subscription activated');
+      setPayments(prev => prev.map(x => x._id === p._id ? { ...x, status: 'completed' } : x));
+    } catch { toast.error('Failed to confirm'); }
+    finally { setActing(null); }
+  };
+
+  const handleReject = async (p) => {
+    const reason = window.prompt(`Rejection reason for ${p.user?.name}:`, 'Receipt unclear. Please resubmit.');
+    if (reason === null) return;
+    setActing(p._id);
+    try {
+      await adminAPI.rejectOfflinePayment({ paymentId: p._id, reason });
+      toast.success('Payment rejected — maid notified');
+      setPayments(prev => prev.map(x => x._id === p._id ? { ...x, status: 'failed' } : x));
+    } catch { toast.error('Failed to reject'); }
+    finally { setActing(null); }
+  };
+
+  const statusC    = { completed: '#5dd6a8', pending: '#f0a050', failed: '#ff6b6b', refunded: '#888' };
+  const methodIcons = { fawry: '🏧', vodafone_cash: '📱', instapay: '💸', amazon_pay: '🛒', paymob: '💳', cash_transfer: '💵' };
+
+  const pendingCash = payments.filter(p => p.method === 'cash_transfer' && p.status === 'pending');
 
   return (
-    <div style={{ fontFamily:"'Jost',sans-serif" }}>
+    <div style={{ fontFamily: "'Jost',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400&display=swap');`}</style>
-      <div style={{ display:'flex', gap:6, marginBottom:18 }}>
-        {['','completed','pending','failed'].map(s => (
+
+      {/* Pending cash receipts banner */}
+      {pendingCash.length > 0 && (
+        <div style={{ background: 'rgba(240,160,80,0.08)', border: '1px solid rgba(240,160,80,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>📎</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#f0a050' }}>{pendingCash.length} pending cash receipt{pendingCash.length > 1 ? 's' : ''} awaiting confirmation</div>
+            <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>Review the receipts below and confirm or reject each one.</div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+        {['', 'completed', 'pending', 'failed'].map(s => (
           <button key={s} onClick={() => setFilter(s)}
-            style={{ padding:'7px 14px', borderRadius:5, border:`1px solid ${filter===s?'#c9a84c':'#2a2a2a'}`, background:filter===s?'rgba(201,168,76,0.12)':'#161616', color:filter===s?'#e8c97a':'#555', fontSize:11, cursor:'pointer', fontFamily:"'Jost',sans-serif", textTransform:'capitalize' }}>
+            style={{ padding: '7px 14px', borderRadius: 5, border: `1px solid ${filter === s ? '#c9a84c' : '#2a2a2a'}`, background: filter === s ? 'rgba(201,168,76,0.12)' : '#161616', color: filter === s ? '#e8c97a' : '#555', fontSize: 11, cursor: 'pointer', fontFamily: "'Jost',sans-serif", textTransform: 'capitalize' }}>
             {s || 'All'}
           </button>
         ))}
-        <div style={{ marginLeft:'auto', fontFamily:"'DM Mono',monospace", fontSize:10, color:'#555', alignSelf:'center' }}>
-          Total EGP: {payments.filter(p=>p.status==='completed').reduce((a,p)=>a+p.amount,0).toLocaleString()}
+        <div style={{ marginLeft: 'auto', fontFamily: "'DM Mono',monospace", fontSize: 10, color: '#555', alignSelf: 'center' }}>
+          Total EGP: {payments.filter(p => p.status === 'completed').reduce((a, p) => a + p.amount, 0).toLocaleString()}
         </div>
       </div>
-      {loading && <div style={{ color:'#555', textAlign:'center', padding:40 }}>Loading…</div>}
-      {payments.map(p => (
-        <div key={p._id} style={{ ...CARD, marginBottom:8 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12, padding:'12px 14px' }}>
-            <div style={{ fontSize:22 }}>{methodIcons[p.method] || '💳'}</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:13, fontWeight:600, color:'#f0ece4' }}>
-                {p.user?.name} — <span style={{ color:'#c9a84c', textTransform:'capitalize' }}>{p.type}</span>
+
+      {loading && <div style={{ color: '#555', textAlign: 'center', padding: 40 }}>Loading…</div>}
+
+      {payments.map(p => {
+        const isPendingCash = p.method === 'cash_transfer' && p.status === 'pending';
+        return (
+          <div key={p._id} style={{ ...CARD, marginBottom: 10, border: isPendingCash ? '1px solid rgba(240,160,80,0.4)' : '1px solid #222' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px' }}>
+              <div style={{ fontSize: 22 }}>{methodIcons[p.method] || '💳'}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#f0ece4', display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                  {p.user?.name}
+                  {p.maidProfile?.fullName && <span style={{ color: '#666', fontSize: 11 }}>({p.maidProfile.fullName})</span>}
+                  — <span style={{ color: '#c9a84c', textTransform: 'capitalize' }}>{p.type}</span>
+                  {p.offlineByAdmin && <span style={{ fontSize: 9, background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)', borderRadius: 3, padding: '2px 6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Admin recorded</span>}
+                  {isPendingCash && <span style={{ fontSize: 9, background: 'rgba(240,160,80,0.15)', color: '#f0a050', border: '1px solid rgba(240,160,80,0.4)', borderRadius: 3, padding: '2px 6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>📎 Receipt submitted</span>}
+                </div>
+                <div style={{ fontSize: 11, color: '#555', marginTop: 1 }}>
+                  {p.method?.replace(/_/g, ' ')} · {p.subscriptionPlan || '—'} · {new Date(p.createdAt).toLocaleDateString()}
+                </div>
+                {p.adminNote && <div style={{ fontSize: 10, color: '#444', marginTop: 2, fontStyle: 'italic' }}>"{p.adminNote}"</div>}
               </div>
-              <div style={{ fontSize:11, color:'#555', marginTop:1 }}>
-                {p.method?.replace('_',' ')} · {p.subscriptionPlan || '—'} · {new Date(p.createdAt).toLocaleDateString()}
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, fontWeight: 700, color: '#e8c97a' }}>EGP {p.amount?.toLocaleString()}</div>
+                <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 2, background: `${statusC[p.status] || '#888'}18`, color: statusC[p.status] || '#888', border: `1px solid ${statusC[p.status] || '#888'}35`, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 700 }}>
+                  {p.status}
+                </span>
               </div>
             </div>
-            <div style={{ textAlign:'right' }}>
-              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, fontWeight:700, color:'#e8c97a' }}>EGP {p.amount?.toLocaleString()}</div>
-              <span style={{ fontSize:9, padding:'2px 7px', borderRadius:2, background:`${statusC[p.status]||'#888'}18`, color:statusC[p.status]||'#888', border:`1px solid ${statusC[p.status]||'#888'}35`, textTransform:'uppercase', letterSpacing:'0.07em', fontWeight:700 }}>
-                {p.status}
-              </span>
-            </div>
+
+            {/* Receipt image + actions for pending cash_transfer */}
+            {isPendingCash && (
+              <div style={{ borderTop: '1px solid rgba(240,160,80,0.2)', padding: '12px 14px', background: 'rgba(240,160,80,0.04)' }}>
+                {p.receiptUrl ? (
+                  <a href={p.receiptUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginBottom: 12 }}>
+                    <img
+                      src={p.receiptUrl}
+                      alt="Payment receipt"
+                      style={{ width: '100%', maxHeight: 240, objectFit: 'contain', borderRadius: 6, border: '1px solid #2a2a2a', background: '#0e0e0e', cursor: 'zoom-in', display: 'block' }}
+                    />
+                    <div style={{ fontSize: 10, color: '#c9a84c', marginTop: 4 }}>🔍 Click to open full size</div>
+                  </a>
+                ) : (
+                  <div style={{ fontSize: 11, color: '#555', marginBottom: 12, fontStyle: 'italic' }}>No receipt image uploaded</div>
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => handleConfirm(p)}
+                    disabled={acting === p._id}
+                    style={{ flex: 1, padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: '#5dd6a8', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: acting === p._id ? 0.5 : 1 }}>
+                    {acting === p._id ? '…' : '✅ Confirm & Activate'}
+                  </button>
+                  <button
+                    onClick={() => handleReject(p)}
+                    disabled={acting === p._id}
+                    style={{ flex: 1, padding: '9px', background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)', borderRadius: 5, color: '#ff6b6b', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: acting === p._id ? 0.5 : 1 }}>
+                    {acting === p._id ? '…' : '❌ Reject Receipt'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

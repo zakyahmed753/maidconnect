@@ -1,6 +1,8 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Linking } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Linking, FlatList, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+
+const { width: SW, height: SH } = Dimensions.get('window');
 import { maidsAPI, chatsAPI, hwAPI, paymentsAPI, configAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
@@ -25,6 +27,11 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [termsModal, setTermsModal]           = useState(false);
   const [termsAgreed, setTermsAgreed]         = useState(false);
   const [termsUrl, setTermsUrl]               = useState(null);
+  const [galleryVisible, setGalleryVisible]   = useState(false);
+  const [galleryIndex, setGalleryIndex]       = useState(0);
+  const galleryRef                            = useRef(null);
+
+  const photos = (maid.photos || []).filter(p => p?.url);
 
   // Re-fetch on every focus so hire status stays fresh after maid approves
   useFocusEffect(
@@ -167,6 +174,57 @@ export default function MaidDetailScreen({ route, navigation }) {
         </View>
       </Modal>
 
+      {/* Full-screen Photo Gallery Modal */}
+      <Modal visible={galleryVisible} transparent={false} animationType="fade" onRequestClose={() => setGalleryVisible(false)}>
+        <View style={{ flex:1, backgroundColor:'#000' }}>
+          {/* Close + counter */}
+          <View style={{ position:'absolute', top:0, left:0, right:0, zIndex:10, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingTop:54, paddingHorizontal:20, paddingBottom:12 }}>
+            <TouchableOpacity onPress={() => setGalleryVisible(false)}
+              style={{ backgroundColor:'rgba(0,0,0,0.6)', borderRadius:20, width:38, height:38, alignItems:'center', justifyContent:'center' }}>
+              <Text style={{ color:'#fff', fontSize:20 }}>✕</Text>
+            </TouchableOpacity>
+            <View style={{ backgroundColor:'rgba(0,0,0,0.6)', borderRadius:14, paddingHorizontal:12, paddingVertical:5 }}>
+              <Text style={{ color:'#fff', fontSize:13, fontWeight:'600' }}>{galleryIndex + 1} / {photos.length}</Text>
+            </View>
+            <View style={{ width:38 }}/>
+          </View>
+
+          {/* Swipeable photos */}
+          <FlatList
+            ref={galleryRef}
+            data={photos}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={galleryIndex}
+            getItemLayout={(_, i) => ({ length: SW, offset: SW * i, index: i })}
+            onMomentumScrollEnd={e => {
+              const idx = Math.round(e.nativeEvent.contentOffset.x / SW);
+              setGalleryIndex(idx);
+            }}
+            keyExtractor={(_, i) => String(i)}
+            renderItem={({ item }) => (
+              <View style={{ width:SW, height:SH, justifyContent:'center', alignItems:'center' }}>
+                <Image
+                  source={{ uri: item.url }}
+                  style={{ width:SW, height:SH * 0.75 }}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+          />
+
+          {/* Dot indicators */}
+          {photos.length > 1 && (
+            <View style={{ position:'absolute', bottom:50, left:0, right:0, flexDirection:'row', justifyContent:'center', gap:6 }}>
+              {photos.map((_, i) => (
+                <View key={i} style={{ width: i===galleryIndex ? 20 : 7, height:7, borderRadius:3.5, backgroundColor: i===galleryIndex ? COLORS.gold : 'rgba(255,255,255,0.4)', transition:'width 0.2s' }}/>
+              ))}
+            </View>
+          )}
+        </View>
+      </Modal>
+
       <StatusBar barStyle="light-content"/>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding:4 }}>
@@ -179,21 +237,33 @@ export default function MaidDetailScreen({ route, navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom:130 }}>
-        {/* Photo gallery */}
+        {/* Photo gallery — tap any photo to open full-screen viewer */}
         <View style={styles.gallery}>
-          <View style={[styles.galMain, { backgroundColor: maid.origin==='african'?'#2d1a0a':'#1a0d2e' }]}>
-            {maid.photos?.[0]?.url
-              ? <Image source={{ uri:maid.photos[0].url }} style={{ width:'100%', height:'100%' }}/>
+          <TouchableOpacity
+            activeOpacity={0.92}
+            style={[styles.galMain, { backgroundColor: maid.origin==='african'?'#2d1a0a':'#1a0d2e' }]}
+            onPress={() => { setGalleryIndex(0); setGalleryVisible(true); }}>
+            {photos[0]?.url
+              ? <Image source={{ uri: photos[0].url }} style={{ width:'100%', height:'100%' }}/>
               : <Text style={{ fontSize:60 }}>👩</Text>}
             {maid.isAvailable && <View style={styles.availBadge}><Text style={styles.availTxt}>● Available</Text></View>}
-          </View>
+            {photos.length > 1 && (
+              <View style={{ position:'absolute', bottom:8, right:8, backgroundColor:'rgba(0,0,0,0.55)', borderRadius:10, paddingHorizontal:8, paddingVertical:3 }}>
+                <Text style={{ color:'#fff', fontSize:10, fontWeight:'600' }}>📷 {photos.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
           <View style={styles.galSide}>
             {[1,2].map(i => (
-              <View key={i} style={[styles.galSm, { backgroundColor: maid.origin==='african'?'#2d1a0aaa':'#1a0d2eaa' }]}>
-                {maid.photos?.[i]?.url
-                  ? <Image source={{ uri:maid.photos[i].url }} style={{ width:'100%', height:'100%' }}/>
+              <TouchableOpacity
+                key={i}
+                activeOpacity={0.85}
+                style={[styles.galSm, { backgroundColor: maid.origin==='african'?'#2d1a0aaa':'#1a0d2eaa' }]}
+                onPress={() => { setGalleryIndex(i); setGalleryVisible(true); }}>
+                {photos[i]?.url
+                  ? <Image source={{ uri: photos[i].url }} style={{ width:'100%', height:'100%' }}/>
                   : <Text style={{ fontSize:28 }}>👩</Text>}
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>

@@ -5,18 +5,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { maidsAPI, uploadAPI } from '../../services/api';
+// Toast is kept for camera permission errors
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
 
 export default function SelfieVerificationScreen({ route, navigation }) {
-  const { isEgyptian, idNumber, idPhotoUri, passportNumber, passportPhotoUri } = route.params || {};
+  const { isEgyptian, idNumber, idPhotoUri, passportNumber, passportPhotoUri, isResubmit } = route.params || {};
   const completeAuth = useAuthStore(s => s.completeAuth);
   const resolvedIdNumber = idNumber || passportNumber;
   const resolvedIdPhotoUri = idPhotoUri || passportPhotoUri;
-  const needsPassportPhoto = !isEgyptian && !resolvedIdPhotoUri; // resubmission for non-Egyptian
+  const needsPassportPhoto = !isEgyptian && !resolvedIdPhotoUri;
   const [selfieUri, setSelfieUri] = useState(null);
   const [resubmitPassportUri, setResubmitPassportUri] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const takeSelfie = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -53,11 +55,12 @@ export default function SelfieVerificationScreen({ route, navigation }) {
   };
 
   const handleSubmit = async () => {
-    if (!selfieUri) return Toast.show({ type: 'error', text1: 'Take or upload a selfie first' });
+    if (!selfieUri) return setSubmitError('Take or upload a selfie first');
     if (needsPassportPhoto && !resubmitPassportUri) {
-      return Toast.show({ type: 'error', text1: 'Upload your passport photo first' });
+      return setSubmitError('Upload your passport photo first');
     }
     setLoading(true);
+    setSubmitError(null);
     try {
       // Upload ID photo (passport only — not needed for Egyptians)
       let passportPhotoUrl = null, passportPhotoPublicId = null;
@@ -82,15 +85,13 @@ export default function SelfieVerificationScreen({ route, navigation }) {
         selfiePublicId,
       });
 
-      const isNewRegistration = !useAuthStore.getState().user;
       await completeAuth();
-      // For new registrations, AppNavigator auto-switches to pending-approval stack.
-      // For resubmissions (already authenticated), go back to PendingApproval.
-      if (!isNewRegistration) {
+      if (isResubmit && navigation.canGoBack()) {
         navigation.goBack();
       }
     } catch (err) {
-      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Submission failed' });
+      const msg = err.response?.data?.message || err.message || 'Submission failed. Check your connection and try again.';
+      setSubmitError(msg);
     } finally { setLoading(false); }
   };
 
@@ -98,9 +99,11 @@ export default function SelfieVerificationScreen({ route, navigation }) {
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content"/>
       <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
-        </TouchableOpacity>
+        {navigation.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+          </TouchableOpacity>
+        )}
         <Text style={styles.heroTitle}>Selfie Verification</Text>
         <Text style={styles.heroSub}>Step 2 of 2 — Identity Confirmation</Text>
       </LinearGradient>
@@ -151,13 +154,19 @@ export default function SelfieVerificationScreen({ route, navigation }) {
           <Text style={styles.galleryBtnTxt}>🖼  Choose from Gallery</Text>
         </TouchableOpacity>
 
+        {submitError && (
+          <View style={{ backgroundColor: 'rgba(224,85,85,0.1)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+            <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 18 }}>⚠️ {submitError}</Text>
+          </View>
+        )}
+
         <TouchableOpacity
           style={[styles.submitBtn, (!selfieUri || loading) && styles.submitBtnDisabled]}
           onPress={handleSubmit}
           disabled={!selfieUri || loading}>
           {loading
             ? <ActivityIndicator color={COLORS.dark}/>
-            : <Text style={styles.submitBtnTxt}>Submit for Verification →</Text>}
+            : <Text style={styles.submitBtnTxt}>{submitError ? 'Try Again →' : 'Submit for Verification →'}</Text>}
         </TouchableOpacity>
 
         <Text style={styles.disclaimer}>

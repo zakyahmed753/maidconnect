@@ -11,6 +11,7 @@ const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password');
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+    if (user.deletedAt) return res.status(403).json({ success: false, message: 'Account deactivated. Contact admin to restore.' });
     if (user.isSuspended) return res.status(403).json({ success: false, message: 'Account suspended' });
     req.user = user;
     next();

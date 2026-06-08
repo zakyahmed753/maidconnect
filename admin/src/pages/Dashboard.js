@@ -70,6 +70,7 @@ export default function Dashboard() {
         <StatCard icon="🤝" label="Total Hires"     value={stats.totalHires}     color={GREEN} sub="Confirmed" />
         <StatCard icon="💰" label="Monthly Revenue" value={`EGP ${(stats.monthlyRevenue||0).toLocaleString()}`} color={GOLD} />
         <StatCard icon="🏦" label="Total Revenue"   value={`EGP ${(stats.totalRevenue||0).toLocaleString()}`}  color={GREEN} />
+        <StatCard icon="💵" label="Offline (Cash)"  value={`EGP ${(stats.offlineRevenue||0).toLocaleString()}`} color="#60a5fa" sub={`${stats.offlineCount||0} transactions`} />
       </div>
 
       {/* Charts row */}
@@ -97,7 +98,10 @@ export default function Dashboard() {
         <div style={CARD_STYLE}>
           <div style={{ fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', color:'#e8c97a', marginBottom:16, fontFamily:"'DM Mono',monospace" }}>Revenue by Type</div>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={(stats.revenueByType||[]).map(d => ({ type: d._id==='subscription'?'Subscriptions':'Commissions', total: d.total, count: d.count }))}>
+            <BarChart data={(stats.revenueByType||[]).map(d => ({
+              type: d._id==='subscription'?'Maid Subs': d._id==='customer_subscription'?'Cust Subs': d._id==='commission'?'Commission': d._id==='release_fee'?'Release Fee': d._id,
+              total: d.total, count: d.count
+            }))}>
               <XAxis dataKey="type" tick={{ fill:'#555', fontSize:10 }} axisLine={false} tickLine={false}/>
               <YAxis tick={{ fill:'#555', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={v=>`${(v/1000).toFixed(0)}k`}/>
               <Tooltip content={customTooltip}/>

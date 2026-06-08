@@ -1,8 +1,15 @@
 const Maid = require('../models/Maid');
 const User = require('../models/User');
-const { HouseWife, Notification, HireRequest } = require('../models/index');
+const { HouseWife, Notification, HireRequest, Payment } = require('../models/index');
 const { sendEmail, hireApprovedEmailToCustomer, hireRejectedEmailToCustomer } = require('../utils/email');
 const { sendPush } = require('../utils/push');
+
+function getMaidPriceEGP(nationality = '') {
+  const n = nationality.toLowerCase();
+  if (n.includes('philip') || n.includes('filip')) return 1000;
+  if (n.includes('indonesia') || n.includes('ethiopia')) return 800;
+  return 500;
+}
 
 // ── Create / Update Maid Profile ──
 exports.createProfile = async (req, res) => {
@@ -45,6 +52,8 @@ exports.getAllMaids = async (req, res) => {
     const filter = {
       approvalStatus: 'approved',
       isHired: false,
+      'subscription.status': 'active',
+      'subscription.endDate': { $gt: new Date() },
     };
 
     // Exclude maids blocked/hired; also filter by customer's residential area
@@ -298,6 +307,40 @@ exports.getMaidReviews = async (req, res) => {
       .populate('housewife', 'name')
       .sort({ createdAt: -1 });
     res.json({ success: true, reviews });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Maid submits offline payment receipt ──
+exports.requestOfflinePayment = async (req, res) => {
+  try {
+    const { receiptUrl, receiptPublicId, plan = 'monthly' } = req.body;
+    if (!receiptUrl) return res.status(400).json({ success: false, message: 'Receipt image is required' });
+
+    const maid = await Maid.findOne({ user: req.user._id });
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid profile not found' });
+
+    // Cancel any previous unconfirmed requests
+    await Payment.updateMany(
+      { maidProfile: maid._id, method: 'cash_transfer', status: 'pending' },
+      { status: 'failed' }
+    );
+
+    const payment = await Payment.create({
+      user: req.user._id,
+      maidProfile: maid._id,
+      type: 'subscription',
+      method: 'cash_transfer',
+      amount: getMaidPriceEGP(maid.nationality),
+      status: 'pending',
+      subscriptionPlan: plan,
+      receiptUrl,
+      receiptPublicId,
+      adminNote: 'Maid submitted receipt — awaiting admin confirmation',
+    });
+
+    res.json({ success: true, payment });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

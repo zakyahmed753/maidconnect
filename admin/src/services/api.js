@@ -29,12 +29,16 @@ export const adminAPI = {
   getMaid:              (id) => api.get(`/admin/maids/${id}`),
   updateMaidStatus:     (id, data) => api.put(`/admin/maids/${id}/status`, data),
   verifyIdentity:       (id, data) => api.put(`/admin/maids/${id}/verify`, data),
-  activateSubscription: (id, data) => api.put(`/admin/maids/${id}/subscription`, data),
-  getHouseWives:        (params) => api.get('/admin/housewives', { params }),
+  activateSubscription: (id, data)     => api.put(`/admin/maids/${id}/subscription`, data),
+  offlinePayment:       (id, data)     => api.post(`/admin/maids/${id}/offline-payment`, data),
+  rejectOfflinePayment: (data)         => api.post('/admin/payments/reject-offline', data),
+  getHouseWives:        (params)       => api.get('/admin/housewives', { params }),
   suspendUser:          (userId, data) => api.put(`/admin/users/${userId}/suspend`, data),
-  toggleHired:          (id) => api.put(`/admin/maids/${id}/hired`),
-  getPayments:          (params) => api.get('/admin/payments', { params }),
-  broadcast:            (data) => api.post('/admin/broadcast', data),
+  deleteUser:           (userId, data) => api.put(`/admin/users/${userId}/delete`, data),
+  restoreUser:          (userId)       => api.put(`/admin/users/${userId}/restore`),
+  toggleHired:          (id)           => api.put(`/admin/maids/${id}/hired`),
+  getPayments:          (params)       => api.get('/admin/payments', { params }),
+  broadcast:            (data)         => api.post('/admin/broadcast', data),
 };
 
 export const configAPI = {

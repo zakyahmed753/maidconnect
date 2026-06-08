@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput,
   ScrollView, Image, ActivityIndicator, RefreshControl, StatusBar,
-  Modal, Pressable, KeyboardAvoidingView, Platform,
+  Modal, Pressable, KeyboardAvoidingView, Platform, Dimensions,
 } from 'react-native';
+
+const { width: SW, height: SH } = Dimensions.get('window');
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { maidsAPI } from '../../services/api';
@@ -32,7 +34,7 @@ const SORT_OPTS = [
 const EMPTY_ADV = { minSalary: '', maxSalary: '', minAge: '', maxAge: '', minExp: '', sort: 'createdAt' };
 
 // ── Maid Card ──
-const MaidCard = ({ maid, onPress, initialLiked }) => {
+const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
   const [liked, setLiked] = useState(!!initialLiked);
   useEffect(() => { setLiked(!!initialLiked); }, [initialLiked]);
 
@@ -43,30 +45,50 @@ const MaidCard = ({ maid, onPress, initialLiked }) => {
     catch { setLiked(!next); Toast.show({ type: 'error', text1: 'Failed to save' }); }
   };
 
+  const validPhotos = (maid.photos || []).filter(p => p?.url);
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.photos}>
-        <View style={[styles.photoMain, { backgroundColor: maid.origin === 'african' ? '#2d1a0a' : '#1a0d2e' }]}>
-          {maid.photos?.[0]?.url
-            ? <Image source={{ uri: maid.photos[0].url }} style={styles.photoImg} />
-            : <Text style={styles.photoEmoji}>👩</Text>}
-          <View style={[styles.availBadge, !maid.isAvailable && { backgroundColor: COLORS.muted }]}>
-            <Text style={styles.availTxt}>{maid.isAvailable ? '● Available' : 'Unavailable'}</Text>
+      <TouchableOpacity
+        activeOpacity={0.88}
+        onPress={() => validPhotos.length && onPhotoPress ? onPhotoPress(validPhotos, 0) : onPress()}
+      >
+        <View style={styles.photos}>
+          <View style={[styles.photoMain, { backgroundColor: maid.origin === 'african' ? '#2d1a0a' : '#1a0d2e' }]}>
+            {maid.photos?.[0]?.url
+              ? <Image source={{ uri: maid.photos[0].url }} style={styles.photoImg} />
+              : <Text style={styles.photoEmoji}>👩</Text>}
+            <View style={[styles.availBadge, !maid.isAvailable && { backgroundColor: COLORS.muted }]}>
+              <Text style={styles.availTxt}>{maid.isAvailable ? '● Available' : 'Unavailable'}</Text>
+            </View>
+            {validPhotos.length > 1 && (
+              <View style={styles.photoCountBadge}>
+                <Text style={styles.photoCountTxt}>1/{validPhotos.length} ▶</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.photosSide}>
+            <TouchableOpacity
+              style={[styles.photoSm, { backgroundColor: maid.origin === 'african' ? '#2d1a0a99' : '#1a0d2e99' }]}
+              activeOpacity={0.85}
+              onPress={() => validPhotos.length > 1 && onPhotoPress ? onPhotoPress(validPhotos, 1) : null}
+            >
+              {maid.photos?.[1]?.url
+                ? <Image source={{ uri: maid.photos[1].url }} style={{ width: '100%', height: '100%' }} />
+                : <Text style={{ fontSize: 18 }}>👩</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.photoSm, { backgroundColor: maid.origin === 'african' ? '#2d1a0a66' : '#1a0d2e66' }]}
+              activeOpacity={0.85}
+              onPress={() => validPhotos.length > 2 && onPhotoPress ? onPhotoPress(validPhotos, 2) : null}
+            >
+              {maid.photos?.[2]?.url
+                ? <Image source={{ uri: maid.photos[2].url }} style={{ width: '100%', height: '100%' }} />
+                : <Text style={{ fontSize: 18 }}>📷</Text>}
+            </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.photosSide}>
-          <View style={[styles.photoSm, { backgroundColor: maid.origin === 'african' ? '#2d1a0a99' : '#1a0d2e99' }]}>
-            {maid.photos?.[1]?.url
-              ? <Image source={{ uri: maid.photos[1].url }} style={{ width: '100%', height: '100%' }} />
-              : <Text style={{ fontSize: 18 }}>👩</Text>}
-          </View>
-          <View style={[styles.photoSm, { backgroundColor: maid.origin === 'african' ? '#2d1a0a66' : '#1a0d2e66' }]}>
-            {maid.photos?.[2]?.url
-              ? <Image source={{ uri: maid.photos[2].url }} style={{ width: '100%', height: '100%' }} />
-              : <Text style={{ fontSize: 18 }}>📷</Text>}
-          </View>
-        </View>
-      </View>
+      </TouchableOpacity>
 
       <View style={styles.info}>
         <View style={styles.infoTop}>
@@ -117,6 +139,7 @@ export default function BrowseScreen({ navigation }) {
   const [draft, setDraft]                 = useState(EMPTY_ADV);
   const [filterVisible, setFilterVisible] = useState(false);
   const [hasMore, setHasMore]             = useState(true);
+  const [photoViewer, setPhotoViewer]     = useState({ visible: false, photos: [], index: 0 });
 
   const pageRef     = useRef(1);
   const hasMoreRef  = useRef(true);
@@ -251,6 +274,7 @@ export default function BrowseScreen({ navigation }) {
                 maid={item}
                 initialLiked={savedIds.has(item._id)}
                 onPress={() => navigation.navigate('MaidDetail', { maid: item })}
+                onPhotoPress={(photos, index) => setPhotoViewer({ visible: true, photos, index })}
               />
             )}
             refreshControl={
@@ -274,6 +298,52 @@ export default function BrowseScreen({ navigation }) {
             ListFooterComponent={hasMore ? <ActivityIndicator color={COLORS.gold} style={{ marginVertical: 20 }} /> : null}
           />
       }
+
+      {/* Photo Viewer Modal */}
+      <Modal
+        visible={photoViewer.visible}
+        animationType="fade"
+        transparent
+        statusBarTranslucent
+        onRequestClose={() => setPhotoViewer(v => ({ ...v, visible: false }))}
+      >
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          <FlatList
+            data={photoViewer.photos}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={photoViewer.index}
+            getItemLayout={(_, i) => ({ length: SW, offset: SW * i, index: i })}
+            onMomentumScrollEnd={e => {
+              const idx = Math.round(e.nativeEvent.contentOffset.x / SW);
+              setPhotoViewer(v => ({ ...v, index: idx }));
+            }}
+            renderItem={({ item }) => (
+              <View style={{ width: SW, height: SH, justifyContent: 'center', alignItems: 'center' }}>
+                <Image source={{ uri: item.url }} style={{ width: SW, height: SH * 0.75 }} resizeMode="contain" />
+              </View>
+            )}
+            keyExtractor={(_, i) => String(i)}
+          />
+          <View style={styles.pvHeader}>
+            <View style={styles.pvCountWrap}>
+              <Text style={styles.pvCount}>{photoViewer.index + 1} / {photoViewer.photos.length}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => setPhotoViewer(v => ({ ...v, visible: false }))}
+              style={styles.pvClose}
+            >
+              <Text style={{ fontSize: 18, color: '#fff' }}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.pvDots}>
+            {photoViewer.photos.map((_, i) => (
+              <View key={i} style={[styles.pvDot, i === photoViewer.index && styles.pvDotActive]} />
+            ))}
+          </View>
+        </View>
+      </Modal>
 
       {/* Filter Modal */}
       <Modal visible={filterVisible} animationType="slide" transparent statusBarTranslucent>
@@ -387,6 +457,17 @@ const styles = StyleSheet.create({
   photoSm:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
   availBadge:  { position: 'absolute', top: 8, left: 8, backgroundColor: COLORS.green, borderRadius: 2, paddingHorizontal: 6, paddingVertical: 2 },
   availTxt:    { fontSize: 8, color: '#fff', letterSpacing: 0.5, fontWeight: '700' },
+  photoCountBadge: { position: 'absolute', bottom: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 },
+  photoCountTxt:   { fontSize: 9, color: '#fff', fontWeight: '700' },
+
+  // Photo viewer modal
+  pvHeader:    { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 50, paddingHorizontal: 18, paddingBottom: 10 },
+  pvCountWrap: { backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+  pvCount:     { color: '#fff', fontSize: 13, fontWeight: '600' },
+  pvClose:     { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  pvDots:      { position: 'absolute', bottom: 60, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
+  pvDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)' },
+  pvDotActive: { width: 20, height: 6, borderRadius: 3, backgroundColor: '#e8c97a' },
   info:        { padding: 13 },
   infoTop:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
   name:        { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },

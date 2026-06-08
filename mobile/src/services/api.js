@@ -32,7 +32,8 @@ export const authAPI = {
   login:      (data) => api.post('/auth/login', data),
   socialAuth: (data) => api.post('/auth/social', data),
   getMe:      ()     => api.get('/auth/me'),
-  updateMe:   (data) => api.put('/auth/me', data),
+  updateMe:       (data) => api.put('/auth/me', data),
+  deleteAccount:  (data) => api.delete('/auth/me', { data }),
 };
 
 export const hwAPI = {
@@ -54,8 +55,9 @@ export const maidsAPI = {
   getSaved:      ()       => api.get('/maids/saved/list'),
   submitReview:  (id, data) => api.post(`/maids/${id}/reviews`, data),
   getReviews:    (id)     => api.get(`/maids/${id}/reviews`),
-  getHireRequests:    ()           => api.get('/maids/hire-requests'),
-  respondHireRequest: (id, action) => api.put(`/maids/hire-requests/${id}/respond`, { action }),
+  getHireRequests:         ()           => api.get('/maids/hire-requests'),
+  respondHireRequest:      (id, action) => api.put(`/maids/hire-requests/${id}/respond`, { action }),
+  requestOfflinePayment:   (data)       => api.post('/maids/me/offline-payment-request', data),
 };
 
 export const chatsAPI = {

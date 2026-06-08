@@ -81,20 +81,25 @@ const DocImage = ({ label, url, fallback, optional }) => (
 );
 
 export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
-  const [maid,      setMaid]      = useState(initialMaid);
-  const [fetching,  setFetching]  = useState(true);
-  const [approving, setApproving] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const [noteText,  setNoteText]  = useState('');
-  const [activeTab, setActiveTab] = useState('profile');
-  const [imgModal,  setImgModal]  = useState(null);
+  const [maid,           setMaid]           = useState(initialMaid);
+  const [pendingReceipt, setPendingReceipt] = useState(null);
+  const [fetching,       setFetching]       = useState(true);
+  const [approving,    setApproving]    = useState(false);
+  const [verifying,    setVerifying]    = useState(false);
+  const [noteText,     setNoteText]     = useState('');
+  const [activeTab,    setActiveTab]    = useState('profile');
+  const [imgModal,     setImgModal]     = useState(null);
+  const [offlinePlan,  setOfflinePlan]  = useState('monthly');
+  const [offlineAmt,   setOfflineAmt]   = useState('');
+  const [offlineNote,  setOfflineNote]  = useState('');
+  const [offlineLoading, setOfflineLoading] = useState(false);
 
   // Fetch full maid data on open to get passport/selfie/all fields
   React.useEffect(() => {
     if (!initialMaid?._id) return;
     setFetching(true);
     adminAPI.getMaid(initialMaid._id)
-      .then(r => setMaid(r.data.maid))
+      .then(r => { setMaid(r.data.maid); setPendingReceipt(r.data.pendingReceipt || null); })
       .catch(() => toast.error('Failed to load maid details'))
       .finally(() => setFetching(false));
   }, [initialMaid?._id]);
@@ -137,6 +142,48 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
       toast.success('Subscription activated');
       onUpdate(maid._id, { subscription: { ...maid.subscription, status: 'active', plan: 'monthly' } });
     } catch { toast.error('Failed to activate subscription'); }
+  };
+
+  const handleRejectReceipt = async () => {
+    if (!pendingReceipt?._id) return;
+    const reason = window.prompt('Rejection reason (sent to maid):', 'Receipt is unclear. Please resubmit a clear photo.');
+    if (reason === null) return;
+    try {
+      await adminAPI.rejectOfflinePayment({ paymentId: pendingReceipt._id, reason });
+      toast.success('Receipt rejected — maid notified to resubmit');
+      setPendingReceipt(null);
+    } catch { toast.error('Failed to reject receipt'); }
+  };
+
+  const handleOfflinePayment = async () => {
+    setOfflineLoading(true);
+    try {
+      await adminAPI.offlinePayment(maid._id, {
+        plan: offlinePlan,
+        amount: offlineAmt ? Number(offlineAmt) : undefined,
+        note: offlineNote || undefined,
+      });
+      toast.success(`Offline ${offlinePlan} payment recorded & subscription activated`);
+      onUpdate(maid._id, { subscription: { ...maid.subscription, status: 'active', plan: offlinePlan } });
+      setOfflineAmt(''); setOfflineNote('');
+      setPendingReceipt(null);
+    } catch { toast.error('Failed to record offline payment'); }
+    finally { setOfflineLoading(false); }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(maid.user?.deletedAt ? 'Restore this account?' : 'Soft-delete this account? Only admin can restore it.')) return;
+    try {
+      if (maid.user?.deletedAt) {
+        await adminAPI.restoreUser(maid.user._id);
+        toast.success('Account restored');
+        onUpdate(maid._id, { user: { ...maid.user, deletedAt: null } });
+      } else {
+        await adminAPI.deleteUser(maid.user._id, { reason: 'Admin removed account' });
+        toast.success('Account deactivated');
+        onUpdate(maid._id, { user: { ...maid.user, deletedAt: new Date().toISOString() } });
+      }
+    } catch { toast.error('Failed'); }
   };
 
   const TABS = ['profile', 'documents', 'photos', 'actions'];
@@ -386,21 +433,91 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                   </div>
                 )}
                 <button onClick={handleActivateSub}
-                  style={{ width: '100%', padding: '9px', background: `${G.gold}18`, border: `1px solid ${G.gold}40`, borderRadius: 5, color: G.gold, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
-                  👑 Activate Monthly Subscription
+                  style={{ width: '100%', padding: '9px', background: `${G.gold}18`, border: `1px solid ${G.gold}40`, borderRadius: 5, color: G.gold, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", marginBottom: 6 }}>
+                  👑 Activate Monthly (no payment record)
+                </button>
+              </div>
+
+              {/* Pending Receipt from Maid */}
+              {pendingReceipt && (
+                <div style={{ background: G.card, border: '1px solid rgba(93,214,168,0.4)', borderRadius: 8, padding: 18, gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: G.green }}>📎 Maid Submitted a Payment Receipt</div>
+                    <span style={{ fontSize: 9, background: 'rgba(240,160,80,0.15)', color: '#f0a050', border: '1px solid rgba(240,160,80,0.4)', borderRadius: 3, padding: '2px 7px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pending Confirmation</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 12 }}>
+                    EGP {pendingReceipt.amount?.toLocaleString()} · {pendingReceipt.subscriptionPlan} · submitted {new Date(pendingReceipt.createdAt).toLocaleDateString()}
+                  </div>
+                  {pendingReceipt.receiptUrl && (
+                    <a href={pendingReceipt.receiptUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginBottom: 10 }}>
+                      <img
+                        src={pendingReceipt.receiptUrl}
+                        alt="Payment receipt"
+                        style={{ width: '100%', maxHeight: 280, objectFit: 'contain', borderRadius: 6, border: `1px solid ${G.border2}`, background: '#0e0e0e', cursor: 'zoom-in' }}
+                      />
+                      <div style={{ fontSize: 10, color: G.gold, marginTop: 4 }}>🔍 Click to open full size</div>
+                    </a>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <button onClick={handleOfflinePayment} disabled={offlineLoading}
+                      style={{ flex: 1, padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: G.green, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.5 : 1 }}>
+                      {offlineLoading ? 'Activating…' : '✅ Confirm & Activate Subscription'}
+                    </button>
+                    <button onClick={handleRejectReceipt}
+                      style={{ flex: 1, padding: '9px', background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)', borderRadius: 5, color: G.red, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
+                      ❌ Reject Receipt
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Offline Cash Payment */}
+              <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 2 }}>💵 Offline Cash Payment</div>
+                <div style={{ fontSize: 11, color: G.muted, marginBottom: 12 }}>Records a cash transfer payment & activates subscription. Appears in analytics.</div>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  {['monthly','annual'].map(p => (
+                    <button key={p} onClick={() => setOfflinePlan(p)}
+                      style={{ flex: 1, padding: '7px', background: offlinePlan === p ? `${G.gold}22` : '#1a1a1a', border: `1px solid ${offlinePlan === p ? G.gold : G.border2}`, borderRadius: 4, color: offlinePlan === p ? G.goldL : G.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", textTransform: 'capitalize' }}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  placeholder="Amount (EGP) — leave blank for auto"
+                  value={offlineAmt}
+                  onChange={e => setOfflineAmt(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 4, color: G.text, fontSize: 12, outline: 'none', fontFamily: "'Jost',sans-serif", boxSizing: 'border-box', marginBottom: 6 }}
+                />
+                <input
+                  placeholder="Admin note (optional)"
+                  value={offlineNote}
+                  onChange={e => setOfflineNote(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 4, color: G.text, fontSize: 12, outline: 'none', fontFamily: "'Jost',sans-serif", boxSizing: 'border-box', marginBottom: 8 }}
+                />
+                <button onClick={handleOfflinePayment} disabled={offlineLoading}
+                  style={{ width: '100%', padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: G.green, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.6 : 1 }}>
+                  {offlineLoading ? 'Recording…' : '💵 Record Cash Payment & Activate'}
                 </button>
               </div>
 
               {/* Account Status */}
               <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 4 }}>Account Status</div>
-                <div style={{ fontSize: 11, color: G.muted, marginBottom: 14 }}>
-                  {maid.user?.isSuspended ? '🔴 Account is currently suspended' : '🟢 Account is active'}
+                <div style={{ fontSize: 11, color: G.muted, marginBottom: 10 }}>
+                  {maid.user?.deletedAt ? '⚫ Account is deactivated (soft-deleted)' : maid.user?.isSuspended ? '🔴 Account is currently suspended' : '🟢 Account is active'}
                 </div>
-                <button onClick={handleSuspend}
-                  style={{ width: '100%', padding: '9px', background: maid.user?.isSuspended ? `${G.green}12` : `${G.red}10`, border: `1px solid ${maid.user?.isSuspended ? G.green : G.red}35`, borderRadius: 5, color: maid.user?.isSuspended ? G.green : G.red, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
-                  {maid.user?.isSuspended ? '✅ Unsuspend Account' : '🔴 Suspend Account'}
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <button onClick={handleSuspend}
+                    style={{ padding: '9px', background: maid.user?.isSuspended ? `${G.green}12` : `${G.red}10`, border: `1px solid ${maid.user?.isSuspended ? G.green : G.red}35`, borderRadius: 5, color: maid.user?.isSuspended ? G.green : G.red, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
+                    {maid.user?.isSuspended ? '✅ Unsuspend Account' : '🔴 Suspend Account'}
+                  </button>
+                  <button onClick={handleDeleteAccount}
+                    style={{ padding: '9px', background: maid.user?.deletedAt ? `${G.green}10` : 'rgba(60,60,60,0.3)', border: `1px solid ${maid.user?.deletedAt ? G.green+'40' : '#444'}`, borderRadius: 5, color: maid.user?.deletedAt ? G.green : '#888', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
+                    {maid.user?.deletedAt ? '↩ Restore Account' : '🗑 Delete Account (Soft)'}
+                  </button>
+                </div>
               </div>
 
               {/* Quick Info */}

@@ -167,3 +167,17 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ── Delete Own Account (soft delete) ──
+exports.deleteAccount = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    await User.findByIdAndUpdate(req.user._id, {
+      deletedAt: new Date(),
+      deletionReason: reason || 'User requested account removal',
+    });
+    res.json({ success: true, message: 'Account deactivated. Contact admin to restore.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

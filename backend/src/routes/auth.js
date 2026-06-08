@@ -11,5 +11,6 @@ router.get('/me',                 protect, ctrl.getMe);
 router.put('/me',                 protect, ctrl.updateMe);
 router.put('/fcm-token',          protect, ctrl.updateFCMToken);
 router.put('/change-password',    protect, ctrl.changePassword);
+router.delete('/me',              protect, ctrl.deleteAccount);
 
 module.exports = router;

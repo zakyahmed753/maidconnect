@@ -2,9 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { LANGUAGES, useTranslation } from '../utils/i18n';
-import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI } from '../services/api';
+import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI } from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../utils/theme';
@@ -53,48 +53,112 @@ export function NotificationsScreen({ navigation }) {
 
 // ─── PaymentResultScreen ───
 export function PaymentResultScreen({ route, navigation }) {
-  const { amount, paymentId } = route.params || {};
+  const { amount, paymentId, isOffline } = route.params || {};
   const completeAuth = useAuthStore(s => s.completeAuth);
   const [completing, setCompleting] = useState(false);
-  const [status, setStatus]         = useState('verifying'); // verifying | completed | failed
+  const [checking,  setChecking]   = useState(false);
+  // online: starts verifying; offline: starts as pending (waiting for admin)
+  const [status, setStatus] = useState(isOffline ? 'pending' : 'verifying');
   const pollTimer = React.useRef(null);
 
-  // Auto-verify as soon as screen mounts
+  // Online payment: auto-poll until confirmed
   React.useEffect(() => {
-    if (!paymentId) { setStatus('completed'); return; }
+    if (isOffline || !paymentId) {
+      if (!isOffline) setStatus('completed');
+      return;
+    }
     let attempts = 0;
     const check = async () => {
       attempts++;
       try {
         const res = await paymentsAPI.checkStatus(paymentId);
-        if (res.data?.status === 'completed') {
-          setStatus('completed');
-          return;
-        }
-        if (res.data?.status === 'failed') {
-          setStatus('failed');
-          return;
-        }
+        if (res.data?.status === 'completed') { setStatus('completed'); return; }
+        if (res.data?.status === 'failed')    { setStatus('failed');    return; }
       } catch {}
       if (attempts < 8) {
         pollTimer.current = setTimeout(check, 2000);
       } else {
-        setStatus('completed'); // allow manual tap anyway
+        setStatus('completed');
       }
     };
     check();
     return () => clearTimeout(pollTimer.current);
-  }, [paymentId]);
+  }, [paymentId, isOffline]);
 
   const handleGoHome = async () => {
     setCompleting(true);
-    try {
-      await completeAuth();
-    } catch {
-      setCompleting(false);
-    }
+    try { await completeAuth(); } catch { setCompleting(false); }
   };
 
+  // Offline: manual status check button
+  const handleCheckStatus = async () => {
+    if (!paymentId) return;
+    setChecking(true);
+    try {
+      const res = await paymentsAPI.checkStatus(paymentId);
+      if (res.data?.status === 'completed') {
+        setStatus('completed');
+      } else {
+        Toast.show({ type: 'info', text1: 'Still pending', text2: 'Admin hasn\'t confirmed yet. Try again later.' });
+      }
+    } catch {
+      Toast.show({ type: 'error', text1: 'Could not check status' });
+    } finally { setChecking(false); }
+  };
+
+  // ── Offline waiting screen ──
+  if (isOffline) {
+    return (
+      <View style={{ flex:1, backgroundColor:'#0a0e1a', alignItems:'center', justifyContent:'center', padding:28 }}>
+        <Text style={{ fontSize:64, marginBottom:16 }}>{status === 'completed' ? '🎉' : '⏳'}</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:26, color:'#fff8ee', textAlign:'center', marginBottom:10 }}>
+          {status === 'completed' ? 'Subscription Activated!' : 'Receipt Submitted'}
+        </Text>
+        <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:22, marginBottom:28 }}>
+          {status === 'completed'
+            ? 'Your offline payment has been confirmed by admin.\nYour subscription is now active.'
+            : 'Your payment receipt has been sent to admin.\nWe\'ll activate your subscription within 24 hours after confirming your transfer.'}
+        </Text>
+
+        <View style={{ backgroundColor:'rgba(201,168,76,0.08)', borderWidth:1, borderColor:'rgba(201,168,76,0.25)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
+          <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>
+            {status === 'completed' ? 'Amount Confirmed' : 'Amount Submitted'}
+          </Text>
+          <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#e8c97a' }}>EGP {amount?.toLocaleString()}</Text>
+          <View style={{ marginTop:8, paddingHorizontal:10, paddingVertical:4, borderRadius:10,
+            backgroundColor: status === 'completed' ? 'rgba(46,125,94,0.2)' : 'rgba(201,168,76,0.12)',
+            borderWidth:1, borderColor: status === 'completed' ? 'rgba(46,125,94,0.5)' : 'rgba(201,168,76,0.3)' }}>
+            <Text style={{ fontSize:11, color: status === 'completed' ? '#5dd6a8' : COLORS.gold, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>
+              {status === 'completed' ? '✓ Confirmed' : '⏳ Pending Admin Confirmation'}
+            </Text>
+          </View>
+        </View>
+
+        {status === 'completed' ? (
+          <TouchableOpacity onPress={handleGoHome} disabled={completing}
+            style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, width:'100%', alignItems:'center', opacity: completing ? 0.6 : 1 }}>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
+              {completing ? 'Loading…' : 'Go to App →'}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <>
+            <TouchableOpacity onPress={handleCheckStatus} disabled={checking}
+              style={{ backgroundColor:'rgba(255,255,255,0.07)', borderWidth:1, borderColor:'rgba(255,255,255,0.15)', paddingHorizontal:28, paddingVertical:13, borderRadius:5, width:'100%', alignItems:'center', marginBottom:12, opacity: checking ? 0.6 : 1 }}>
+              {checking
+                ? <ActivityIndicator color={COLORS.gold} />
+                : <Text style={{ fontSize:14, color:'#e8c97a', fontWeight:'600' }}>🔄 Check Status</Text>}
+            </TouchableOpacity>
+            <Text style={{ fontSize:11, color:'rgba(255,255,255,0.3)', textAlign:'center', lineHeight:17 }}>
+              You'll also receive a notification when admin confirms your payment.{'\n'}You can close this screen and come back later.
+            </Text>
+          </>
+        )}
+      </View>
+    );
+  }
+
+  // ── Online payment result screen ──
   return (
     <View style={{ flex:1, backgroundColor:'#0a1208', alignItems:'center', justifyContent:'center', padding:28 }}>
       <Text style={{ fontSize:64, marginBottom:16 }}>🎉</Text>
@@ -293,6 +357,39 @@ export function HWProfileScreen({ navigation }) {
   const { user, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Your account will be deactivated. Only admin can restore it. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => Alert.alert(
+            'Confirm Deletion',
+            'This action cannot be undone by yourself. Proceed?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Yes, Delete',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await authAPI.deleteAccount({ reason: 'Customer requested account removal' });
+                    logout();
+                  } catch {
+                    Toast.show({ type: 'error', text1: 'Failed to delete account' });
+                  }
+                },
+              },
+            ]
+          ),
+        },
+      ]
+    );
+  };
+
   const MENU = [
     { icon:'❤️', title: t('menu_saved'),         color:'',    onPress: () => navigation.navigate('Saved') },
     { icon:'💬', title: t('menu_messages'),       color:'',    onPress: () => navigation.navigate('Chats') },
@@ -301,6 +398,7 @@ export function HWProfileScreen({ navigation }) {
     { icon:'🔔', title: t('menu_notifications'),  color:'',    onPress: () => navigation.navigate('Alerts') },
     { icon:'🌐', title: t('language'),            color:'',    onPress: () => setLangVisible(true) },
     { icon:'🎫', title: t('menu_support'),        color:'',    onPress: () => navigation.navigate('Support') },
+    { icon:'🗑️', title: 'Delete Account',         color:'red', onPress: handleDeleteAccount },
     { icon:'🚪', title: t('menu_sign_out'),       color:'red', onPress: logout },
   ];
 
@@ -337,6 +435,39 @@ export function MaidDashScreen({ navigation }) {
   const { user, profile, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
   const [stats, setStats] = useState({ views: 0, likes: 0, chats: 0 });
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Your account will be deactivated. Only admin can restore it. Are you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => Alert.alert(
+            'Confirm Deletion',
+            'This action cannot be undone by yourself. Proceed?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Yes, Delete',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await authAPI.deleteAccount({ reason: 'Maid requested account removal' });
+                    logout();
+                  } catch {
+                    Toast.show({ type: 'error', text1: 'Failed to delete account' });
+                  }
+                },
+              },
+            ]
+          ),
+        },
+      ]
+    );
+  };
 
   const [maidProfile, setMaidProfile] = useState(null);
   const [areasModalVisible, setAreasModalVisible] = useState(false);
@@ -491,12 +622,13 @@ export function MaidDashScreen({ navigation }) {
             {[
               ['🎫','Open Support Ticket','Contact admin for any issues', () => navigation.navigate('Support')],
               ['🌐','Language','', () => setLangVisible(true)],
+              ['🗑️','Delete Account','Deactivates your profile', handleDeleteAccount],
               ['🚪','Sign Out','', logout],
             ].map(([icon,title,sub,onPress])=>(
               <TouchableOpacity key={title} onPress={onPress}
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
-                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: title==='Sign Out'?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
+                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: (title==='Sign Out'||title==='Delete Account')?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
                 <Text style={{ color:COLORS.muted }}>›</Text>
               </TouchableOpacity>
             ))}
@@ -512,12 +644,13 @@ export function MaidDashScreen({ navigation }) {
               ['🌐','Language',''],
               ['🔔','Notifications',''],
               ['🎫','Support','Contact us anytime'],
+              ['🗑️','Delete Account','Deactivates your profile'],
               ['🚪','Sign Out','']
             ].map(([icon,title,sub])=>(
-              <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : title==='Payments' ? () => navigation.navigate('PaymentHistory') : title==='Hire Requests' ? () => navigation.navigate('HireRequest') : title==='Referrals' ? () => navigation.navigate('Coupons') : undefined}
+              <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Delete Account' ? handleDeleteAccount : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : title==='Payments' ? () => navigation.navigate('PaymentHistory') : title==='Hire Requests' ? () => navigation.navigate('HireRequest') : title==='Referrals' ? () => navigation.navigate('Coupons') : undefined}
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
-                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: title==='Sign Out'?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
+                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: (title==='Sign Out'||title==='Delete Account')?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
                 <Text style={{ color:COLORS.muted }}>›</Text>
               </TouchableOpacity>
             ))}
@@ -903,7 +1036,7 @@ export function PaymentHistoryScreen({ navigation }) {
   }, []);
 
   const statusColor = { completed:'#2e7d5e', pending:'#c9a84c', failed:'#e05555', refunded:'#888' };
-  const methodIcon  = { fawry:'🏧', vodafone_cash:'📱', instapay:'💸', amazon_pay:'🛒', paymob:'💳' };
+  const methodIcon  = { fawry:'🏧', vodafone_cash:'📱', instapay:'💸', amazon_pay:'🛒', paymob:'💳', cash_transfer:'💵' };
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
@@ -929,7 +1062,10 @@ export function PaymentHistoryScreen({ navigation }) {
                   <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
                     <Text style={{ fontSize:22 }}>{methodIcon[item.method] || '💳'}</Text>
                     <View>
-                      <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark, textTransform:'capitalize' }}>{item.type}</Text>
+                      <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
+                        <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark, textTransform:'capitalize' }}>{item.type}</Text>
+                        {item.offlineByAdmin && <View style={{ backgroundColor:'rgba(201,168,76,0.15)', paddingHorizontal:6, paddingVertical:1, borderRadius:4, borderWidth:1, borderColor:'rgba(201,168,76,0.4)' }}><Text style={{ fontSize:9, color:COLORS.gold, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>Offline</Text></View>}
+                      </View>
                       <Text style={{ fontSize:11, color:COLORS.muted }}>{(item.method||'').replace('_',' ')}</Text>
                     </View>
                   </View>

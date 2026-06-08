@@ -51,8 +51,17 @@ export default function RegisterScreen({ navigation }) {
 
   const pickPhoto = async () => {
     if (photos.length >= 5) return Toast.show({ type:'info', text1: t('max_photos') });
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
-    if (!res.canceled) setPhotos(p => [...p, res.assets[0].uri]);
+    const remaining = 5 - photos.length;
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+    });
+    if (!res.canceled) {
+      const uris = res.assets.map(a => a.uri);
+      setPhotos(p => [...p, ...uris].slice(0, 5));
+    }
   };
 
   const pickIdPhoto = async () => {

@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
   isSuspended: { type: Boolean, default: false },
   suspendReason: { type: String, default: null },
 
+  // ── Soft Delete ──
+  deletedAt:      { type: Date, default: null },
+  deletionReason: { type: String, default: null },
+
   // ── Notifications ──
   fcmToken: { type: String, default: null }, // for push notifications
   pushEnabled: { type: Boolean, default: true },

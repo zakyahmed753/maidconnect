@@ -119,6 +119,7 @@ export default function PendingApprovalScreen({ navigation }) {
               isEgyptian,
               idNumber:       isEgyptian ? maidData?.nationalId   : undefined,
               passportNumber: isEgyptian ? undefined : maidData?.passport?.number,
+              isResubmit:     true,
             });
           }}>
             <Text style={styles.resubmitBtnTxt}>{t('resubmit')}</Text>

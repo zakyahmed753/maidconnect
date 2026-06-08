@@ -41,6 +41,12 @@ exports.getDashboard = async (req, res) => {
       { $group: { _id: '$type', total: { $sum: '$amount' }, count: { $sum: 1 } } }
     ]);
 
+    // Offline (cash transfer) payments breakdown
+    const offlineStats = await Payment.aggregate([
+      { $match: { status: 'completed', offlineByAdmin: true } },
+      { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
+    ]);
+
     res.json({
       success: true,
       stats: {
@@ -48,7 +54,9 @@ exports.getDashboard = async (req, res) => {
         totalRevenue: totalRevenue[0]?.total || 0,
         monthlyRevenue: monthlyRev[0]?.total || 0,
         totalHires, pendingPayments,
-        monthlyBreakdown, revenueByType
+        monthlyBreakdown, revenueByType,
+        offlineRevenue: offlineStats[0]?.total || 0,
+        offlineCount: offlineStats[0]?.count || 0,
       }
     });
   } catch (err) {
@@ -77,9 +85,15 @@ exports.getAllMaids = async (req, res) => {
 exports.getMaid = async (req, res) => {
   try {
     const maid = await Maid.findById(req.params.id)
-      .populate('user', 'name email phone createdAt isSuspended suspendReason');
+      .populate('user', 'name email phone createdAt isSuspended suspendReason deletedAt');
     if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
-    res.json({ success: true, maid });
+    // Include any pending offline payment receipt submitted by the maid
+    const pendingReceipt = await Payment.findOne({
+      maidProfile: maid._id,
+      method: 'cash_transfer',
+      status: 'pending',
+    }).sort({ createdAt: -1 });
+    res.json({ success: true, maid, pendingReceipt });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -217,7 +231,7 @@ exports.getPayments = async (req, res) => {
     const total = await Payment.countDocuments(filter);
     const payments = await Payment.find(filter)
       .populate('user', 'name email')
-      .populate('maidProfile', 'fullName')
+      .populate('maidProfile', 'fullName nationality')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
@@ -243,6 +257,131 @@ exports.toggleHired = async (req, res) => {
         : 'Your profile is now visible to customers again.'
     });
     res.json({ success: true, isHired: newStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Offline (Cash Transfer) Payment for Maid Subscription ──
+exports.offlinePayment = async (req, res) => {
+  try {
+    const { plan = 'monthly', amount, note } = req.body;
+    const maid = await Maid.findById(req.params.id).populate('user');
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+
+    const now = new Date();
+    const endDate = new Date(now);
+    if (plan === 'annual') endDate.setFullYear(endDate.getFullYear() + 1);
+    else endDate.setMonth(endDate.getMonth() + 1);
+
+    // Use provided amount or compute by origin
+    const originPrices = { philippine: 1000, filipino: 1000, indonesian: 800, ethiopian: 800 };
+    const computedAmount = amount || originPrices[(maid.origin || '').toLowerCase()] || 500;
+
+    // Confirm existing maid-submitted receipt if present; otherwise create new record
+    let payment = await Payment.findOne({
+      maidProfile: maid._id, method: 'cash_transfer', status: 'pending',
+    }).sort({ createdAt: -1 });
+
+    if (payment) {
+      payment.status = 'completed';
+      payment.offlineByAdmin = true;
+      payment.adminNote = note || payment.adminNote || 'Confirmed by admin';
+      payment.amount = computedAmount;
+      payment.subscriptionPlan = plan;
+      payment.paidAt = now;
+      await payment.save();
+    } else {
+      payment = await Payment.create({
+        user: maid.user._id,
+        type: 'subscription',
+        method: 'cash_transfer',
+        amount: computedAmount,
+        status: 'completed',
+        offlineByAdmin: true,
+        adminNote: note || 'Offline cash payment recorded by admin',
+        maidProfile: maid._id,
+        subscriptionPlan: plan,
+        paidAt: now,
+      });
+    }
+
+    await Maid.findByIdAndUpdate(req.params.id, {
+      'subscription.plan': plan,
+      'subscription.status': 'active',
+      'subscription.startDate': now,
+      'subscription.endDate': endDate,
+      'subscription.paymentId': payment._id,
+    });
+
+    await Notification.create({
+      user: maid.user._id,
+      type: 'subscription',
+      title: '💵 Subscription Activated!',
+      body: `Your ${plan} subscription has been activated via offline cash payment.`,
+    });
+
+    res.json({ success: true, payment });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Reject Maid Offline Payment Receipt ──
+exports.rejectOfflinePayment = async (req, res) => {
+  try {
+    const { paymentId, reason } = req.body;
+    if (!paymentId) return res.status(400).json({ success: false, message: 'paymentId required' });
+    const payment = await Payment.findOneAndUpdate(
+      { _id: paymentId, method: 'cash_transfer', status: 'pending' },
+      { status: 'failed', adminNote: reason || 'Receipt rejected by admin. Please resubmit a clear payment receipt.' },
+      { new: true }
+    ).populate('user', 'name email _id');
+    if (!payment) return res.status(404).json({ success: false, message: 'Pending payment not found' });
+    await Notification.create({
+      user: payment.user._id,
+      type: 'payment',
+      title: '❌ Payment Receipt Rejected',
+      body: reason || 'Your receipt was rejected. Please transfer again and upload a clear receipt.',
+    });
+    res.json({ success: true, payment });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Soft Delete User Account ──
+exports.softDeleteUser = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { deletedAt: new Date(), deletionReason: reason || null },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Restore Soft-Deleted User Account ──
+exports.restoreUser = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { deletedAt: null, deletionReason: null },
+      { new: true }
+    );
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    await Notification.create({
+      user: user._id,
+      type: 'system',
+      title: '✅ Account Restored',
+      body: 'Your account has been reactivated by the admin. You can now log in again.',
+    });
+    res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
