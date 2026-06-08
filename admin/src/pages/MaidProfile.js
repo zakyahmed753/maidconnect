@@ -99,7 +99,12 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
     if (!initialMaid?._id) return;
     setFetching(true);
     adminAPI.getMaid(initialMaid._id)
-      .then(r => { setMaid(r.data.maid); setPendingReceipt(r.data.pendingReceipt || null); })
+      .then(r => {
+        setMaid(r.data.maid);
+        const receipt = r.data.pendingReceipt || null;
+        setPendingReceipt(receipt);
+        if (receipt) setActiveTab('actions'); // auto-open Actions when receipt waiting
+      })
       .catch(() => toast.error('Failed to load maid details'))
       .finally(() => setFetching(false));
   }, [initialMaid?._id]);
@@ -146,28 +151,31 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
 
   const handleRejectReceipt = async () => {
     if (!pendingReceipt?._id) return;
-    const reason = window.prompt('Rejection reason (sent to maid):', 'Receipt is unclear. Please resubmit a clear photo.');
-    if (reason === null) return;
+    if (!window.confirm('Reject this receipt? The maid will be notified to resubmit.')) return;
     try {
-      await adminAPI.rejectOfflinePayment({ paymentId: pendingReceipt._id, reason });
+      await adminAPI.rejectOfflinePayment({
+        paymentId: pendingReceipt._id,
+        reason: 'Receipt rejected by admin. Please transfer again and upload a clear receipt.',
+      });
       toast.success('Receipt rejected — maid notified to resubmit');
       setPendingReceipt(null);
     } catch { toast.error('Failed to reject receipt'); }
   };
 
-  const handleOfflinePayment = async () => {
+  const handleOfflinePayment = async (fromReceipt = false) => {
     setOfflineLoading(true);
     try {
-      await adminAPI.offlinePayment(maid._id, {
-        plan: offlinePlan,
-        amount: offlineAmt ? Number(offlineAmt) : undefined,
-        note: offlineNote || undefined,
-      });
-      toast.success(`Offline ${offlinePlan} payment recorded & subscription activated`);
-      onUpdate(maid._id, { subscription: { ...maid.subscription, status: 'active', plan: offlinePlan } });
+      const plan = fromReceipt ? (pendingReceipt?.subscriptionPlan || 'monthly') : offlinePlan;
+      const amount = fromReceipt ? pendingReceipt?.amount : (offlineAmt ? Number(offlineAmt) : undefined);
+      const note = fromReceipt ? 'Confirmed by admin via receipt' : (offlineNote || undefined);
+      await adminAPI.offlinePayment(maid._id, { plan, amount, note });
+      toast.success(`✅ Subscription activated — ${plan} plan`);
+      onUpdate(maid._id, { subscription: { ...maid.subscription, status: 'active', plan } });
       setOfflineAmt(''); setOfflineNote('');
       setPendingReceipt(null);
-    } catch { toast.error('Failed to record offline payment'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to activate subscription');
+    }
     finally { setOfflineLoading(false); }
   };
 
@@ -187,6 +195,11 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
   };
 
   const TABS = ['profile', 'documents', 'photos', 'actions'];
+  const TAB_LABELS = {
+    profile: '👤 Profile', documents: '📄 Documents',
+    photos: '📸 Photos',
+    actions: pendingReceipt ? '⚡ Actions 🔴' : '⚡ Actions',
+  };
 
   return (
     <>
@@ -237,7 +250,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
           {TABS.map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               style={{ padding: '10px 18px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === tab ? G.gold : 'transparent'}`, color: activeTab === tab ? G.goldL : G.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize', fontFamily: "'Jost',sans-serif", letterSpacing: '0.04em' }}>
-              {tab === 'profile' ? '👤 Profile' : tab === 'documents' ? '📄 Documents' : tab === 'photos' ? '📸 Photos' : '⚡ Actions'}
+              {TAB_LABELS[tab]}
             </button>
           ))}
         </div>
@@ -397,6 +410,55 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
           {/* ── ACTIONS TAB ── */}
           {activeTab === 'actions' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
+              {/* ── PENDING RECEIPT — shown first and full-width ── */}
+              {pendingReceipt && (
+                <div style={{ background: '#0e1a14', border: '1.5px solid rgba(93,214,168,0.5)', borderRadius: 8, padding: 20, gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span style={{ fontSize: 20 }}>📎</span>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: G.green }}>Payment Receipt Submitted</div>
+                        <div style={{ fontSize: 11, color: G.muted, marginTop: 2 }}>
+                          EGP {pendingReceipt.amount?.toLocaleString()} · {pendingReceipt.subscriptionPlan || 'monthly'} plan · {new Date(pendingReceipt.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 9, background: 'rgba(240,160,80,0.15)', color: '#f0a050', border: '1px solid rgba(240,160,80,0.4)', borderRadius: 3, padding: '3px 9px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      ⏳ Awaiting Confirmation
+                    </span>
+                  </div>
+
+                  {pendingReceipt.receiptUrl ? (
+                    <a href={pendingReceipt.receiptUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginBottom: 14 }}>
+                      <img
+                        src={pendingReceipt.receiptUrl}
+                        alt="Payment receipt"
+                        style={{ width: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 7, border: '1px solid rgba(93,214,168,0.25)', background: '#060e08', cursor: 'zoom-in', display: 'block' }}
+                      />
+                      <div style={{ fontSize: 10, color: G.green, marginTop: 6, textAlign: 'center' }}>🔍 Click to view full size</div>
+                    </a>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '20px 0', color: G.muted, fontSize: 12, marginBottom: 14 }}>No receipt image attached</div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      onClick={() => handleOfflinePayment(true)}
+                      disabled={offlineLoading}
+                      style={{ flex: 2, padding: '12px', background: 'rgba(93,214,168,0.15)', border: '1.5px solid rgba(93,214,168,0.5)', borderRadius: 6, color: G.green, fontSize: 13, fontWeight: 700, cursor: offlineLoading ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.6 : 1 }}>
+                      {offlineLoading ? '⏳ Activating…' : '✅ Confirm Receipt & Activate Subscription'}
+                    </button>
+                    <button
+                      onClick={handleRejectReceipt}
+                      disabled={offlineLoading}
+                      style={{ flex: 1, padding: '12px', background: 'rgba(255,107,107,0.1)', border: '1.5px solid rgba(255,107,107,0.35)', borderRadius: 6, color: G.red, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
+                      ❌ Reject
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Profile Approval */}
               <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 4 }}>Profile Approval</div>
@@ -438,38 +500,6 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                 </button>
               </div>
 
-              {/* Pending Receipt from Maid */}
-              {pendingReceipt && (
-                <div style={{ background: G.card, border: '1px solid rgba(93,214,168,0.4)', borderRadius: 8, padding: 18, gridColumn: '1 / -1' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: G.green }}>📎 Maid Submitted a Payment Receipt</div>
-                    <span style={{ fontSize: 9, background: 'rgba(240,160,80,0.15)', color: '#f0a050', border: '1px solid rgba(240,160,80,0.4)', borderRadius: 3, padding: '2px 7px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pending Confirmation</span>
-                  </div>
-                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 12 }}>
-                    EGP {pendingReceipt.amount?.toLocaleString()} · {pendingReceipt.subscriptionPlan} · submitted {new Date(pendingReceipt.createdAt).toLocaleDateString()}
-                  </div>
-                  {pendingReceipt.receiptUrl && (
-                    <a href={pendingReceipt.receiptUrl} target="_blank" rel="noreferrer" style={{ display: 'block', marginBottom: 10 }}>
-                      <img
-                        src={pendingReceipt.receiptUrl}
-                        alt="Payment receipt"
-                        style={{ width: '100%', maxHeight: 280, objectFit: 'contain', borderRadius: 6, border: `1px solid ${G.border2}`, background: '#0e0e0e', cursor: 'zoom-in' }}
-                      />
-                      <div style={{ fontSize: 10, color: G.gold, marginTop: 4 }}>🔍 Click to open full size</div>
-                    </a>
-                  )}
-                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                    <button onClick={handleOfflinePayment} disabled={offlineLoading}
-                      style={{ flex: 1, padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: G.green, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.5 : 1 }}>
-                      {offlineLoading ? 'Activating…' : '✅ Confirm & Activate Subscription'}
-                    </button>
-                    <button onClick={handleRejectReceipt}
-                      style={{ flex: 1, padding: '9px', background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)', borderRadius: 5, color: G.red, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
-                      ❌ Reject Receipt
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Offline Cash Payment */}
               <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
