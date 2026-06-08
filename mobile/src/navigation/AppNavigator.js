@@ -164,7 +164,7 @@ export default function AppNavigator() {
           // Maid awaiting admin approval
           <>
             <Stack.Screen name="PendingApproval"    component={PendingApprovalScreen}/>
-            <Stack.Screen name="SelfieVerification" component={SelfieVerificationScreen}/>
+            <Stack.Screen name="SelfieResubmit"     component={SelfieVerificationScreen}/>
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>

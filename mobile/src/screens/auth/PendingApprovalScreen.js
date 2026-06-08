@@ -115,7 +115,7 @@ export default function PendingApprovalScreen({ navigation }) {
         {status === 'rejected' && (
           <TouchableOpacity style={styles.resubmitBtn} onPress={() => {
             const isEgyptian = !!maidData?.nationalId;
-            navigation.navigate('SelfieVerification', {
+            navigation.navigate('SelfieResubmit', {
               isEgyptian,
               idNumber:       isEgyptian ? maidData?.nationalId   : undefined,
               passportNumber: isEgyptian ? undefined : maidData?.passport?.number,
