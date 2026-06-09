@@ -27,6 +27,14 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
+// Admin or Agent — for routes agents are allowed to use
+const adminOrAgent = (req, res, next) => {
+  if (!['admin', 'agent'].includes(req.user?.role)) {
+    return res.status(403).json({ success: false, message: 'Admin or agent access required' });
+  }
+  next();
+};
+
 const maidOnly = (req, res, next) => {
   if (req.user?.role !== 'maid') {
     return res.status(403).json({ success: false, message: 'Maid access required' });
@@ -45,4 +53,4 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 };
 
-module.exports = { protect, adminOnly, maidOnly, housewifeOnly, generateToken };
+module.exports = { protect, adminOnly, adminOrAgent, maidOnly, housewifeOnly, generateToken };

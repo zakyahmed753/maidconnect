@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   role: {
     type: String,
-    enum: ['maid', 'housewife', 'admin'],
+    enum: ['maid', 'housewife', 'admin', 'agent'],
     required: true
   },
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { adminAPI } from '../services/api';
+import useAuthStore from '../store/authStore';
 import toast from 'react-hot-toast';
 
 const G = {
@@ -81,6 +82,8 @@ const DocImage = ({ label, url, fallback, optional }) => (
 );
 
 export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
+  const currentAdmin = useAuthStore(s => s.admin);
+  const isAgent = currentAdmin?.role === 'agent';
   const [maid,           setMaid]           = useState(initialMaid);
   const [pendingReceipt, setPendingReceipt] = useState(null);
   const [fetching,       setFetching]       = useState(true);
@@ -427,8 +430,8 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                 </button>
               </div>
 
-              {/* ── PENDING RECEIPT — shown first and full-width ── */}
-              {pendingReceipt && (
+              {/* ── PENDING RECEIPT — admin-only ── */}
+              {!isAgent && pendingReceipt && (
                 <div style={{ background: '#0e1a14', border: '1.5px solid rgba(93,214,168,0.5)', borderRadius: 8, padding: 20, gridColumn: '1 / -1' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -499,7 +502,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                 </div>
               </div>
 
-              {/* Subscription */}
+              {/* Subscription — read-only for agents */}
               <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 4 }}>Subscription</div>
                 <div style={{ fontSize: 11, color: G.muted, marginBottom: 6 }}>
@@ -510,7 +513,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                     Expires: {new Date(maid.subscription.endDate).toLocaleDateString()}
                   </div>
                 )}
-                {maid.subscription?.status !== 'active' && (
+                {!isAgent && maid.subscription?.status !== 'active' && (
                   <button onClick={handleActivateSub}
                     style={{ width: '100%', padding: '9px', background: `${G.gold}18`, border: `1px solid ${G.gold}40`, borderRadius: 5, color: G.gold, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", marginBottom: 6 }}>
                     👑 Activate Monthly (no payment record)
@@ -523,55 +526,58 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                 )}
               </div>
 
+              {/* Offline Cash Payment — admin-only */}
+              {!isAgent && (
+                <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 2 }}>💵 Offline Cash Payment</div>
+                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 12 }}>Records a cash transfer payment & activates subscription. Appears in analytics.</div>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                    {['monthly','annual'].map(p => (
+                      <button key={p} onClick={() => setOfflinePlan(p)}
+                        style={{ flex: 1, padding: '7px', background: offlinePlan === p ? `${G.gold}22` : '#1a1a1a', border: `1px solid ${offlinePlan === p ? G.gold : G.border2}`, borderRadius: 4, color: offlinePlan === p ? G.goldL : G.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", textTransform: 'capitalize' }}>
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="Amount (EGP) — leave blank for auto"
+                    value={offlineAmt}
+                    onChange={e => setOfflineAmt(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 4, color: G.text, fontSize: 12, outline: 'none', fontFamily: "'Jost',sans-serif", boxSizing: 'border-box', marginBottom: 6 }}
+                  />
+                  <input
+                    placeholder="Admin note (optional)"
+                    value={offlineNote}
+                    onChange={e => setOfflineNote(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 4, color: G.text, fontSize: 12, outline: 'none', fontFamily: "'Jost',sans-serif", boxSizing: 'border-box', marginBottom: 8 }}
+                  />
+                  <button onClick={handleOfflinePayment} disabled={offlineLoading}
+                    style={{ width: '100%', padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: G.green, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.6 : 1 }}>
+                    {offlineLoading ? 'Recording…' : '💵 Record Cash Payment & Activate'}
+                  </button>
+                </div>
+              )}
 
-              {/* Offline Cash Payment */}
-              <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 2 }}>💵 Offline Cash Payment</div>
-                <div style={{ fontSize: 11, color: G.muted, marginBottom: 12 }}>Records a cash transfer payment & activates subscription. Appears in analytics.</div>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                  {['monthly','annual'].map(p => (
-                    <button key={p} onClick={() => setOfflinePlan(p)}
-                      style={{ flex: 1, padding: '7px', background: offlinePlan === p ? `${G.gold}22` : '#1a1a1a', border: `1px solid ${offlinePlan === p ? G.gold : G.border2}`, borderRadius: 4, color: offlinePlan === p ? G.goldL : G.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", textTransform: 'capitalize' }}>
-                      {p}
+              {/* Account Status — admin-only */}
+              {!isAgent && (
+                <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 4 }}>Account Status</div>
+                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 10 }}>
+                    {maid.user?.deletedAt ? '⚫ Account is deactivated (soft-deleted)' : maid.user?.isSuspended ? '🔴 Account is currently suspended' : '🟢 Account is active'}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button onClick={handleSuspend}
+                      style={{ padding: '9px', background: maid.user?.isSuspended ? `${G.green}12` : `${G.red}10`, border: `1px solid ${maid.user?.isSuspended ? G.green : G.red}35`, borderRadius: 5, color: maid.user?.isSuspended ? G.green : G.red, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
+                      {maid.user?.isSuspended ? '✅ Unsuspend Account' : '🔴 Suspend Account'}
                     </button>
-                  ))}
+                    <button onClick={handleDeleteAccount}
+                      style={{ padding: '9px', background: maid.user?.deletedAt ? `${G.green}10` : 'rgba(60,60,60,0.3)', border: `1px solid ${maid.user?.deletedAt ? G.green+'40' : '#444'}`, borderRadius: 5, color: maid.user?.deletedAt ? G.green : '#888', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
+                      {maid.user?.deletedAt ? '↩ Restore Account' : '🗑 Delete Account (Soft)'}
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type="number"
-                  placeholder="Amount (EGP) — leave blank for auto"
-                  value={offlineAmt}
-                  onChange={e => setOfflineAmt(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 4, color: G.text, fontSize: 12, outline: 'none', fontFamily: "'Jost',sans-serif", boxSizing: 'border-box', marginBottom: 6 }}
-                />
-                <input
-                  placeholder="Admin note (optional)"
-                  value={offlineNote}
-                  onChange={e => setOfflineNote(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 4, color: G.text, fontSize: 12, outline: 'none', fontFamily: "'Jost',sans-serif", boxSizing: 'border-box', marginBottom: 8 }}
-                />
-                <button onClick={handleOfflinePayment} disabled={offlineLoading}
-                  style={{ width: '100%', padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: G.green, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.6 : 1 }}>
-                  {offlineLoading ? 'Recording…' : '💵 Record Cash Payment & Activate'}
-                </button>
-              </div>
-
-              {/* Account Status */}
-              <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 4 }}>Account Status</div>
-                <div style={{ fontSize: 11, color: G.muted, marginBottom: 10 }}>
-                  {maid.user?.deletedAt ? '⚫ Account is deactivated (soft-deleted)' : maid.user?.isSuspended ? '🔴 Account is currently suspended' : '🟢 Account is active'}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  <button onClick={handleSuspend}
-                    style={{ padding: '9px', background: maid.user?.isSuspended ? `${G.green}12` : `${G.red}10`, border: `1px solid ${maid.user?.isSuspended ? G.green : G.red}35`, borderRadius: 5, color: maid.user?.isSuspended ? G.green : G.red, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
-                    {maid.user?.isSuspended ? '✅ Unsuspend Account' : '🔴 Suspend Account'}
-                  </button>
-                  <button onClick={handleDeleteAccount}
-                    style={{ padding: '9px', background: maid.user?.deletedAt ? `${G.green}10` : 'rgba(60,60,60,0.3)', border: `1px solid ${maid.user?.deletedAt ? G.green+'40' : '#444'}`, borderRadius: 5, color: maid.user?.deletedAt ? G.green : '#888', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif" }}>
-                    {maid.user?.deletedAt ? '↩ Restore Account' : '🗑 Delete Account (Soft)'}
-                  </button>
-                </div>
-              </div>
+              )}
 
               {/* Quick Info */}
               <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>

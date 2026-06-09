@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect, adminOnly } = require('../middleware/auth');
+const { protect, adminOnly, adminOrAgent } = require('../middleware/auth');
 const { SupportTicket } = require('../models/index');
 const User = require('../models/User');
 
@@ -60,8 +60,8 @@ router.get('/mine', protect, async (req, res) => {
   }
 });
 
-// ── Admin: list all tickets ──
-router.get('/', protect, adminOnly, async (req, res) => {
+// ── Admin/Agent: list all tickets ──
+router.get('/', protect, adminOrAgent, async (req, res) => {
   try {
     const { status, role, page = 1, limit = 20 } = req.query;
     const filter = {};
@@ -78,8 +78,8 @@ router.get('/', protect, adminOnly, async (req, res) => {
   }
 });
 
-// ── Admin: update ticket status / notes ──
-router.put('/:id', protect, adminOnly, async (req, res) => {
+// ── Admin/Agent: update ticket status / notes ──
+router.put('/:id', protect, adminOrAgent, async (req, res) => {
   try {
     const { status, priority, adminNotes } = req.body;
     const ticket = await SupportTicket.findByIdAndUpdate(

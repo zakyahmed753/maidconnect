@@ -39,6 +39,8 @@ export const adminAPI = {
   toggleHired:          (id)           => api.put(`/admin/maids/${id}/hired`),
   getPayments:          (params)       => api.get('/admin/payments', { params }),
   broadcast:            (data)         => api.post('/admin/broadcast', data),
+  listAgents:           ()             => api.get('/admin/agents'),
+  createAgent:          (data)         => api.post('/admin/agents', data),
 };
 
 export const configAPI = {

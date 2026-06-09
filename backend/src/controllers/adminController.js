@@ -387,6 +387,32 @@ exports.restoreUser = async (req, res) => {
   }
 };
 
+// ── Create Agent Account ──
+exports.createAgent = async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email and password are required' });
+    }
+    const exists = await User.findOne({ email: email.toLowerCase() });
+    if (exists) return res.status(409).json({ success: false, message: 'Email already in use' });
+    const agent = await User.create({ name, email: email.toLowerCase(), password, role: 'agent', isVerified: true });
+    res.status(201).json({ success: true, agent: { _id: agent._id, name: agent.name, email: agent.email, role: agent.role, createdAt: agent.createdAt } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── List Agent Accounts ──
+exports.listAgents = async (req, res) => {
+  try {
+    const agents = await User.find({ role: 'agent' }).select('-password').sort({ createdAt: -1 });
+    res.json({ success: true, agents });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Send Broadcast Notification ──
 exports.broadcastNotification = async (req, res) => {
   try {

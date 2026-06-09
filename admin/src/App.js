@@ -13,10 +13,20 @@ import Notifications from './pages/Notifications';
 import SupportTickets from './pages/SupportTickets';
 import Coupons from './pages/Coupons';
 import Areas   from './pages/Areas';
+import Agents  from './pages/Agents';
+
+const AGENT_ALLOWED = ['/maids', '/approvals', '/support'];
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore(s => s.token);
   return token ? children : <Navigate to="/login" />;
+};
+
+// Redirects agents away from admin-only pages
+const AdminRoute = ({ children }) => {
+  const admin = useAuthStore(s => s.admin);
+  if (admin?.role === 'agent') return <Navigate to="/maids" replace />;
+  return children;
 };
 
 export default function App() {
@@ -26,15 +36,16 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index         element={<Dashboard />} />
+          <Route index         element={<AdminRoute><Dashboard /></AdminRoute>} />
           <Route path="maids"  element={<Maids />} />
-          <Route path="housewives" element={<HouseWives />} />
+          <Route path="housewives" element={<AdminRoute><HouseWives /></AdminRoute>} />
           <Route path="approvals"  element={<Approvals />} />
-          <Route path="payments"   element={<Payments />} />
-          <Route path="notifications" element={<Notifications />} />
+          <Route path="payments"   element={<AdminRoute><Payments /></AdminRoute>} />
+          <Route path="notifications" element={<AdminRoute><Notifications /></AdminRoute>} />
           <Route path="support"  element={<SupportTickets />} />
-          <Route path="coupons" element={<Coupons />} />
-          <Route path="areas"   element={<Areas />} />
+          <Route path="coupons" element={<AdminRoute><Coupons /></AdminRoute>} />
+          <Route path="areas"   element={<AdminRoute><Areas /></AdminRoute>} />
+          <Route path="agents"  element={<AdminRoute><Agents /></AdminRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>

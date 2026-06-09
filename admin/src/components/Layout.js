@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
-const NAV = [
-  { to: '/',             icon: '📊', label: 'Dashboard' },
-  { to: '/maids',        icon: '👩', label: 'Maids' },
-  { to: '/housewives',   icon: '👤', label: 'Customers' },
-  { to: '/approvals',    icon: '✅', label: 'Approvals' },
-  { to: '/payments',     icon: '💳', label: 'Payments' },
-  { to: '/notifications',icon: '🔔', label: 'Notifications' },
-  { to: '/support',      icon: '🎫', label: 'Support' },
-  { to: '/coupons',      icon: '🏷', label: 'Coupons' },
-  { to: '/areas',        icon: '📍', label: 'Areas' },
+const ALL_NAV = [
+  { to: '/',             icon: '📊', label: 'Dashboard',     adminOnly: true },
+  { to: '/maids',        icon: '👩', label: 'Maids',         adminOnly: false },
+  { to: '/housewives',   icon: '👤', label: 'Customers',     adminOnly: true },
+  { to: '/approvals',    icon: '✅', label: 'Approvals',     adminOnly: false },
+  { to: '/payments',     icon: '💳', label: 'Payments',      adminOnly: true },
+  { to: '/notifications',icon: '🔔', label: 'Notifications', adminOnly: true },
+  { to: '/support',      icon: '🎫', label: 'Support',       adminOnly: false },
+  { to: '/coupons',      icon: '🏷', label: 'Coupons',       adminOnly: true },
+  { to: '/areas',        icon: '📍', label: 'Areas',         adminOnly: true },
+  { to: '/agents',       icon: '🕵️', label: 'Agents',        adminOnly: true },
 ];
 
 const S = {
@@ -38,6 +39,9 @@ export default function Layout() {
   const { admin, logout } = useAuthStore();
   const navigate = useNavigate();
   const [pageTitle, setPageTitle] = useState('Dashboard');
+
+  const isAgent = admin?.role === 'agent';
+  const NAV = ALL_NAV.filter(n => !n.adminOnly || !isAgent);
 
   const handleLogout = () => { logout(); navigate('/login'); };
 
@@ -66,7 +70,7 @@ export default function Layout() {
             </svg>
             <div style={S.logoT}>Servix</div>
           </div>
-          <div style={S.logoS}>Admin Panel</div>
+          <div style={S.logoS}>{isAgent ? 'Agent Panel' : 'Admin Panel'}</div>
         </div>
         <nav style={S.nav}>
           {NAV.map(n => (
@@ -84,8 +88,10 @@ export default function Layout() {
           <div style={S.adminRow}>
             <div style={S.ava}>{admin?.name?.[0] || 'A'}</div>
             <div>
-              <div style={S.name}>{admin?.name || 'Admin'}</div>
-              <div style={{ fontSize:9, color:'#444', fontFamily:"'DM Mono',monospace" }}>SUPER ADMIN</div>
+              <div style={S.name}>{admin?.name || 'Agent'}</div>
+              <div style={{ fontSize:9, color: isAgent ? '#6aabcc' : '#444', fontFamily:"'DM Mono',monospace" }}>
+                {isAgent ? 'AGENT' : 'SUPER ADMIN'}
+              </div>
             </div>
             <button style={S.logoutB} onClick={handleLogout} title="Logout">🚪</button>
           </div>
@@ -96,8 +102,15 @@ export default function Layout() {
       <div style={S.main}>
         <div style={S.topbar}>
           <div style={S.pageTit}>{pageTitle}</div>
-          <div style={{ fontSize:11, color:'#555', fontFamily:"'DM Mono',monospace" }}>
-            {new Date().toLocaleDateString('en-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            {isAgent && (
+              <span style={{ fontSize:10, background:'rgba(106,171,204,0.15)', color:'#6aabcc', border:'1px solid rgba(106,171,204,0.3)', borderRadius:3, padding:'3px 9px', fontFamily:"'DM Mono',monospace", letterSpacing:'0.08em' }}>
+                AGENT VIEW
+              </span>
+            )}
+            <div style={{ fontSize:11, color:'#555', fontFamily:"'DM Mono',monospace" }}>
+              {new Date().toLocaleDateString('en-EG', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
+            </div>
           </div>
         </div>
         <div style={S.content}>
