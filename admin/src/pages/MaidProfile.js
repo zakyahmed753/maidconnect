@@ -94,8 +94,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
   const [offlineNote,  setOfflineNote]  = useState('');
   const [offlineLoading, setOfflineLoading] = useState(false);
 
-  // Fetch full maid data on open to get passport/selfie/all fields
-  React.useEffect(() => {
+  const refreshMaid = React.useCallback(() => {
     if (!initialMaid?._id) return;
     setFetching(true);
     adminAPI.getMaid(initialMaid._id)
@@ -103,11 +102,14 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
         setMaid(r.data.maid);
         const receipt = r.data.pendingReceipt || null;
         setPendingReceipt(receipt);
-        if (receipt) setActiveTab('actions'); // auto-open Actions when receipt waiting
+        if (receipt) setActiveTab('actions');
       })
       .catch(() => toast.error('Failed to load maid details'))
       .finally(() => setFetching(false));
   }, [initialMaid?._id]);
+
+  // Fetch full maid data on open to get passport/selfie/all fields
+  React.useEffect(() => { refreshMaid(); }, [refreshMaid]);
 
   if (!maid) return null;
 
@@ -145,7 +147,9 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
     try {
       await adminAPI.activateSubscription(maid._id, { plan: 'monthly' });
       toast.success('Subscription activated');
-      onUpdate(maid._id, { subscription: { ...maid.subscription, status: 'active', plan: 'monthly' } });
+      const updated = { ...maid.subscription, status: 'active', plan: 'monthly' };
+      setMaid(prev => ({ ...prev, subscription: updated }));
+      onUpdate(maid._id, { subscription: updated });
     } catch { toast.error('Failed to activate subscription'); }
   };
 
@@ -170,7 +174,9 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
       const note = fromReceipt ? 'Confirmed by admin via receipt' : (offlineNote || undefined);
       await adminAPI.offlinePayment(maid._id, { plan, amount, note });
       toast.success(`✅ Subscription activated — ${plan} plan`);
-      onUpdate(maid._id, { subscription: { ...maid.subscription, status: 'active', plan } });
+      const updated = { ...maid.subscription, status: 'active', plan };
+      setMaid(prev => ({ ...prev, subscription: updated }));
+      onUpdate(maid._id, { subscription: updated });
       setOfflineAmt(''); setOfflineNote('');
       setPendingReceipt(null);
     } catch (err) {
@@ -248,7 +254,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
         {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: `1px solid ${G.border}`, flexShrink: 0 }}>
           {TABS.map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
+            <button key={tab} onClick={() => { setActiveTab(tab); if (tab === 'actions') refreshMaid(); }}
               style={{ padding: '10px 18px', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === tab ? G.gold : 'transparent'}`, color: activeTab === tab ? G.goldL : G.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize', fontFamily: "'Jost',sans-serif", letterSpacing: '0.04em' }}>
               {TAB_LABELS[tab]}
             </button>
@@ -411,6 +417,16 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
           {activeTab === 'actions' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
+              {/* Refresh banner */}
+              <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end', marginBottom: -8 }}>
+                <button
+                  onClick={refreshMaid}
+                  disabled={fetching}
+                  style={{ padding: '5px 12px', background: 'transparent', border: `1px solid ${G.border2}`, borderRadius: 4, color: G.muted, fontSize: 11, cursor: fetching ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: fetching ? 0.5 : 1 }}>
+                  {fetching ? '⏳ Loading…' : '🔄 Refresh'}
+                </button>
+              </div>
+
               {/* ── PENDING RECEIPT — shown first and full-width ── */}
               {pendingReceipt && (
                 <div style={{ background: '#0e1a14', border: '1.5px solid rgba(93,214,168,0.5)', borderRadius: 8, padding: 20, gridColumn: '1 / -1' }}>
@@ -494,10 +510,17 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                     Expires: {new Date(maid.subscription.endDate).toLocaleDateString()}
                   </div>
                 )}
-                <button onClick={handleActivateSub}
-                  style={{ width: '100%', padding: '9px', background: `${G.gold}18`, border: `1px solid ${G.gold}40`, borderRadius: 5, color: G.gold, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", marginBottom: 6 }}>
-                  👑 Activate Monthly (no payment record)
-                </button>
+                {maid.subscription?.status !== 'active' && (
+                  <button onClick={handleActivateSub}
+                    style={{ width: '100%', padding: '9px', background: `${G.gold}18`, border: `1px solid ${G.gold}40`, borderRadius: 5, color: G.gold, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", marginBottom: 6 }}>
+                    👑 Activate Monthly (no payment record)
+                  </button>
+                )}
+                {maid.subscription?.status === 'active' && (
+                  <div style={{ fontSize: 11, color: G.green, padding: '8px 0' }}>
+                    ✅ Subscription is active
+                  </div>
+                )}
               </div>
 
 

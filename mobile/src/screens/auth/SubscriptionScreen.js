@@ -3,12 +3,13 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, StatusBar, ActivityIndicator, Modal, Pressable
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
 import { useTranslation } from '../../utils/i18n';
-import { maidsAPI, couponsAPI, uploadAPI } from '../../services/api';
+import { maidsAPI, couponsAPI, uploadAPI, paymentsAPI } from '../../services/api';
 import * as ImagePicker from 'expo-image-picker';
 
 function getMaidPrice(nationality = '') {
@@ -34,6 +35,10 @@ export default function SubscriptionScreen({ navigation }) {
   const [applying, setApplying]           = useState(false);
   const [couponResult, setCouponResult]   = useState(null); // { discountAmount, finalAmount, discountValue, couponType }
 
+  // pending offline receipt submitted by maid but not yet confirmed by admin
+  const [pendingPayment, setPendingPayment] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
+
   useEffect(() => {
     if (!nationality) {
       maidsAPI.getMyProfile()
@@ -41,6 +46,43 @@ export default function SubscriptionScreen({ navigation }) {
         .catch(() => {});
     }
   }, []);
+
+  // On every focus: refresh profile (auto-routes to app if admin confirmed) and
+  // detect any maid-submitted receipt that is still awaiting admin confirmation.
+  useFocusEffect(
+    React.useCallback(() => {
+      completeAuth().catch(() => {});
+      paymentsAPI.getHistory()
+        .then(r => {
+          const pending = (r.data?.payments || []).find(
+            p => p.method === 'cash_transfer' && p.status === 'pending'
+          );
+          setPendingPayment(pending || null);
+        })
+        .catch(() => {});
+    }, [])
+  );
+
+  const handleCheckPendingStatus = async () => {
+    if (!pendingPayment?._id) return;
+    setCheckingStatus(true);
+    try {
+      const res = await paymentsAPI.checkStatus(pendingPayment._id);
+      if (res.data?.status === 'completed') {
+        await completeAuth();
+        // completeAuth will update auth store → AppNavigator routes to MaidTabs
+      } else if (res.data?.status === 'failed') {
+        setPendingPayment(null);
+        Toast.show({ type: 'info', text1: 'Receipt rejected', text2: 'Please re-upload a clear receipt.' });
+      } else {
+        Toast.show({ type: 'info', text1: 'Still pending', text2: 'Admin hasn\'t confirmed yet.' });
+      }
+    } catch {
+      Toast.show({ type: 'error', text1: 'Could not check status' });
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
 
   const monthlyPrice = getMaidPrice(nationality);
   const displayPrice = couponResult ? couponResult.finalAmount : monthlyPrice;
@@ -148,6 +190,27 @@ export default function SubscriptionScreen({ navigation }) {
 
       <ScrollView style={{ backgroundColor: COLORS.cream }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
 
+        {/* Pending receipt banner — shown when maid already submitted but admin hasn't confirmed yet */}
+        {pendingPayment && (
+          <View style={{ backgroundColor: 'rgba(201,168,76,0.08)', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 16, marginBottom: 16 }}>
+            <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark, marginBottom: 4 }}>⏳ Receipt Under Review</Text>
+            <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 14 }}>
+              Your payment receipt was submitted and is awaiting admin confirmation. You'll receive a notification once confirmed.
+            </Text>
+            <TouchableOpacity
+              onPress={handleCheckPendingStatus}
+              disabled={checkingStatus}
+              style={{ backgroundColor: COLORS.dark, padding: 12, borderRadius: 8, alignItems: 'center', opacity: checkingStatus ? 0.6 : 1 }}>
+              {checkingStatus
+                ? <ActivityIndicator color="#e8c97a" size="small" />
+                : <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a' }}>🔄 Check Confirmation Status</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPendingPayment(null)} style={{ alignItems: 'center', paddingTop: 10 }}>
+              <Text style={{ fontSize: 11, color: COLORS.muted }}>Submit a new receipt instead</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Plan card */}
         <View style={[styles.planCard, styles.planSelected]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -243,6 +306,20 @@ export default function SubscriptionScreen({ navigation }) {
             <Text style={styles.offlineSub}>Arrange payment offline with admin</Text>
           </View>
           <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
+        </TouchableOpacity>
+
+        {/* Check if admin has activated subscription */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', paddingVertical: 12 }}
+          onPress={async () => {
+            try {
+              await completeAuth();
+              Toast.show({ type: 'info', text1: 'Checking...', text2: 'If admin activated your subscription you\'ll be redirected now.' });
+            } catch {
+              Toast.show({ type: 'error', text1: 'Could not check status' });
+            }
+          }}>
+          <Text style={{ fontSize: 12, color: COLORS.muted }}>Already paid? Tap to check if admin activated your subscription</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} disabled={skipping}>
