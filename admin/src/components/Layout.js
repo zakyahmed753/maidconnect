@@ -12,7 +12,7 @@ const ALL_NAV = [
   { to: '/support',      icon: '🎫', label: 'Support',       adminOnly: false },
   { to: '/coupons',      icon: '🏷', label: 'Coupons',       adminOnly: true },
   { to: '/areas',        icon: '📍', label: 'Areas',         adminOnly: true },
-  { to: '/agents',       icon: '🕵️', label: 'Agents',        adminOnly: true },
+  { to: '/agents',       icon: '👥', label: 'Agents',        adminOnly: true },
 ];
 
 const S = {
