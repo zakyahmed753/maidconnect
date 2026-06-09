@@ -40,17 +40,29 @@ export default function ChatScreen({ route, navigation }) {
 
   const connectSocket = async () => {
     const token = await SecureStore.getItemAsync('maidconnect_token');
-    const BASE = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'http://192.168.1.16:5001';
-    const socket = io(BASE, { auth: { token }, transports: ['websocket'] });
+    const BASE = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'https://api.servix.world';
+    const socket = io(BASE, {
+      auth: { token },
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
+    });
     socketRef.current = socket;
-    socket.emit('join_chat', chatId);
+
+    socket.on('connect', () => {
+      socket.emit('join_chat', chatId);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('[Socket] connect_error:', err.message);
+    });
+
     socket.on('new_message', (msg) => {
       setMessages(prev => {
-        // Replace optimistic temp message if this is our own confirmed message
         const isOwn = String(msg.sender?._id) === String(user?._id);
         if (isOwn) {
           const withoutTemp = prev.filter(m => !m._isTemp);
-          // Avoid duplicate if already confirmed
           const alreadyExists = withoutTemp.some(m => m._id === msg._id);
           return alreadyExists ? withoutTemp : [...withoutTemp, msg];
         }

@@ -61,13 +61,17 @@ export function PaymentResultScreen({ route, navigation }) {
   const [status, setStatus] = useState(isOffline ? 'pending' : 'verifying');
   const pollTimer = React.useRef(null);
 
-  // Online payment: auto-poll until confirmed
+  // Online payment: fast auto-poll until confirmed (every 2s, 8 attempts)
+  // Offline payment: slower auto-poll every 30s until admin confirms
   React.useEffect(() => {
-    if (isOffline || !paymentId) {
+    if (!paymentId) {
       if (!isOffline) setStatus('completed');
       return;
     }
     let attempts = 0;
+    const interval = isOffline ? 30000 : 2000;
+    const maxAttempts = isOffline ? 999 : 8; // keep polling offline indefinitely
+
     const check = async () => {
       attempts++;
       try {
@@ -75,10 +79,10 @@ export function PaymentResultScreen({ route, navigation }) {
         if (res.data?.status === 'completed') { setStatus('completed'); return; }
         if (res.data?.status === 'failed')    { setStatus('failed');    return; }
       } catch {}
-      if (attempts < 8) {
-        pollTimer.current = setTimeout(check, 2000);
-      } else {
-        setStatus('completed');
+      if (attempts < maxAttempts) {
+        pollTimer.current = setTimeout(check, interval);
+      } else if (!isOffline) {
+        setStatus('completed'); // online: give up after 8 attempts
       }
     };
     check();
@@ -212,9 +216,16 @@ export function ChatsListScreen({ navigation }) {
       const io          = require('socket.io-client').default;
       const token = await SecureStore.getItemAsync('maidconnect_token');
       const BASE  = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'https://api.servix.world';
-      socket = io(BASE, { auth: { token }, transports: ['websocket'] });
+      socket = io(BASE, {
+        auth: { token },
+        transports: ['polling', 'websocket'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+      });
       socketRef.current = socket;
       socket.on('new_chat_message', () => loadChats());
+      socket.on('connect_error', (err) => console.warn('[Socket] ChatsListScreen error:', err.message));
     })();
     return () => { socket?.disconnect(); };
   }, []);

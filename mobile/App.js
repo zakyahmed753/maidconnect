@@ -62,8 +62,20 @@ export default function App() {
   const [fontsLoaded, setFontsLoaded] = React.useState(false);
   const init = useAuthStore(s => s.init);
   const loading = useAuthStore(s => s.loading);
+  const user = useAuthStore(s => s.user);
   const initLang = useLangStore(s => s.init);
   const notifResponseListener = useRef();
+
+  // Re-register push token whenever user logs in (covers first login, re-login, token refresh)
+  useEffect(() => {
+    if (!user?._id) return;
+    (async () => {
+      const pushToken = await registerForPushNotifications();
+      if (pushToken) {
+        try { await authAPI.updateMe({ fcmToken: pushToken }); } catch {}
+      }
+    })();
+  }, [user?._id]);
 
   useEffect(() => {
     async function load() {
@@ -79,12 +91,6 @@ export default function App() {
       });
       setFontsLoaded(true);
       await init();
-
-      // Register push token and save to backend
-      const token = await registerForPushNotifications();
-      if (token) {
-        try { await authAPI.updateMe({ fcmToken: token }); } catch {}
-      }
     }
     load();
 
