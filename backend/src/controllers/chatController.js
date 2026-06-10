@@ -25,6 +25,24 @@ exports.getOrCreateChat = async (req, res) => {
       maid: maidUserId
     }).populate('maid', 'name avatar lastSeen').populate('lastMessage');
 
+    // Gate: block NEW chat creation when a replacement fee is owed
+    if (!chat && req.user.role === 'housewife') {
+      const { HouseWife } = require('../models/index');
+      const hw2 = await HouseWife.findOne({ user: req.user._id });
+      if (
+        hw2?.freeVacancy?.available &&
+        hw2.freeVacancy.penaltyAmount > 0 &&
+        new Date(hw2.freeVacancy.expiresAt) > new Date()
+      ) {
+        return res.status(403).json({
+          success: false,
+          code: 'REPLACEMENT_FEE_REQUIRED',
+          penaltyAmount: hw2.freeVacancy.penaltyAmount,
+          message: 'Pay your replacement fee before starting new chats.',
+        });
+      }
+    }
+
     if (!chat) {
       chat = await Chat.create({
         housewife: req.user._id,

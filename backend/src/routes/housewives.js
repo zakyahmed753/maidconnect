@@ -41,8 +41,22 @@ router.post('/hire', protect, async (req, res) => {
     const maid = await Maid.findById(maidProfileId).populate('user', 'name email fcmToken');
     if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
 
-    // ── Subscription guard — customer must have active subscription ──
+    // ── Replacement fee guard — must pay fee before sending hire requests ──
     const hwProfile = await HouseWife.findOne({ user: req.user._id });
+    if (
+      hwProfile?.freeVacancy?.available &&
+      hwProfile.freeVacancy.penaltyAmount > 0 &&
+      new Date(hwProfile.freeVacancy.expiresAt) > new Date()
+    ) {
+      return res.status(403).json({
+        success: false,
+        requiresReplacementFee: true,
+        penaltyAmount: hwProfile.freeVacancy.penaltyAmount,
+        message: 'Pay your replacement fee before sending hire requests.',
+      });
+    }
+
+    // ── Subscription guard — customer must have active subscription ──
     const sub = hwProfile?.subscription;
     const subActive = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
     if (!subActive) {

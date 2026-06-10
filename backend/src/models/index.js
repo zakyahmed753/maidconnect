@@ -88,7 +88,7 @@ const couponSchema = new mongoose.Schema({
 // ── Payment ──
 const paymentSchema = new mongoose.Schema({
   user:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  type:        { type: String, enum: ['subscription','commission','customer_subscription','release_fee'], required: true },
+  type:        { type: String, enum: ['subscription','commission','customer_subscription','release_fee','replacement_fee'], required: true },
   method:      { type: String, enum: ['fawry','vodafone_cash','instapay','amazon_pay','paymob','cash_transfer'], required: true },
   offlineByAdmin: { type: Boolean, default: false },
   adminNote:   { type: String },

@@ -47,8 +47,9 @@ export default function PaymentScreen({ route, navigation }) {
           clearTimeout(pollTimer.current);
           await completeAuth();
           setChecking(false);
-          if (type === 'release_fee') {
-            navigation.navigate('HiredMaids');
+          if (type === 'replacement_fee') {
+            // Go back to maid profile so customer can immediately chat/hire
+            navigation.goBack();
           } else if (user?.role === 'housewife') {
             // customer_subscription or commission — go to Browse
             navigation.navigate('Browse');
@@ -150,8 +151,8 @@ export default function PaymentScreen({ route, navigation }) {
                 ? `${planInfo?.label ?? plan} Subscription`
                 : type === 'customer_subscription'
                 ? 'Customer Platform Subscription'
-                : type === 'release_fee'
-                ? `Release Fee — ${maidName || 'Maid'}`
+                : type === 'replacement_fee'
+                ? `Replacement Fee — unlock your next hire`
                 : `Commission — ${maidName || 'Maid'}`}
             </Text>
             {planInfo?.badge && (

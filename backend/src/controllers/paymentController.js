@@ -91,37 +91,52 @@ exports.initiatePaymob = async (req, res) => {
       const hw = await HouseWife.findOne({ user: req.user._id });
       const vacancyActive = hw?.freeVacancy?.available && hw.freeVacancy.expiresAt > new Date();
 
-      if (vacancyActive) {
-        const penaltyAmount = hw.freeVacancy.penaltyAmount || 0;
-
-        if (penaltyAmount === 0) {
-          // Released within grace period — hire replacement for free
-          await HouseWife.findOneAndUpdate({ user: req.user._id }, {
-            'freeVacancy.available':     false,
-            'freeVacancy.penaltyAmount': 0,
-            $push: { hiredMaids: { maid: maid._id, commissionPaid: true, commissionAmount: 0 } },
-          });
-          if (chatId) {
-            const { Chat } = require('../models/index');
-            await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'hired' });
-          }
-          await Notification.create({
-            user: req.user._id, type: 'hire_confirmed',
-            title: '🎉 Hire Confirmed (Free Replacement)!',
-            body: `${maid.fullName} has been hired using your free replacement vacancy.`,
-          });
-          return res.json({ success: true, freeVacancyUsed: true, amount: 0 });
-        }
-
-        // Released after grace period — charge stored penalty at hire time
-        amountCents = penaltyAmount * 100;
-        description = `Replacement fee for ${maid.fullName} (EGP ${penaltyAmount})`;
-
-      } else {
-        // No active vacancy — normal commission
-        amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
-        description = `Commission for ${maid.fullName}`;
+      // Safeguard: replacement fee must be paid via /replacement_fee before hiring
+      if (vacancyActive && (hw.freeVacancy.penaltyAmount || 0) > 0) {
+        return res.status(403).json({
+          success: false,
+          requiresReplacementFee: true,
+          penaltyAmount: hw.freeVacancy.penaltyAmount,
+          message: 'Pay your replacement fee before hiring a new maid.',
+        });
       }
+
+      if (vacancyActive) {
+        // Vacancy active with no penalty (grace period or already paid) — hire for free
+        await HouseWife.findOneAndUpdate({ user: req.user._id }, {
+          'freeVacancy.available':     false,
+          'freeVacancy.penaltyAmount': 0,
+          $push: { hiredMaids: { maid: maid._id, commissionPaid: true, commissionAmount: 0 } },
+        });
+        if (chatId) {
+          const { Chat } = require('../models/index');
+          await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'hired' });
+        }
+        await Notification.create({
+          user: req.user._id, type: 'hire_confirmed',
+          title: '🎉 Hire Confirmed (Free Replacement)!',
+          body: `${maid.fullName} has been hired using your free replacement vacancy.`,
+        });
+        return res.json({ success: true, freeVacancyUsed: true, amount: 0 });
+      }
+
+      // No active vacancy — normal commission
+      amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
+      description = `Commission for ${maid.fullName}`;
+
+    } else if (type === 'replacement_fee') {
+      const hw = await HouseWife.findOne({ user: req.user._id });
+      if (!hw?.freeVacancy?.available) {
+        return res.status(400).json({ success: false, message: 'No active vacancy slot found' });
+      }
+      if (!hw.freeVacancy.penaltyAmount || hw.freeVacancy.penaltyAmount === 0) {
+        return res.status(400).json({ success: false, message: 'No replacement fee pending' });
+      }
+      if (new Date(hw.freeVacancy.expiresAt) < new Date()) {
+        return res.status(400).json({ success: false, message: 'Replacement vacancy has expired' });
+      }
+      amountCents = hw.freeVacancy.penaltyAmount * 100;
+      description = `Replacement slot fee (EGP ${hw.freeVacancy.penaltyAmount})`;
 
     } else {
       return res.status(400).json({ success: false, message: `Invalid payment type: "${type}". Allowed: subscription, customer_subscription, commission, release_fee` });
@@ -267,6 +282,17 @@ async function handlePaymentSuccess(payment) {
       user: payment.user, type: 'subscription',
       title: '🎉 Subscription Activated!',
       body: 'You can now chat with maids and start hiring.',
+    });
+
+  } else if (payment.type === 'replacement_fee') {
+    // Fee paid — clear the penalty so the customer can chat and hire freely
+    await HouseWife.findOneAndUpdate({ user: payment.user }, {
+      'freeVacancy.penaltyAmount': 0,
+    });
+    await Notification.create({
+      user: payment.user, type: 'payment',
+      title: '✅ Replacement Fee Paid',
+      body: 'You can now chat with and hire your next maid.',
     });
 
   } else if (payment.type === 'commission') {

@@ -85,6 +85,14 @@ export default function MaidDetailScreen({ route, navigation }) {
       setHireRequestSent(true);
       Toast.show({ type:'success', text1: t('hire_req_sent'), text2: t('hire_req_sent_sub') });
     } catch (err) {
+      if (err.response?.data?.requiresReplacementFee) {
+        navigation.navigate('Payment', {
+          type: 'replacement_fee',
+          amount: err.response.data.penaltyAmount,
+          maidName: maid.fullName,
+        });
+        return;
+      }
       if (err.response?.data?.requiresSubscription) { goToSubscription(); return; }
       Toast.show({ type:'error', text1: err.response?.data?.message || t('hire_failed') });
     } finally {
@@ -127,7 +135,13 @@ export default function MaidDetailScreen({ route, navigation }) {
       const res = await chatsAPI.startChat({ maidUserId: maid.user?._id || maid.user, maidProfileId: maid._id });
       navigation.navigate('Chat', { chatId: res.data.chat._id, maidName: maid.fullName });
     } catch (err) {
-      if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
+      if (err.response?.status === 403 && err.response?.data?.code === 'REPLACEMENT_FEE_REQUIRED') {
+        navigation.navigate('Payment', {
+          type: 'replacement_fee',
+          amount: err.response.data.penaltyAmount,
+          maidName: maid.fullName,
+        });
+      } else if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
         goToSubscription();
       } else {
         Toast.show({ type: 'error', text1: err.response?.data?.message || t('chat_open_failed') });
