@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
   StyleSheet, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator, Keyboard
@@ -12,6 +12,8 @@ import Toast from 'react-native-toast-message';
 import useAuthStore from '../../store/authStore';
 import { useTranslation } from '../../utils/i18n';
 
+const POLL_MS = 3000; // fallback poll interval when socket is unreliable
+
 export default function ChatScreen({ route, navigation }) {
   const { chatId, maidName } = route.params || {};
   const { user } = useAuthStore();
@@ -19,30 +21,55 @@ export default function ChatScreen({ route, navigation }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
-  const listRef = useRef();
+  const listRef   = useRef();
   const socketRef = useRef();
+  const pollRef   = useRef();
+  const atBottomRef = useRef(true); // track if user is scrolled to bottom
 
-  useEffect(() => {
-    loadMessages();
-    connectSocket();
-    // Scroll to bottom when keyboard opens so input stays visible
-    const sub = Keyboard.addListener('keyboardDidShow', () => {
-      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
+  // ── Merge helper: add only messages we don't already have ──────────────────
+  const mergeMessages = useCallback((incoming) => {
+    setMessages(prev => {
+      const existingIds = new Set(prev.filter(m => !m._isTemp).map(m => m._id));
+      const newOnes = incoming.filter(m => !existingIds.has(m._id));
+      if (newOnes.length === 0) return prev;
+      // Keep unconfirmed temp messages at the end
+      const temps = prev.filter(m => m._isTemp);
+      const confirmed = [...prev.filter(m => !m._isTemp), ...newOnes]
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      const result = [...confirmed, ...temps];
+      if (atBottomRef.current) {
+        setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+      }
+      return result;
     });
-    return () => { socketRef.current?.disconnect(); sub.remove(); };
   }, []);
 
-  const loadMessages = async () => {
+  // ── Load messages from server (used for initial load AND polling) ───────────
+  const fetchMessages = useCallback(async (initial = false) => {
     try {
       const res = await chatsAPI.getMessages(chatId);
-      setMessages(res.data.messages);
-    } catch { Toast.show({ type: 'error', text1: t('failed_load_msgs') }); }
-    finally { setLoading(false); }
-  };
+      const msgs = res.data.messages || [];
+      if (initial) {
+        setMessages(msgs);
+        setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 50);
+        setLoading(false);
+      } else {
+        mergeMessages(msgs);
+      }
+    } catch {
+      if (initial) {
+        Toast.show({ type: 'error', text1: t('failed_load_msgs') });
+        setLoading(false);
+      }
+    }
+  }, [chatId, mergeMessages]);
 
-  const connectSocket = async () => {
+  // ── Socket: instant delivery ───────────────────────────────────────────────
+  const connectSocket = useCallback(async () => {
     const token = await SecureStore.getItemAsync('maidconnect_token');
-    const BASE = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'https://api.servix.world';
+    const BASE = Constants.expoConfig?.extra?.API_URL?.replace('/api', '')
+      || 'https://api.servix.world';
+
     const socket = io(BASE, {
       auth: { token },
       transports: ['websocket', 'polling'],
@@ -52,6 +79,7 @@ export default function ChatScreen({ route, navigation }) {
     });
     socketRef.current = socket;
 
+    // Join the chat room (and rejoin after every reconnect — 'connect' fires both)
     socket.on('connect', () => {
       socket.emit('join_chat', chatId);
     });
@@ -60,42 +88,63 @@ export default function ChatScreen({ route, navigation }) {
       console.warn('[Socket] connect_error:', err.message);
     });
 
+    // Primary: message arrives via room
     socket.on('new_message', (msg) => {
       setMessages(prev => {
         const isOwn = String(msg.sender?._id) === String(user?._id);
         if (isOwn) {
           const withoutTemp = prev.filter(m => !m._isTemp);
-          const alreadyExists = withoutTemp.some(m => m._id === msg._id);
-          return alreadyExists ? withoutTemp : [...withoutTemp, msg];
+          const alreadyExists = withoutTemp.some(m => String(m._id) === String(msg._id));
+          const result = alreadyExists ? withoutTemp : [...withoutTemp, msg];
+          if (atBottomRef.current) setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
+          return result;
         }
-        // Deduplicate — may also arrive via new_chat_message
-        if (prev.some(m => m._id === msg._id)) return prev;
+        if (prev.some(m => String(m._id) === String(msg._id))) return prev;
+        if (atBottomRef.current) setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
         return [...prev, msg];
       });
-      listRef.current?.scrollToEnd({ animated: true });
     });
 
-    // Fallback: recipient receives this via their user room even if room-join was delayed
+    // Fallback: recipient's user room — arrives even if room join was delayed
     socket.on('new_chat_message', ({ chatId: incomingId, message }) => {
       if (String(incomingId) !== String(chatId)) return;
       setMessages(prev => {
-        if (prev.some(m => m._id === message._id)) return prev; // already from new_message
+        if (prev.some(m => String(m._id) === String(message._id))) return prev;
+        if (atBottomRef.current) setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
         return [...prev, message];
       });
-      listRef.current?.scrollToEnd({ animated: true });
+    });
+  }, [chatId, user]);
+
+  useEffect(() => {
+    // Initial load
+    fetchMessages(true);
+
+    // Socket for instant delivery
+    connectSocket();
+
+    // Polling fallback — guarantees delivery within POLL_MS even if socket fails
+    pollRef.current = setInterval(() => fetchMessages(false), POLL_MS);
+
+    // Keyboard scroll
+    const sub = Keyboard.addListener('keyboardDidShow', () => {
+      setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
     });
 
-    // Re-join chat room after any reconnection
-    socket.on('reconnect', () => socket.emit('join_chat', chatId));
-  };
+    return () => {
+      socketRef.current?.disconnect();
+      clearInterval(pollRef.current);
+      sub.remove();
+    };
+  }, []);
 
+  // ── Send message ───────────────────────────────────────────────────────────
   const sendText = async () => {
     if (!text.trim()) return;
     const content = text.trim();
-    const tempId = `temp_${Date.now()}`;
+    const tempId  = `temp_${Date.now()}`;
     setText('');
 
-    // Show immediately — optimistic update
     const optimistic = {
       _id: tempId,
       _isTemp: true,
@@ -105,11 +154,11 @@ export default function ChatScreen({ route, navigation }) {
       createdAt: new Date().toISOString(),
     };
     setMessages(prev => [...prev, optimistic]);
-    listRef.current?.scrollToEnd({ animated: true });
+    setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
 
     try {
       await chatsAPI.sendMessage({ chatId, type: 'text', content });
-      // Socket will deliver the confirmed message and strip the temp one
+      // Confirmed message arrives via socket new_message or next poll — temp gets replaced
     } catch {
       Toast.show({ type: 'error', text1: t('failed_send_msg') });
       setText(content);
@@ -143,7 +192,6 @@ export default function ChatScreen({ route, navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
       <StatusBar barStyle="dark-content" />
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
           <Text style={{ fontSize: 22, color: COLORS.muted }}>←</Text>
@@ -160,13 +208,19 @@ export default function ChatScreen({ route, navigation }) {
         : <FlatList
             ref={listRef}
             data={messages}
-            keyExtractor={i => i._id || String(Math.random())}
+            keyExtractor={i => String(i._id)}
             contentContainerStyle={{ padding: 14, paddingBottom: 10 }}
             renderItem={renderMessage}
-            onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+            onContentSizeChange={() => {
+              if (atBottomRef.current) listRef.current?.scrollToEnd({ animated: false });
+            }}
+            onScroll={({ nativeEvent }) => {
+              const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+              atBottomRef.current = contentOffset.y + layoutMeasurement.height >= contentSize.height - 40;
+            }}
+            scrollEventThrottle={100}
           />}
 
-      {/* Input */}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.textInput}
