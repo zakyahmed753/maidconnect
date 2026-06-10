@@ -1,6 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import { authAPI } from '../services/api';
+
+// Show notifications + play sound even when app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge:  true,
+  }),
+});
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
@@ -140,6 +152,31 @@ function MaidTabs() {
 // Root navigator
 export default function AppNavigator() {
   const { token, user, profile, activeAreas } = useAuthStore();
+
+  // Register Expo push token whenever the user logs in
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        // Android: create sound-enabled notification channel
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'Servix Notifications',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            sound: 'default',
+            lightColor: '#C9A84C',
+          });
+        }
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== 'granted') return;
+        const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync();
+        await authAPI.updateFCMToken(expoPushToken);
+      } catch (e) {
+        console.warn('[Push] token registration failed:', e.message);
+      }
+    })();
+  }, [token]);
 
   return (
     <NavigationContainer ref={navigationRef}>

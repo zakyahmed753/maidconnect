@@ -28,12 +28,13 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-  register:   (data) => api.post('/auth/register', data),
-  login:      (data) => api.post('/auth/login', data),
-  socialAuth: (data) => api.post('/auth/social', data),
-  getMe:      ()     => api.get('/auth/me'),
-  updateMe:       (data) => api.put('/auth/me', data),
-  deleteAccount:  (data) => api.delete('/auth/me', { data }),
+  register:        (data)  => api.post('/auth/register', data),
+  login:           (data)  => api.post('/auth/login', data),
+  socialAuth:      (data)  => api.post('/auth/social', data),
+  getMe:           ()      => api.get('/auth/me'),
+  updateMe:        (data)  => api.put('/auth/me', data),
+  deleteAccount:   (data)  => api.delete('/auth/me', { data }),
+  updateFCMToken:  (token) => api.put('/auth/fcm-token', { token }),
 };
 
 export const hwAPI = {

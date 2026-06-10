@@ -68,10 +68,25 @@ export default function ChatScreen({ route, navigation }) {
           const alreadyExists = withoutTemp.some(m => m._id === msg._id);
           return alreadyExists ? withoutTemp : [...withoutTemp, msg];
         }
+        // Deduplicate — may also arrive via new_chat_message
+        if (prev.some(m => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
       listRef.current?.scrollToEnd({ animated: true });
     });
+
+    // Fallback: recipient receives this via their user room even if room-join was delayed
+    socket.on('new_chat_message', ({ chatId: incomingId, message }) => {
+      if (String(incomingId) !== String(chatId)) return;
+      setMessages(prev => {
+        if (prev.some(m => m._id === message._id)) return prev; // already from new_message
+        return [...prev, message];
+      });
+      listRef.current?.scrollToEnd({ animated: true });
+    });
+
+    // Re-join chat room after any reconnection
+    socket.on('reconnect', () => socket.emit('join_chat', chatId));
   };
 
   const sendText = async () => {

@@ -1,5 +1,7 @@
-const { Chat, Message, Notification } = require('../models/index');
+const { Chat, Message, Notification, HouseWife } = require('../models/index');
 const Maid = require('../models/Maid');
+const User = require('../models/User');
+const { sendPush } = require('../utils/push');
 
 // ── Get or Create Chat ──
 exports.getOrCreateChat = async (req, res) => {
@@ -70,9 +72,21 @@ exports.getOrCreateChat = async (req, res) => {
 // ── Get My Chats ──
 exports.getMyChats = async (req, res) => {
   try {
-    const query = req.user.role === 'housewife'
-      ? { housewife: req.user._id }
-      : { maid: req.user._id };
+    let query;
+    if (req.user.role === 'housewife') {
+      query = { housewife: req.user._id };
+    } else {
+      // Maid: if currently hired, only show chat with the customer who hired them
+      const maidProfile = await Maid.findOne({ user: req.user._id });
+      if (maidProfile?.isHired) {
+        const hw = await HouseWife.findOne({ 'hiredMaids.maid': maidProfile._id });
+        query = hw
+          ? { maid: req.user._id, housewife: hw.user }
+          : { maid: req.user._id };
+      } else {
+        query = { maid: req.user._id };
+      }
+    }
 
     const chats = await Chat.find(query)
       .populate('housewife', 'name avatar lastSeen')
@@ -136,11 +150,21 @@ exports.sendMessage = async (req, res) => {
 
     const populated = await Message.findById(message._id).populate('sender', 'name avatar role');
 
-    // Emit via Socket.IO — to chat room (both users inside ChatScreen) AND to recipient's personal room (for list updates)
+    // Emit via Socket.IO — to chat room AND to recipient's user room as fallback
     const io = req.app.get('io');
     io.to(`chat_${chatId}`).emit('new_message', populated);
     const recipientId = chat.housewife.equals(req.user._id) ? chat.maid : chat.housewife;
     io.to(`user_${recipientId}`).emit('new_chat_message', { chatId, message: populated });
+
+    // Push notification so recipient is alerted even when app is in background
+    const recipientUser = await User.findById(recipientId).select('fcmToken name');
+    await sendPush({
+      token: recipientUser?.fcmToken,
+      title: req.user.name,
+      body: type === 'voice' ? '🎙 Sent you a voice note' : content?.substring(0, 80),
+      data: { chatId: String(chatId), screen: 'Chat' },
+    });
+
     await Notification.create({
       user: recipientId,
       type: 'chat',
