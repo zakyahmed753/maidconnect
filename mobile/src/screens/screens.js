@@ -57,6 +57,7 @@ export function PaymentResultScreen({ route, navigation }) {
   const completeAuth = useAuthStore(s => s.completeAuth);
   const [completing, setCompleting] = useState(false);
   const [checking,  setChecking]   = useState(false);
+  const { t } = useTranslation();
   // online: starts verifying; offline: starts as pending (waiting for admin)
   const [status, setStatus] = useState(isOffline ? 'pending' : 'verifying');
   const pollTimer = React.useRef(null);
@@ -103,10 +104,10 @@ export function PaymentResultScreen({ route, navigation }) {
       if (res.data?.status === 'completed') {
         setStatus('completed');
       } else {
-        Toast.show({ type: 'info', text1: 'Still pending', text2: 'Admin hasn\'t confirmed yet. Try again later.' });
+        Toast.show({ type: 'info', text1: t('still_pending'), text2: t('admin_not_confirmed_yet') });
       }
     } catch {
-      Toast.show({ type: 'error', text1: 'Could not check status' });
+      Toast.show({ type: 'error', text1: t('could_not_check') });
     } finally { setChecking(false); }
   };
 
@@ -116,24 +117,22 @@ export function PaymentResultScreen({ route, navigation }) {
       <View style={{ flex:1, backgroundColor:'#0a0e1a', alignItems:'center', justifyContent:'center', padding:28 }}>
         <Text style={{ fontSize:64, marginBottom:16 }}>{status === 'completed' ? '🎉' : '⏳'}</Text>
         <Text style={{ fontFamily:FONTS.display, fontSize:26, color:'#fff8ee', textAlign:'center', marginBottom:10 }}>
-          {status === 'completed' ? 'Subscription Activated!' : 'Receipt Submitted'}
+          {status === 'completed' ? t('sub_activated') : t('receipt_submitted_title')}
         </Text>
         <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:22, marginBottom:28 }}>
-          {status === 'completed'
-            ? 'Your offline payment has been confirmed by admin.\nYour subscription is now active.'
-            : 'Your payment receipt has been sent to admin.\nWe\'ll activate your subscription within 24 hours after confirming your transfer.'}
+          {status === 'completed' ? t('offline_confirmed_body') : t('offline_pending_body')}
         </Text>
 
         <View style={{ backgroundColor:'rgba(201,168,76,0.08)', borderWidth:1, borderColor:'rgba(201,168,76,0.25)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
           <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>
-            {status === 'completed' ? 'Amount Confirmed' : 'Amount Submitted'}
+            {status === 'completed' ? t('amount_confirmed_label') : t('amount_submitted_label')}
           </Text>
           <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#e8c97a' }}>EGP {amount?.toLocaleString()}</Text>
           <View style={{ marginTop:8, paddingHorizontal:10, paddingVertical:4, borderRadius:10,
             backgroundColor: status === 'completed' ? 'rgba(46,125,94,0.2)' : 'rgba(201,168,76,0.12)',
             borderWidth:1, borderColor: status === 'completed' ? 'rgba(46,125,94,0.5)' : 'rgba(201,168,76,0.3)' }}>
             <Text style={{ fontSize:11, color: status === 'completed' ? '#5dd6a8' : COLORS.gold, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>
-              {status === 'completed' ? '✓ Confirmed' : '⏳ Pending Admin Confirmation'}
+              {status === 'completed' ? t('confirmed_badge') : t('pending_admin_badge')}
             </Text>
           </View>
         </View>
@@ -142,7 +141,7 @@ export function PaymentResultScreen({ route, navigation }) {
           <TouchableOpacity onPress={handleGoHome} disabled={completing}
             style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, width:'100%', alignItems:'center', opacity: completing ? 0.6 : 1 }}>
             <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
-              {completing ? 'Loading…' : 'Go to App →'}
+              {completing ? t('loading') : t('go_to_app')}
             </Text>
           </TouchableOpacity>
         ) : (
@@ -151,10 +150,10 @@ export function PaymentResultScreen({ route, navigation }) {
               style={{ backgroundColor:'rgba(255,255,255,0.07)', borderWidth:1, borderColor:'rgba(255,255,255,0.15)', paddingHorizontal:28, paddingVertical:13, borderRadius:5, width:'100%', alignItems:'center', marginBottom:12, opacity: checking ? 0.6 : 1 }}>
               {checking
                 ? <ActivityIndicator color={COLORS.gold} />
-                : <Text style={{ fontSize:14, color:'#e8c97a', fontWeight:'600' }}>🔄 Check Status</Text>}
+                : <Text style={{ fontSize:14, color:'#e8c97a', fontWeight:'600' }}>{t('check_status_btn2')}</Text>}
             </TouchableOpacity>
             <Text style={{ fontSize:11, color:'rgba(255,255,255,0.3)', textAlign:'center', lineHeight:17 }}>
-              You'll also receive a notification when admin confirms your payment.{'\n'}You can close this screen and come back later.
+              {t('offline_notification_note')}
             </Text>
           </>
         )}
@@ -167,26 +166,25 @@ export function PaymentResultScreen({ route, navigation }) {
     <View style={{ flex:1, backgroundColor:'#0a1208', alignItems:'center', justifyContent:'center', padding:28 }}>
       <Text style={{ fontSize:64, marginBottom:16 }}>🎉</Text>
       <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff8ee', textAlign:'center', marginBottom:10 }}>
-        Payment Confirmed!
+        {t('payment_confirmed_online')}
       </Text>
       <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:22, marginBottom:28 }}>
-        Your payment of EGP {amount?.toLocaleString()} was successful.{'\n'}
-        Your subscription is now active.
+        {t('payment_of_egp')}{amount?.toLocaleString()}{t('payment_was_successful')}
       </Text>
       <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
-        <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Amount Paid</Text>
+        <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>{t('amount_paid_label')}</Text>
         <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#e8c97a' }}>EGP {amount?.toLocaleString()}</Text>
       </View>
       {status === 'verifying' ? (
         <View style={{ flexDirection:'row', alignItems:'center', gap:10 }}>
           <ActivityIndicator color={COLORS.gold}/>
-          <Text style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>Verifying payment…</Text>
+          <Text style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{t('verifying_payment')}</Text>
         </View>
       ) : (
         <TouchableOpacity onPress={handleGoHome} disabled={completing}
           style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, opacity: completing ? 0.6 : 1 }}>
           <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
-            {completing ? 'Loading…' : 'Go to Home →'}
+            {completing ? t('loading') : t('go_home')}
           </Text>
         </TouchableOpacity>
       )}
@@ -370,27 +368,27 @@ export function HWProfileScreen({ navigation }) {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Delete Account',
-      'Your account will be deactivated. Only admin can restore it. Are you sure?',
+      t('delete_confirm_title'),
+      t('delete_confirm_body'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('delete_account'),
           style: 'destructive',
           onPress: () => Alert.alert(
-            'Confirm Deletion',
-            'This action cannot be undone by yourself. Proceed?',
+            t('confirm_deletion'),
+            t('confirm_deletion_body'),
             [
-              { text: 'Cancel', style: 'cancel' },
+              { text: t('cancel'), style: 'cancel' },
               {
-                text: 'Yes, Delete',
+                text: t('yes_delete'),
                 style: 'destructive',
                 onPress: async () => {
                   try {
                     await authAPI.deleteAccount({ reason: 'Customer requested account removal' });
                     logout();
                   } catch {
-                    Toast.show({ type: 'error', text1: 'Failed to delete account' });
+                    Toast.show({ type: 'error', text1: t('failed_delete') });
                   }
                 },
               },
@@ -404,12 +402,12 @@ export function HWProfileScreen({ navigation }) {
   const MENU = [
     { icon:'❤️', title: t('menu_saved'),         color:'',    onPress: () => navigation.navigate('Saved') },
     { icon:'💬', title: t('menu_messages'),       color:'',    onPress: () => navigation.navigate('Chats') },
-    { icon:'👑', title: 'My Hired Maid',          color:'',    onPress: () => navigation.navigate('HiredMaids') },
+    { icon:'👑', title: t('my_hired_maid'),       color:'',    onPress: () => navigation.navigate('HiredMaids') },
     { icon:'💳', title: t('menu_payments'),       color:'',    onPress: () => navigation.navigate('PaymentHistory') },
     { icon:'🔔', title: t('menu_notifications'),  color:'',    onPress: () => navigation.navigate('Alerts') },
     { icon:'🌐', title: t('language'),            color:'',    onPress: () => setLangVisible(true) },
     { icon:'🎫', title: t('menu_support'),        color:'',    onPress: () => navigation.navigate('Support') },
-    { icon:'🗑️', title: 'Delete Account',         color:'red', onPress: handleDeleteAccount },
+    { icon:'🗑️', title: t('delete_account'),      color:'red', onPress: handleDeleteAccount },
     { icon:'🚪', title: t('menu_sign_out'),       color:'red', onPress: logout },
   ];
 
@@ -449,27 +447,27 @@ export function MaidDashScreen({ navigation }) {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      'Delete Account',
-      'Your account will be deactivated. Only admin can restore it. Are you sure?',
+      t('delete_confirm_title'),
+      t('delete_confirm_body'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('delete_account'),
           style: 'destructive',
           onPress: () => Alert.alert(
-            'Confirm Deletion',
-            'This action cannot be undone by yourself. Proceed?',
+            t('confirm_deletion'),
+            t('confirm_deletion_body'),
             [
-              { text: 'Cancel', style: 'cancel' },
+              { text: t('cancel'), style: 'cancel' },
               {
-                text: 'Yes, Delete',
+                text: t('yes_delete'),
                 style: 'destructive',
                 onPress: async () => {
                   try {
                     await authAPI.deleteAccount({ reason: 'Maid requested account removal' });
                     logout();
                   } catch {
-                    Toast.show({ type: 'error', text1: 'Failed to delete account' });
+                    Toast.show({ type: 'error', text1: t('failed_delete') });
                   }
                 },
               },
@@ -520,9 +518,9 @@ export function MaidDashScreen({ navigation }) {
       await maidsAPI.updateProfile({ areasServed: selectedAreas });
       setMaidProfile(prev => ({ ...prev, areasServed: selectedAreas }));
       setAreasModalVisible(false);
-      Toast.show({ type: 'success', text1: 'Service areas updated!' });
+      Toast.show({ type: 'success', text1: t('service_areas_updated') });
     } catch {
-      Toast.show({ type: 'error', text1: 'Failed to save areas' });
+      Toast.show({ type: 'error', text1: t('save_areas_fail') });
     } finally {
       setSavingAreas(false);
     }
@@ -540,8 +538,8 @@ export function MaidDashScreen({ navigation }) {
       <Modal visible={areasModalVisible} transparent animationType="slide" onRequestClose={() => setAreasModalVisible(false)}>
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
           <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:20, maxHeight:'80%' }}>
-            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>Areas You Serve</Text>
-            <Text style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>Select all Cairo areas where you're available to work</Text>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>{t('areas_you_serve')}</Text>
+            <Text style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>{t('areas_serve_sub')}</Text>
             <ScrollView style={{ marginBottom:16 }}>
               {ALL_CAIRO_AREAS.map(area => {
                 const on = selectedAreas.includes(area);
@@ -558,10 +556,10 @@ export function MaidDashScreen({ navigation }) {
             </ScrollView>
             <TouchableOpacity onPress={saveAreas} disabled={savingAreas}
               style={{ backgroundColor:COLORS.gold, padding:14, borderRadius:8, alignItems:'center', opacity: savingAreas ? 0.6 : 1 }}>
-              {savingAreas ? <ActivityIndicator color={COLORS.dark}/> : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>Save Areas ({selectedAreas.length} selected)</Text>}
+              {savingAreas ? <ActivityIndicator color={COLORS.dark}/> : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{t('save')} ({selectedAreas.length})</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setAreasModalVisible(false)} style={{ alignItems:'center', paddingTop:12 }}>
-              <Text style={{ fontSize:13, color:COLORS.muted }}>Cancel</Text>
+              <Text style={{ fontSize:13, color:COLORS.muted }}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -571,7 +569,7 @@ export function MaidDashScreen({ navigation }) {
         <View style={{ backgroundColor:'#1a1108', padding:20, paddingTop:54 }}>
           <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:10 }}>
             <View style={{ backgroundColor:'rgba(46,125,94,0.2)', borderWidth:1, borderColor:'rgba(46,125,94,0.35)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
-              <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#5dd6a8' }}>Active Subscription</Text>
+              <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#5dd6a8' }}>{t('active_subscription')}</Text>
             </View>
             {profile?.subscription?.plan && profile.subscription.plan !== 'none' && (
               <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:COLORS.gold, paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}>
@@ -598,9 +596,9 @@ export function MaidDashScreen({ navigation }) {
             <Text style={{ fontSize:22 }}>👑</Text>
             <View style={{ flex:1 }}>
               <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>
-                {pendingRequests} Hire Request{pendingRequests > 1 ? 's' : ''} Waiting!
+                {pendingRequests} {pendingRequests > 1 ? t('hire_reqs_waiting') : t('hire_req_waiting')}
               </Text>
-              <Text style={{ fontSize:11, color:COLORS.muted, marginTop:1 }}>Tap to review and accept or decline</Text>
+              <Text style={{ fontSize:11, color:COLORS.muted, marginTop:1 }}>{t('tap_review_decide')}</Text>
             </View>
             <View style={{ backgroundColor:COLORS.gold, width:24, height:24, borderRadius:12, alignItems:'center', justifyContent:'center' }}>
               <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.dark }}>{pendingRequests}</Text>
@@ -614,10 +612,10 @@ export function MaidDashScreen({ navigation }) {
           <Text style={{ fontSize:20 }}>{maidProfile?.areasServed?.length > 0 ? '📍' : '⚠️'}</Text>
           <View style={{ flex:1 }}>
             <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark }}>
-              {maidProfile?.areasServed?.length > 0 ? `Service areas: ${maidProfile.areasServed.join(', ')}` : 'Set your service areas'}
+              {maidProfile?.areasServed?.length > 0 ? maidProfile.areasServed.join(', ') : t('set_service_areas')}
             </Text>
             <Text style={{ fontSize:11, color:COLORS.muted, marginTop:1 }}>
-              {maidProfile?.areasServed?.length > 0 ? 'Tap to update' : 'Customers can only find you if your area is set'}
+              {maidProfile?.areasServed?.length > 0 ? t('tap_to_update') : t('area_find_notice')}
             </Text>
           </View>
           <Text style={{ color:COLORS.muted }}>›</Text>
@@ -627,19 +625,19 @@ export function MaidDashScreen({ navigation }) {
         {maidProfile?.isHired ? (
           <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
             <View style={{ backgroundColor:'rgba(46,125,94,0.08)', padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-              <Text style={{ fontFamily:FONTS.display, fontSize:16, color:'#2e7d5e' }}>✓ Currently Hired</Text>
-              <Text style={{ fontSize:12, color:COLORS.muted, marginTop:2 }}>You are in an active engagement. When released by the customer you will return to browse.</Text>
+              <Text style={{ fontFamily:FONTS.display, fontSize:16, color:'#2e7d5e' }}>{t('currently_hired_badge')}</Text>
+              <Text style={{ fontSize:12, color:COLORS.muted, marginTop:2 }}>{t('currently_hired_desc')}</Text>
             </View>
             {[
-              ['🎫','Open Support Ticket','Contact admin for any issues', () => navigation.navigate('Support')],
-              ['🌐','Language','', () => setLangVisible(true)],
-              ['🗑️','Delete Account','Deactivates your profile', handleDeleteAccount],
-              ['🚪','Sign Out','', logout],
-            ].map(([icon,title,sub,onPress])=>(
-              <TouchableOpacity key={title} onPress={onPress}
+              ['🎫', t('open_support'),     t('contact_admin_note'),   () => navigation.navigate('Support'), false],
+              ['🌐', t('language'),         '',                          () => setLangVisible(true),            false],
+              ['🗑️', t('delete_account'),  t('deactivates_profile'),  handleDeleteAccount,                   true],
+              ['🚪', t('menu_sign_out'),    '',                          logout,                                true],
+            ].map(([icon,title,sub,onPress,isRed])=>(
+              <TouchableOpacity key={icon} onPress={onPress}
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
-                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: (title==='Sign Out'||title==='Delete Account')?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
+                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
                 <Text style={{ color:COLORS.muted }}>›</Text>
               </TouchableOpacity>
             ))}
@@ -647,21 +645,21 @@ export function MaidDashScreen({ navigation }) {
         ) : (
           <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
             {[
-              ['👑','Hire Requests', pendingRequests > 0 ? `${pendingRequests} pending — tap to review` : 'View & respond to requests'],
-              ['💬','Messages', `${stats.chats} active`],
-              ['💳','Payments', profile?.subscription?.plan ? `${profile.subscription.plan} · ${profile.subscription.status}` : 'View history'],
-              ['🎁','Referrals', 'Share your code & earn rewards'],
-              ['📊','Analytics', `${stats.views} views · ${stats.likes} likes`],
-              ['🌐','Language',''],
-              ['🔔','Notifications',''],
-              ['🎫','Support','Contact us anytime'],
-              ['🗑️','Delete Account','Deactivates your profile'],
-              ['🚪','Sign Out','']
-            ].map(([icon,title,sub])=>(
-              <TouchableOpacity key={title} onPress={title==='Sign Out' ? logout : title==='Delete Account' ? handleDeleteAccount : title==='Language' ? () => setLangVisible(true) : title==='Analytics' ? () => navigation.navigate('Analytics') : title==='Support' ? () => navigation.navigate('Support') : title==='Payments' ? () => navigation.navigate('PaymentHistory') : title==='Hire Requests' ? () => navigation.navigate('HireRequest') : title==='Referrals' ? () => navigation.navigate('Coupons') : undefined}
+              { icon:'👑', id:'hire_req',  title:t('menu_hire_requests'), sub: pendingRequests > 0 ? `${pendingRequests} pending` : '', isRed:false, onPress: () => navigation.navigate('HireRequest') },
+              { icon:'💬', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} active`,                                  isRed:false, onPress: undefined },
+              { icon:'💳', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.plan ? `${profile.subscription.plan} · ${profile.subscription.status}` : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
+              { icon:'🎁', id:'referrals', title:t('menu_referrals'),     sub: t('share_code_earn'),                                     isRed:false, onPress: () => navigation.navigate('Coupons') },
+              { icon:'📊', id:'analytics', title:t('menu_analytics'),     sub: `${stats.views} ${t('views')} · ${stats.likes} ${t('likes')}`, isRed:false, onPress: () => navigation.navigate('Analytics') },
+              { icon:'🌐', id:'language',  title:t('language'),           sub: '',                                                       isRed:false, onPress: () => setLangVisible(true) },
+              { icon:'🔔', id:'notifs',    title:t('menu_notifications2'),sub: '',                                                       isRed:false, onPress: undefined },
+              { icon:'🎫', id:'support',   title:t('menu_support2'),      sub: t('contact_admin_note'),                                  isRed:false, onPress: () => navigation.navigate('Support') },
+              { icon:'🗑️', id:'delete',   title:t('menu_delete_account'),sub: t('deactivates_profile'),                                 isRed:true,  onPress: handleDeleteAccount },
+              { icon:'🚪', id:'sign_out',  title:t('menu_sign_out'),      sub: '',                                                       isRed:true,  onPress: logout },
+            ].map(({ icon, id, title, sub, isRed, onPress }) => (
+              <TouchableOpacity key={id} onPress={onPress}
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
-                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: (title==='Sign Out'||title==='Delete Account')?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
+                <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
                 <Text style={{ color:COLORS.muted }}>›</Text>
               </TouchableOpacity>
             ))}
@@ -672,7 +670,7 @@ export function MaidDashScreen({ navigation }) {
         <View style={{ marginHorizontal:14, marginTop:20, marginBottom:8 }}>
           <View style={{ flexDirection:'row', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
             <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark }}>
-              ⭐ My Reviews
+              {t('my_reviews')}
             </Text>
             {maidProfile?.rating > 0 && (
               <View style={{ backgroundColor:'rgba(201,168,76,0.12)', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, paddingHorizontal:10, paddingVertical:5 }}>
@@ -686,9 +684,9 @@ export function MaidDashScreen({ navigation }) {
           {myReviews.length === 0 ? (
             <View style={{ backgroundColor:COLORS.surface, borderRadius:10, borderWidth:1, borderColor:COLORS.border, padding:20, alignItems:'center' }}>
               <Text style={{ fontSize:28, marginBottom:8 }}>💬</Text>
-              <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'600' }}>No reviews yet</Text>
+              <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'600' }}>{t('no_reviews_maid')}</Text>
               <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4, textAlign:'center', lineHeight:18 }}>
-                Work hard and deliver great service — your reviews will appear here and help you earn more!
+                {t('no_reviews_maid_sub')}
               </Text>
             </View>
           ) : (
@@ -739,7 +737,7 @@ export function MaidDashScreen({ navigation }) {
                   {rv.comment ? (
                     <Text style={{ fontSize:13, color:COLORS.text, lineHeight:20, fontStyle:'italic' }}>"{rv.comment}"</Text>
                   ) : (
-                    <Text style={{ fontSize:12, color:COLORS.muted, fontStyle:'italic' }}>No comment</Text>
+                    <Text style={{ fontSize:12, color:COLORS.muted, fontStyle:'italic' }}>{t('no_comment_short')}</Text>
                   )}
                 </View>
               ))}
@@ -809,6 +807,7 @@ export function ApprovalScreen({ route, navigation }) {
 // ─── SupportScreen ───
 export function SupportScreen({ navigation }) {
   const { user } = useAuthStore();
+  const { t } = useTranslation();
 
   const [subject, setSubject]   = useState('');
   const [message, setMessage]   = useState('');
@@ -824,11 +823,11 @@ export function SupportScreen({ navigation }) {
   }, [tab]);
 
   const handleSubmit = async () => {
-    if (!subject.trim() || !message.trim()) return Toast.show({ type:'error', text1:'Subject and message are required' });
+    if (!subject.trim() || !message.trim()) return Toast.show({ type:'error', text1:t('subject_msg_required') });
     setLoading(true);
     try {
       await supportAPI.create({ subject: subject.trim(), message: message.trim(), priority });
-      Toast.show({ type:'success', text1:'Ticket submitted', text2:"We'll get back to you soon" });
+      Toast.show({ type:'success', text1:t('ticket_submitted'), text2:t('ticket_submitted_sub') });
       setSubject(''); setMessage(''); setPriority('medium');
       setTab('history');
     } catch (err) {
@@ -844,12 +843,12 @@ export function SupportScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Customer Support</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>We typically respond within 24 hours</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('support_title')}</Text>
+        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>{t('support_sub')}</Text>
       </View>
       {/* Tabs */}
       <View style={{ flexDirection:'row', backgroundColor:COLORS.surface, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-        {[['new','New Ticket'],['history','My Tickets']].map(([key, label]) => (
+        {[['new', t('new_ticket')],['history', t('my_tickets')]].map(([key, label]) => (
           <TouchableOpacity key={key} onPress={() => setTab(key)}
             style={{ flex:1, padding:14, alignItems:'center', borderBottomWidth:2, borderBottomColor: tab===key ? COLORS.gold : 'transparent' }}>
             <Text style={{ fontSize:13, fontFamily:FONTS.bodySemiBold, color: tab===key ? COLORS.gold : COLORS.muted }}>{label}</Text>
@@ -859,9 +858,9 @@ export function SupportScreen({ navigation }) {
 
       {tab === 'new' ? (
         <ScrollView style={{ flex:1, backgroundColor:COLORS.cream }} contentContainerStyle={{ padding:20 }} keyboardShouldPersistTaps="handled">
-          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>Priority</Text>
+          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>{t('priority_label')}</Text>
           <View style={{ flexDirection:'row', gap:8, marginBottom:16 }}>
-            {[['low','Low'],['medium','Medium'],['high','High']].map(([val, label]) => (
+            {[['low', t('priority_low')],['medium', t('priority_medium')],['high', t('priority_high')]].map(([val, label]) => (
               <TouchableOpacity key={val} onPress={() => setPriority(val)}
                 style={{ flex:1, padding:10, borderRadius:5, borderWidth:1.5, alignItems:'center',
                   borderColor: priority===val ? COLORS.gold : COLORS.border,
@@ -870,15 +869,15 @@ export function SupportScreen({ navigation }) {
               </TouchableOpacity>
             ))}
           </View>
-          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>Subject</Text>
+          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>{t('subject_label')}</Text>
           <TextInput style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, marginBottom:16 }}
-            value={subject} onChangeText={setSubject} placeholder="Brief description of your issue" placeholderTextColor={COLORS.muted}/>
-          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>Message</Text>
+            value={subject} onChangeText={setSubject} placeholder={t('subject_ph')} placeholderTextColor={COLORS.muted}/>
+          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>{t('message_label2')}</Text>
           <TextInput style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, height:140, textAlignVertical:'top', marginBottom:20 }}
-            value={message} onChangeText={setMessage} placeholder="Describe your issue in detail…" placeholderTextColor={COLORS.muted} multiline/>
+            value={message} onChangeText={setMessage} placeholder={t('message_ph')} placeholderTextColor={COLORS.muted} multiline/>
           <TouchableOpacity style={{ backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', opacity: loading ? 0.6 : 1 }}
             onPress={handleSubmit} disabled={loading}>
-            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? 'Submitting…' : 'Submit Ticket'}</Text>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? t('submitting') : t('submit_ticket')}</Text>
           </TouchableOpacity>
         </ScrollView>
       ) : (
@@ -899,7 +898,7 @@ export function SupportScreen({ navigation }) {
               <Text style={{ fontSize:10, color:COLORS.muted, marginTop:6 }}>{new Date(item.createdAt).toLocaleDateString()}</Text>
             </View>
           )}
-          ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60 }}>No tickets yet</Text>}
+          ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60 }}>{t('no_tickets')}</Text>}
         />
       )}
     </KeyboardAvoidingView>
@@ -910,6 +909,7 @@ export function SupportScreen({ navigation }) {
 export function EditHWProfileScreen({ navigation }) {
   const { authAPI, hwAPI } = require('../services/api');
   const { user, init } = useAuthStore();
+  const { t } = useTranslation();
 
   const [name, setName]       = useState(user?.name || '');
   const [phone, setPhone]     = useState(user?.phone || '');
@@ -925,7 +925,7 @@ export function EditHWProfileScreen({ navigation }) {
   }, []);
 
   const handleSave = async () => {
-    if (!name.trim()) return Toast.show({ type:'error', text1:'Name is required' });
+    if (!name.trim()) return Toast.show({ type:'error', text1:t('name_required_err') });
     setLoading(true);
     try {
       await Promise.all([
@@ -933,10 +933,10 @@ export function EditHWProfileScreen({ navigation }) {
         hwAPI.updateProfile({ city: city.trim(), country: country.trim() }),
       ]);
       await init();
-      Toast.show({ type:'success', text1:'Profile updated' });
+      Toast.show({ type:'success', text1:t('profile_updated') });
       navigation.goBack();
     } catch (err) {
-      Toast.show({ type:'error', text1: err.response?.data?.message || 'Update failed' });
+      Toast.show({ type:'error', text1: err.response?.data?.message || t('update_failed') });
     } finally { setLoading(false); }
   };
 
@@ -957,17 +957,17 @@ export function EditHWProfileScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Edit Profile</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('edit_profile_title2')}</Text>
       </View>
       <ScrollView style={{ flex:1, backgroundColor:COLORS.cream }} contentContainerStyle={{ padding:20 }} keyboardShouldPersistTaps="handled">
-        <Field label="Full Name"    value={name}    onChange={setName}    placeholder="Your name" />
-        <Field label="Phone"        value={phone}   onChange={setPhone}   placeholder="+20 ..." keyboardType="phone-pad" />
-        <Field label="City"         value={city}    onChange={setCity}    placeholder="e.g. Cairo" />
-        <Field label="Country"      value={country} onChange={setCountry} placeholder="e.g. Egypt" />
+        <Field label={t('field_full_name')} value={name}    onChange={setName}    placeholder={t('name_ph')} />
+        <Field label={t('phone')}           value={phone}   onChange={setPhone}   placeholder="+20 ..." keyboardType="phone-pad" />
+        <Field label={t('field_city')}      value={city}    onChange={setCity}    placeholder={t('city_ph')} />
+        <Field label={t('field_country')}   value={country} onChange={setCountry} placeholder={t('country_ph')} />
         <TouchableOpacity
           style={{ backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', marginTop:8, opacity: loading ? 0.6 : 1 }}
           onPress={handleSave} disabled={loading}>
-          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? 'Saving…' : 'Save Changes'}</Text>
+          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? t('saving') : t('save_changes')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -976,6 +976,7 @@ export function EditHWProfileScreen({ navigation }) {
 
 // ─── AnalyticsScreen ───
 export function AnalyticsScreen({ navigation }) {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -990,10 +991,10 @@ export function AnalyticsScreen({ navigation }) {
   );
 
   const rows = [
-    { icon:'👁️', label:'Profile Views',   value: stats?.views     ?? 0 },
-    { icon:'❤️', label:'Likes Received',  value: stats?.likes     ?? 0 },
-    { icon:'💬', label:'Chat Requests',   value: stats?.chats     ?? 0 },
-    { icon:'🏠', label:'Times Hired',     value: stats?.hireCount ?? 0 },
+    { icon:'👁️', label:t('stat_views'),   value: stats?.views     ?? 0 },
+    { icon:'❤️', label:t('stat_likes'),   value: stats?.likes     ?? 0 },
+    { icon:'💬', label:t('stat_chats2'),  value: stats?.chats     ?? 0 },
+    { icon:'🏠', label:t('stat_hired'),   value: stats?.hireCount ?? 0 },
   ];
 
   return (
@@ -1002,8 +1003,8 @@ export function AnalyticsScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Analytics</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>Your profile performance</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('analytics_title')}</Text>
+        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>{t('analytics_sub')}</Text>
       </View>
       {loading
         ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
@@ -1020,7 +1021,7 @@ export function AnalyticsScreen({ navigation }) {
               ))}
             </View>
             <View style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:16 }}>
-              <Text style={{ fontSize:11, letterSpacing:1, textTransform:'uppercase', color:COLORS.gold, fontFamily:FONTS.bodySemiBold, marginBottom:12 }}>Summary</Text>
+              <Text style={{ fontSize:11, letterSpacing:1, textTransform:'uppercase', color:COLORS.gold, fontFamily:FONTS.bodySemiBold, marginBottom:12 }}>{t('summary_label')}</Text>
               {rows.map(({ icon, label, value }) => (
                 <View key={label} style={{ flexDirection:'row', justifyContent:'space-between', paddingVertical:8, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                   <Text style={{ fontSize:13, color:COLORS.text }}>{icon}  {label}</Text>
@@ -1036,6 +1037,7 @@ export function AnalyticsScreen({ navigation }) {
 
 // ─── PaymentHistoryScreen ───
 export function PaymentHistoryScreen({ navigation }) {
+  const { t } = useTranslation();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -1055,8 +1057,8 @@ export function PaymentHistoryScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>Payments</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>Subscriptions & commissions</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('payments_title')}</Text>
+        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>{t('payments_sub')}</Text>
       </View>
       {loading
         ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
@@ -1094,8 +1096,8 @@ export function PaymentHistoryScreen({ navigation }) {
             ListEmptyComponent={
               <View style={{ alignItems:'center', marginTop:80 }}>
                 <Text style={{ fontSize:40, marginBottom:12 }}>💳</Text>
-                <Text style={{ fontSize:15, color:COLORS.dark, fontFamily:FONTS.display }}>No payments yet</Text>
-                <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4 }}>Your transactions will appear here</Text>
+                <Text style={{ fontSize:15, color:COLORS.dark, fontFamily:FONTS.display }}>{t('no_payments')}</Text>
+                <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4 }}>{t('transactions_here')}</Text>
               </View>
             }
           />

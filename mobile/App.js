@@ -4,15 +4,13 @@ import * as Font from 'expo-font';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import {
-  CormorantGaramond_400Regular,
   CormorantGaramond_600SemiBold,
   CormorantGaramond_700Bold,
   CormorantGaramond_700Bold_Italic,
-  CormorantGaramond_400Regular_Italic,
 } from '@expo-google-fonts/cormorant-garamond';
 import {
-  Jost_300Light, Jost_400Regular,
-  Jost_500Medium, Jost_600SemiBold, Jost_700Bold,
+  Jost_400Regular,
+  Jost_500Medium, Jost_600SemiBold,
 } from '@expo-google-fonts/jost';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -79,18 +77,18 @@ export default function App() {
 
   useEffect(() => {
     async function load() {
-      await initLang();
-      await Font.loadAsync({
-        CormorantGaramond_400Regular,
-        CormorantGaramond_600SemiBold,
-        CormorantGaramond_700Bold,
-        CormorantGaramond_700Bold_Italic,
-        CormorantGaramond_400Regular_Italic,
-        Jost_300Light, Jost_400Regular,
-        Jost_500Medium, Jost_600SemiBold, Jost_700Bold,
-      });
+      await Promise.all([
+        initLang(),
+        Font.loadAsync({
+          CormorantGaramond_600SemiBold,
+          CormorantGaramond_700Bold,
+          CormorantGaramond_700Bold_Italic,
+          Jost_400Regular,
+          Jost_500Medium, Jost_600SemiBold,
+        }),
+        init(),
+      ]);
       setFontsLoaded(true);
-      await init();
     }
     load();
 

@@ -75,7 +75,7 @@ export default function MaidDetailScreen({ route, navigation }) {
 
   const confirmHire = async () => {
     if (!termsAgreed) {
-      Toast.show({ type: 'error', text1: 'Please agree to the Terms & Conditions' });
+      Toast.show({ type: 'error', text1: t('please_agree_terms') });
       return;
     }
     setTermsModal(false);
@@ -83,7 +83,7 @@ export default function MaidDetailScreen({ route, navigation }) {
     try {
       await hwAPI.hireMaid({ maidProfileId: maid._id });
       setHireRequestSent(true);
-      Toast.show({ type:'success', text1: '👑 Request Sent!', text2: 'Waiting for the maid to approve.' });
+      Toast.show({ type:'success', text1: t('hire_req_sent'), text2: t('hire_req_sent_sub') });
     } catch (err) {
       if (err.response?.data?.requiresSubscription) { goToSubscription(); return; }
       Toast.show({ type:'error', text1: err.response?.data?.message || t('hire_failed') });
@@ -93,18 +93,18 @@ export default function MaidDetailScreen({ route, navigation }) {
   };
 
   const handleReviewSubmit = async () => {
-    if (reviewStar === 0) return Toast.show({ type: 'error', text1: 'Please select a star rating' });
+    if (reviewStar === 0) return Toast.show({ type: 'error', text1: t('please_rate_star') });
     setReviewLoading(true);
     try {
       await maidsAPI.submitReview(maid._id, { rating: reviewStar, comment: reviewComment.trim() });
-      Toast.show({ type: 'success', text1: 'Review submitted!' });
+      Toast.show({ type: 'success', text1: t('review_submitted') });
       setReviewModal(false);
       setReviewStar(0);
       setReviewComment('');
       const r = await maidsAPI.getReviews(maid._id);
       setReviews(r.data?.reviews || []);
     } catch (err) {
-      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to submit review' });
+      Toast.show({ type: 'error', text1: err.response?.data?.message || t('review_submit_failed') });
     } finally {
       setReviewLoading(false);
     }
@@ -130,7 +130,7 @@ export default function MaidDetailScreen({ route, navigation }) {
       if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
         goToSubscription();
       } else {
-        Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to open chat' });
+        Toast.show({ type: 'error', text1: err.response?.data?.message || t('chat_open_failed') });
       }
     } finally {
       setLoading(false);
@@ -143,13 +143,13 @@ export default function MaidDetailScreen({ route, navigation }) {
       <Modal visible={termsModal} transparent animationType="slide" onRequestClose={() => setTermsModal(false)}>
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
           <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:22 }}>
-            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:8 }}>Terms & Conditions</Text>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:8 }}>{t('terms_title')}</Text>
             <Text style={{ fontSize:13, color:COLORS.muted, lineHeight:20, marginBottom:16 }}>
-              Servix is a communication platform only. We connect customers with domestic service providers and are not responsible for the conduct, performance, or actions of any maid or customer. All agreements are between the two parties directly.
+              {t('terms_body_short')}
             </Text>
             {termsUrl && (
               <TouchableOpacity onPress={() => Linking.openURL(termsUrl)} style={{ marginBottom:16 }}>
-                <Text style={{ fontSize:13, color:COLORS.gold, textDecorationLine:'underline' }}>📄 Read Full Terms & Conditions (PDF)</Text>
+                <Text style={{ fontSize:13, color:COLORS.gold, textDecorationLine:'underline' }}>{t('terms_read_full')}</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -158,17 +158,17 @@ export default function MaidDetailScreen({ route, navigation }) {
               <View style={{ width:22, height:22, borderRadius:4, borderWidth:1.5, borderColor: termsAgreed ? '#2e7d5e' : COLORS.border, backgroundColor: termsAgreed ? '#2e7d5e' : 'transparent', alignItems:'center', justifyContent:'center' }}>
                 {termsAgreed && <Text style={{ color:'#fff', fontSize:13, fontWeight:'700' }}>✓</Text>}
               </View>
-              <Text style={{ fontSize:13, color:COLORS.text, flex:1 }}>I have read and agree to the Terms & Conditions</Text>
+              <Text style={{ fontSize:13, color:COLORS.text, flex:1 }}>{t('terms_agree_label')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{ backgroundColor: termsAgreed ? COLORS.gold : COLORS.border, padding:14, borderRadius:8, alignItems:'center', marginBottom:10 }}
               onPress={confirmHire} disabled={!termsAgreed}>
               <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color: termsAgreed ? COLORS.dark : COLORS.muted }}>
-                👑 Confirm Hire Request
+                {t('confirm_hire_btn')}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setTermsModal(false)} style={{ alignItems:'center', padding:10 }}>
-              <Text style={{ fontSize:13, color:COLORS.muted }}>Cancel</Text>
+              <Text style={{ fontSize:13, color:COLORS.muted }}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -246,7 +246,7 @@ export default function MaidDetailScreen({ route, navigation }) {
             {photos[0]?.url
               ? <Image source={{ uri: photos[0].url }} style={{ width:'100%', height:'100%' }}/>
               : <Text style={{ fontSize:60 }}>👩</Text>}
-            {maid.isAvailable && <View style={styles.availBadge}><Text style={styles.availTxt}>● Available</Text></View>}
+            {maid.isAvailable && <View style={styles.availBadge}><Text style={styles.availTxt}>{t('available_badge')}</Text></View>}
             {photos.length > 1 && (
               <View style={{ position:'absolute', bottom:8, right:8, backgroundColor:'rgba(0,0,0,0.55)', borderRadius:10, paddingHorizontal:8, paddingVertical:3 }}>
                 <Text style={{ color:'#fff', fontSize:10, fontWeight:'600' }}>📷 {photos.length}</Text>
@@ -276,11 +276,11 @@ export default function MaidDetailScreen({ route, navigation }) {
           </View>
 
           <Text style={styles.secTitle}>{t('about')}</Text>
-          <Text style={styles.bio}>{maid.bio || 'No bio provided.'}</Text>
+          <Text style={styles.bio}>{maid.bio || t('no_bio')}</Text>
 
           <Text style={styles.secTitle}>{t('details')}</Text>
           <View style={styles.infoGrid}>
-            {[['Experience',`${maid.experienceYears} Years`],['Expected Salary',`EGP ${(maid.expectedSalary||0).toLocaleString()}/mo`],['Age',`${maid.age} years`],['Origin',maid.nationality]].map(([l,v])=>(
+            {[[t('details_experience'),`${maid.experienceYears} yrs`],[t('details_salary'),`EGP ${(maid.expectedSalary||0).toLocaleString()}/mo`],[t('details_age'),`${maid.age} yrs`],[t('details_origin'),maid.nationality]].map(([l,v])=>(
               <View key={l} style={styles.infoBox}>
                 <Text style={styles.infoLabel}>{l}</Text>
                 <Text style={styles.infoVal}>{v}</Text>
@@ -339,8 +339,8 @@ export default function MaidDetailScreen({ route, navigation }) {
           {reviews.length === 0 ? (
             <View style={{ backgroundColor:COLORS.surface, borderRadius:10, borderWidth:1, borderColor:COLORS.border, padding:20, alignItems:'center', marginBottom:8 }}>
               <Text style={{ fontSize:28, marginBottom:8 }}>💬</Text>
-              <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'600' }}>No reviews yet</Text>
-              <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4, textAlign:'center' }}>Be the first to leave a review after hiring</Text>
+              <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'600' }}>{t('no_reviews_label')}</Text>
+              <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4, textAlign:'center' }}>{t('no_reviews_sub')}</Text>
             </View>
           ) : reviews.map(rv => (
             <View key={rv._id} style={{ backgroundColor:'#fff', borderWidth:1, borderColor:COLORS.border, borderRadius:12, padding:16, marginBottom:10, shadowColor:'#c9a84c', shadowOpacity:0.05, shadowRadius:4, elevation:1 }}>
@@ -361,7 +361,7 @@ export default function MaidDetailScreen({ route, navigation }) {
               {rv.comment ? (
                 <Text style={{ fontSize:14, color:COLORS.text, lineHeight:21, fontStyle:'italic' }}>"{rv.comment}"</Text>
               ) : (
-                <Text style={{ fontSize:12, color:COLORS.muted, fontStyle:'italic' }}>No comment left</Text>
+                <Text style={{ fontSize:12, color:COLORS.muted, fontStyle:'italic' }}>{t('no_comment_left')}</Text>
               )}
             </View>
           ))}
@@ -373,8 +373,8 @@ export default function MaidDetailScreen({ route, navigation }) {
         <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':'height'}>
           <TouchableOpacity style={{ flex:1, backgroundColor:'rgba(0,0,0,0.5)' }} activeOpacity={1} onPress={() => setReviewModal(false)}/>
           <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:24, paddingBottom:Platform.OS==='ios'?40:24 }}>
-            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>Rate {maid.fullName}</Text>
-            <Text style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>Only available after hiring this maid</Text>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>{t('rate_label')} {maid.fullName}</Text>
+            <Text style={{ fontSize:12, color:COLORS.muted, marginBottom:16 }}>{t('review_after_hire_note')}</Text>
             <View style={{ flexDirection:'row', justifyContent:'center', gap:12, marginBottom:20 }}>
               {[1,2,3,4,5].map(s => (
                 <TouchableOpacity key={s} onPress={() => setReviewStar(s)}>
@@ -384,7 +384,7 @@ export default function MaidDetailScreen({ route, navigation }) {
             </View>
             <TextInput
               style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:6, padding:12, fontSize:14, color:COLORS.text, backgroundColor:COLORS.cream, height:100, textAlignVertical:'top', marginBottom:16 }}
-              placeholder="Share your experience (optional)…"
+              placeholder={t('share_exp_optional')}
               placeholderTextColor={COLORS.muted}
               value={reviewComment}
               onChangeText={setReviewComment}
@@ -408,7 +408,7 @@ export default function MaidDetailScreen({ route, navigation }) {
       <View style={styles.actionBar}>
         <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
           <TouchableOpacity style={styles.btnSecondary} onPress={handleLike}>
-            <Text style={styles.btnSecondaryTxt}>{liked ? '❤️ Saved' : '🤍 Save'}</Text>
+            <Text style={styles.btnSecondaryTxt}>{liked ? t('saved_label') : t('save_label')}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.btnChat, loading && { opacity:0.6 }]} onPress={handleOpenChat} disabled={loading}>
             <Text style={styles.btnPrimaryTxt}>{loading ? t('opening') : `💬 ${t('open_chat')}`}</Text>
@@ -420,7 +420,7 @@ export default function MaidDetailScreen({ route, navigation }) {
           </View>
         ) : hireRequestSent ? (
           <View style={[styles.btnHire, { backgroundColor:'#3d2203', borderWidth:1.5, borderColor:COLORS.gold }]}>
-            <Text style={[styles.btnPrimaryTxt, { color:COLORS.gold }]}>⏳ Request Sent — Awaiting Approval</Text>
+            <Text style={[styles.btnPrimaryTxt, { color:COLORS.gold }]}>{t('request_sent_awaiting')}</Text>
           </View>
         ) : (
           <TouchableOpacity

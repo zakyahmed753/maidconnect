@@ -22,8 +22,9 @@ const houseWifeSchema = new mongoose.Schema({
     paymentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Payment' },
   },
   freeVacancy: {
-    available:  { type: Boolean, default: false },
-    expiresAt:  { type: Date },
+    available:     { type: Boolean, default: false },
+    expiresAt:     { type: Date },
+    penaltyAmount: { type: Number, default: 0 }, // fee charged on NEXT hire (not on release)
   },
   createdAt: { type: Date, default: Date.now }
 });

@@ -23,9 +23,13 @@
         "backgroundColor": "#1a1108"
       },
       "package": "com.servix.app",
-      "versionCode": 7,
+      "versionCode": 9,
       "softwareKeyboardLayoutMode": "pan",
       "permissions": [
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "CAMERA",
         "RECORD_AUDIO",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
@@ -43,6 +47,12 @@
       "expo-secure-store",
       "expo-asset"
     ],
-    "owner": "testahmed570"
+    "owner": "testahmed570",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aaf38d20-cf98-4589-b23d-1e6838133970"
+    }
   }
 }

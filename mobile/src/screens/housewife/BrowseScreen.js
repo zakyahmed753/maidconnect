@@ -35,6 +35,7 @@ const EMPTY_ADV = { minSalary: '', maxSalary: '', minAge: '', maxAge: '', minExp
 
 // ── Maid Card ──
 const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
+  const { t } = useTranslation();
   const [liked, setLiked] = useState(!!initialLiked);
   useEffect(() => { setLiked(!!initialLiked); }, [initialLiked]);
 
@@ -59,7 +60,7 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
               ? <Image source={{ uri: maid.photos[0].url }} style={styles.photoImg} />
               : <Text style={styles.photoEmoji}>👩</Text>}
             <View style={[styles.availBadge, !maid.isAvailable && { backgroundColor: COLORS.muted }]}>
-              <Text style={styles.availTxt}>{maid.isAvailable ? '● Available' : 'Unavailable'}</Text>
+              <Text style={styles.availTxt}>{maid.isAvailable ? t('available_badge') : t('unavailable_badge')}</Text>
             </View>
             {validPhotos.length > 1 && (
               <View style={styles.photoCountBadge}>
@@ -108,15 +109,15 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <Text style={styles.statN}>{maid.experienceYears}yr</Text>
-            <Text style={styles.statL}>Exp</Text>
+            <Text style={styles.statL}>{t('exp_stat')}</Text>
           </View>
           <View style={[styles.stat, styles.statBorder]}>
             <Text style={styles.statN}>EGP {(maid.expectedSalary || 0).toLocaleString()}</Text>
-            <Text style={styles.statL}>Salary</Text>
+            <Text style={styles.statL}>{t('salary_stat')}</Text>
           </View>
           <View style={styles.stat}>
             <Text style={styles.statN}>⭐{maid.rating?.toFixed(1) || '—'}</Text>
-            <Text style={styles.statL}>{maid.reviewCount || 0} rev</Text>
+            <Text style={styles.statL}>{maid.reviewCount || 0} {t('reviews_short')}</Text>
           </View>
         </View>
       </View>

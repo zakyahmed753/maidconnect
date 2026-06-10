@@ -88,47 +88,40 @@ exports.initiatePaymob = async (req, res) => {
       const maid = await Maid.findById(maidProfileId);
       if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
 
-      // Check free vacancy
       const hw = await HouseWife.findOne({ user: req.user._id });
-      if (hw?.freeVacancy?.available && hw.freeVacancy.expiresAt > new Date()) {
-        // Use free vacancy — skip payment
-        await HouseWife.findOneAndUpdate({ user: req.user._id }, {
-          'freeVacancy.available': false,
-          $push: { hiredMaids: { maid: maid._id, commissionPaid: true, commissionAmount: 0 } }
-        });
-        if (chatId) {
-          const { Chat } = require('../models/index');
-          await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'hired' });
+      const vacancyActive = hw?.freeVacancy?.available && hw.freeVacancy.expiresAt > new Date();
+
+      if (vacancyActive) {
+        const penaltyAmount = hw.freeVacancy.penaltyAmount || 0;
+
+        if (penaltyAmount === 0) {
+          // Released within grace period — hire replacement for free
+          await HouseWife.findOneAndUpdate({ user: req.user._id }, {
+            'freeVacancy.available':     false,
+            'freeVacancy.penaltyAmount': 0,
+            $push: { hiredMaids: { maid: maid._id, commissionPaid: true, commissionAmount: 0 } },
+          });
+          if (chatId) {
+            const { Chat } = require('../models/index');
+            await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'hired' });
+          }
+          await Notification.create({
+            user: req.user._id, type: 'hire_confirmed',
+            title: '🎉 Hire Confirmed (Free Replacement)!',
+            body: `${maid.fullName} has been hired using your free replacement vacancy.`,
+          });
+          return res.json({ success: true, freeVacancyUsed: true, amount: 0 });
         }
-        await Notification.create({
-          user: req.user._id, type: 'hire_confirmed',
-          title: '🎉 Hire Confirmed (Free Replacement)!',
-          body: `${maid.fullName} has been hired using your free replacement vacancy.`,
-        });
-        return res.json({ success: true, freeVacancyUsed: true, amount: 0 });
+
+        // Released after grace period — charge stored penalty at hire time
+        amountCents = penaltyAmount * 100;
+        description = `Replacement fee for ${maid.fullName} (EGP ${penaltyAmount})`;
+
+      } else {
+        // No active vacancy — normal commission
+        amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
+        description = `Commission for ${maid.fullName}`;
       }
-
-      amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
-      description = `Commission for ${maid.fullName}`;
-
-    } else if (type === 'release_fee') {
-      if (!maidProfileId) return res.status(400).json({ success: false, message: 'maidProfileId required' });
-      const maid = await Maid.findById(maidProfileId);
-      if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
-
-      const hw = await HouseWife.findOne({ user: req.user._id });
-      const hireEntry = hw?.hiredMaids?.find(h => String(h.maid) === String(maidProfileId));
-      if (!hireEntry) return res.status(404).json({ success: false, message: 'Maid not in your hired list' });
-
-      const daysHired = (Date.now() - new Date(hireEntry.hiredAt || 0).getTime()) / (24 * 60 * 60 * 1000);
-      let penaltyPct;
-      if (daysHired <= 3)  return res.status(400).json({ success: false, message: 'Use free release during grace period' });
-      if (daysHired <= 7)  penaltyPct = 0.50;
-      else if (daysHired <= 30) penaltyPct = 0.70;
-      else                 penaltyPct = 1.00;
-
-      amountCents = Math.round(CUSTOMER_SUBSCRIPTION_CENTS * penaltyPct);
-      description = `Maid release fee (${Math.round(penaltyPct * 100)}% of subscription)`;
 
     } else {
       return res.status(400).json({ success: false, message: `Invalid payment type: "${type}". Allowed: subscription, customer_subscription, commission, release_fee` });
@@ -276,29 +269,15 @@ async function handlePaymentSuccess(payment) {
       body: 'You can now chat with maids and start hiring.',
     });
 
-  } else if (payment.type === 'release_fee') {
-    const maidProfileId = payment.maidProfile;
-    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
-    const expiresAt = new Date(Date.now() + THREE_DAYS);
-    await HouseWife.findOneAndUpdate({ user: payment.user }, {
-      'freeVacancy.available': true,
-      'freeVacancy.expiresAt': expiresAt,
-      $pull: { hiredMaids: { maid: maidProfileId } },
-      $addToSet: { blockedMaids: maidProfileId },
-    });
-    if (maidProfileId) {
-      await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true, isHired: false });
-    }
-    await Notification.create({
-      user: payment.user, type: 'system',
-      title: '↩ Maid Released',
-      body: 'Your maid has been released. You have 3 days to hire a replacement.',
-    });
-
   } else if (payment.type === 'commission') {
     const { HouseWife, Chat } = require('../models/index');
     const hw = await HouseWife.findOne({ user: payment.user });
     if (hw && payment.maidProfile) {
+      // Clear the free vacancy slot (whether it was a penalized replacement or normal hire)
+      if (hw.freeVacancy?.available) {
+        hw.freeVacancy.available     = false;
+        hw.freeVacancy.penaltyAmount = 0;
+      }
       hw.hiredMaids.push({
         maid: payment.maidProfile,
         commissionPaid: true,
@@ -312,7 +291,7 @@ async function handlePaymentSuccess(payment) {
     await Notification.create({
       user: payment.user, type: 'hire_confirmed',
       title: '🎉 Hire Confirmed!',
-      body: 'Commission paid. The maid has been officially hired!',
+      body: 'Your new maid has been officially hired!',
     });
   }
 }
@@ -324,28 +303,32 @@ async function handlePaymentSuccess(payment) {
 exports.returnMaid = async (req, res) => {
   try {
     const { maidProfileId, chatId } = req.body;
-    const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+    const DAY_MS    = 24 * 60 * 60 * 1000;
+    const THREE_DAYS_MS = 3 * DAY_MS;
 
-    // Enforce 3-day return window: customer can only release within 3 days of hiring
     const hw = await HouseWife.findOne({ user: req.user._id });
     const hireEntry = hw?.hiredMaids?.find(h => String(h.maid) === String(maidProfileId));
     if (!hireEntry) {
       return res.status(404).json({ success: false, message: 'Maid not in your hired list' });
     }
-    const hiredAt = hireEntry.hiredAt ? new Date(hireEntry.hiredAt) : new Date(0);
-    if (Date.now() - hiredAt.getTime() > THREE_DAYS) {
-      return res.status(403).json({ success: false, message: 'The 3-day return window has expired. You cannot release this maid until your next subscription period.' });
-    }
 
-    const expiresAt = new Date(Date.now() + THREE_DAYS);
+    // Calculate what the customer will owe when they hire their next maid.
+    // Release itself is always free — the fee is charged at next hire time.
+    const daysHired = (Date.now() - new Date(hireEntry.hiredAt || 0).getTime()) / DAY_MS;
+    let penaltyAmount = 0;
+    if      (daysHired > 30) penaltyAmount = 1000;
+    else if (daysHired > 7)  penaltyAmount = 700;
+    else if (daysHired > 3)  penaltyAmount = 500;
+
+    const expiresAt = new Date(Date.now() + THREE_DAYS_MS);
     await HouseWife.findOneAndUpdate({ user: req.user._id }, {
-      'freeVacancy.available': true,
-      'freeVacancy.expiresAt': expiresAt,
-      $pull: { hiredMaids: { maid: maidProfileId } },
-      $addToSet: { blockedMaids: maidProfileId },
+      'freeVacancy.available':     true,
+      'freeVacancy.expiresAt':     expiresAt,
+      'freeVacancy.penaltyAmount': penaltyAmount,
+      $pull:    { hiredMaids: { maid: maidProfileId } },
+      $addToSet:{ blockedMaids: maidProfileId },
     });
 
-    // Restore maid to available so she appears in browse for others
     if (maidProfileId) {
       await Maid.findByIdAndUpdate(maidProfileId, { isAvailable: true, isHired: false });
     }
@@ -355,13 +338,17 @@ exports.returnMaid = async (req, res) => {
       await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'chatting' });
     }
 
+    const notifBody = penaltyAmount > 0
+      ? `You have 3 days to hire a replacement. A fee of EGP ${penaltyAmount} will apply.`
+      : 'You have 3 days to hire a free replacement maid.';
+
     await Notification.create({
       user: req.user._id, type: 'system',
-      title: 'Free Replacement Available',
-      body: 'You have 3 days to select a new maid at no extra commission cost.',
+      title: '↩ Maid Released',
+      body: notifBody,
     });
 
-    res.json({ success: true, freeVacancyExpiresAt: expiresAt });
+    res.json({ success: true, penaltyAmount, freeVacancyExpiresAt: expiresAt });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -32,15 +32,26 @@ module.exports = { chats: r2 };
 const r3 = express.Router();
 const pc = require('../controllers/paymentController');
 
-r3.post('/fawry',         protect, pc.initFawry);
-r3.post('/vodafone-cash', protect, pc.initVodafoneCash);
-r3.post('/instapay',      protect, pc.initInstaPay);
-r3.post('/amazon-pay',    protect, pc.initAmazonPay);
-r3.post('/callback',      pc.paymentCallback);  // webhook - no auth
-r3.get('/history',        protect, pc.getHistory);
-r3.get('/:id/status',     protect, pc.checkStatus);
+r3.post('/paymob/initiate',  protect, pc.initiatePaymob);
+r3.post('/paymob/callback',  pc.paymobCallback);   // Paymob webhook — no auth
+r3.post('/return-maid',      protect, pc.returnMaid);
+r3.get('/history',           protect, pc.getHistory);
+r3.get('/:id/status',        protect, pc.checkStatus);
 
 module.exports = { payments: r3 };
+
+// ─── coupons.js ───
+const r7 = express.Router();
+const coupon = require('../controllers/couponController');
+const { adminOnly } = require('../middleware/auth');
+
+r7.get('/my-code',       protect, coupon.getMyCode);
+r7.post('/validate',     protect, coupon.validateCoupon);
+r7.get('/',              protect, adminOnly, coupon.listCoupons);
+r7.post('/',             protect, adminOnly, coupon.createCoupon);
+r7.put('/:id/toggle',    protect, adminOnly, coupon.toggleCoupon);
+
+module.exports = { payments: r3, coupons: r7 };
 
 // ─── admin.js ───
 const r4 = express.Router();

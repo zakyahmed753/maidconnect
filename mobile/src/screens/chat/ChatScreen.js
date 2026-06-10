@@ -10,10 +10,12 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import Toast from 'react-native-toast-message';
 import useAuthStore from '../../store/authStore';
+import { useTranslation } from '../../utils/i18n';
 
 export default function ChatScreen({ route, navigation }) {
   const { chatId, maidName } = route.params || {};
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export default function ChatScreen({ route, navigation }) {
     try {
       const res = await chatsAPI.getMessages(chatId);
       setMessages(res.data.messages);
-    } catch { Toast.show({ type: 'error', text1: 'Failed to load messages' }); }
+    } catch { Toast.show({ type: 'error', text1: t('failed_load_msgs') }); }
     finally { setLoading(false); }
   };
 
@@ -94,7 +96,7 @@ export default function ChatScreen({ route, navigation }) {
       await chatsAPI.sendMessage({ chatId, type: 'text', content });
       // Socket will deliver the confirmed message and strip the temp one
     } catch {
-      Toast.show({ type: 'error', text1: 'Failed to send' });
+      Toast.show({ type: 'error', text1: t('failed_send_msg') });
       setText(content);
       setMessages(prev => prev.filter(m => m._id !== tempId));
     }
@@ -106,7 +108,7 @@ export default function ChatScreen({ route, navigation }) {
       return (
         <View style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
           <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
-            <Text style={[styles.bubbleTxt, isMe && styles.bubbleTxtMe]}>🎙 Voice note</Text>
+            <Text style={[styles.bubbleTxt, isMe && styles.bubbleTxtMe]}>{t('voice_note')}</Text>
           </View>
         </View>
       );
@@ -134,7 +136,7 @@ export default function ChatScreen({ route, navigation }) {
         <View style={styles.chatAva}><Text style={{ fontSize: 18 }}>👩🏽</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={styles.chatName}>{maidName || 'Maid'}</Text>
-          <Text style={styles.chatOnline}>● Online</Text>
+          <Text style={styles.chatOnline}>{t('chat_online')}</Text>
         </View>
       </View>
 
@@ -155,7 +157,7 @@ export default function ChatScreen({ route, navigation }) {
           style={styles.textInput}
           value={text}
           onChangeText={setText}
-          placeholder="Type a message…"
+          placeholder={t('type_message')}
           placeholderTextColor={COLORS.muted}
           multiline
           onSubmitEditing={sendText}

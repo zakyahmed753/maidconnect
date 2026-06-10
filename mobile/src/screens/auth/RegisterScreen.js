@@ -78,16 +78,16 @@ export default function RegisterScreen({ navigation }) {
       return Toast.show({ type:'error', text1: t('age_range') });
     }
 
-    if (!form.nationality) return Toast.show({ type:'error', text1: 'Select nationality' });
-    if (!form.bio.trim()) return Toast.show({ type:'error', text1: 'Bio is required' });
+    if (!form.nationality) return Toast.show({ type:'error', text1: t('select_nationality_err') });
+    if (!form.bio.trim()) return Toast.show({ type:'error', text1: t('bio_required') });
 
     if (!form.phone || !form.phone.trim()) {
-      return Toast.show({ type: 'error', text1: 'Phone number is required' });
+      return Toast.show({ type: 'error', text1: t('phone_required') });
     }
     const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
     const phoneNorm = form.phone.trim().replace(/\s|-/g, '');
     if (!EGYPTIAN_PHONE.test(phoneNorm)) {
-      return Toast.show({ type: 'error', text1: 'Phone must be a valid Egyptian number (e.g. 01012345678)' });
+      return Toast.show({ type: 'error', text1: t('phone_invalid_eg') });
     }
 
     // ID validation
@@ -97,7 +97,7 @@ export default function RegisterScreen({ navigation }) {
     } else {
       const passportCheck = validatePassport(form.idNumber);
       if (!passportCheck.valid) return Toast.show({ type:'error', text1: passportCheck.message });
-      if (!idPhoto) return Toast.show({ type:'error', text1: 'Upload a photo of your passport' });
+      if (!idPhoto) return Toast.show({ type:'error', text1: t('upload_passport_photo_err') });
     }
 
     setLoading(true);
@@ -171,7 +171,7 @@ export default function RegisterScreen({ navigation }) {
             <Text style={styles.label}>{t('age')} (20–45) *</Text>
             <TextInput style={styles.input} value={form.age} onChangeText={v=>upd('age',v)} keyboardType="numeric" placeholder="25" placeholderTextColor={COLORS.muted}/>
             {form.age.length > 0 && (Number(form.age) < 20 || Number(form.age) > 45) && (
-              <Text style={{ fontSize:11, color:COLORS.red, marginTop:3 }}>Must be 20–45</Text>
+              <Text style={{ fontSize:11, color:COLORS.red, marginTop:3 }}>{t('must_be_20_45')}</Text>
             )}
           </View>
           <View style={{ flex:1 }}>
@@ -180,22 +180,22 @@ export default function RegisterScreen({ navigation }) {
           </View>
         </View>
 
-        <Text style={styles.label}>Expected Salary (EGP/mo)</Text>
+        <Text style={styles.label}>{t('expected_salary_egp')}</Text>
         <TextInput style={styles.input} value={form.expectedSalary} onChangeText={v=>upd('expectedSalary',v)} keyboardType="numeric" placeholder="17,500" placeholderTextColor={COLORS.muted}/>
 
         {/* ID section — changes based on nationality */}
-        <Text style={styles.label}>{isEgyptian ? 'National ID Number *' : `${t('passport_number')} *`}</Text>
+        <Text style={styles.label}>{isEgyptian ? `${t('national_id_label')} *` : `${t('passport_number')} *`}</Text>
         <TextInput style={styles.input}
           value={form.idNumber}
           onChangeText={v => upd('idNumber', isEgyptian ? v.replace(/\D/g,'') : v.toUpperCase())}
-          placeholder={isEgyptian ? '14-digit National ID' : 'e.g. A1234567'}
+          placeholder={isEgyptian ? t('national_id_ph') : 'e.g. A1234567'}
           placeholderTextColor={COLORS.muted}
           keyboardType={isEgyptian ? 'numeric' : 'default'}
           autoCapitalize={isEgyptian ? 'none' : 'characters'}
           maxLength={isEgyptian ? 14 : 15}/>
         {form.idNumber.length > 0 && (
           <Text style={{ fontSize:11, marginTop:3, color: idValidation.valid ? '#2e7d5e' : COLORS.red }}>
-            {idValidation.valid ? '✓ Valid format' : idValidation.message}
+            {idValidation.valid ? t('valid_format') : idValidation.message}
           </Text>
         )}
 
@@ -208,8 +208,8 @@ export default function RegisterScreen({ navigation }) {
                 ? <Image source={{ uri: idPhoto }} style={{ width:'100%', height:120, borderRadius:4, resizeMode:'cover' }}/>
                 : <>
                     <Text style={{ fontSize:24, marginBottom:4 }}>🪪</Text>
-                    <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.gold }}>Tap to Upload Passport Photo</Text>
-                    <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>Clear photo of the photo page</Text>
+                    <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.gold }}>{t('tap_upload_passport')}</Text>
+                    <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>{t('clear_photo_of_page')}</Text>
                   </>}
             </TouchableOpacity>
           </>
@@ -217,9 +217,9 @@ export default function RegisterScreen({ navigation }) {
 
 
         <Text style={styles.label}>{t('bio')} *</Text>
-        <TextInput style={[styles.input, { height:80, textAlignVertical:'top' }]} value={form.bio} onChangeText={v=>upd('bio',v)} multiline placeholder="Describe your experience…" placeholderTextColor={COLORS.muted}/>
+        <TextInput style={[styles.input, { height:80, textAlignVertical:'top' }]} value={form.bio} onChangeText={v=>upd('bio',v)} multiline placeholder={t('bio') + '…'} placeholderTextColor={COLORS.muted}/>
 
-        <Text style={styles.label}>Languages Spoken</Text>
+        <Text style={styles.label}>{t('languages_spoken_label')}</Text>
         <View style={styles.skillsWrap}>
           {LANGUAGES.map(l => (
             <TouchableOpacity key={l} onPress={() => toggleLang(l)}
@@ -242,8 +242,8 @@ export default function RegisterScreen({ navigation }) {
         <Text style={styles.label}>{t('photos')} (minimum 3) — {photos.length}/5</Text>
         <TouchableOpacity style={styles.uploadBox} onPress={pickPhoto}>
           <Text style={{ fontSize:28, marginBottom:6 }}>📸</Text>
-          <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.gold }}>Tap to Upload Photos</Text>
-          <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>Clear, professional photos only</Text>
+          <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.gold }}>{t('tap_upload_photos')}</Text>
+          <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>{t('professional_photos_note')}</Text>
         </TouchableOpacity>
         <View style={styles.photoRow}>
           {photos.map((uri, i) => (

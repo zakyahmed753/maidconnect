@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
+import { useTranslation } from '../../utils/i18n';
 
 function maskPhone(phone) {
   if (!phone) return null;
@@ -17,6 +18,7 @@ function maskPhone(phone) {
 }
 
 export default function HireRequestScreen({ navigation }) {
+  const { t } = useTranslation();
   const [requests,    setRequests]    = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [responding,  setResponding]  = useState(null);
@@ -43,20 +45,20 @@ export default function HireRequestScreen({ navigation }) {
       if (action === 'approve') {
         navigation.replace('HiredCelebration');
       } else {
-        Toast.show({ type: 'info', text1: 'Request declined' });
+        Toast.show({ type: 'info', text1: t('request_declined') });
         setRequests(prev => prev.filter(r => r._id !== requestId));
       }
     } catch (err) {
       if (err.response?.data?.requiresResubscription) {
         Toast.show({
           type: 'error',
-          text1: 'Monthly limit reached',
-          text2: 'You have 2 hires this month. Renew to accept more.',
+          text1: t('monthly_limit_reached'),
+          text2: t('monthly_limit_desc'),
           visibilityTime: 5000,
         });
         navigation.navigate('PaymentHistory');
       } else {
-        Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to respond' });
+        Toast.show({ type: 'error', text1: err.response?.data?.message || t('failed_to_respond') });
       }
     } finally {
       setResponding(null);
@@ -81,19 +83,19 @@ export default function HireRequestScreen({ navigation }) {
               </Text>
               {profileModal?.hwProfile?.subscription?.status === 'active' ? (
                 <View style={{ flexDirection:'row', alignItems:'center', gap:5, marginTop:4, backgroundColor:'rgba(46,125,94,0.1)', paddingHorizontal:10, paddingVertical:4, borderRadius:12 }}>
-                  <Text style={{ fontSize:11, color:'#2e7d5e', fontWeight:'700' }}>✓ Verified Subscriber</Text>
+                  <Text style={{ fontSize:11, color:'#2e7d5e', fontWeight:'700' }}>{t('verified_subscriber')}</Text>
                 </View>
               ) : (
-                <Text style={{ fontSize:11, color:COLORS.muted, marginTop:4 }}>Subscription status unknown</Text>
+                <Text style={{ fontSize:11, color:COLORS.muted, marginTop:4 }}>{t('sub_status_unknown')}</Text>
               )}
             </View>
 
             {/* Info rows */}
             {[
-              { label: 'Area', value: profileModal?.hwProfile?.residentialArea || profileModal?.hwProfile?.city || '—', icon: '📍' },
-              { label: 'Phone', value: maskPhone(profileModal?.housewife?.phone) || '—', icon: '📞' },
-              { label: 'Country', value: profileModal?.hwProfile?.country || 'Egypt', icon: '🌍' },
-              { label: 'Request date', value: profileModal ? new Date(profileModal.createdAt).toLocaleDateString([], { day:'numeric', month:'long', year:'numeric' }) : '—', icon: '🗓' },
+              { label: t('area_info'), value: profileModal?.hwProfile?.residentialArea || profileModal?.hwProfile?.city || '—', icon: '📍' },
+              { label: t('phone_info'), value: maskPhone(profileModal?.housewife?.phone) || '—', icon: '📞' },
+              { label: t('country_info'), value: profileModal?.hwProfile?.country || 'Egypt', icon: '🌍' },
+              { label: t('request_date_info'), value: profileModal ? new Date(profileModal.createdAt).toLocaleDateString([], { day:'numeric', month:'long', year:'numeric' }) : '—', icon: '🗓' },
             ].map(({ label, value, icon }) => (
               <View key={label} style={{ flexDirection:'row', alignItems:'center', gap:12, paddingVertical:12, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <Text style={{ fontSize:18, width:26 }}>{icon}</Text>
@@ -107,18 +109,18 @@ export default function HireRequestScreen({ navigation }) {
                 style={[styles.btnReject, { flex:1 }]}
                 onPress={() => { setProfileModal(null); respond(profileModal._id, 'reject'); }}
                 disabled={!!responding}>
-                <Text style={styles.btnRejectTxt}>✗ Decline</Text>
+                <Text style={styles.btnRejectTxt}>{t('btn_decline')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.btnApprove, { flex:2 }]}
                 onPress={() => { setProfileModal(null); respond(profileModal._id, 'approve'); }}
                 disabled={!!responding}>
-                <Text style={styles.btnApproveTxt}>✓ Accept Hire</Text>
+                <Text style={styles.btnApproveTxt}>{t('btn_accept_hire')}</Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity onPress={() => setProfileModal(null)} style={{ alignItems:'center', marginTop:14 }}>
-              <Text style={{ fontSize:13, color:COLORS.muted }}>Close</Text>
+              <Text style={{ fontSize:13, color:COLORS.muted }}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -128,9 +130,9 @@ export default function HireRequestScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1.2, textTransform: 'uppercase' }}>Incoming</Text>
-        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginTop: 2 }}>Hire Requests 👑</Text>
-        <Text style={{ fontSize: 12, color: 'rgba(232,201,122,0.45)', marginTop: 4 }}>Review customer profile before deciding</Text>
+        <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{t('incoming_label')}</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginTop: 2 }}>{t('hire_requests_title')}</Text>
+        <Text style={{ fontSize: 12, color: 'rgba(232,201,122,0.45)', marginTop: 4 }}>{t('review_before_deciding')}</Text>
       </LinearGradient>
 
       {loading ? (
@@ -140,9 +142,9 @@ export default function HireRequestScreen({ navigation }) {
       ) : requests.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
           <Text style={{ fontSize: 48, marginBottom: 16 }}>📭</Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, textAlign: 'center' }}>No pending requests</Text>
+          <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, textAlign: 'center' }}>{t('no_pending_requests')}</Text>
           <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
-            When a customer wants to hire you, their request will appear here.
+            {t('no_pending_sub')}
           </Text>
         </View>
       ) : (
@@ -183,7 +185,7 @@ export default function HireRequestScreen({ navigation }) {
                 <TouchableOpacity
                   style={styles.viewProfileBtn}
                   onPress={() => setProfileModal(req)}>
-                  <Text style={styles.viewProfileTxt}>👁 View Customer Profile</Text>
+                  <Text style={styles.viewProfileTxt}>{t('view_customer_profile')}</Text>
                   <Text style={{ color: COLORS.gold, fontSize: 14 }}>→</Text>
                 </TouchableOpacity>
 
@@ -197,7 +199,7 @@ export default function HireRequestScreen({ navigation }) {
                     disabled={!!responding}>
                     {responding === req._id + 'reject'
                       ? <ActivityIndicator size="small" color={COLORS.red} />
-                      : <Text style={styles.btnRejectTxt}>✗ Decline</Text>}
+                      : <Text style={styles.btnRejectTxt}>{t('btn_decline')}</Text>}
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.btnApprove, responding === req._id + 'approve' && { opacity: 0.5 }]}
@@ -205,7 +207,7 @@ export default function HireRequestScreen({ navigation }) {
                     disabled={!!responding}>
                     {responding === req._id + 'approve'
                       ? <ActivityIndicator size="small" color="#fff" />
-                      : <Text style={styles.btnApproveTxt}>✓ Accept Hire</Text>}
+                      : <Text style={styles.btnApproveTxt}>{t('btn_accept_hire')}</Text>}
                   </TouchableOpacity>
                 </View>
 

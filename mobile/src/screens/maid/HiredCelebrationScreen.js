@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, StatusBar } from 'r
 import { LinearGradient } from 'expo-linear-gradient';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
+import { useTranslation } from '../../utils/i18n';
 
 export default function HiredCelebrationScreen({ navigation }) {
+  const { t } = useTranslation();
   const completeAuth = useAuthStore(s => s.completeAuth);
 
   const scaleAnim  = useRef(new Animated.Value(0.5)).current;
@@ -43,20 +45,18 @@ export default function HiredCelebrationScreen({ navigation }) {
         </Animated.View>
 
         <Animated.View style={{ opacity: opacityAnim, transform: [{ translateY: slideAnim }], alignItems: 'center' }}>
-          <Text style={styles.congrats}>Congratulations!</Text>
-          <Text style={styles.headline}>You're Hired! 👑</Text>
+          <Text style={styles.congrats}>{t('congratulations')}</Text>
+          <Text style={styles.headline}>{t('youre_hired')}</Text>
 
           <View style={styles.dividerLine} />
 
-          <Text style={styles.body}>
-            You have officially accepted the hire request. The customer has been notified.
-          </Text>
+          <Text style={styles.body}>{t('hired_body')}</Text>
 
           <View style={styles.infoBox}>
             {[
-              ['✅', 'Your profile is now marked unavailable'],
-              ['📧', 'Customer received a confirmation email'],
-              ['💬', 'Chat with your employer via Messages'],
+              ['✅', t('hired_profile_unavail')],
+              ['📧', t('hired_email_sent')],
+              ['💬', t('hired_chat_employer')],
             ].map(([icon, text]) => (
               <View key={text} style={styles.infoRow}>
                 <Text style={{ fontSize: 16 }}>{icon}</Text>
@@ -66,7 +66,7 @@ export default function HiredCelebrationScreen({ navigation }) {
           </View>
 
           <TouchableOpacity style={styles.btn} onPress={handleGoHome}>
-            <Text style={styles.btnTxt}>Go to Dashboard →</Text>
+            <Text style={styles.btnTxt}>{t('go_to_dashboard')}</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>

@@ -73,12 +73,12 @@ export default function SubscriptionScreen({ navigation }) {
         // completeAuth will update auth store → AppNavigator routes to MaidTabs
       } else if (res.data?.status === 'failed') {
         setPendingPayment(null);
-        Toast.show({ type: 'info', text1: 'Receipt rejected', text2: 'Please re-upload a clear receipt.' });
+        Toast.show({ type: 'info', text1: t('receipt_rejected'), text2: t('receipt_rejected_sub') });
       } else {
-        Toast.show({ type: 'info', text1: 'Still pending', text2: 'Admin hasn\'t confirmed yet.' });
+        Toast.show({ type: 'info', text1: t('still_pending'), text2: t('admin_not_confirmed_yet') });
       }
     } catch {
-      Toast.show({ type: 'error', text1: 'Could not check status' });
+      Toast.show({ type: 'error', text1: t('could_not_check') });
     } finally {
       setCheckingStatus(false);
     }
@@ -97,12 +97,12 @@ export default function SubscriptionScreen({ navigation }) {
         setCouponResult(res.data);
         Toast.show({
           type: 'success',
-          text1: `${res.data.discountValue}% discount applied!`,
-          text2: `You save EGP ${res.data.discountAmount}`,
+          text1: `${res.data.discountValue}${t('discount_applied_suffix')}`,
+          text2: `${t('you_save')} ${res.data.discountAmount}`,
         });
       }
     } catch (err) {
-      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Invalid coupon code' });
+      Toast.show({ type: 'error', text1: err.response?.data?.message || t('coupon_invalid') });
     } finally {
       setApplying(false);
     }
@@ -193,9 +193,9 @@ export default function SubscriptionScreen({ navigation }) {
         {/* Pending receipt banner — shown when maid already submitted but admin hasn't confirmed yet */}
         {pendingPayment && (
           <View style={{ backgroundColor: 'rgba(201,168,76,0.08)', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 16, marginBottom: 16 }}>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark, marginBottom: 4 }}>⏳ Receipt Under Review</Text>
+            <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark, marginBottom: 4 }}>{t('receipt_under_review')}</Text>
             <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 14 }}>
-              Your payment receipt was submitted and is awaiting admin confirmation. You'll receive a notification once confirmed.
+              {t('receipt_review_body')}
             </Text>
             <TouchableOpacity
               onPress={handleCheckPendingStatus}
@@ -203,10 +203,10 @@ export default function SubscriptionScreen({ navigation }) {
               style={{ backgroundColor: COLORS.dark, padding: 12, borderRadius: 8, alignItems: 'center', opacity: checkingStatus ? 0.6 : 1 }}>
               {checkingStatus
                 ? <ActivityIndicator color="#e8c97a" size="small" />
-                : <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a' }}>🔄 Check Confirmation Status</Text>}
+                : <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a' }}>{t('check_confirmation_status')}</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setPendingPayment(null)} style={{ alignItems: 'center', paddingTop: 10 }}>
-              <Text style={{ fontSize: 11, color: COLORS.muted }}>Submit a new receipt instead</Text>
+              <Text style={{ fontSize: 11, color: COLORS.muted }}>{t('submit_new_receipt')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -215,9 +215,9 @@ export default function SubscriptionScreen({ navigation }) {
         <View style={[styles.planCard, styles.planSelected]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <View>
-              <Text style={styles.planName}>Monthly Plan</Text>
+              <Text style={styles.planName}>{t('monthly_plan_name')}</Text>
               <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>
-                {nationality ? `Pricing for ${nationality}` : 'Standard pricing'}
+                {nationality ? `${t('pricing_for')} ${nationality}` : t('standard_pricing')}
               </Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
@@ -234,12 +234,12 @@ export default function SubscriptionScreen({ navigation }) {
               ) : (
                 <>
                   <Text style={styles.planPrice}>EGP {monthlyPrice.toLocaleString()}</Text>
-                  <Text style={styles.planPer}>/month</Text>
+                  <Text style={styles.planPer}>{t('per_month')}</Text>
                 </>
               )}
             </View>
           </View>
-          {['Active profile listing', 'Up to 5 photos', 'Chat messaging', 'Basic analytics', 'Priority support'].map(f => (
+          {[t('plan_active_listing'), t('plan_photos'), t('plan_chat'), t('plan_analytics'), t('plan_support')].map(f => (
             <View key={f} style={styles.featureRow}>
               <Text style={{ color: COLORS.green, fontSize: 14 }}>✓</Text>
               <Text style={styles.featureTxt}>{f}</Text>
@@ -249,19 +249,19 @@ export default function SubscriptionScreen({ navigation }) {
 
         {/* Coupon input */}
         <View style={styles.couponCard}>
-          <Text style={styles.couponLabel}>Have a referral or promo code? (Optional)</Text>
+          <Text style={styles.couponLabel}>{t('have_coupon')}</Text>
           {couponResult ? (
             <View style={styles.appliedRow}>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 13, color: '#2e7d5e', fontWeight: '700' }}>
-                  ✓ Code applied — {couponResult.discountValue}% off
+                  {t('coupon_applied_pct')} {couponResult.discountValue}% off
                 </Text>
                 <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>
-                  You save EGP {couponResult.discountAmount}
+                  {t('you_save')} {couponResult.discountAmount}
                 </Text>
               </View>
               <TouchableOpacity onPress={handleRemoveCoupon}>
-                <Text style={{ fontSize: 12, color: '#e05555', fontWeight: '600' }}>Remove</Text>
+                <Text style={{ fontSize: 12, color: '#e05555', fontWeight: '600' }}>{t('remove_coupon')}</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -269,7 +269,7 @@ export default function SubscriptionScreen({ navigation }) {
               <TextInput
                 style={styles.couponInput}
                 value={couponInput}
-                onChangeText={t => setCouponInput(t.toUpperCase())}
+                onChangeText={v => setCouponInput(v.toUpperCase())}
                 placeholder="Enter code (e.g. FAT2K9X)"
                 placeholderTextColor={COLORS.muted}
                 autoCapitalize="characters"
@@ -281,7 +281,7 @@ export default function SubscriptionScreen({ navigation }) {
                 disabled={!couponInput.trim() || applying}>
                 {applying
                   ? <ActivityIndicator size="small" color={COLORS.dark} />
-                  : <Text style={styles.applyBtnTxt}>Apply</Text>}
+                  : <Text style={styles.applyBtnTxt}>{t('apply_label')}</Text>}
               </TouchableOpacity>
             </View>
           )}
@@ -302,8 +302,8 @@ export default function SubscriptionScreen({ navigation }) {
         <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
           <Text style={styles.offlineIcon}>💵</Text>
           <View style={{ flex: 1 }}>
-            <Text style={styles.offlineTxt}>Pay via Cash Transfer</Text>
-            <Text style={styles.offlineSub}>Arrange payment offline with admin</Text>
+            <Text style={styles.offlineTxt}>{t('pay_cash')}</Text>
+            <Text style={styles.offlineSub}>{t('arrange_offline')}</Text>
           </View>
           <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
         </TouchableOpacity>
@@ -314,12 +314,12 @@ export default function SubscriptionScreen({ navigation }) {
           onPress={async () => {
             try {
               await completeAuth();
-              Toast.show({ type: 'info', text1: 'Checking...', text2: 'If admin activated your subscription you\'ll be redirected now.' });
+              Toast.show({ type: 'info', text1: t('checking_label') });
             } catch {
-              Toast.show({ type: 'error', text1: 'Could not check status' });
+              Toast.show({ type: 'error', text1: t('could_not_check') });
             }
           }}>
-          <Text style={{ fontSize: 12, color: COLORS.muted }}>Already paid? Tap to check if admin activated your subscription</Text>
+          <Text style={{ fontSize: 12, color: COLORS.muted }}>{t('already_paid_check')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} disabled={skipping}>
@@ -335,20 +335,20 @@ export default function SubscriptionScreen({ navigation }) {
         <ScrollView style={styles.modalSheet} contentContainerStyle={{ paddingBottom: 36 }} bounces={false}>
           <View style={styles.modalHandle} />
 
-          <Text style={styles.modalTitle}>💵 Cash Transfer Payment</Text>
+          <Text style={styles.modalTitle}>{t('cash_transfer_title')}</Text>
           <Text style={styles.modalSub}>
-            Transfer your subscription fee to one of the accounts below, then upload your receipt to submit.
+            {t('cash_transfer_sub')}
           </Text>
 
           {/* Amount box */}
           <View style={styles.amountBox}>
-            <Text style={styles.amountLabel}>Amount Due</Text>
+            <Text style={styles.amountLabel}>{t('amount_due')}</Text>
             <Text style={styles.amountVal}>EGP {displayPrice.toLocaleString()}</Text>
             <Text style={styles.amountNote}>Monthly plan · {nationality || 'Standard'} pricing</Text>
           </View>
 
           {/* Payment details */}
-          <Text style={styles.detailsHeader}>Transfer To</Text>
+          <Text style={styles.detailsHeader}>{t('transfer_to')}</Text>
           {[
             { icon: '💸', label: 'Instapay', value: '01022781113' },
             { icon: '📱', label: 'Vodafone Cash', value: '01022781113' },
@@ -362,22 +362,22 @@ export default function SubscriptionScreen({ navigation }) {
             </View>
           ))}
           <View style={styles.nameRow}>
-            <Text style={styles.detailLabel}>Account Name</Text>
+            <Text style={styles.detailLabel}>{t('account_name')}</Text>
             <Text style={styles.detailValue}>Ahmed Ibrahim Zaky Ahmed Ismail</Text>
           </View>
 
           {/* Receipt upload */}
-          <Text style={[styles.detailsHeader, { marginTop: 18 }]}>Upload Receipt</Text>
+          <Text style={[styles.detailsHeader, { marginTop: 18 }]}>{t('upload_receipt')}</Text>
           <TouchableOpacity style={styles.receiptUploadBtn} onPress={pickReceipt}>
             {receiptUri ? (
               <View style={{ width: '100%', alignItems: 'center' }}>
-                <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700', marginBottom: 6 }}>✓ Receipt selected — tap to change</Text>
+                <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700', marginBottom: 6 }}>✓ {t('upload_receipt')} — tap to change</Text>
               </View>
             ) : (
               <>
                 <Text style={{ fontSize: 24, marginBottom: 6 }}>📎</Text>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.gold }}>Tap to Upload Receipt</Text>
-                <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>Screenshot or photo of transfer confirmation</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.gold }}>{t('tap_upload_receipt')}</Text>
+                <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t('receipt_screenshot_note')}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -394,11 +394,11 @@ export default function SubscriptionScreen({ navigation }) {
             disabled={!receiptUri || submitting}>
             {submitting
               ? <ActivityIndicator color="#e8c97a" />
-              : <Text style={styles.gotItTxt}>{submitError ? 'Try Again' : 'Submit Receipt for Confirmation'}</Text>}
+              : <Text style={styles.gotItTxt}>{submitError ? t('try_again_btn') : t('submit_receipt_btn')}</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 12 }} onPress={() => { setOfflineModal(false); setReceiptUri(null); setSubmitError(null); }}>
-            <Text style={{ fontSize: 13, color: COLORS.muted }}>Cancel</Text>
+            <Text style={{ fontSize: 13, color: COLORS.muted }}>{t('cancel')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>

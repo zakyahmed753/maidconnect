@@ -41,12 +41,12 @@ export default function RegisterHousewifeScreen({ navigation }) {
       return Toast.show({ type: 'error', text1: t('fill_required') });
     }
     if (!area) {
-      return Toast.show({ type: 'error', text1: 'Please select your area in Cairo' });
+      return Toast.show({ type: 'error', text1: t('select_area_err') });
     }
     const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
     const normalizedPhone = form.phone.trim().replace(/\s|-/g, '');
     if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
-      return Toast.show({ type: 'error', text1: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
+      return Toast.show({ type: 'error', text1: t('phone_invalid_hw') });
     }
     setLoading(true);
     try {
@@ -75,7 +75,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
         <Text style={styles.heroTitle}>{t('sign_up')}</Text>
-        <Text style={styles.heroSub}>Customer — Find your trusted maid</Text>
+        <Text style={styles.heroSub}>{t('customer_subtitle')}</Text>
       </LinearGradient>
 
       <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
@@ -97,7 +97,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
         ))}
 
         {/* Area selection */}
-        <Text style={styles.label}>Your area in Cairo *</Text>
+        <Text style={styles.label}>{t('your_area_cairo')} *</Text>
         <View style={styles.areaGrid}>
           {CAIRO_AREAS.map(({ label, active }) => {
             const selected = area === label;
@@ -118,7 +118,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
                   {label}
                 </Text>
                 {!active && (
-                  <Text style={styles.areaSoonBadge}>soon</Text>
+                  <Text style={styles.areaSoonBadge}>{t('area_soon_badge')}</Text>
                 )}
               </TouchableOpacity>
             );

@@ -305,24 +305,18 @@
       <div class="step-title">Photos & Identity</div>
       <div class="step-sub">Upload your profile photos and ID document. This helps families trust you and speeds up verification.</div>
 
-      <!-- Profile Photos -->
+      <!-- Profile Photos — multi-select -->
       <div class="field">
         <label>Profile Photos <span style="color:#e05555">*</span> <span class="ar">صور الملف الشخصي</span></label>
-        <p style="font-size:12px;color:#666;margin-bottom:10px">Upload exactly 3 clear photos of yourself (face visible, good lighting)</p>
-        <div class="photo-grid">
-          <div class="photo-slot" id="slot0" onclick="document.getElementById('photoFile0').click()">
-            <input type="file" id="photoFile0" accept="image/*" onchange="previewPhoto(0,this)" style="display:none"/>
-            <div class="ph-label">📷<br/>Photo 1<br/><span style="font-size:9px;color:#444">Required</span></div>
-          </div>
-          <div class="photo-slot" id="slot1" onclick="document.getElementById('photoFile1').click()">
-            <input type="file" id="photoFile1" accept="image/*" onchange="previewPhoto(1,this)" style="display:none"/>
-            <div class="ph-label">📷<br/>Photo 2<br/><span style="font-size:9px;color:#444">Required</span></div>
-          </div>
-          <div class="photo-slot" id="slot2" onclick="document.getElementById('photoFile2').click()">
-            <input type="file" id="photoFile2" accept="image/*" onchange="previewPhoto(2,this)" style="display:none"/>
-            <div class="ph-label">📷<br/>Photo 3<br/><span style="font-size:9px;color:#444">Required</span></div>
-          </div>
+        <p style="font-size:12px;color:#666;margin-bottom:10px">Select at least 3 clear photos from your gallery at once (face visible, good lighting)</p>
+        <div class="upload-zone" id="photoZone" onclick="document.getElementById('photoFilesInput').click()" style="margin-bottom:10px">
+          <input type="file" id="photoFilesInput" accept="image/*" multiple style="display:none" onchange="handleMultiPhoto(this)"/>
+          <span class="icon">📷</span>
+          <strong style="font-size:13px;color:#bbb">Tap to select photos from gallery</strong>
+          <p>Select 3 or more photos at once · JPG or PNG</p>
         </div>
+        <div class="photo-grid" id="photoPreviewGrid" style="display:none"></div>
+        <div id="photoCount" style="font-size:11px;color:#555;margin-top:6px"></div>
       </div>
 
       <!-- ID Type -->
@@ -615,18 +609,88 @@ function markUploaded(zoneId, fileId, input) {
   }
 }
 
-const photoFiles = [null, null, null];
+let photoFiles = [];
 
-function previewPhoto(idx, input) {
-  if (!input.files[0]) return;
-  photoFiles[idx] = input.files[0];
-  const slot = document.getElementById('slot'+idx);
-  slot.classList.add('filled');
-  const reader = new FileReader();
-  reader.onload = e => {
-    slot.innerHTML = `<img src="${e.target.result}" alt="Photo ${idx+1}"/>`;
-  };
-  reader.readAsDataURL(input.files[0]);
+function handleMultiPhoto(input) {
+  if (!input.files || input.files.length === 0) return;
+  const newFiles = Array.from(input.files);
+  photoFiles = [...photoFiles, ...newFiles].slice(0, 10); // max 10
+
+  const zone = document.getElementById('photoZone');
+  zone.classList.add('has-file');
+  zone.querySelector('p').textContent = `✓ ${photoFiles.length} photo${photoFiles.length!==1?'s':''} selected`;
+
+  const grid = document.getElementById('photoPreviewGrid');
+  const countEl = document.getElementById('photoCount');
+  grid.innerHTML = '';
+  grid.style.display = 'grid';
+
+  photoFiles.forEach((file, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot filled';
+    slot.style.position = 'relative';
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      slot.innerHTML = `
+        <img src="${e.target.result}" alt="Photo ${i+1}" style="width:100%;height:100%;object-fit:cover;border-radius:6px"/>
+        <button onclick="removePhoto(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
+        <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px">#${i+1}</div>
+      `;
+    };
+    reader.readAsDataURL(file);
+    grid.appendChild(slot);
+  });
+
+  countEl.textContent = photoFiles.length >= 3
+    ? `✓ ${photoFiles.length} photos selected — first 3 will be uploaded as your profile photos`
+    : `⚠️ ${photoFiles.length}/3 selected — please add at least ${3 - photoFiles.length} more`;
+  countEl.style.color = photoFiles.length >= 3 ? '#2e7d5e' : '#e05555';
+}
+
+function removePhoto(idx) {
+  photoFiles.splice(idx, 1);
+  // Re-trigger preview refresh
+  const fakeInput = { files: [] };
+  handleMultiPhotoRefresh();
+}
+
+function handleMultiPhotoRefresh() {
+  const grid = document.getElementById('photoPreviewGrid');
+  const countEl = document.getElementById('photoCount');
+  const zone = document.getElementById('photoZone');
+
+  if (photoFiles.length === 0) {
+    grid.innerHTML = '';
+    grid.style.display = 'none';
+    zone.classList.remove('has-file');
+    zone.querySelector('p').textContent = 'Select 3 or more photos at once · JPG or PNG';
+    countEl.textContent = '';
+    return;
+  }
+
+  grid.innerHTML = '';
+  photoFiles.forEach((file, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'photo-slot filled';
+    slot.style.position = 'relative';
+    const reader = new FileReader();
+    reader.onload = e => {
+      slot.innerHTML = `
+        <img src="${e.target.result}" alt="Photo ${i+1}" style="width:100%;height:100%;object-fit:cover;border-radius:6px"/>
+        <button onclick="removePhoto(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1">✕</button>
+        <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px">#${i+1}</div>
+      `;
+    };
+    reader.readAsDataURL(file);
+    grid.appendChild(slot);
+  });
+
+  zone.querySelector('p').textContent = `✓ ${photoFiles.length} photo${photoFiles.length!==1?'s':''} selected`;
+  countEl.textContent = photoFiles.length >= 3
+    ? `✓ ${photoFiles.length} photos — first 3 will be your profile photos`
+    : `⚠️ ${photoFiles.length}/3 — please add at least ${3 - photoFiles.length} more`;
+  countEl.style.color = photoFiles.length >= 3 ? '#2e7d5e' : '#e05555';
 }
 
 function setProgress(pct) {

@@ -21,7 +21,7 @@ export default function LoginScreen({ navigation, route }) {
     setLoading(true);
     try {
       await login(email, password, role);
-      Toast.show({ type:'success', text1:'Welcome back! 👋' });
+      Toast.show({ type:'success', text1: t('login_success_toast') });
     } catch (err) {
       Toast.show({ type:'error', text1: err.response?.data?.message || 'Login failed' });
     } finally { setLoading(false); }
@@ -34,10 +34,10 @@ export default function LoginScreen({ navigation, route }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom:12 }}>
           <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.heroTitle}>Welcome Back</Text>
+        <Text style={styles.heroTitle}>{t('welcome_back')}</Text>
         {/* Role tabs */}
         <View style={styles.roleTabs}>
-          {[['housewife','🏠 Customer'],['maid','👩 Maid']].map(([r, label]) => (
+          {[['housewife', t('role_customer')],['maid', t('role_maid')]].map(([r, label]) => (
             <TouchableOpacity key={r} onPress={() => setRole(r)}
               style={[styles.roleTab, role === r && styles.roleTabActive]}>
               <Text style={[styles.roleTabTxt, role === r && styles.roleTabTxtActive]}>{label}</Text>

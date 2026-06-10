@@ -10,12 +10,13 @@ const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
 const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
 
-function getReleasePenalty(hiredAt) {
+// Returns what the customer will pay when hiring their NEXT maid (not to release this one).
+function getReplacementFee(hiredAt) {
   const ms = Date.now() - new Date(hiredAt || 0).getTime();
-  if (ms <= THREE_DAYS_MS) return { pct: 0,   amount: 0,    isFree: true,  label: 'Free' };
-  if (ms <= WEEK_MS)       return { pct: 50,  amount: 500,  isFree: false, label: 'EGP 500 (50%)' };
-  if (ms <= MONTH_MS)      return { pct: 70,  amount: 700,  isFree: false, label: 'EGP 700 (70%)' };
-  return                          { pct: 100, amount: 1000, isFree: false, label: 'EGP 1,000 (100%)' };
+  if (ms <= THREE_DAYS_MS) return { amount: 0,    isFree: true  };
+  if (ms <= WEEK_MS)       return { amount: 500,  isFree: false };
+  if (ms <= MONTH_MS)      return { amount: 700,  isFree: false };
+  return                          { amount: 1000, isFree: false };
 }
 
 export default function HiredMaidsScreen({ navigation }) {
@@ -51,7 +52,7 @@ export default function HiredMaidsScreen({ navigation }) {
 
   const submitReviewAndRelease = async () => {
     if (reviewStar === 0) {
-      Toast.show({ type: 'error', text1: 'Please select a star rating before releasing' });
+      Toast.show({ type: 'error', text1: t('please_rate_before_release') });
       return;
     }
     setReviewLoading(true);
@@ -65,70 +66,56 @@ export default function HiredMaidsScreen({ navigation }) {
       // Step 2: proceed with release
       proceedRelease(reviewMaid.maidId, reviewMaid.maidName, reviewMaid.hiredAt);
     } catch (err) {
-      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to submit review' });
+      Toast.show({ type: 'error', text1: err.response?.data?.message || t('review_submit_failed') });
     } finally {
       setReviewLoading(false);
     }
   };
 
   const proceedRelease = (maidId, maidName, hiredAt) => {
-    const penalty = getReleasePenalty(hiredAt);
+    const fee = getReplacementFee(hiredAt);
+    const feeNote = fee.isFree
+      ? 'Your next hire will be free (grace period).'
+      : `A replacement fee of EGP ${fee.amount} will be charged when you hire your next maid.`;
 
-    let title, message, confirmText;
-    if (penalty.isFree) {
-      title       = '↩ Release Maid — Free';
-      message     = `You're within the 3-day grace period.\n\nReleasing ${maidName} is FREE. You'll get 3 days to hire a free replacement.`;
-      confirmText = 'Release for Free';
-    } else if (penalty.pct === 50) {
-      title       = '↩ Release Maid — 50% Fee';
-      message     = `You're in the first week after the grace period.\n\nA release fee of EGP 500 (50% of subscription) applies.\n\nAfter payment you'll get 3 days to hire a replacement.`;
-      confirmText = 'Pay EGP 500 to Release';
-    } else if (penalty.pct === 70) {
-      title       = '↩ Release Maid — 70% Fee';
-      message     = `You're past the first week.\n\nA release fee of EGP 700 (70% of subscription) applies.\n\nAfter payment you'll get 3 days to hire a replacement.`;
-      confirmText = 'Pay EGP 700 to Release';
-    } else {
-      title       = '↩ Release Maid — Full Fee';
-      message     = `You're past the 30-day period.\n\nThe full subscription fee of EGP 1,000 is required to release ${maidName}.\n\nAfter payment you'll get 3 days to hire a replacement.`;
-      confirmText = 'Pay EGP 1,000 to Release';
-    }
-
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: confirmText,
-        style: penalty.isFree ? 'default' : 'destructive',
-        onPress: async () => {
-          if (penalty.isFree) {
+    Alert.alert(
+      '↩ Release Maid',
+      `Releasing ${maidName} is free.\n\nYou'll have 3 days to hire a replacement.\n\n${feeNote}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Release',
+          style: 'destructive',
+          onPress: async () => {
             setReturning(maidId);
             try {
-              await paymentsAPI.returnMaid({ maidProfileId: maidId });
+              const res = await paymentsAPI.returnMaid({ maidProfileId: maidId });
               setHired(prev => prev.filter(h => (h.maid?._id || h.maid) !== maidId));
-              Toast.show({ type: 'success', text1: 'Vacancy released', text2: 'You have 3 days to hire a replacement at no cost.' });
+              const penalty = res.data?.penaltyAmount || 0;
+              Toast.show({
+                type: penalty > 0 ? 'info' : 'success',
+                text1: t('vacancy_released'),
+                text2: penalty > 0
+                  ? `EGP ${penalty} replacement fee will apply to your next hire.`
+                  : t('vacancy_released_sub'),
+              });
             } catch (err) {
-              Toast.show({ type: 'error', text1: err.response?.data?.message || 'Failed to release' });
+              Toast.show({ type: 'error', text1: err.response?.data?.message || t('release_failed') });
             } finally {
               setReturning(null);
             }
-          } else {
-            navigation.navigate('Payment', {
-              type: 'release_fee',
-              maidProfileId: maidId,
-              maidName,
-              amount: penalty.amount,
-            });
-          }
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const getPenaltyBadge = (hiredAt) => {
-    const penalty = getReleasePenalty(hiredAt);
-    if (penalty.isFree) return { text: '✓ Grace period — free return', color: '#2e7d5e', bg: 'rgba(46,125,94,0.1)' };
-    if (penalty.pct === 50) return { text: '⚠ Release fee: EGP 500 (50%)', color: '#b45309', bg: '#fffbeb' };
-    if (penalty.pct === 70) return { text: '⚠ Release fee: EGP 700 (70%)', color: '#b45309', bg: '#fffbeb' };
-    return { text: '⚠ Release fee: EGP 1,000 (100%)', color: '#b91c1c', bg: '#fef2f2' };
+    const fee = getReplacementFee(hiredAt);
+    if (fee.isFree)        return { text: t('next_hire_free'),    color: '#2e7d5e', bg: 'rgba(46,125,94,0.1)' };
+    if (fee.amount === 500) return { text: t('next_hire_fee_500'), color: '#b45309', bg: '#fffbeb' };
+    if (fee.amount === 700) return { text: t('next_hire_fee_700'), color: '#b45309', bg: '#fffbeb' };
+    return                        { text: t('next_hire_fee_1000'), color: '#b91c1c', bg: '#fef2f2' };
   };
 
   return (
@@ -139,10 +126,10 @@ export default function HiredMaidsScreen({ navigation }) {
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
           <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:22 }}>
             <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>
-              Rate {reviewMaid?.maidName}
+              {t('rate_label')} {reviewMaid?.maidName}
             </Text>
             <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:16, lineHeight:19 }}>
-              A review is required before releasing the vacancy. Your feedback helps other families.
+              {t('rate_required_release')}
             </Text>
 
             {/* Stars */}
@@ -156,7 +143,7 @@ export default function HiredMaidsScreen({ navigation }) {
 
             <TextInput
               style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:8, padding:12, fontSize:14, color:COLORS.text, backgroundColor:COLORS.cream, minHeight:80, textAlignVertical:'top', marginBottom:16 }}
-              placeholder="Share your experience (optional but appreciated)…"
+              placeholder={t('share_exp_release')}
               placeholderTextColor={COLORS.muted}
               value={reviewComment}
               onChangeText={setReviewComment}
@@ -170,7 +157,7 @@ export default function HiredMaidsScreen({ navigation }) {
               {reviewLoading
                 ? <ActivityIndicator color="#fff"/>
                 : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color: reviewStar > 0 ? '#fff' : COLORS.muted }}>
-                    Submit Review & Release Vacancy
+                    {t('submit_review_release')}
                   </Text>}
             </TouchableOpacity>
           </View>
@@ -181,8 +168,8 @@ export default function HiredMaidsScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Hired Maid 👑</Text>
-        <Text style={styles.headerSub}>Manage your current domestic helper</Text>
+        <Text style={styles.headerTitle}>{t('hired_maid_title')}</Text>
+        <Text style={styles.headerSub}>{t('hired_maid_sub')}</Text>
       </View>
 
       {loading ? (
@@ -192,14 +179,14 @@ export default function HiredMaidsScreen({ navigation }) {
       ) : hired.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
           <Text style={{ fontSize: 52, marginBottom: 16 }}>🏠</Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, textAlign: 'center' }}>No hired maid yet</Text>
+          <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, textAlign: 'center' }}>{t('no_hired_maid')}</Text>
           <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
-            Browse available maids and send a hire request to get started.
+            {t('no_hired_sub')}
           </Text>
           <TouchableOpacity
             style={{ backgroundColor: COLORS.gold, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 6, marginTop: 24 }}
             onPress={() => navigation.navigate('Browse')}>
-            <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark }}>🔍 Browse Maids</Text>
+            <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark }}>{t('browse_maids_btn')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -230,11 +217,11 @@ export default function HiredMaidsScreen({ navigation }) {
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Hired on</Text>
+                  <Text style={styles.infoLabel}>{t('hired_on')}</Text>
                   <Text style={styles.infoVal}>{new Date(item.hiredAt || Date.now()).toLocaleDateString()}</Text>
                 </View>
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Skills</Text>
+                  <Text style={styles.infoLabel}>{t('skills_label_info')}</Text>
                   <Text style={styles.infoVal}>{(maid.skills || []).slice(0, 3).join(', ') || '—'}</Text>
                 </View>
 
@@ -250,7 +237,7 @@ export default function HiredMaidsScreen({ navigation }) {
                   disabled={isRet}>
                   {isRet
                     ? <ActivityIndicator size="small" color="#e05555" />
-                    : <Text style={styles.btnReleaseTxt}>↩ Release Vacancy</Text>}
+                    : <Text style={styles.btnReleaseTxt}>{t('release_vacancy')}</Text>}
                 </TouchableOpacity>
               </View>
             );
@@ -258,11 +245,14 @@ export default function HiredMaidsScreen({ navigation }) {
 
           <View style={styles.infoBox}>
             <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-              💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Return policy:</Text>{'\n'}
-              • Days 0–3: Free release (grace period){'\n'}
-              • Days 4–7: EGP 500 release fee (50%){'\n'}
-              • Days 8–30: EGP 700 release fee (70%){'\n'}
-              • After 30 days: EGP 1,000 full fee (100%)
+              💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Replacement policy:</Text>{'\n'}
+              • Releasing a maid is always free.{'\n'}
+              • A fee applies when hiring your next maid:{'\n'}
+              {'  '}• Hired 0–3 days ago → next hire is free{'\n'}
+              {'  '}• Hired 4–7 days ago → EGP 500 fee{'\n'}
+              {'  '}• Hired 8–30 days ago → EGP 700 fee{'\n'}
+              {'  '}• Hired 30+ days ago → EGP 1,000 fee{'\n'}
+              • You have 3 days after release to use your slot.
             </Text>
           </View>
         </ScrollView>
