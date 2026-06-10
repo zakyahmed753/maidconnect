@@ -24,7 +24,9 @@ export default function ChatScreen({ route, navigation }) {
   const listRef   = useRef();
   const socketRef = useRef();
   const pollRef   = useRef();
-  const atBottomRef = useRef(true); // track if user is scrolled to bottom
+  const atBottomRef = useRef(true);
+  const userRef   = useRef(user);
+  useEffect(() => { userRef.current = user; }, [user]);
 
   // ── Merge helper: add only messages we don't already have ──────────────────
   const mergeMessages = useCallback((incoming) => {
@@ -32,15 +34,20 @@ export default function ChatScreen({ route, navigation }) {
       const existingIds = new Set(prev.filter(m => !m._isTemp).map(m => m._id));
       const newOnes = incoming.filter(m => !existingIds.has(m._id));
       if (newOnes.length === 0) return prev;
-      // Keep unconfirmed temp messages at the end
-      const temps = prev.filter(m => m._isTemp);
+      // Drop temps whose content is now confirmed by the server (prevents duplicates
+      // when the poll delivers the confirmed message before the socket fires)
+      const confirmedOwnContents = new Set(
+        newOnes
+          .filter(m => String(m.sender?._id) === String(userRef.current?._id))
+          .map(m => m.content)
+      );
+      const temps = prev.filter(m => m._isTemp && !confirmedOwnContents.has(m.content));
       const confirmed = [...prev.filter(m => !m._isTemp), ...newOnes]
         .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-      const result = [...confirmed, ...temps];
       if (atBottomRef.current) {
         setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
       }
-      return result;
+      return [...confirmed, ...temps];
     });
   }, []);
 
