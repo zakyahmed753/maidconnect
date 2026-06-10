@@ -1,9 +1,12 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Image, StatusBar, Modal, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Linking, FlatList, Dimensions } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 import { maidsAPI, chatsAPI, hwAPI, paymentsAPI, configAPI } from '../../services/api';
+import io from 'socket.io-client';
+import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
@@ -32,6 +35,41 @@ export default function MaidDetailScreen({ route, navigation }) {
   const galleryRef                            = useRef(null);
 
   const photos = (maid.photos || []).filter(p => p?.url);
+  const socketRef = useRef();
+
+  // Real-time: listen for hire request response (approve/reject) while screen is open
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const token = await SecureStore.getItemAsync('maidconnect_token');
+      const BASE = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'https://api.servix.world';
+      const socket = io(BASE, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+      });
+      socketRef.current = socket;
+      socket.on('hire_request_response', ({ action, maidName: respondingMaidName }) => {
+        if (!mounted) return;
+        // Re-fetch profile to get accurate hired/pending state
+        hwAPI.getProfile().then(r => {
+          if (!mounted) return;
+          const hw = r.data?.profile;
+          const hired = (hw?.hiredMaids || []).some(h => h.maid === maid._id || h.maid?._id === maid._id);
+          setIsHired(hired);
+          setHireRequestSent((r.data?.pendingHireRequests || []).includes(maid._id));
+        }).catch(() => {});
+        if (action === 'approve') {
+          Toast.show({ type: 'success', text1: '🎉 Hire Confirmed!', text2: `${respondingMaidName} accepted your request.`, visibilityTime: 5000 });
+        } else {
+          Toast.show({ type: 'info', text1: 'Request Declined', text2: `${respondingMaidName} declined your request.`, visibilityTime: 4000 });
+        }
+      });
+    })();
+    return () => { mounted = false; socketRef.current?.disconnect(); };
+  }, []);
 
   // Re-fetch on every focus so hire status stays fresh after maid approves
   useFocusEffect(

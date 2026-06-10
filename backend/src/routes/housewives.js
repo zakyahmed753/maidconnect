@@ -77,8 +77,25 @@ router.post('/hire', protect, async (req, res) => {
       chatId: chatId || null,
     });
 
-    // In-app notification for maid
+    // Real-time: push hire request to maid's HireRequestScreen instantly
     const hwUser = req.user;
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${maid.user._id}`).emit('new_hire_request', {
+        _id: String(request._id),
+        housewife: { _id: String(req.user._id), name: hwUser.name, phone: req.user.phone },
+        hwProfile: hwProfile ? {
+          _id: String(hwProfile._id),
+          residentialArea: hwProfile.residentialArea,
+          city: hwProfile.city,
+          subscription: { status: hwProfile.subscription?.status },
+        } : null,
+        createdAt: request.createdAt,
+        status: 'pending',
+      });
+    }
+
+    // In-app notification for maid
     await Notification.create({
       user: maid.user._id,
       type: 'hire_request',

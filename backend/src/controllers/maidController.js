@@ -489,6 +489,10 @@ exports.respondHireRequest = async (req, res) => {
         body: `Congratulations! You accepted the hire request from ${hwUser.name}.`,
       });
 
+      // Real-time: notify customer their hire was approved
+      const ioApprove = req.app.get('io');
+      if (ioApprove) ioApprove.to(`user_${hwUser._id}`).emit('hire_request_response', { action: 'approve', maidName });
+
       res.json({ success: true, action: 'approved' });
 
     } else {
@@ -516,6 +520,10 @@ exports.respondHireRequest = async (req, res) => {
         subject: `Hire Request Declined — Servix`,
         html: hireRejectedEmailToCustomer(hwUser.name, maidName),
       });
+
+      // Real-time: notify customer their hire was rejected
+      const ioReject = req.app.get('io');
+      if (ioReject) ioReject.to(`user_${hwUser._id}`).emit('hire_request_response', { action: 'reject', maidName });
 
       res.json({ success: true, action: 'rejected' });
     }

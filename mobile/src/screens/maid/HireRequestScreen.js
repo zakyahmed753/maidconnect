@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, StatusBar, Modal
@@ -9,6 +9,9 @@ import { maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
+import io from 'socket.io-client';
+import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 
 function maskPhone(phone) {
   if (!phone) return null;
@@ -22,13 +25,36 @@ export default function HireRequestScreen({ navigation }) {
   const [requests,    setRequests]    = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [responding,  setResponding]  = useState(null);
-  const [profileModal, setProfileModal] = useState(null); // holds the req object to show
+  const [profileModal, setProfileModal] = useState(null);
+  const socketRef = useRef();
 
   useFocusEffect(
     useCallback(() => {
       load();
     }, [])
   );
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const token = await SecureStore.getItemAsync('maidconnect_token');
+      const BASE = Constants.expoConfig?.extra?.API_URL?.replace('/api', '') || 'https://api.servix.world';
+      const socket = io(BASE, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+      });
+      socketRef.current = socket;
+      socket.on('new_hire_request', (req) => {
+        if (!mounted) return;
+        setRequests(prev => prev.some(r => r._id === req._id) ? prev : [req, ...prev]);
+        Toast.show({ type: 'info', text1: '👑 New Hire Request!', text2: `${req.housewife?.name} wants to hire you.` });
+      });
+    })();
+    return () => { mounted = false; socketRef.current?.disconnect(); };
+  }, []);
 
   const load = () => {
     setLoading(true);

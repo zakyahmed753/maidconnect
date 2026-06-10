@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { hwAPI, paymentsAPI, maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -122,6 +122,7 @@ export default function HiredMaidsScreen({ navigation }) {
 
       {/* Mandatory Review Modal */}
       <Modal visible={reviewModal} transparent animationType="slide" onRequestClose={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex:1 }}>
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
           <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:22 }}>
             <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>
@@ -161,6 +162,7 @@ export default function HiredMaidsScreen({ navigation }) {
             </TouchableOpacity>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <View style={styles.header}>
@@ -243,15 +245,17 @@ export default function HiredMaidsScreen({ navigation }) {
           })}
 
           <View style={styles.infoBox}>
-            <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-              💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Replacement policy:</Text>{'\n'}
-              • Releasing a maid is always free.{'\n'}
-              • A fee applies when hiring your next maid:{'\n'}
-              {'  '}• Hired 0–3 days ago → next hire is free{'\n'}
-              {'  '}• Hired 4–7 days ago → EGP 500 fee{'\n'}
-              {'  '}• Hired 8–30 days ago → EGP 700 fee{'\n'}
-              {'  '}• Hired 30+ days ago → EGP 1,000 fee{'\n'}
-              • You have 3 days after release to use your slot.
+            <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 20 }}>
+              <Text style={{ fontWeight: '700', color: COLORS.dark }}>📋 How replacement fees work{'\n'}</Text>
+              {'\n'}
+              <Text>If you encounter any issues with your maid and need to replace her, a fee applies based on how long you have been working together:{'\n'}</Text>
+              {'\n'}
+              <Text style={{ color: '#2e7d5e', fontWeight: '700' }}>  ✓  0 – 3 days</Text><Text>   →  Free (trial period — no commitment){'\n'}</Text>
+              <Text style={{ fontWeight: '600' }}>  •  4 – 7 days</Text><Text>   →  EGP 500 replacement fee{'\n'}</Text>
+              <Text style={{ fontWeight: '600' }}>  •  8 – 30 days</Text><Text>  →  EGP 700 replacement fee{'\n'}</Text>
+              <Text style={{ fontWeight: '600' }}>  •  After 30 days</Text><Text> →  EGP 1,000 replacement fee{'\n'}</Text>
+              {'\n'}
+              <Text style={{ color: COLORS.dark }}>The fee is charged when you hire your next maid, not when you release. After releasing, you have 3 days to choose a replacement.</Text>
             </Text>
           </View>
         </ScrollView>
