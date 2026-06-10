@@ -15,8 +15,13 @@ const app = express();
 const server = http.createServer(app);
 
 // ── Socket.IO (real-time chat) ──
+// allowUpgrades:false keeps connections on polling (Render's nginx blocks WS upgrades)
 const io = new Server(server, {
-  cors: { origin: '*', methods: ['GET', 'POST'] }
+  cors: { origin: '*', methods: ['GET', 'POST'] },
+  transports: ['polling', 'websocket'],
+  allowUpgrades: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 // Attach io to app for use in controllers

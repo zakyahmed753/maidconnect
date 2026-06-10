@@ -72,7 +72,7 @@ export default function ChatScreen({ route, navigation }) {
 
     const socket = io(BASE, {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
