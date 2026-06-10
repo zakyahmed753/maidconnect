@@ -74,40 +74,39 @@ export default function HiredMaidsScreen({ navigation }) {
 
   const proceedRelease = (maidId, maidName, hiredAt) => {
     const fee = getReplacementFee(hiredAt);
-    const feeNote = fee.isFree
-      ? 'Your next hire will be free (grace period).'
-      : `A replacement fee of EGP ${fee.amount} will be charged when you hire your next maid.`;
 
-    Alert.alert(
-      '↩ Release Maid',
-      `Releasing ${maidName} is free.\n\nYou'll have 3 days to hire a replacement.\n\n${feeNote}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Release',
-          style: 'destructive',
-          onPress: async () => {
-            setReturning(maidId);
-            try {
-              const res = await paymentsAPI.returnMaid({ maidProfileId: maidId });
-              setHired(prev => prev.filter(h => (h.maid?._id || h.maid) !== maidId));
-              const penalty = res.data?.penaltyAmount || 0;
-              Toast.show({
-                type: penalty > 0 ? 'info' : 'success',
-                text1: t('vacancy_released'),
-                text2: penalty > 0
-                  ? `EGP ${penalty} replacement fee will apply to your next hire.`
-                  : t('vacancy_released_sub'),
-              });
-            } catch (err) {
-              Toast.show({ type: 'error', text1: err.response?.data?.message || t('release_failed') });
-            } finally {
-              setReturning(null);
-            }
-          },
+    // Dialog body is specific to each scenario
+    const dialogBody = fee.isFree
+      ? `${t('release_confirm_grace_body_1', { name: maidName })}\n\n${t('release_confirm_grace_body_2')}`
+      : `${t('release_confirm_fee_body_1', { name: maidName })}\n\n${t('release_confirm_fee_body_2_prefix')} EGP ${fee.amount} ${t('release_confirm_fee_body_2_suffix')}`;
+
+    Alert.alert(t('release_dialog_title'), dialogBody, [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('release_btn'),
+        style: 'destructive',
+        onPress: async () => {
+          setReturning(maidId);
+          try {
+            const res = await paymentsAPI.returnMaid({ maidProfileId: maidId });
+            setHired(prev => prev.filter(h => (h.maid?._id || h.maid) !== maidId));
+            const penalty = res.data?.penaltyAmount || 0;
+            // Toast is also scenario-specific
+            Toast.show({
+              type: penalty > 0 ? 'info' : 'success',
+              text1: t('vacancy_released'),
+              text2: penalty > 0
+                ? `${t('release_toast_fee_prefix')} EGP ${penalty} ${t('release_toast_fee_suffix')}`
+                : t('release_toast_free'),
+            });
+          } catch (err) {
+            Toast.show({ type: 'error', text1: err.response?.data?.message || t('release_failed') });
+          } finally {
+            setReturning(null);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const getPenaltyBadge = (hiredAt) => {
