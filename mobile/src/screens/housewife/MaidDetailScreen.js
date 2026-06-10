@@ -62,6 +62,7 @@ export default function MaidDetailScreen({ route, navigation }) {
           setHireRequestSent((r.data?.pendingHireRequests || []).includes(maid._id));
         }).catch(() => {});
         if (action === 'approve') {
+          route.params?.onHired?.(maid._id);
           Toast.show({ type: 'success', text1: '🎉 Hire Confirmed!', text2: `${respondingMaidName} accepted your request.`, visibilityTime: 5000 });
         } else {
           Toast.show({ type: 'info', text1: 'Request Declined', text2: `${respondingMaidName} declined your request.`, visibilityTime: 4000 });

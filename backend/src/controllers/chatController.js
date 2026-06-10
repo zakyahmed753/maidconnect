@@ -88,7 +88,7 @@ exports.getMyChats = async (req, res) => {
       }
     }
 
-    const chats = await Chat.find(query)
+    const chats = await Chat.find({ ...query, isActive: { $ne: false } })
       .populate('housewife', 'name avatar lastSeen')
       .populate('maid', 'name avatar lastSeen')
       .populate('maidProfile', 'fullName photos rating')

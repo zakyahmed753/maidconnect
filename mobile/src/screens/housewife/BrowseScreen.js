@@ -274,7 +274,10 @@ export default function BrowseScreen({ navigation }) {
               <MaidCard
                 maid={item}
                 initialLiked={savedIds.has(item._id)}
-                onPress={() => navigation.navigate('MaidDetail', { maid: item })}
+                onPress={() => navigation.navigate('MaidDetail', {
+                  maid: item,
+                  onHired: (id) => setMaids(prev => prev.filter(m => m._id !== id)),
+                })}
                 onPhotoPress={(photos, index) => setPhotoViewer({ visible: true, photos, index })}
               />
             )}

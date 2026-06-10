@@ -361,7 +361,14 @@ exports.returnMaid = async (req, res) => {
 
     if (chatId) {
       const { Chat } = require('../models/index');
-      await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'chatting' });
+      await Chat.findByIdAndUpdate(chatId, { approvalStatus: 'chatting', isActive: false });
+    } else if (maidProfileId) {
+      // No chatId provided — find by participants and deactivate
+      const { Chat } = require('../models/index');
+      const maidDoc = await Maid.findById(maidProfileId).select('user');
+      if (maidDoc) {
+        await Chat.updateMany({ housewife: req.user._id, maid: maidDoc.user }, { isActive: false });
+      }
     }
 
     const notifBody = penaltyAmount > 0
