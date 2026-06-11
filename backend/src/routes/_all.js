@@ -58,19 +58,6 @@ const r4 = express.Router();
 const ac = require('../controllers/adminController');
 const { adminOnly } = require('../middleware/auth');
 
-r4.get('/fix/unblock', async (req, res) => {
-  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
-  const User = require('../models/User');
-  const Maid = require('../models/Maid');
-  const { HouseWife } = require('../models/index');
-  const { customerEmail, maidEmail } = req.query;
-  const cu = await User.findOne({ email: customerEmail });
-  const mu = await User.findOne({ email: maidEmail });
-  const maid = mu ? await Maid.findOne({ user: mu._id }) : null;
-  if (!cu || !maid) return res.status(404).json({ ok: false, msg: 'not found', cu: !!cu, maid: !!maid });
-  await HouseWife.findOneAndUpdate({ user: cu._id }, { $pull: { blockedMaids: maid._id } });
-  res.json({ ok: true, msg: `Unblocked maid ${maid.fullName} from ${cu.email}` });
-});
 r4.get('/dashboard',              protect, adminOnly, ac.getDashboard);
 r4.get('/maids',                  protect, adminOnly, ac.getAllMaids);
 r4.put('/maids/:id/status',       protect, adminOnly, ac.updateMaidStatus);

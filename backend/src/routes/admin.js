@@ -9,6 +9,20 @@ router.get('/maids/:id',                protect, adminOrAgent, ac.getMaid);
 router.put('/maids/:id/status',         protect, adminOrAgent, ac.updateMaidStatus);
 router.put('/maids/:id/verify',         protect, adminOrAgent, ac.verifyIdentity);
 
+// Temp one-shot unblock fix
+router.get('/fix/unblock', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const User = require('../models/User');
+  const Maid = require('../models/Maid');
+  const { HouseWife } = require('../models/index');
+  const cu = await User.findOne({ email: req.query.customerEmail });
+  const mu = await User.findOne({ email: req.query.maidEmail });
+  const maid = mu ? await Maid.findOne({ user: mu._id }) : null;
+  if (!cu || !maid) return res.status(404).json({ ok: false, cu: !!cu, maid: !!maid });
+  await HouseWife.findOneAndUpdate({ user: cu._id }, { $pull: { blockedMaids: maid._id } });
+  res.json({ ok: true, msg: `Unblocked ${maid.fullName} from ${cu.email}` });
+});
+
 // Admin-only routes
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
