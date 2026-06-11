@@ -26,6 +26,36 @@ exports.sendEmail = async ({ to, subject, html }) => {
   }
 };
 
+exports.sendOTPEmail = async (to, otp) => {
+  await exports.sendEmail({
+    to,
+    subject: 'Servix — Verify Your Email',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#fffcf5;border-radius:12px;border:1px solid #e8dcc8">
+        <h2 style="color:#1a1108;margin-bottom:8px">Verify your email</h2>
+        <p style="color:#6b5b45;margin-bottom:24px">Use this code to complete your Servix registration. Expires in <strong>10 minutes</strong>.</p>
+        <div style="background:#1a1108;color:#c9a84c;font-size:38px;font-weight:700;letter-spacing:14px;text-align:center;padding:22px 0;border-radius:8px">${otp}</div>
+        <p style="color:#a08060;font-size:12px;margin-top:20px">If you didn't create a Servix account, ignore this email.</p>
+      </div>
+    `,
+  });
+};
+
+exports.sendResetEmail = async (to, code) => {
+  await exports.sendEmail({
+    to,
+    subject: 'Servix — Reset Your Password',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#fffcf5;border-radius:12px;border:1px solid #e8dcc8">
+        <h2 style="color:#1a1108;margin-bottom:8px">Reset your password</h2>
+        <p style="color:#6b5b45;margin-bottom:24px">Use this code in the Servix app to reset your password. Expires in <strong>15 minutes</strong>.</p>
+        <div style="background:#1a1108;color:#c9a84c;font-size:38px;font-weight:700;letter-spacing:14px;text-align:center;padding:22px 0;border-radius:8px">${code}</div>
+        <p style="color:#a08060;font-size:12px;margin-top:20px">If you didn't request a password reset, ignore this email.</p>
+      </div>
+    `,
+  });
+};
+
 exports.hireRequestEmail = (maidName, customerName) => `
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#3d2203,#1a1108);padding:32px 28px;text-align:center">

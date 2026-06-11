@@ -2,6 +2,10 @@ const User = require('../models/User');
 const Maid = require('../models/Maid');
 const { HouseWife, Notification } = require('../models/index');
 const { generateToken } = require('../middleware/auth');
+const { sendOTPEmail, sendResetEmail } = require('../utils/email');
+const bcrypt = require('bcryptjs');
+
+const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 // ── Register ──
 exports.register = async (req, res) => {
@@ -31,15 +35,24 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'This phone number is already registered' });
     }
 
-    const user = await User.create({ name, email, password, phone: normalizedPhone, role });
+    const otp = genCode();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+
+    const user = await User.create({
+      name, email, password, phone: normalizedPhone, role,
+      emailVerified: false, otpCode: otp, otpExpiry,
+    });
 
     // Create role-specific profile
     if (role === 'housewife') {
       await HouseWife.create({ user: user._id, fullName: name });
     }
 
+    // Send OTP email (non-blocking — don't fail registration if email fails)
+    sendOTPEmail(email, otp).catch(e => console.error('[OTP email]', e.message));
+
     const token = generateToken(user._id);
-    res.status(201).json({ success: true, token, user: user.toSafeObject() });
+    res.status(201).json({ success: true, token, user: user.toSafeObject(), requiresOTP: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -177,6 +190,87 @@ exports.deleteAccount = async (req, res) => {
       deletionReason: reason || 'User requested account removal',
     });
     res.json({ success: true, message: 'Account deactivated. Contact admin to restore.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Verify Email OTP ──
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (user.emailVerified) return res.json({ success: true, message: 'Already verified' });
+    if (!user.otpCode || user.otpCode !== otp) {
+      return res.status(400).json({ success: false, message: 'Invalid code' });
+    }
+    if (new Date() > new Date(user.otpExpiry)) {
+      return res.status(400).json({ success: false, message: 'Code expired — request a new one' });
+    }
+    await User.findByIdAndUpdate(user._id, {
+      emailVerified: true, otpCode: null, otpExpiry: null,
+    });
+    res.json({ success: true, message: 'Email verified' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Resend OTP ──
+exports.resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (user.emailVerified) return res.json({ success: true, message: 'Already verified' });
+    const otp = genCode();
+    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+    await User.findByIdAndUpdate(user._id, { otpCode: otp, otpExpiry });
+    await sendOTPEmail(email, otp);
+    res.json({ success: true, message: 'New code sent' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Forgot Password — send reset code ──
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    // Always respond OK to prevent email enumeration
+    if (!user) return res.json({ success: true, message: 'If that email exists, a code was sent' });
+    const code = genCode();
+    const resetExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+    await User.findByIdAndUpdate(user._id, { resetCode: code, resetExpiry });
+    await sendResetEmail(email, code);
+    res.json({ success: true, message: 'Reset code sent to your email' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Reset Password ──
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (!user.resetCode || user.resetCode !== code) {
+      return res.status(400).json({ success: false, message: 'Invalid reset code' });
+    }
+    if (new Date() > new Date(user.resetExpiry)) {
+      return res.status(400).json({ success: false, message: 'Code expired — request a new one' });
+    }
+    user.password = newPassword;
+    user.resetCode = null;
+    user.resetExpiry = null;
+    await user.save();
+    res.json({ success: true, message: 'Password reset successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

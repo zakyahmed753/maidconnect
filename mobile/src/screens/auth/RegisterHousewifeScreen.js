@@ -51,10 +51,12 @@ export default function RegisterHousewifeScreen({ navigation }) {
     setLoading(true);
     try {
       await register({ ...form, phone: normalizedPhone, role: 'housewife' });
-      // Save selected area to profile
+      // Save selected area before OTP so profile is ready after verification
       await hwAPI.updateProfile({ residentialArea: area });
-      // Now load the full profile — AppNavigator routes based on area
-      await completeAuth();
+      navigation.navigate('OTPVerification', {
+        email: form.email,
+        onVerified: () => completeAuth(),
+      });
     } catch (err) {
       Toast.show({ type: 'error', text1: err.response?.data?.message || t('registration_failed') });
     } finally { setLoading(false); }

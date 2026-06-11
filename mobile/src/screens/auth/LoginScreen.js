@@ -156,7 +156,11 @@ export default function LoginScreen({ navigation, route }) {
           <Text style={styles.orText}>— or use password above —</Text>
         )}
 
-        <TouchableOpacity style={styles.link} onPress={() => navigation.navigate(role === 'maid' ? 'Register' : 'RegisterHousewife')}>
+        <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('ForgotPassword')}>
+          <Text style={styles.linkTxt}>Forgot password? <Text style={{ color: COLORS.gold }}>Reset it</Text></Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.link, { marginTop: 8 }]} onPress={() => navigation.navigate(role === 'maid' ? 'Register' : 'RegisterHousewife')}>
           <Text style={styles.linkTxt}>{t('no_account')} <Text style={{ color: COLORS.gold }}>{t('sign_up_link')}</Text></Text>
         </TouchableOpacity>
       </ScrollView>

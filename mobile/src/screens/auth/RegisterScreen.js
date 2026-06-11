@@ -127,10 +127,13 @@ export default function RegisterScreen({ navigation }) {
         photos: uploadedPhotos,
       });
 
-      navigation.navigate('SelfieVerification', {
-        isEgyptian,
-        idNumber: form.idNumber,
-        idPhotoUri: isEgyptian ? null : idPhoto,
+      navigation.navigate('OTPVerification', {
+        email: form.email,
+        onVerified: () => navigation.navigate('SelfieVerification', {
+          isEgyptian,
+          idNumber: form.idNumber,
+          idPhotoUri: isEgyptian ? null : idPhoto,
+        }),
       });
     } catch (err) {
       Toast.show({ type:'error', text1: err.response?.data?.message || t('registration_failed') });

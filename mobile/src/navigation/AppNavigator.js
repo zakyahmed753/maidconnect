@@ -35,6 +35,9 @@ import SubscriptionScreen from '../screens/auth/SubscriptionScreen';
 import PaymentScreen from '../screens/payment/PaymentScreen';
 import PaymentResultScreen from '../screens/payment/PaymentResultScreen';
 import CustomerSubscriptionScreen from '../screens/housewife/CustomerSubscriptionScreen';
+import OTPVerificationScreen from '../screens/auth/OTPVerificationScreen';
+import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 
 // Housewife screens
 import BrowseScreen  from '../screens/housewife/BrowseScreen';
@@ -209,6 +212,9 @@ export default function AppNavigator() {
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
+            <Stack.Screen name="OTPVerification"    component={OTPVerificationScreen}/>
+            <Stack.Screen name="ForgotPassword"     component={ForgotPasswordScreen}/>
+            <Stack.Screen name="ResetPassword"      component={ResetPasswordScreen}/>
           </>
         ) : user?.role === 'maid' && profile && (
             profile.verificationStatus === 'pending' ||

@@ -35,6 +35,10 @@ export const authAPI = {
   updateMe:        (data)  => api.put('/auth/me', data),
   deleteAccount:   (data)  => api.delete('/auth/me', { data }),
   updateFCMToken:  (token) => api.put('/auth/fcm-token', { token }),
+  verifyOTP:       (data)  => api.post('/auth/verify-otp', data),
+  resendOTP:       (data)  => api.post('/auth/resend-otp', data),
+  forgotPassword:  (data)  => api.post('/auth/forgot-password', data),
+  resetPassword:   (data)  => api.post('/auth/reset-password', data),
 };
 
 export const hwAPI = {

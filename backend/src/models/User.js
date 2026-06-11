@@ -31,8 +31,17 @@ const userSchema = new mongoose.Schema({
   deletedAt:      { type: Date, default: null },
   deletionReason: { type: String, default: null },
 
+  // ── Email Verification ──
+  emailVerified: { type: Boolean, default: false },
+  otpCode:       { type: String,  default: null },
+  otpExpiry:     { type: Date,    default: null },
+
+  // ── Password Reset ──
+  resetCode:     { type: String,  default: null },
+  resetExpiry:   { type: Date,    default: null },
+
   // ── Notifications ──
-  fcmToken: { type: String, default: null }, // for push notifications
+  fcmToken: { type: String, default: null },
   pushEnabled: { type: Boolean, default: true },
 
   // ── Timestamps ──
