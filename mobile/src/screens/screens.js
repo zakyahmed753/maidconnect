@@ -61,6 +61,8 @@ export function PaymentResultScreen({ route, navigation }) {
   // online: starts verifying; offline: starts as pending (waiting for admin)
   const [status, setStatus] = useState(isOffline ? 'pending' : 'verifying');
   const pollTimer = React.useRef(null);
+  const mountedRef = React.useRef(true);
+  React.useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   // Online payment: fast auto-poll until confirmed (every 2s, 8 attempts)
   // Offline payment: slower auto-poll every 30s until admin confirms
@@ -99,7 +101,14 @@ export function PaymentResultScreen({ route, navigation }) {
       return;
     }
     setCompleting(true);
-    try { await completeAuth(); } catch { setCompleting(false); }
+    try {
+      await completeAuth();
+      // If still mounted after completeAuth, the navigator didn't switch stacks
+      // (renewal — maid was already in MaidTabs). Navigate to home explicitly.
+      if (mountedRef.current) navigation.navigate('MaidDash');
+    } catch {
+      if (mountedRef.current) setCompleting(false);
+    }
   };
 
   // Offline: manual status check button
