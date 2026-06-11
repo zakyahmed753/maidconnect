@@ -82,7 +82,7 @@ export default function HireRequestScreen({ navigation }) {
           text2: t('monthly_limit_desc'),
           visibilityTime: 5000,
         });
-        navigation.navigate('PaymentHistory');
+        navigation.navigate('Subscription');
       } else {
         Toast.show({ type: 'error', text1: err.response?.data?.message || t('failed_to_respond') });
       }

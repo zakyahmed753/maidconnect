@@ -257,6 +257,8 @@ async function handlePaymentSuccess(payment) {
       'subscription.startDate': now,
       'subscription.endDate':   endDate,
       'subscription.paymentId': payment._id,
+      'monthlyHires.count':     0,
+      'monthlyHires.month':     now.toISOString().slice(0, 7),
     });
     if (payment.couponCode) {
       const { applyUsage } = require('./couponController');
