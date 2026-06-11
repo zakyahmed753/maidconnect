@@ -496,12 +496,6 @@ exports.respondHireRequest = async (req, res) => {
       res.json({ success: true, action: 'approved' });
 
     } else {
-      // Reject — block this maid from appearing to this housewife again
-      await HouseWife.findOneAndUpdate(
-        { user: hwUser._id },
-        { $addToSet: { blockedMaids: maid._id } }
-      );
-
       // Notify customer
       await Notification.create({
         user: hwUser._id,
