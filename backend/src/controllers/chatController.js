@@ -27,6 +27,13 @@ exports.getOrCreateChat = async (req, res) => {
       maid: maidUserId
     }).populate('maid', 'name avatar lastSeen').populate('lastMessage');
 
+    // If the existing chat was deactivated (e.g. maid was released then re-chatted),
+    // re-activate it so it appears in both users' chat lists again.
+    if (chat && chat.isActive === false) {
+      await Chat.findByIdAndUpdate(chat._id, { isActive: true });
+      chat.isActive = true;
+    }
+
     // Gate: block NEW chat creation when a replacement fee is owed
     if (!chat && req.user.role === 'housewife') {
       const { HouseWife } = require('../models/index');

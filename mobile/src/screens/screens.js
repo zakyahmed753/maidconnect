@@ -212,11 +212,13 @@ export function PaymentResultScreen({ route, navigation }) {
 export function ChatsListScreen({ navigation }) {
   const { t } = useTranslation();
   const [chats, setChats] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
   const user    = useAuthStore(s => s.user);
   const profile = useAuthStore(s => s.profile);
   const socketRef = React.useRef(null);
 
   const loadChats = () => chatsAPI.getMyChats().then(r => setChats(r.data.chats || [])).catch(() => {});
+  const onRefresh = React.useCallback(async () => { setRefreshing(true); await loadChats(); setRefreshing(false); }, []);
 
   // Refresh list whenever screen is focused (e.g. returning from ChatScreen)
   useFocusEffect(React.useCallback(() => { loadChats(); }, []));
@@ -274,6 +276,7 @@ export function ChatsListScreen({ navigation }) {
         </View>
       ) : (
         <FlatList data={chats} keyExtractor={i=>i._id}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} colors={[COLORS.gold]} />}
           renderItem={({ item }) => {
             // Maid sees the customer (housewife); customer sees the maid profile
             const other = user?.role === 'maid'
