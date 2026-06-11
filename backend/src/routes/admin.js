@@ -9,6 +9,18 @@ router.get('/maids/:id',                protect, adminOrAgent, ac.getMaid);
 router.put('/maids/:id/status',         protect, adminOrAgent, ac.updateMaidStatus);
 router.put('/maids/:id/verify',         protect, adminOrAgent, ac.verifyIdentity);
 
+// Test helper: re-activate chats between a customer and maid (testing only)
+router.get('/fix/reactivate-chats', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const User = require('../models/User');
+  const { Chat } = require('../models/index');
+  const cu = await User.findOne({ email: req.query.customerEmail });
+  const mu = await User.findOne({ email: req.query.maidEmail });
+  if (!cu || !mu) return res.status(404).json({ ok: false, cu: !!cu, mu: !!mu });
+  const result = await Chat.updateMany({ housewife: cu._id, maid: mu._id }, { isActive: true });
+  res.json({ ok: true, reactivated: result.modifiedCount });
+});
+
 // Temp one-shot unblock fix
 router.get('/fix/unblock', async (req, res) => {
   if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
