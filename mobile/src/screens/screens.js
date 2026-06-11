@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl, Image } from 'react-native';
 import { LANGUAGES, useTranslation } from '../utils/i18n';
 import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI } from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
@@ -278,7 +278,11 @@ export function ChatsListScreen({ navigation }) {
             const other = item.maidProfile || item.maid;
             return (
               <TouchableOpacity style={styles.chatItem} onPress={() => handleOpenChat(item, other)}>
-                <View style={styles.chatAva}><Text style={{ fontSize:20 }}>👩</Text></View>
+                <View style={styles.chatAva}>
+                  {other?.photos?.[0]?.url
+                    ? <Image source={{ uri: other.photos[0].url }} style={{ width:'100%', height:'100%', borderRadius:22 }} resizeMode="cover"/>
+                    : <Text style={{ fontSize:20 }}>👩</Text>}
+                </View>
                 <View style={{ flex:1 }}>
                   <Text style={styles.chatName}>{other?.fullName || other?.name || 'Chat'}</Text>
                   <Text style={styles.chatLast} numberOfLines={1}>{item.lastMessage?.content || 'No messages yet'}</Text>
@@ -1079,7 +1083,7 @@ const styles = StyleSheet.create({
   notifTime:  { fontSize:10, color:COLORS.muted, marginTop:3 },
   unreadDot:  { width:8, height:8, borderRadius:4, backgroundColor:COLORS.gold, marginTop:5 },
   chatItem:   { flexDirection:'row', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border, alignItems:'center' },
-  chatAva:    { width:44, height:44, borderRadius:22, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center' },
+  chatAva:    { width:44, height:44, borderRadius:22, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center', overflow:'hidden' },
   chatName:   { fontFamily:FONTS.display, fontSize:16, color:COLORS.dark },
   chatLast:   { fontSize:12, color:COLORS.muted, marginTop:1 },
   chatTime:   { fontSize:10, color:COLORS.muted },
