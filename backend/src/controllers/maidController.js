@@ -496,6 +496,19 @@ exports.respondHireRequest = async (req, res) => {
       res.json({ success: true, action: 'approved' });
 
     } else {
+      // Block maid from this customer after 2 rejections
+      const rejectionCount = await HireRequest.countDocuments({
+        maid: maid._id,
+        housewife: hwUser._id,
+        status: 'rejected',
+      });
+      if (rejectionCount >= 2) {
+        await HouseWife.findOneAndUpdate(
+          { user: hwUser._id },
+          { $addToSet: { blockedMaids: maid._id } }
+        );
+      }
+
       // Notify customer
       await Notification.create({
         user: hwUser._id,
