@@ -119,6 +119,8 @@ function MaidHomeStack() {
     <Stack.Navigator screenOptions={{ headerShown:false }}>
       <Stack.Screen name="MaidDash"          component={MaidDashScreen}/>
       <Stack.Screen name="Subscription"      component={SubscriptionScreen}/>
+      <Stack.Screen name="Payment"           component={PaymentScreen}/>
+      <Stack.Screen name="PaymentResult"     component={PaymentResultScreen}/>
       <Stack.Screen name="Analytics"         component={AnalyticsScreen}/>
       <Stack.Screen name="Support"           component={SupportScreen}/>
       <Stack.Screen name="EditProfile"       component={EditProfileScreen}/>
