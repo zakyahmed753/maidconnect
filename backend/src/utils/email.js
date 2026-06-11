@@ -1,25 +1,16 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const FROM_ADDRESS = process.env.EMAIL_FROM || 'Servix <noreply@servix.world>';
 
 exports.sendEmail = async ({ to, subject, html }) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.log('[Email] Not configured — skipping:', subject, '→', to);
+  if (!process.env.RESEND_API_KEY) {
+    console.log('[Email] RESEND_API_KEY not set — skipping:', subject, '→', to);
     return;
   }
   try {
-    await transporter.sendMail({
-      from: `Servix <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html,
-    });
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({ from: FROM_ADDRESS, to, subject, html });
+    if (error) throw new Error(error.message);
     console.log('[Email] Sent:', subject, '→', to);
   } catch (err) {
     console.error('[Email] Failed:', err.message);
