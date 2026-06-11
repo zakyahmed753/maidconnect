@@ -184,7 +184,9 @@ export default function AppNavigator() {
         }
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== 'granted') return;
-        const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync();
+        const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({
+          projectId: 'aaf38d20-cf98-4589-b23d-1e6838133970',
+        });
         await authAPI.updateFCMToken(expoPushToken);
       } catch (e) {
         console.warn('[Push] token registration failed:', e.message);
