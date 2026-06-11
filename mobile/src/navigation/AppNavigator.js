@@ -20,6 +20,7 @@ import useAuthStore from '../store/authStore';
 import { COLORS } from '../utils/theme';
 import { useTranslation } from '../utils/i18n';
 import HiredMaidsScreen from '../screens/housewife/HiredMaidsScreen';
+import PreviouslyHiredScreen from '../screens/housewife/PreviouslyHiredScreen';
 
 export const navigationRef = createNavigationContainerRef();
 
@@ -77,7 +78,8 @@ function HWProfileStack() {
       <Stack.Screen name="EditHWProfile"   component={EditHWProfileScreen}/>
       <Stack.Screen name="Support"         component={SupportScreen}/>
       <Stack.Screen name="PaymentHistory"  component={PaymentHistoryScreen}/>
-      <Stack.Screen name="HiredMaids"      component={HiredMaidsScreen}/>
+      <Stack.Screen name="HiredMaids"          component={HiredMaidsScreen}/>
+      <Stack.Screen name="PreviouslyHired"     component={PreviouslyHiredScreen}/>
       <Stack.Screen name="Payment"         component={PaymentScreen}/>
       <Stack.Screen name="PaymentResult"   component={PaymentResultScreen}/>
     </Stack.Navigator>

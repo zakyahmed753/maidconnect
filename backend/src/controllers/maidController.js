@@ -453,8 +453,8 @@ exports.respondHireRequest = async (req, res) => {
           { $push: { hiredMaids: { maid: maid._id, commissionPaid: false, commissionAmount: 0 } } }
         );
       }
-      // Mark maid unavailable and hired
-      await Maid.findByIdAndUpdate(maid._id, { isAvailable: false, isHired: true });
+      // Mark maid unavailable and hired; increment lifetime hire count
+      await Maid.findByIdAndUpdate(maid._id, { isAvailable: false, isHired: true, $inc: { 'stats.hireCount': 1 } });
 
       // Update chat if linked
       if (request.chatId) {

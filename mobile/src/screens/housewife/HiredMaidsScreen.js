@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { hwAPI, paymentsAPI, maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -262,33 +262,19 @@ export default function HiredMaidsScreen({ navigation }) {
             </View>
           )}
 
-          {/* Previously Hired — view only */}
-          {pastHired.length > 0 && (
-            <View style={{ marginTop: 8 }}>
-              <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: COLORS.dark, marginBottom: 12 }}>Previously Hired</Text>
-              {pastHired.map((item, idx) => {
-                const maid    = item.maid || {};
-                const photo   = maid.photos?.[0]?.url;
-                const initials = (maid.fullName || 'M').charAt(0).toUpperCase();
-                return (
-                  <View key={String(maid._id || idx)} style={styles.pastCard}>
-                    {photo
-                      ? <Image source={{ uri: photo }} style={styles.pastAvatar} />
-                      : <View style={[styles.pastAvatar, { backgroundColor: '#fef6e4', alignItems: 'center', justifyContent: 'center' }]}>
-                          <Text style={{ fontSize: 22, color: COLORS.gold }}>{initials}</Text>
-                        </View>}
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontFamily: FONTS.display, fontSize: 15, color: COLORS.dark }}>{maid.fullName || '—'}</Text>
-                      {maid.nationality ? <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 1 }}>{maid.nationality}</Text> : null}
-                    </View>
-                    <Text style={{ fontSize: 10, color: COLORS.muted }}>
-                      {new Date(item.releasedAt || Date.now()).toLocaleDateString()}
-                    </Text>
-                  </View>
-                );
-              })}
+          {/* Previously Hired link */}
+          <TouchableOpacity
+            style={styles.prevHiredBtn}
+            onPress={() => navigation.navigate('PreviouslyHired', { pastHired })}>
+            <Text style={{ fontSize: 20 }}>📋</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.dark }}>Previously Hired Maids</Text>
+              <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 1 }}>
+                {pastHired.length > 0 ? `${pastHired.length} past maid${pastHired.length !== 1 ? 's' : ''}` : 'No history yet'}
+              </Text>
             </View>
-          )}
+            <Text style={{ color: COLORS.muted, fontSize: 18 }}>›</Text>
+          </TouchableOpacity>
         </ScrollView>
       )}
     </View>
@@ -313,7 +299,6 @@ const styles = StyleSheet.create({
   penaltyTxt:   { fontSize: 11, fontWeight: '600' },
   btnRelease:   { marginTop: 12, padding: 13, borderRadius: 8, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
   btnReleaseTxt:{ fontSize: 14, fontWeight: '700', color: '#e05555' },
-  infoBox:      { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14, marginTop: 4, marginBottom: 20 },
-  pastCard:     { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 10, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: '#f0e8d8' },
-  pastAvatar:   { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: COLORS.gold },
+  infoBox:      { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14, marginTop: 4, marginBottom: 12 },
+  prevHiredBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 10, padding: 14, marginBottom: 20, borderWidth: 1, borderColor: '#f0e8d8' },
 });
