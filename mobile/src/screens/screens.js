@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { LANGUAGES, useTranslation } from '../utils/i18n';
 import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI } from '../services/api';
 import { useFocusEffect } from '@react-navigation/native';
@@ -481,37 +481,40 @@ export function MaidDashScreen({ navigation }) {
   const [maidProfile, setMaidProfile] = useState(null);
   const [pendingRequests, setPendingRequests] = useState(0);
   const [myReviews, setMyReviews] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      maidsAPI.getMyProfile()
-        .then(r => {
-          const m = r.data?.maid;
-          const s = m?.stats || {};
-          setStats({ views: s.views || 0, likes: s.likes || 0, chats: s.chats || 0 });
-          setMaidProfile(m);
-        })
-        .catch(() => {});
-      maidsAPI.getHireRequests()
-        .then(r => setPendingRequests((r.data?.requests || []).length))
-        .catch(() => {});
-      // Fetch own reviews using maid._id loaded above
-      maidsAPI.getMyProfile()
-        .then(r => {
-          const id = r.data?.maid?._id;
-          if (id) return maidsAPI.getReviews(id);
-        })
-        .then(r => { if (r) setMyReviews(r.data?.reviews || []); })
-        .catch(() => {});
-    }, [])
-  );
+  const loadData = React.useCallback(async () => {
+    try {
+      const [profileRes, requestsRes] = await Promise.all([
+        maidsAPI.getMyProfile(),
+        maidsAPI.getHireRequests(),
+      ]);
+      const m = profileRes.data?.maid;
+      const s = m?.stats || {};
+      setStats({ views: s.views || 0, likes: s.likes || 0, chats: s.chats || 0 });
+      setMaidProfile(m);
+      setPendingRequests((requestsRes.data?.requests || []).length);
+      if (m?._id) {
+        const reviewsRes = await maidsAPI.getReviews(m._id);
+        setMyReviews(reviewsRes.data?.reviews || []);
+      }
+    } catch {}
+  }, []);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }, [loadData]);
+
+  useFocusEffect(React.useCallback(() => { loadData(); }, [loadData]));
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <LanguageModal visible={langVisible} onClose={() => setLangVisible(false)}/>
 
 
-      <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} colors={[COLORS.gold]} />}>
         <View style={{ backgroundColor:'#1a1108', padding:20, paddingTop:54 }}>
           <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:10 }}>
             <View style={{ backgroundColor:'rgba(46,125,94,0.2)', borderWidth:1, borderColor:'rgba(46,125,94,0.35)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
