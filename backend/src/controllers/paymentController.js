@@ -353,6 +353,7 @@ exports.returnMaid = async (req, res) => {
       'freeVacancy.penaltyAmount': penaltyAmount,
       $pull:    { hiredMaids: { maid: maidProfileId } },
       $addToSet:{ blockedMaids: maidProfileId },
+      $push:    { pastHiredMaids: { maid: maidProfileId, releasedAt: new Date() } },
     });
 
     if (maidProfileId) {

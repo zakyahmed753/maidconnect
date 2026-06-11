@@ -15,6 +15,10 @@ const houseWifeSchema = new mongoose.Schema({
     commissionPaid: { type: Boolean, default: false },
     commissionAmount: { type: Number }
   }],
+  pastHiredMaids: [{
+    maid:       { type: mongoose.Schema.Types.ObjectId, ref: 'Maid' },
+    releasedAt: { type: Date, default: Date.now }
+  }],
   subscription: {
     status:    { type: String, enum: ['none','active','expired'], default: 'none' },
     startDate: { type: Date },

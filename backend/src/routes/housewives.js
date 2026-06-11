@@ -12,7 +12,8 @@ router.get('/me', protect, async (req, res) => {
   try {
     const hw = await HouseWife.findOne({ user: req.user._id })
       .populate({ path: 'savedMaids', populate: { path: 'user', select: 'name' } })
-      .populate({ path: 'hiredMaids.maid', populate: { path: 'user', select: 'name' } });
+      .populate({ path: 'hiredMaids.maid', populate: { path: 'user', select: 'name' } })
+      .populate({ path: 'pastHiredMaids.maid', select: 'fullName photos nationality' });
 
     // Attach pending hire request maid IDs so the app can show "Request Sent" state
     const pending = await HireRequest.find({ housewife: req.user._id, status: 'pending' }).select('maid');

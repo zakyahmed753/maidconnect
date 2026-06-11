@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { hwAPI, paymentsAPI, maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -22,6 +22,7 @@ function getReplacementFee(hiredAt) {
 export default function HiredMaidsScreen({ navigation }) {
   const { t } = useTranslation();
   const [hired, setHired]             = useState([]);
+  const [pastHired, setPastHired]     = useState([]);
   const [loading, setLoading]         = useState(true);
   const [returning, setReturning]     = useState(null);
 
@@ -36,7 +37,10 @@ export default function HiredMaidsScreen({ navigation }) {
     React.useCallback(() => {
       setLoading(true);
       hwAPI.getProfile()
-        .then(r => setHired(r.data?.profile?.hiredMaids || []))
+        .then(r => {
+          setHired(r.data?.profile?.hiredMaids || []);
+          setPastHired(r.data?.profile?.pastHiredMaids || []);
+        })
         .catch(() => {})
         .finally(() => setLoading(false));
     }, [])
@@ -177,21 +181,18 @@ export default function HiredMaidsScreen({ navigation }) {
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={COLORS.gold} />
         </View>
-      ) : hired.length === 0 ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <Text style={{ fontSize: 52, marginBottom: 16 }}>🏠</Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, textAlign: 'center' }}>{t('no_hired_maid')}</Text>
-          <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
-            {t('no_hired_sub')}
-          </Text>
-          <TouchableOpacity
-            style={{ backgroundColor: COLORS.gold, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 6, marginTop: 24 }}
-            onPress={() => navigation.navigate('Browse')}>
-            <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark }}>{t('browse_maids_btn')}</Text>
-          </TouchableOpacity>
-        </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16 }}>
+          {hired.length === 0 && pastHired.length === 0 ? (
+            <View style={{ alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+              <Text style={{ fontSize: 52, marginBottom: 16 }}>🏠</Text>
+              <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, textAlign: 'center' }}>{t('no_hired_maid')}</Text>
+              <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>{t('no_hired_sub')}</Text>
+              <TouchableOpacity style={{ backgroundColor: COLORS.gold, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 6, marginTop: 24 }} onPress={() => navigation.navigate('Browse')}>
+                <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark }}>{t('browse_maids_btn')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
           {hired.map((item, idx) => {
             const maid      = item.maid || {};
             const maidId    = maid._id || item.maid;
@@ -244,20 +245,50 @@ export default function HiredMaidsScreen({ navigation }) {
             );
           })}
 
-          <View style={styles.infoBox}>
-            <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 20 }}>
-              <Text style={{ fontWeight: '700', color: COLORS.dark }}>📋 How replacement fees work{'\n'}</Text>
-              {'\n'}
-              <Text>If you encounter any issues with your maid and need to replace her, a fee applies based on how long you have been working together:{'\n'}</Text>
-              {'\n'}
-              <Text style={{ color: '#2e7d5e', fontWeight: '700' }}>  ✓  0 – 3 days</Text><Text>   →  Free (trial period — no commitment){'\n'}</Text>
-              <Text style={{ fontWeight: '600' }}>  •  4 – 7 days</Text><Text>   →  EGP 500 replacement fee{'\n'}</Text>
-              <Text style={{ fontWeight: '600' }}>  •  8 – 30 days</Text><Text>  →  EGP 700 replacement fee{'\n'}</Text>
-              <Text style={{ fontWeight: '600' }}>  •  After 30 days</Text><Text> →  EGP 1,000 replacement fee{'\n'}</Text>
-              {'\n'}
-              <Text style={{ color: COLORS.dark }}>The fee is charged when you hire your next maid, not when you release. After releasing, you have 3 days to choose a replacement.</Text>
-            </Text>
-          </View>
+          {hired.length > 0 && (
+            <View style={styles.infoBox}>
+              <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 20 }}>
+                <Text style={{ fontWeight: '700', color: COLORS.dark }}>📋 How replacement fees work{'\n'}</Text>
+                {'\n'}
+                <Text>If you encounter any issues with your maid and need to replace her, a fee applies based on how long you have been working together:{'\n'}</Text>
+                {'\n'}
+                <Text style={{ color: '#2e7d5e', fontWeight: '700' }}>  ✓  0 – 3 days</Text><Text>   →  Free (trial period — no commitment){'\n'}</Text>
+                <Text style={{ fontWeight: '600' }}>  •  4 – 7 days</Text><Text>   →  EGP 500 replacement fee{'\n'}</Text>
+                <Text style={{ fontWeight: '600' }}>  •  8 – 30 days</Text><Text>  →  EGP 700 replacement fee{'\n'}</Text>
+                <Text style={{ fontWeight: '600' }}>  •  After 30 days</Text><Text> →  EGP 1,000 replacement fee{'\n'}</Text>
+                {'\n'}
+                <Text style={{ color: COLORS.dark }}>The fee is charged when you hire your next maid, not when you release. After releasing, you have 3 days to choose a replacement.</Text>
+              </Text>
+            </View>
+          )}
+
+          {/* Previously Hired — view only */}
+          {pastHired.length > 0 && (
+            <View style={{ marginTop: 8 }}>
+              <Text style={{ fontFamily: FONTS.display, fontSize: 16, color: COLORS.dark, marginBottom: 12 }}>Previously Hired</Text>
+              {pastHired.map((item, idx) => {
+                const maid    = item.maid || {};
+                const photo   = maid.photos?.[0]?.url;
+                const initials = (maid.fullName || 'M').charAt(0).toUpperCase();
+                return (
+                  <View key={String(maid._id || idx)} style={styles.pastCard}>
+                    {photo
+                      ? <Image source={{ uri: photo }} style={styles.pastAvatar} />
+                      : <View style={[styles.pastAvatar, { backgroundColor: '#fef6e4', alignItems: 'center', justifyContent: 'center' }]}>
+                          <Text style={{ fontSize: 22, color: COLORS.gold }}>{initials}</Text>
+                        </View>}
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: FONTS.display, fontSize: 15, color: COLORS.dark }}>{maid.fullName || '—'}</Text>
+                      {maid.nationality ? <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 1 }}>{maid.nationality}</Text> : null}
+                    </View>
+                    <Text style={{ fontSize: 10, color: COLORS.muted }}>
+                      {new Date(item.releasedAt || Date.now()).toLocaleDateString()}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </ScrollView>
       )}
     </View>
@@ -283,4 +314,6 @@ const styles = StyleSheet.create({
   btnRelease:   { marginTop: 12, padding: 13, borderRadius: 8, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
   btnReleaseTxt:{ fontSize: 14, fontWeight: '700', color: '#e05555' },
   infoBox:      { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14, marginTop: 4, marginBottom: 20 },
+  pastCard:     { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 10, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: '#f0e8d8' },
+  pastAvatar:   { width: 48, height: 48, borderRadius: 24, borderWidth: 1.5, borderColor: COLORS.gold },
 });
