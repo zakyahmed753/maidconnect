@@ -86,6 +86,15 @@ function HWProfileStack() {
   );
 }
 
+function HWChatsStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown:false }}>
+      <Stack.Screen name="HWChatsList" component={ChatsListScreen}/>
+      <Stack.Screen name="Chat"        component={ChatScreen}/>
+    </Stack.Navigator>
+  );
+}
+
 // Housewife bottom tabs
 function HouseWifeTabs() {
   const insets = useSafeAreaInsets();
@@ -93,7 +102,7 @@ function HouseWifeTabs() {
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
       <Tab.Screen name="Browse"  component={BrowseStack}   options={{ tabBarIcon:({focused})=><TabIcon icon="🔍" focused={focused} labelKey="tab_browse"/> }}/>
       <Tab.Screen name="Saved"   component={SavedScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="❤️" focused={focused} labelKey="tab_saved"/> }}/>
-      <Tab.Screen name="Chats"   component={ChatsListScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
+      <Tab.Screen name="Chats"   component={HWChatsStack}  options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
       <Tab.Screen name="Alerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} labelKey="tab_alerts"/> }}/>
       <Tab.Screen name="Me"      component={HWProfileStack} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} labelKey="tab_me"/> }}/>
     </Tab.Navigator>

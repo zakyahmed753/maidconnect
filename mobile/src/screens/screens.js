@@ -275,12 +275,16 @@ export function ChatsListScreen({ navigation }) {
       ) : (
         <FlatList data={chats} keyExtractor={i=>i._id}
           renderItem={({ item }) => {
-            const other = item.maidProfile || item.maid;
+            // Maid sees the customer (housewife); customer sees the maid profile
+            const other = user?.role === 'maid'
+              ? item.housewife
+              : (item.maidProfile || item.maid);
+            const photoUrl = user?.role === 'maid' ? null : (item.maidProfile || item.maid)?.photos?.[0]?.url;
             return (
               <TouchableOpacity style={styles.chatItem} onPress={() => handleOpenChat(item, other)}>
                 <View style={styles.chatAva}>
-                  {other?.photos?.[0]?.url
-                    ? <Image source={{ uri: other.photos[0].url }} style={{ width:'100%', height:'100%', borderRadius:22 }} resizeMode="cover"/>
+                  {photoUrl
+                    ? <Image source={{ uri: photoUrl }} style={{ width:'100%', height:'100%', borderRadius:22 }} resizeMode="cover"/>
                     : <Text style={{ fontSize:20 }}>👩</Text>}
                 </View>
                 <View style={{ flex:1 }}>
