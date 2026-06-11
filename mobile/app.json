@@ -15,7 +15,10 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.servix.app",
-      "icon": "./assets/icon.png"
+      "icon": "./assets/icon.png",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use Face ID to log in to Servix quickly and securely."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,17 +26,20 @@
         "backgroundColor": "#1a1108"
       },
       "package": "com.servix.app",
-      "versionCode": 9,
+      "versionCode": 10,
       "softwareKeyboardLayoutMode": "pan",
+      "notification": {
+        "icon": "./assets/icon.png",
+        "color": "#C9A84C",
+        "defaultChannel": "default"
+      },
       "permissions": [
         "RECORD_AUDIO",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
         "CAMERA",
-        "RECORD_AUDIO",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA"
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
       ]
     },
     "extra": {
@@ -45,7 +51,17 @@
     "plugins": [
       "expo-font",
       "expo-secure-store",
-      "expo-asset"
+      "expo-asset",
+      "expo-local-authentication",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#C9A84C",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ]
     ],
     "owner": "testahmed570",
     "runtimeVersion": {
