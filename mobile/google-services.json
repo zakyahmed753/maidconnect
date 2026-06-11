@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "789599116184",
+    "project_id": "servix-1790a",
+    "storage_bucket": "servix-1790a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:789599116184:android:89859581e0e5d2eb6f29ed",
+        "android_client_info": {
+          "package_name": "com.servix.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuTNas_CHN6AYdUydtQNcGFpNQlIfIcJY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
