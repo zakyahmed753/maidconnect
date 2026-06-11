@@ -174,6 +174,8 @@ exports.activateSubscription = async (req, res) => {
         'subscription.status': 'active',
         'subscription.startDate': now,
         'subscription.endDate': endDate,
+        'monthlyHires.count': 0,
+        'monthlyHires.month': now.toISOString().slice(0, 7),
       },
       { new: true }
     ).populate('user');
@@ -312,6 +314,8 @@ exports.offlinePayment = async (req, res) => {
       'subscription.startDate': now,
       'subscription.endDate': endDate,
       'subscription.paymentId': payment._id,
+      'monthlyHires.count': 0,
+      'monthlyHires.month': now.toISOString().slice(0, 7),
     });
 
     await Notification.create({
