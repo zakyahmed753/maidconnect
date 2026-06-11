@@ -45,7 +45,7 @@ router.get('/fix/test-push', async (req, res) => {
   if (!user.fcmToken) return res.json({ ok: false, msg: 'no push token saved for this user', token: null });
 
   try {
-    const r = await axios.post('https://exp.host/api/v2/push/send', {
+    const r = await axios.post('https://exp.host/--/api/v2/push/send', {
       to: user.fcmToken,
       title: 'Servix Test 🔔',
       body: 'Push notification is working!',
