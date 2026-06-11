@@ -58,7 +58,7 @@
   .check-item{display:flex;align-items:center;gap:8px;background:#1a1a1a;border:1.5px solid #2a2a2a;border-radius:6px;padding:9px 12px;cursor:pointer;transition:all .2s;user-select:none}
   .check-item:hover{border-color:#c9a84c40}
   .check-item.checked{border-color:#c9a84c;background:rgba(201,168,76,.08)}
-  .check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid #444;background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;flex-shrink:0}
+  .check-box{width:16px;height:16px;border-radius:4px;border:1.5px solid #444;background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
   .check-item.checked .check-box{background:#c9a84c;border-color:#c9a84c}
   .check-tick{color:#1a1108;font-size:10px;font-weight:700;display:none}
   .check-item.checked .check-tick{display:block}
@@ -128,6 +128,35 @@
   .id-type-btn.selected{border-color:#c9a84c;background:rgba(201,168,76,.1);color:#e8c97a}
   .upload-progress{height:3px;border-radius:2px;background:#2a2a2a;margin-top:8px;overflow:hidden}
   .upload-progress-bar{height:100%;background:#c9a84c;border-radius:2px;transition:width .3s;width:0%}
+
+  /* ── OTP boxes ── */
+  .otp-row{display:flex;gap:10px;justify-content:center;margin:28px 0 24px}
+  .otp-box{width:48px;height:58px;background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:8px;color:#f0ece4;font-size:24px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;-moz-appearance:textfield;font-family:'Jost',sans-serif}
+  .otp-box:focus{border-color:#c9a84c}
+  .otp-box.filled{border-color:#c9a84c;background:rgba(201,168,76,.06)}
+  .otp-box::-webkit-outer-spin-button,.otp-box::-webkit-inner-spin-button{-webkit-appearance:none}
+  .otp-resend{text-align:center;margin-top:16px}
+  .otp-resend button{background:none;border:none;font-family:'Jost',sans-serif;font-size:13px;color:#c9a84c;cursor:pointer;padding:0;transition:opacity .2s}
+  .otp-resend button:disabled{color:#555;cursor:default}
+
+  /* ── Forgot password link ── */
+  .forgot-link{text-align:center;margin-top:18px}
+  .forgot-link button{background:none;border:none;font-family:'Jost',sans-serif;font-size:13px;color:#555;cursor:pointer;padding:0;transition:color .2s}
+  .forgot-link button:hover{color:#c9a84c}
+
+  /* ── Forgot password modal ── */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.open{display:flex}
+  .modal-card{background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:32px;max-width:420px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.9)}
+  .modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+  .modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;color:#fff8ee;font-weight:700}
+  .modal-sub{font-size:13px;color:#666;line-height:1.55;margin-top:4px}
+  .modal-close{background:none;border:none;color:#555;font-size:22px;cursor:pointer;line-height:1;padding:0;flex-shrink:0;margin-left:12px;transition:color .2s}
+  .modal-close:hover{color:#aaa}
+  .modal-success{text-align:center;padding:8px 0}
+  .modal-success .icon{font-size:44px;display:block;margin-bottom:14px}
+  .modal-success p{font-size:14px;color:#888;line-height:1.6}
+  .modal-success strong{color:#e8c97a}
 </style>
 </head>
 <body>
@@ -148,13 +177,16 @@
     <div class="step-line" id="line2"></div>
     <div class="step-dot pending" id="dot3">3</div>
     <div class="step-line" id="line3"></div>
-    <div class="step-dot pending" id="dot4">✓</div>
+    <div class="step-dot pending" id="dot4">4</div>
+    <div class="step-line" id="line4"></div>
+    <div class="step-dot pending" id="dot5">✓</div>
   </div>
   <div class="step-labels">
     <span class="step-label active" id="lbl1">Account</span>
-    <span class="step-label" id="lbl2">Profile</span>
-    <span class="step-label" id="lbl3">Photos & ID</span>
-    <span class="step-label" id="lbl4">Done</span>
+    <span class="step-label" id="lbl2">Verify</span>
+    <span class="step-label" id="lbl3">Profile</span>
+    <span class="step-label" id="lbl4">Photos & ID</span>
+    <span class="step-label" id="lbl5">Done</span>
   </div>
 </div>
 
@@ -193,12 +225,39 @@
       </div>
 
       <div class="btn-row">
-        <button class="btn-next" onclick="goStep2()">Continue →</button>
+        <button class="btn-next" onclick="goRegister()">Continue →</button>
+      </div>
+
+      <div class="forgot-link">
+        <button onclick="openForgotPw()">Forgot your password? Reset it here</button>
       </div>
     </div>
 
-    <!-- ── Step 2: Profile ── -->
+    <!-- ── Step 2: Verify Email (OTP) ── -->
     <div id="step2" style="display:none">
+      <div class="step-title">Verify Your Email</div>
+      <div class="step-sub">We sent a 6-digit code to <strong id="otpEmailDisplay" style="color:#e8c97a"></strong>. Enter it below — expires in 10 minutes.</div>
+
+      <div class="otp-row">
+        <input class="otp-box" type="number" id="otp0" maxlength="1" min="0" max="9" oninput="otpInput(this,0)" onkeydown="otpKeydown(event,0)"/>
+        <input class="otp-box" type="number" id="otp1" maxlength="1" min="0" max="9" oninput="otpInput(this,1)" onkeydown="otpKeydown(event,1)"/>
+        <input class="otp-box" type="number" id="otp2" maxlength="1" min="0" max="9" oninput="otpInput(this,2)" onkeydown="otpKeydown(event,2)"/>
+        <input class="otp-box" type="number" id="otp3" maxlength="1" min="0" max="9" oninput="otpInput(this,3)" onkeydown="otpKeydown(event,3)"/>
+        <input class="otp-box" type="number" id="otp4" maxlength="1" min="0" max="9" oninput="otpInput(this,4)" onkeydown="otpKeydown(event,4)"/>
+        <input class="otp-box" type="number" id="otp5" maxlength="1" min="0" max="9" oninput="otpInput(this,5)" onkeydown="otpKeydown(event,5)"/>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-next" id="otpVerifyBtn" onclick="verifyEmailOTP()">Verify Email →</button>
+      </div>
+
+      <div class="otp-resend">
+        <button id="resendBtn" onclick="resendOTPCode()" disabled>Resend code in 60s</button>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Profile ── -->
+    <div id="step3" style="display:none">
       <div class="step-title">Your Work Profile</div>
       <div class="step-sub">This information will be shown to potential employers. Fill in as accurately as possible.</div>
 
@@ -295,17 +354,16 @@
       </div>
 
       <div class="btn-row">
-        <button class="btn-back" onclick="showStep(1)">← Back</button>
-        <button class="btn-next" id="submitBtn" onclick="goStep3()">Continue →</button>
+        <button class="btn-back" onclick="showStep(2)">← Back</button>
+        <button class="btn-next" id="submitBtn" onclick="goPhotos()">Continue →</button>
       </div>
     </div>
 
-    <!-- ── Step 3: Photos & ID ── -->
-    <div id="step3" style="display:none">
+    <!-- ── Step 4: Photos & ID ── -->
+    <div id="step4" style="display:none">
       <div class="step-title">Photos & Identity</div>
       <div class="step-sub">Upload your profile photos and ID document. This helps families trust you and speeds up verification.</div>
 
-      <!-- Profile Photos — multi-select -->
       <div class="field">
         <label>Profile Photos <span style="color:#e05555">*</span> <span class="ar">صور الملف الشخصي</span></label>
         <p style="font-size:12px;color:#666;margin-bottom:10px">Select at least 3 clear photos from your gallery at once (face visible, good lighting)</p>
@@ -319,7 +377,6 @@
         <div id="photoCount" style="font-size:11px;color:#555;margin-top:6px"></div>
       </div>
 
-      <!-- ID Type -->
       <div class="field">
         <label>Identity Document <span style="color:#e05555">*</span></label>
         <div class="id-type-row">
@@ -327,7 +384,6 @@
           <button type="button" class="id-type-btn" id="idTypePassport" onclick="selectIdType('passport')">🌍 Passport</button>
         </div>
 
-        <!-- Egyptian ID fields -->
         <div id="egyptianFields">
           <div class="field">
             <label>National ID Number</label>
@@ -335,7 +391,6 @@
           </div>
         </div>
 
-        <!-- Passport fields -->
         <div id="passportFields" style="display:none">
           <div class="field">
             <label>Passport Number</label>
@@ -353,7 +408,6 @@
         </div>
       </div>
 
-      <!-- Selfie -->
       <div class="field">
         <label>Selfie Photo <span style="color:#e05555">*</span> <span class="ar">صورة سيلفي</span></label>
         <div class="upload-zone" id="selfieZone">
@@ -369,13 +423,13 @@
       </div>
 
       <div class="btn-row">
-        <button class="btn-back" onclick="showStep(2)">← Back</button>
+        <button class="btn-back" onclick="showStep(3)">← Back</button>
         <button class="btn-next" id="uploadSubmitBtn" onclick="submitAll()">Submit Application →</button>
       </div>
     </div>
 
-    <!-- ── Step 4: Success ── -->
-    <div id="step4" style="display:none">
+    <!-- ── Step 5: Success ── -->
+    <div id="step5" style="display:none">
       <div class="success-wrap">
         <span class="success-icon">🎉</span>
         <div class="success-title">Profile Submitted!</div>
@@ -417,18 +471,50 @@
   </div>
 </div>
 
+<!-- ── Forgot Password Modal ── -->
+<div class="modal-overlay" id="forgotModal" onclick="if(event.target===this)closeForgotPw()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Forgot Password</div>
+        <div class="modal-sub">Enter your registered email and we'll send a 6-digit reset code.</div>
+      </div>
+      <button class="modal-close" onclick="closeForgotPw()">×</button>
+    </div>
+
+    <div id="forgotError" class="err-msg"></div>
+
+    <div id="forgotForm">
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="forgotEmail" placeholder="you@email.com" autocomplete="email"/>
+      </div>
+      <button class="btn-next" id="forgotSubmitBtn" onclick="sendResetCode()" style="width:100%">Send Reset Code</button>
+    </div>
+
+    <div id="forgotSuccess" style="display:none">
+      <div class="modal-success">
+        <span class="icon">📧</span>
+        <p>Reset code sent to<br/><strong id="forgotSentEmail"></strong><br/><br/>Open the Servix app → Login → Forgot Password → enter the 6-digit code to set a new password.</p>
+      </div>
+      <button class="btn-next" onclick="closeForgotPw()" style="width:100%;margin-top:20px">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = 'https://api.servix.world/api';
 let authToken = null;
 let selectedOrigin = 'african';
+let otpEmail = '';
+let otpTimer = null;
+let otpSeconds = 0;
 
 const LANGS  = ['Arabic','English','French','Tagalog','Bahasa Indonesia','Amharic','Swahili','Hindi','Tamil','Chinese'];
 const SKILLS = ['Cooking','Childcare','Eldercare','Cleaning','Laundry','Ironing','Driving','Tutoring','Nursing','Pet Care'];
-
-const ASIAN_NATIONALITIES  = ['Filipino','Indonesian','Malaysian','Sri Lankan','Indian','Bangladeshi','Nepalese'];
+const ASIAN_NATIONALITIES   = ['Filipino','Indonesian','Malaysian','Sri Lankan','Indian','Bangladeshi','Nepalese'];
 const AFRICAN_NATIONALITIES = ['Ethiopian','Kenyan','Ugandan','Ghanaian','Nigerian','Tanzanian','Sudanese'];
 
-// Build checkbox grids — use div (not label) to avoid native double-toggle
 function buildChecks(containerId, items) {
   const g = document.getElementById(containerId);
   g.innerHTML = items.map(i => `
@@ -440,15 +526,11 @@ function buildChecks(containerId, items) {
 buildChecks('langGrid', LANGS);
 buildChecks('skillGrid', SKILLS);
 
-function toggleCheck(el) {
-  el.classList.toggle('checked');
-}
-
+function toggleCheck(el) { el.classList.toggle('checked'); }
 function getChecked(containerId) {
   return [...document.querySelectorAll(`#${containerId} .check-item.checked`)].map(c => c.dataset.value);
 }
 
-// Origin selector
 function selectOrigin(val) {
   selectedOrigin = val;
   document.getElementById('originAfrican').classList.toggle('selected', val === 'african');
@@ -459,52 +541,48 @@ function autoOrigin() {
   const nat = document.getElementById('nationality').value;
   if (ASIAN_NATIONALITIES.includes(nat))   selectOrigin('asian');
   if (AFRICAN_NATIONALITIES.includes(nat)) selectOrigin('african');
-  // clear old hints
   document.getElementById('salaryHint').textContent = '';
 }
 
-// Password strength
 function checkPw(val) {
-  const bar  = document.getElementById('pwBar');
-  const hint = document.getElementById('pwHint');
-  if (!val)                                { bar.style.background='#2a2a2a'; bar.style.width='100%'; hint.textContent='Enter a password'; hint.style.color='#555'; return; }
-  if (val.length < 6)                      { bar.style.background='#e05555'; hint.textContent='Too short (min. 6 chars)'; hint.style.color='#e05555'; }
-  else if (val.length < 10)               { bar.style.background='#c9a84c'; hint.textContent='Good'; hint.style.color='#c9a84c'; }
-  else                                     { bar.style.background='#2e7d5e'; hint.textContent='Strong ✓'; hint.style.color='#2e7d5e'; }
+  const bar = document.getElementById('pwBar'), hint = document.getElementById('pwHint');
+  if (!val)            { bar.style.background='#2a2a2a'; hint.textContent='Enter a password'; hint.style.color='#555'; return; }
+  if (val.length < 6)  { bar.style.background='#e05555'; hint.textContent='Too short (min. 6 chars)'; hint.style.color='#e05555'; }
+  else if (val.length < 10) { bar.style.background='#c9a84c'; hint.textContent='Good'; hint.style.color='#c9a84c'; }
+  else                 { bar.style.background='#2e7d5e'; hint.textContent='Strong ✓'; hint.style.color='#2e7d5e'; }
 }
 
-// Show/hide steps
+// 5-step progress bar
 function showStep(n) {
-  [1,2,3,4].forEach(i => {
+  [1,2,3,4,5].forEach(i => {
     const el = document.getElementById('step'+i);
     if (el) el.style.display = i===n ? 'block' : 'none';
   });
-  [1,2,3,4].forEach(i => {
+  [1,2,3,4,5].forEach(i => {
     const dot = document.getElementById('dot'+i);
     const lbl = document.getElementById('lbl'+i);
     if (!dot) return;
     dot.className = 'step-dot ' + (i < n ? 'done' : i === n ? 'active' : 'pending');
-    dot.textContent = i < n ? '✓' : i === 4 ? '✓' : i;
+    dot.textContent = i < n ? '✓' : i === 5 ? '✓' : i;
     if (lbl) lbl.className = 'step-label ' + (i < n ? 'done' : i === n ? 'active' : '');
   });
-  [1,2,3].forEach(i => {
+  [1,2,3,4].forEach(i => {
     const line = document.getElementById('line'+i);
     if (line) line.className = 'step-line ' + (i < n ? 'done' : '');
   });
-  window.scrollTo(0,0);
+  window.scrollTo(0, 0);
 }
 
-// Error display
 function showErr(msg) {
   const el = document.getElementById('err');
   el.textContent = msg;
   el.classList.add('show');
-  el.scrollIntoView({behavior:'smooth', block:'center'});
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
 }
 function clearErr() { document.getElementById('err').classList.remove('show'); }
 
-// ── Step 1: validate & create account ──
-async function goStep2() {
+// ── Step 1 → register → show OTP ──
+async function goRegister() {
   clearErr();
   const name     = document.getElementById('name').value.trim();
   const email    = document.getElementById('email').value.trim();
@@ -512,11 +590,11 @@ async function goStep2() {
   const password = document.getElementById('password').value;
   const confirm  = document.getElementById('confirm').value;
 
-  if (!name)                    return showErr('Please enter your full name.');
+  if (!name)                          return showErr('Please enter your full name.');
   if (!email || !email.includes('@')) return showErr('Please enter a valid email address.');
-  if (!phone)                   return showErr('Please enter your phone number.');
-  if (password.length < 6)      return showErr('Password must be at least 6 characters.');
-  if (password !== confirm)     return showErr('Passwords do not match.');
+  if (!phone)                         return showErr('Please enter your phone number.');
+  if (password.length < 6)           return showErr('Password must be at least 6 characters.');
+  if (password !== confirm)          return showErr('Passwords do not match.');
 
   const btn = document.querySelector('#step1 .btn-next');
   btn.disabled = true;
@@ -535,7 +613,13 @@ async function goStep2() {
       return showErr(data.message || 'Registration failed. Please try again.');
     }
     authToken = data.token;
+    otpEmail  = email;
+    document.getElementById('otpEmailDisplay').textContent = email;
+    btn.disabled = false;
+    btn.textContent = 'Continue →';
     showStep(2);
+    startOTPCountdown();
+    setTimeout(() => document.getElementById('otp0')?.focus(), 300);
   } catch(e) {
     btn.disabled = false;
     btn.textContent = 'Continue →';
@@ -543,8 +627,113 @@ async function goStep2() {
   }
 }
 
-// ── Step 2: create maid profile → go to Step 3 ──
-async function goStep3() {
+// ── OTP countdown ──
+function startOTPCountdown() {
+  otpSeconds = 60;
+  updateResendBtn();
+  clearInterval(otpTimer);
+  otpTimer = setInterval(() => {
+    otpSeconds--;
+    updateResendBtn();
+    if (otpSeconds <= 0) clearInterval(otpTimer);
+  }, 1000);
+}
+
+function updateResendBtn() {
+  const btn = document.getElementById('resendBtn');
+  if (!btn) return;
+  btn.disabled  = otpSeconds > 0;
+  btn.textContent = otpSeconds > 0 ? `Resend code in ${otpSeconds}s` : 'Resend code';
+}
+
+// ── OTP input — single digit per box, handles paste ──
+function otpInput(el, idx) {
+  const val = el.value.replace(/[^0-9]/g, '');
+  if (val.length > 1) {
+    const digits = val.slice(0, 6);
+    digits.split('').forEach((d, i) => {
+      const box = document.getElementById('otp' + i);
+      if (box) { box.value = d; box.classList.toggle('filled', true); }
+    });
+    const last = Math.min(digits.length, 5);
+    document.getElementById('otp' + last)?.focus();
+    return;
+  }
+  el.value = val;
+  el.classList.toggle('filled', !!val);
+  if (val && idx < 5) document.getElementById('otp' + (idx + 1))?.focus();
+}
+
+function otpKeydown(e, idx) {
+  if (e.key === 'Backspace') {
+    const el = document.getElementById('otp' + idx);
+    if (!el.value && idx > 0) {
+      const prev = document.getElementById('otp' + (idx - 1));
+      if (prev) { prev.value = ''; prev.classList.remove('filled'); prev.focus(); }
+    }
+  }
+}
+
+// ── Verify OTP → go to profile ──
+async function verifyEmailOTP() {
+  clearErr();
+  const code = [0,1,2,3,4,5].map(i => document.getElementById('otp'+i)?.value || '').join('');
+  if (code.length < 6) return showErr('Please enter the complete 6-digit code.');
+
+  const btn = document.getElementById('otpVerifyBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Verifying…';
+
+  try {
+    const res = await fetch(`${API}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ email: otpEmail, otp: code })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      btn.disabled = false;
+      btn.textContent = 'Verify Email →';
+      return showErr(data.message || 'Invalid or expired code. Please try again.');
+    }
+    clearInterval(otpTimer);
+    btn.disabled = false;
+    btn.textContent = 'Verify Email →';
+    showStep(3);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Verify Email →';
+    showErr('Network error. Please try again.');
+  }
+}
+
+// ── Resend OTP ──
+async function resendOTPCode() {
+  if (otpSeconds > 0) return;
+  const btn = document.getElementById('resendBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  try {
+    await fetch(`${API}/auth/resend-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ email: otpEmail })
+    });
+    [0,1,2,3,4,5].forEach(i => {
+      const box = document.getElementById('otp' + i);
+      if (box) { box.value = ''; box.classList.remove('filled'); }
+    });
+    document.getElementById('otp0')?.focus();
+    clearErr();
+    startOTPCountdown();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Resend code';
+  }
+}
+
+// ── Step 3 (Profile) → Step 4 (Photos) ──
+async function goPhotos() {
   clearErr();
   const nationality = document.getElementById('nationality').value;
   const age         = parseInt(document.getElementById('age').value);
@@ -556,7 +745,7 @@ async function goStep3() {
   const langs       = getChecked('langGrid');
   const skills      = getChecked('skillGrid');
 
-  if (!nationality)                return showErr('Please select your nationality.');
+  if (!nationality)                 return showErr('Please select your nationality.');
   if (!age || age < 18 || age > 60) return showErr('Please enter a valid age (18–60).');
   if (isNaN(experience))            return showErr('Please enter your years of experience.');
   if (!salary || salary < 500)      return showErr('Please enter your expected monthly salary (min EGP 500).');
@@ -583,7 +772,7 @@ async function goStep3() {
       return showErr(data.message || 'Failed to save profile.');
     }
     btn.disabled = false; btn.textContent = 'Continue →';
-    showStep(3);
+    showStep(4);
   } catch(e) {
     btn.disabled = false; btn.textContent = 'Continue →';
     showErr('Network error. Please check your connection.');
@@ -597,8 +786,8 @@ function selectIdType(type) {
   selectedIdType = type;
   document.getElementById('idTypeEgyptian').classList.toggle('selected', type === 'egyptian');
   document.getElementById('idTypePassport').classList.toggle('selected', type === 'passport');
-  document.getElementById('egyptianFields').style.display  = type === 'egyptian' ? 'block' : 'none';
-  document.getElementById('passportFields').style.display  = type === 'passport'  ? 'block' : 'none';
+  document.getElementById('egyptianFields').style.display = type === 'egyptian' ? 'block' : 'none';
+  document.getElementById('passportFields').style.display = type === 'passport'  ? 'block' : 'none';
 }
 
 function markUploaded(zoneId, fileId, input) {
@@ -613,49 +802,19 @@ let photoFiles = [];
 
 function handleMultiPhoto(input) {
   if (!input.files || input.files.length === 0) return;
-  const newFiles = Array.from(input.files);
-  photoFiles = [...photoFiles, ...newFiles].slice(0, 10); // max 10
-
+  photoFiles = [...photoFiles, ...Array.from(input.files)].slice(0, 10);
   const zone = document.getElementById('photoZone');
   zone.classList.add('has-file');
   zone.querySelector('p').textContent = `✓ ${photoFiles.length} photo${photoFiles.length!==1?'s':''} selected`;
-
-  const grid = document.getElementById('photoPreviewGrid');
-  const countEl = document.getElementById('photoCount');
-  grid.innerHTML = '';
-  grid.style.display = 'grid';
-
-  photoFiles.forEach((file, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'photo-slot filled';
-    slot.style.position = 'relative';
-
-    const reader = new FileReader();
-    reader.onload = e => {
-      slot.innerHTML = `
-        <img src="${e.target.result}" alt="Photo ${i+1}" style="width:100%;height:100%;object-fit:cover;border-radius:6px"/>
-        <button onclick="removePhoto(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>
-        <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px">#${i+1}</div>
-      `;
-    };
-    reader.readAsDataURL(file);
-    grid.appendChild(slot);
-  });
-
-  countEl.textContent = photoFiles.length >= 3
-    ? `✓ ${photoFiles.length} photos selected — first 3 will be uploaded as your profile photos`
-    : `⚠️ ${photoFiles.length}/3 selected — please add at least ${3 - photoFiles.length} more`;
-  countEl.style.color = photoFiles.length >= 3 ? '#2e7d5e' : '#e05555';
+  renderPhotoGrid();
 }
 
 function removePhoto(idx) {
   photoFiles.splice(idx, 1);
-  // Re-trigger preview refresh
-  const fakeInput = { files: [] };
-  handleMultiPhotoRefresh();
+  renderPhotoGrid();
 }
 
-function handleMultiPhotoRefresh() {
+function renderPhotoGrid() {
   const grid = document.getElementById('photoPreviewGrid');
   const countEl = document.getElementById('photoCount');
   const zone = document.getElementById('photoZone');
@@ -669,6 +828,7 @@ function handleMultiPhotoRefresh() {
     return;
   }
 
+  grid.style.display = 'grid';
   grid.innerHTML = '';
   photoFiles.forEach((file, i) => {
     const slot = document.createElement('div');
@@ -679,8 +839,7 @@ function handleMultiPhotoRefresh() {
       slot.innerHTML = `
         <img src="${e.target.result}" alt="Photo ${i+1}" style="width:100%;height:100%;object-fit:cover;border-radius:6px"/>
         <button onclick="removePhoto(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;line-height:1">✕</button>
-        <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px">#${i+1}</div>
-      `;
+        <div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,0.5);color:#fff;font-size:9px;padding:2px 5px;border-radius:3px">#${i+1}</div>`;
     };
     reader.readAsDataURL(file);
     grid.appendChild(slot);
@@ -688,14 +847,14 @@ function handleMultiPhotoRefresh() {
 
   zone.querySelector('p').textContent = `✓ ${photoFiles.length} photo${photoFiles.length!==1?'s':''} selected`;
   countEl.textContent = photoFiles.length >= 3
-    ? `✓ ${photoFiles.length} photos — first 3 will be your profile photos`
-    : `⚠️ ${photoFiles.length}/3 — please add at least ${3 - photoFiles.length} more`;
+    ? `✓ ${photoFiles.length} photos selected — first 3 will be uploaded as your profile photos`
+    : `⚠️ ${photoFiles.length}/3 selected — please add at least ${3 - photoFiles.length} more`;
   countEl.style.color = photoFiles.length >= 3 ? '#2e7d5e' : '#e05555';
 }
 
 function setProgress(pct) {
   document.getElementById('uploadProgressBar').style.display = 'block';
-  document.getElementById('uploadProgressFill').style.width  = pct + '%';
+  document.getElementById('uploadProgressFill').style.width = pct + '%';
 }
 
 async function uploadImage(file) {
@@ -708,28 +867,19 @@ async function uploadImage(file) {
   });
   const data = await res.json();
   if (!data.success) throw new Error(data.message || 'Upload failed');
-  return data; // { url, publicId }
+  return data;
 }
 
-// ── Step 3: upload photos + ID + selfie → submitVerification ──
+// ── Step 4: upload everything → Step 5 success ──
 async function submitAll() {
   clearErr();
-
-  // Validate profile photos
-  const missingPhoto = photoFiles.findIndex(f => !f);
-  if (missingPhoto !== -1) return showErr(`Please upload Photo ${missingPhoto + 1}.`);
-
-  // Validate selfie
-  const selfieInput = document.getElementById('selfieFile');
-  if (!selfieInput.files[0]) return showErr('Please upload a selfie photo.');
-
-  // Validate ID
+  if (photoFiles.length < 3) return showErr('Please upload at least 3 profile photos.');
+  if (!document.getElementById('selfieFile').files[0]) return showErr('Please upload a selfie photo.');
   if (selectedIdType === 'egyptian') {
     const nid = document.getElementById('nationalId').value.trim();
     if (!nid || nid.length < 10) return showErr('Please enter your national ID number.');
   } else {
-    const pn = document.getElementById('passportNumber').value.trim();
-    if (!pn) return showErr('Please enter your passport number.');
+    if (!document.getElementById('passportNumber').value.trim()) return showErr('Please enter your passport number.');
     if (!document.getElementById('passportFile').files[0]) return showErr('Please upload your passport photo.');
   }
 
@@ -740,19 +890,16 @@ async function submitAll() {
   try {
     setProgress(5);
 
-    // 1. Upload 3 profile photos
     const photoUrls = [];
     for (let i = 0; i < 3; i++) {
       const result = await uploadImage(photoFiles[i]);
       photoUrls.push({ url: result.url, publicId: result.publicId, isPrimary: i === 0 });
-      setProgress(5 + (i + 1) * 15); // 20%, 35%, 50%
+      setProgress(5 + (i + 1) * 15);
     }
 
-    // 2. Upload selfie
-    const selfieResult = await uploadImage(selfieInput.files[0]);
+    const selfieResult = await uploadImage(document.getElementById('selfieFile').files[0]);
     setProgress(65);
 
-    // 3. Upload passport if needed
     let passportPhotoUrl = null, passportPhotoPublicId = null;
     if (selectedIdType === 'passport') {
       const ppResult = await uploadImage(document.getElementById('passportFile').files[0]);
@@ -761,7 +908,6 @@ async function submitAll() {
     }
     setProgress(80);
 
-    // 4. Add profile photos
     for (const photo of photoUrls) {
       await fetch(`${API}/maids/me/photos`, {
         method: 'POST',
@@ -771,17 +917,13 @@ async function submitAll() {
     }
     setProgress(90);
 
-    // 5. Submit verification
-    const verifyBody = {
-      selfieUrl:       selfieResult.url,
-      selfiePublicId:  selfieResult.publicId,
-    };
+    const verifyBody = { selfieUrl: selfieResult.url, selfiePublicId: selfieResult.publicId };
     if (selectedIdType === 'egyptian') {
       verifyBody.nationalId = document.getElementById('nationalId').value.trim();
     } else {
-      verifyBody.passportNumber       = document.getElementById('passportNumber').value.trim();
-      verifyBody.passportPhotoUrl     = passportPhotoUrl;
-      verifyBody.passportPhotoPublicId= passportPhotoPublicId;
+      verifyBody.passportNumber        = document.getElementById('passportNumber').value.trim();
+      verifyBody.passportPhotoUrl      = passportPhotoUrl;
+      verifyBody.passportPhotoPublicId = passportPhotoPublicId;
     }
     await fetch(`${API}/maids/me/verification`, {
       method: 'POST',
@@ -791,11 +933,63 @@ async function submitAll() {
     setProgress(100);
 
     document.getElementById('successEmail').textContent = document.getElementById('email').value.trim();
-    showStep(4);
+    showStep(5);
   } catch(e) {
     btn.disabled = false;
     btn.textContent = 'Submit Application →';
     showErr(e.message || 'Upload failed. Please check your connection and try again.');
+  }
+}
+
+// ── Forgot Password Modal ──
+function openForgotPw() {
+  document.getElementById('forgotModal').classList.add('open');
+  document.getElementById('forgotEmail').value = document.getElementById('email').value.trim();
+  document.getElementById('forgotError').classList.remove('show');
+  document.getElementById('forgotForm').style.display   = 'block';
+  document.getElementById('forgotSuccess').style.display = 'none';
+  document.getElementById('forgotSubmitBtn').disabled    = false;
+  document.getElementById('forgotSubmitBtn').textContent = 'Send Reset Code';
+}
+
+function closeForgotPw() {
+  document.getElementById('forgotModal').classList.remove('open');
+}
+
+async function sendResetCode() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const errEl = document.getElementById('forgotError');
+  errEl.classList.remove('show');
+  if (!email || !email.includes('@')) {
+    errEl.textContent = 'Please enter a valid email address.';
+    errEl.classList.add('show');
+    return;
+  }
+  const btn = document.getElementById('forgotSubmitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Sending…';
+  try {
+    const res = await fetch(`${API}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      btn.disabled = false;
+      btn.textContent = 'Send Reset Code';
+      errEl.textContent = data.message || 'Failed to send reset code.';
+      errEl.classList.add('show');
+      return;
+    }
+    document.getElementById('forgotForm').style.display    = 'none';
+    document.getElementById('forgotSuccess').style.display = 'block';
+    document.getElementById('forgotSentEmail').textContent  = email;
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Send Reset Code';
+    errEl.textContent = 'Network error. Please try again.';
+    errEl.classList.add('show');
   }
 }
 </script>
