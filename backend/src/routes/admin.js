@@ -35,6 +35,30 @@ router.get('/fix/unblock', async (req, res) => {
   res.json({ ok: true, msg: `Unblocked ${maid.fullName} from ${cu.email}` });
 });
 
+// Test push notification — returns token state + Expo delivery receipt
+router.get('/fix/test-push', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const User = require('../models/User');
+  const axios = require('axios');
+  const user = await User.findOne({ email: req.query.email }).select('fcmToken name');
+  if (!user) return res.status(404).json({ ok: false, msg: 'user not found' });
+  if (!user.fcmToken) return res.json({ ok: false, msg: 'no push token saved for this user', token: null });
+
+  try {
+    const r = await axios.post('https://exp.host/api/v2/push/send', {
+      to: user.fcmToken,
+      title: 'Servix Test 🔔',
+      body: 'Push notification is working!',
+      sound: 'default',
+      priority: 'high',
+      channelId: 'default',
+    }, { headers: { 'Content-Type': 'application/json', Accept: 'application/json' } });
+    res.json({ ok: true, token: user.fcmToken, expoResponse: r.data });
+  } catch (err) {
+    res.json({ ok: false, token: user.fcmToken, error: err.message });
+  }
+});
+
 // Admin-only routes
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
