@@ -608,12 +608,12 @@ export function MaidDashScreen({ navigation }) {
           <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
             {[
               { icon:'👑', id:'hire_req',  title:t('menu_hire_requests'), sub: pendingRequests > 0 ? `${pendingRequests} pending` : '', isRed:false, onPress: () => navigation.navigate('HireRequest') },
-              { icon:'💬', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} active`,                                  isRed:false, onPress: undefined },
+              { icon:'💬', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} active`,                                  isRed:false, onPress: () => navigation.navigate('MaidChats') },
               { icon:'💳', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.plan ? `${profile.subscription.plan} · ${profile.subscription.status}` : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
               { icon:'🎁', id:'referrals', title:t('menu_referrals'),     sub: t('share_code_earn'),                                     isRed:false, onPress: () => navigation.navigate('Coupons') },
               { icon:'📊', id:'analytics', title:t('menu_analytics'),     sub: `${stats.views} ${t('views')} · ${stats.likes} ${t('likes')}`, isRed:false, onPress: () => navigation.navigate('Analytics') },
               { icon:'🌐', id:'language',  title:t('language'),           sub: '',                                                       isRed:false, onPress: () => setLangVisible(true) },
-              { icon:'🔔', id:'notifs',    title:t('menu_notifications2'),sub: '',                                                       isRed:false, onPress: undefined },
+              { icon:'🔔', id:'notifs',    title:t('menu_notifications2'),sub: '',                                                       isRed:false, onPress: () => navigation.navigate('MaidAlerts') },
               { icon:'🎫', id:'support',   title:t('menu_support2'),      sub: t('contact_admin_note'),                                  isRed:false, onPress: () => navigation.navigate('Support') },
               { icon:'🗑️', id:'delete',   title:t('menu_delete_account'),sub: t('deactivates_profile'),                                 isRed:true,  onPress: handleDeleteAccount },
               { icon:'🚪', id:'sign_out',  title:t('menu_sign_out'),      sub: '',                                                       isRed:true,  onPress: logout },
