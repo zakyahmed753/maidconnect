@@ -24,6 +24,8 @@ export default function SubscriptionScreen({ navigation }) {
   const completeAuth = useAuthStore(s => s.completeAuth);
   const logout       = useAuthStore(s => s.logout);
   const { profile }  = useAuthStore();
+  const mountedRef   = React.useRef(true);
+  React.useEffect(() => { return () => { mountedRef.current = false; }; }, []);
   const [skipping, setSkipping]           = useState(false);
   const [nationality, setNationality]     = useState(profile?.nationality || '');
   const [offlineModal, setOfflineModal]   = useState(false);
@@ -63,14 +65,24 @@ export default function SubscriptionScreen({ navigation }) {
     }, [])
   );
 
+  // After completeAuth, if still mounted (renewal — already in MaidTabs),
+  // navigate explicitly; first-time case is handled by AppNavigator switching stacks.
+  const goHomeAfterAuth = async () => {
+    await completeAuth();
+    const p = useAuthStore.getState().profile;
+    const active = p?.subscription?.status === 'active' && p?.subscription?.endDate && new Date(p.subscription.endDate) > new Date();
+    if (mountedRef.current && active) {
+      navigation.navigate('MaidDash');
+    }
+  };
+
   const handleCheckPendingStatus = async () => {
     if (!pendingPayment?._id) return;
     setCheckingStatus(true);
     try {
       const res = await paymentsAPI.checkStatus(pendingPayment._id);
       if (res.data?.status === 'completed') {
-        await completeAuth();
-        // completeAuth will update auth store → AppNavigator routes to MaidTabs
+        await goHomeAfterAuth();
       } else if (res.data?.status === 'failed') {
         setPendingPayment(null);
         Toast.show({ type: 'info', text1: t('receipt_rejected'), text2: t('receipt_rejected_sub') });
@@ -313,8 +325,9 @@ export default function SubscriptionScreen({ navigation }) {
           style={{ alignItems: 'center', paddingVertical: 12 }}
           onPress={async () => {
             try {
-              await completeAuth();
-              Toast.show({ type: 'info', text1: t('checking_label') });
+              await goHomeAfterAuth();
+              // If still on this screen the subscription isn't active yet
+              if (mountedRef.current) Toast.show({ type: 'info', text1: t('checking_label') });
             } catch {
               Toast.show({ type: 'error', text1: t('could_not_check') });
             }
