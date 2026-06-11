@@ -91,6 +91,13 @@ export function PaymentResultScreen({ route, navigation }) {
   }, [paymentId, isOffline]);
 
   const handleGoHome = async () => {
+    // Offline pending: maid is already logged in — just go back rather than
+    // re-running completeAuth which would re-evaluate the subscription gate
+    // and kick the maid out while the receipt is still awaiting admin approval.
+    if (isOffline && status !== 'completed') {
+      navigation.canGoBack() ? navigation.goBack() : navigation.navigate('MaidDash');
+      return;
+    }
     setCompleting(true);
     try { await completeAuth(); } catch { setCompleting(false); }
   };

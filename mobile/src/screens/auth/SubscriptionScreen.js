@@ -180,7 +180,7 @@ export default function SubscriptionScreen({ navigation }) {
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={logout} style={{ alignSelf: 'flex-start', marginBottom: 10 }}>
+        <TouchableOpacity onPress={() => navigation.canGoBack() ? navigation.goBack() : logout()} style={{ alignSelf: 'flex-start', marginBottom: 10 }}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 36, marginBottom: 8 }}>👑</Text>
