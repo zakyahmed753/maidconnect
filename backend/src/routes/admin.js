@@ -59,6 +59,21 @@ router.get('/fix/test-push', async (req, res) => {
   }
 });
 
+// Test email delivery — returns Resend response or error
+router.get('/fix/test-email', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const { sendOTPEmail } = require('../utils/email');
+  const to = req.query.email;
+  if (!to) return res.status(400).json({ ok: false, msg: 'Pass ?email=you@example.com' });
+  if (!process.env.RESEND_API_KEY) return res.json({ ok: false, msg: 'RESEND_API_KEY not set on server' });
+  try {
+    await sendOTPEmail(to, '123456');
+    res.json({ ok: true, msg: `Test OTP email sent to ${to}`, from: process.env.EMAIL_FROM || 'noreply@servix.world' });
+  } catch (err) {
+    res.json({ ok: false, error: err.message });
+  }
+});
+
 // Admin-only routes
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
