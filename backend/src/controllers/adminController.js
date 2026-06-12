@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Maid = require('../models/Maid');
 const { HouseWife, Payment, Notification, Chat } = require('../models/index');
+const { sendPush } = require('../utils/push');
 
 // ── Dashboard Stats ──
 exports.getDashboard = async (req, res) => {
@@ -422,12 +423,19 @@ exports.broadcastNotification = async (req, res) => {
   try {
     const { title, body, targetRole } = req.body;
     const filter = targetRole ? { role: targetRole } : {};
-    const users = await User.find(filter).select('_id');
+    const users = await User.find(filter).select('_id fcmToken');
 
+    // Save in-app notifications
     const notifications = users.map(u => ({ user: u._id, type: 'system', title, body }));
     await Notification.insertMany(notifications);
 
-    res.json({ success: true, sent: notifications.length });
+    // Fire push notifications to devices (non-blocking)
+    const pushTargets = users.filter(u => u.fcmToken);
+    Promise.allSettled(
+      pushTargets.map(u => sendPush({ token: u.fcmToken, title, body }))
+    ).catch(() => {});
+
+    res.json({ success: true, sent: notifications.length, pushed: pushTargets.length });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
