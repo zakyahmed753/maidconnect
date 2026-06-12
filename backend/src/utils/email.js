@@ -54,15 +54,15 @@ exports.sendProfileApprovedEmail = async (to, maidName) => {
     html: `
       <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
         <div style="background:linear-gradient(135deg,#0d2e1a,#1a3d25);padding:32px 28px;text-align:center">
-          <div style="font-size:52px;margin-bottom:12px">🎉</div>
-          <h1 style="color:#5dd6a8;font-size:26px;margin:0;letter-spacing:1px">You're Approved!</h1>
-          <p style="color:rgba(93,214,168,0.65);font-size:13px;margin:10px 0 0">Your Servix profile is now live</p>
+          <div style="font-size:52px;margin-bottom:12px">🎉✅🌟</div>
+          <h1 style="color:#5dd6a8;font-size:26px;margin:0;letter-spacing:1px">Congratulations! You're Approved!</h1>
+          <p style="color:rgba(93,214,168,0.65);font-size:13px;margin:10px 0 0">Your Servix profile is verified & ready 🙌</p>
         </div>
         <div style="padding:28px;background:#111">
-          <p style="color:#e0d0b0;font-size:15px;line-height:1.6">Hi <strong style="color:#5dd6a8">${maidName}</strong>,</p>
+          <p style="color:#e0d0b0;font-size:15px;line-height:1.6">Hi <strong style="color:#5dd6a8">${maidName}</strong>, 👋</p>
           <p style="color:#b0a080;font-size:14px;line-height:1.8">
-            Great news — your profile has been <strong style="color:#5dd6a8">reviewed and approved</strong> by the Servix team.
-            Families can now find you and reach out directly through the app.
+            🎊 Congratulations! Your profile has been <strong style="color:#5dd6a8">reviewed and approved</strong> by the Servix team.
+            You are now a verified maid on our platform 💪 — families will be able to find you and reach out directly through the app.
           </p>
           <div style="background:#0d1f15;border:1px solid #1e4d30;border-radius:8px;padding:18px;margin:22px 0">
             <p style="color:#5dd6a8;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.5px">What happens next?</p>
