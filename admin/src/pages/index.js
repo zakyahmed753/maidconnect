@@ -111,12 +111,18 @@ export function Maids() {
 }
 
 // ─── Customers.js ───
+const subColors = { active:'#5dd6a8', expired:'#ff6b6b', none:'#555' };
+
 export function HouseWives() {
-  const [hws, setHws] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [hws,        setHws]        = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [expanded,   setExpanded]   = useState(null); // hw._id with payment panel open
+  const [offlineAmt, setOfflineAmt] = useState('');
+  const [offlineNote,setOfflineNote]= useState('');
+  const [paying,     setPaying]     = useState(null); // hw._id being processed
 
   useEffect(() => {
-    adminAPI.getHouseWives({ limit:50 })
+    adminAPI.getHouseWives({ limit:100 })
       .then(r => setHws(r.data.housewives))
       .catch(() => toast.error('Failed to load'))
       .finally(() => setLoading(false));
@@ -144,39 +150,96 @@ export function HouseWives() {
     } catch { toast.error('Failed'); }
   };
 
+  const handleOfflineSub = async (hw) => {
+    if (!window.confirm(`Record EGP ${offlineAmt || 1000} cash payment and activate subscription for ${hw.fullName}?`)) return;
+    setPaying(hw._id);
+    try {
+      await adminAPI.customerOfflineSubscription(hw._id, {
+        amount: offlineAmt ? Number(offlineAmt) : 1000,
+        note: offlineNote || undefined,
+      });
+      toast.success('Subscription activated');
+      const now = new Date();
+      const endDate = new Date(now); endDate.setMonth(endDate.getMonth() + 1);
+      setHws(prev => prev.map(h => h._id === hw._id
+        ? { ...h, subscription: { status: 'active', startDate: now, endDate } }
+        : h
+      ));
+      setExpanded(null);
+      setOfflineAmt(''); setOfflineNote('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed');
+    } finally { setPaying(null); }
+  };
+
+  const inp = { width:'100%', padding:'7px 10px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:4, color:'#f0ece4', fontSize:12, outline:'none', fontFamily:"'Jost',sans-serif", boxSizing:'border-box' };
+
   return (
     <div style={{ fontFamily:"'Jost',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400&display=swap');`}</style>
       {loading && <div style={{ color:'#555', textAlign:'center', padding:40 }}>Loading…</div>}
-      {hws.map(hw => (
-        <div key={hw._id} style={CARD}>
-          <div style={{ display:'flex', alignItems:'center', gap:13, padding:'13px 15px' }}>
-            <div style={{ width:40, height:40, borderRadius:'50%', background:'linear-gradient(135deg,#c9a84c,#e8c97a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>👩</div>
-            <div style={{ flex:1 }}>
-              <div style={{ fontSize:13, fontWeight:600, color:'#f0ece4' }}>{hw.fullName}</div>
-              <div style={{ fontSize:11, color:'#555' }}>{hw.user?.email} · {hw.city || 'Egypt'}</div>
-              <div style={{ fontSize:10, color:'#444', fontFamily:"'DM Mono',monospace", marginTop:1 }}>
-                {hw.savedMaids?.length||0} saved · {hw.hiredMaids?.length||0} hired · Joined {new Date(hw.createdAt).toLocaleDateString()}
+      {hws.map(hw => {
+        const subStatus = hw.subscription?.status || 'none';
+        const isExpanded = expanded === hw._id;
+        return (
+          <div key={hw._id} style={{ ...CARD, border: isExpanded ? '1px solid rgba(201,168,76,0.35)' : '1px solid #222' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:13, padding:'13px 15px' }}>
+              <div style={{ width:40, height:40, borderRadius:'50%', background:'linear-gradient(135deg,#c9a84c,#e8c97a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>👩</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:600, color:'#f0ece4' }}>{hw.fullName}</div>
+                <div style={{ fontSize:11, color:'#555' }}>{hw.user?.email} · {hw.city || 'Egypt'}</div>
+                <div style={{ display:'flex', gap:5, marginTop:4, alignItems:'center', flexWrap:'wrap' }}>
+                  <span style={{ fontSize:9, padding:'2px 7px', borderRadius:3, fontWeight:700, background:`${subColors[subStatus]||'#555'}18`, color:subColors[subStatus]||'#555', border:`1px solid ${subColors[subStatus]||'#555'}35`, textTransform:'uppercase', letterSpacing:'0.06em' }}>
+                    sub: {subStatus}
+                  </span>
+                  {hw.subscription?.endDate && subStatus === 'active' && (
+                    <span style={{ fontSize:9, color:'#555', fontFamily:"'DM Mono',monospace" }}>
+                      expires {new Date(hw.subscription.endDate).toLocaleDateString()}
+                    </span>
+                  )}
+                  <span style={{ fontSize:9, color:'#444', fontFamily:"'DM Mono',monospace" }}>
+                    {hw.savedMaids?.length||0} saved · {hw.hiredMaids?.length||0} hired
+                  </span>
+                </div>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:5 }}>
+                <span style={{ fontSize:10, color: hw.user?.deletedAt ? '#888' : hw.user?.isSuspended ? '#ff6b6b' : '#5dd6a8' }}>
+                  {hw.user?.deletedAt ? '⚫ Deleted' : hw.user?.isSuspended ? '🔴 Suspended' : '🟢 Active'}
+                </span>
+                <div style={{ display:'flex', gap:5 }}>
+                  <button onClick={() => { setExpanded(isExpanded ? null : hw._id); setOfflineAmt(''); setOfflineNote(''); }}
+                    style={{ padding:'5px 10px', background: isExpanded ? 'rgba(201,168,76,0.15)' : 'rgba(201,168,76,0.06)', border:`1px solid rgba(201,168,76,${isExpanded?'0.5':'0.2'})`, borderRadius:4, color:'#c9a84c', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
+                    💵 Pay
+                  </button>
+                  <button onClick={() => handleSuspend(hw.user?._id, hw.user?.isSuspended)}
+                    style={{ padding:'5px 10px', background:'rgba(255,107,107,0.08)', border:'1px solid rgba(255,107,107,0.2)', borderRadius:4, color:'#ff6b6b', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
+                    {hw.user?.isSuspended ? 'Unsuspend' : 'Suspend'}
+                  </button>
+                  <button onClick={() => handleDelete(hw.user?._id, !!hw.user?.deletedAt)}
+                    style={{ padding:'5px 10px', background: hw.user?.deletedAt ? 'rgba(93,214,168,0.08)' : 'rgba(80,80,80,0.12)', border:`1px solid ${hw.user?.deletedAt ? 'rgba(93,214,168,0.3)' : 'rgba(80,80,80,0.3)'}`, borderRadius:4, color: hw.user?.deletedAt ? '#5dd6a8' : '#888', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
+                    {hw.user?.deletedAt ? '↩ Restore' : '🗑 Delete'}
+                  </button>
+                </div>
               </div>
             </div>
-            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4 }}>
-              <span style={{ fontSize:10, color: hw.user?.deletedAt ? '#888' : hw.user?.isSuspended ? '#ff6b6b' : '#5dd6a8' }}>
-                {hw.user?.deletedAt ? '⚫ Deleted' : hw.user?.isSuspended ? '🔴 Suspended' : '🟢 Active'}
-              </span>
-              <div style={{ display:'flex', gap:6 }}>
-                <button onClick={() => handleSuspend(hw.user?._id, hw.user?.isSuspended)}
-                  style={{ padding:'5px 10px', background:'rgba(255,107,107,0.08)', border:'1px solid rgba(255,107,107,0.2)', borderRadius:4, color:'#ff6b6b', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
-                  {hw.user?.isSuspended ? 'Unsuspend' : 'Suspend'}
-                </button>
-                <button onClick={() => handleDelete(hw.user?._id, !!hw.user?.deletedAt)}
-                  style={{ padding:'5px 10px', background: hw.user?.deletedAt ? 'rgba(93,214,168,0.08)' : 'rgba(80,80,80,0.12)', border:`1px solid ${hw.user?.deletedAt ? 'rgba(93,214,168,0.3)' : 'rgba(80,80,80,0.3)'}`, borderRadius:4, color: hw.user?.deletedAt ? '#5dd6a8' : '#888', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
-                  {hw.user?.deletedAt ? '↩ Restore' : '🗑 Delete'}
+
+            {/* Offline subscription panel */}
+            {isExpanded && (
+              <div style={{ borderTop:'1px solid rgba(201,168,76,0.2)', padding:'14px 15px', background:'rgba(201,168,76,0.04)' }}>
+                <div style={{ fontSize:12, fontWeight:600, color:'#c9a84c', marginBottom:10 }}>💵 Record Offline Cash Payment — Customer Subscription</div>
+                <div style={{ display:'flex', gap:8, marginBottom:8 }}>
+                  <input type="number" placeholder="Amount EGP (default 1000)" value={offlineAmt} onChange={e => setOfflineAmt(e.target.value)} style={{ ...inp, flex:1 }} />
+                  <input placeholder="Admin note (optional)" value={offlineNote} onChange={e => setOfflineNote(e.target.value)} style={{ ...inp, flex:2 }} />
+                </div>
+                <button onClick={() => handleOfflineSub(hw)} disabled={paying === hw._id}
+                  style={{ width:'100%', padding:'9px', background:'rgba(93,214,168,0.13)', border:'1px solid rgba(93,214,168,0.4)', borderRadius:5, color:'#5dd6a8', fontSize:12, fontWeight:700, cursor:paying===hw._id?'not-allowed':'pointer', fontFamily:"'Jost',sans-serif", opacity:paying===hw._id?0.6:1 }}>
+                  {paying === hw._id ? '⏳ Activating…' : '✅ Confirm Cash Payment & Activate Subscription'}
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

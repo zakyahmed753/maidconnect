@@ -96,6 +96,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
   const [offlineAmt,   setOfflineAmt]   = useState('');
   const [offlineNote,  setOfflineNote]  = useState('');
   const [offlineLoading, setOfflineLoading] = useState(false);
+  const [releasing,    setReleasing]    = useState(false);
 
   const refreshMaid = React.useCallback(() => {
     if (!initialMaid?._id) return;
@@ -186,6 +187,19 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
       toast.error(err.response?.data?.message || 'Failed to activate subscription');
     }
     finally { setOfflineLoading(false); }
+  };
+
+  const handleReleaseMaid = async () => {
+    if (!window.confirm('Release this maid from her current customer? This mirrors the customer release flow — the customer will get a free-replacement vacancy and the maid becomes available again.')) return;
+    setReleasing(true);
+    try {
+      await adminAPI.releaseMaid(maid._id);
+      toast.success('Maid released — profile is now visible to new customers');
+      setMaid(prev => ({ ...prev, isHired: false, isAvailable: true }));
+      onUpdate(maid._id, { isHired: false, isAvailable: true });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to release maid');
+    } finally { setReleasing(false); }
   };
 
   const handleDeleteAccount = async () => {
@@ -555,6 +569,20 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                   <button onClick={handleOfflinePayment} disabled={offlineLoading}
                     style={{ width: '100%', padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: G.green, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.6 : 1 }}>
                     {offlineLoading ? 'Recording…' : '💵 Record Cash Payment & Activate'}
+                  </button>
+                </div>
+              )}
+
+              {/* Release Maid — admin-only, shown when maid is hired */}
+              {!isAgent && maid.isHired && (
+                <div style={{ background: '#0e1a0e', border: `1.5px solid rgba(93,214,168,0.4)`, borderRadius: 8, padding: 18, gridColumn: '1 / -1' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: G.green, marginBottom: 4 }}>↩ Release Maid</div>
+                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 14 }}>
+                    Releases the maid from her current customer — identical to the customer releasing her from the app. The customer gets a 3-day free-replacement vacancy; the maid's profile becomes visible again.
+                  </div>
+                  <button onClick={handleReleaseMaid} disabled={releasing}
+                    style={{ width: '100%', padding: '11px', background: 'rgba(93,214,168,0.14)', border: `1.5px solid rgba(93,214,168,0.45)`, borderRadius: 5, color: G.green, fontSize: 13, fontWeight: 700, cursor: releasing ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: releasing ? 0.6 : 1 }}>
+                    {releasing ? '⏳ Releasing…' : '↩ Release from Current Job'}
                   </button>
                 </div>
               )}

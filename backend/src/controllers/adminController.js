@@ -418,6 +418,108 @@ exports.listAgents = async (req, res) => {
   }
 };
 
+// ── Admin Release Maid (same behaviour as customer returnMaid) ──
+exports.releaseMaid = async (req, res) => {
+  try {
+    const maidProfile = await Maid.findById(req.params.id);
+    if (!maidProfile) return res.status(404).json({ success: false, message: 'Maid not found' });
+    if (!maidProfile.isHired) return res.status(400).json({ success: false, message: 'Maid is not currently marked as hired' });
+
+    const DAY_MS = 24 * 60 * 60 * 1000;
+
+    // Find the customer who currently has this maid hired
+    const hw = await HouseWife.findOne({ 'hiredMaids.maid': maidProfile._id });
+
+    if (hw) {
+      const hireEntry = hw.hiredMaids.find(h => String(h.maid) === String(maidProfile._id));
+      const daysHired = hireEntry ? (Date.now() - new Date(hireEntry.hiredAt || 0).getTime()) / DAY_MS : 0;
+
+      let penaltyAmount = 0;
+      if      (daysHired > 30) penaltyAmount = 1000;
+      else if (daysHired > 7)  penaltyAmount = 700;
+      else if (daysHired > 3)  penaltyAmount = 500;
+
+      const expiresAt = new Date(Date.now() + 3 * DAY_MS);
+
+      await HouseWife.findByIdAndUpdate(hw._id, {
+        'freeVacancy.available':     true,
+        'freeVacancy.expiresAt':     expiresAt,
+        'freeVacancy.penaltyAmount': penaltyAmount,
+        $pull:     { hiredMaids: { maid: maidProfile._id } },
+        $addToSet: { blockedMaids: maidProfile._id },
+        $push:     { pastHiredMaids: { maid: maidProfile._id, releasedAt: new Date() } },
+      });
+
+      await Chat.updateMany({ housewife: hw.user, maid: maidProfile.user }, { isActive: false });
+
+      const custBody = penaltyAmount > 0
+        ? `Your maid has been released by admin. You have 3 days to hire a replacement. A fee of EGP ${penaltyAmount} will apply.`
+        : 'Your maid has been released by admin. You have 3 days to hire a free replacement.';
+      await Notification.create({ user: hw.user, type: 'system', title: '↩ Maid Released by Admin', body: custBody });
+
+      const hwUser = await User.findById(hw.user).select('fcmToken');
+      if (hwUser?.fcmToken) sendPush({ token: hwUser.fcmToken, title: '↩ Maid Released by Admin', body: custBody }).catch(() => {});
+    }
+
+    await Maid.findByIdAndUpdate(req.params.id, { isAvailable: true, isHired: false });
+
+    const maidBody = 'Admin has released you from your current job. Your profile is now visible to new customers.';
+    await Notification.create({ user: maidProfile.user, type: 'system', title: '🆓 Released — Available Again', body: maidBody });
+
+    const maidUser = await User.findById(maidProfile.user).select('fcmToken');
+    if (maidUser?.fcmToken) sendPush({ token: maidUser.fcmToken, title: '🆓 Available Again', body: maidBody }).catch(() => {});
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Offline Cash Subscription for Customer (housewife) ──
+exports.offlineCustomerSubscription = async (req, res) => {
+  try {
+    const { amount = 1000, note } = req.body;
+    const hw = await HouseWife.findById(req.params.hwId).populate('user', '_id name email');
+    if (!hw) return res.status(404).json({ success: false, message: 'Customer not found' });
+
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    const payment = await Payment.create({
+      user:             hw.user._id,
+      type:             'customer_subscription',
+      method:           'cash_transfer',
+      amount:           Number(amount),
+      status:           'completed',
+      offlineByAdmin:   true,
+      adminNote:        note || 'Offline cash payment recorded by admin',
+      subscriptionPlan: 'monthly',
+      paidAt:           now,
+    });
+
+    await HouseWife.findByIdAndUpdate(req.params.hwId, {
+      'subscription.status':    'active',
+      'subscription.startDate': now,
+      'subscription.endDate':   endDate,
+      'subscription.paymentId': payment._id,
+    });
+
+    await Notification.create({
+      user: hw.user._id, type: 'subscription',
+      title: '💵 Subscription Activated!',
+      body: 'Your monthly subscription has been activated via offline cash payment.',
+    });
+
+    const hwUserRecord = await User.findById(hw.user._id).select('fcmToken');
+    if (hwUserRecord?.fcmToken) sendPush({ token: hwUserRecord.fcmToken, title: '💵 Subscription Activated!', body: 'Your subscription is now active. You can now chat with and hire maids.' }).catch(() => {});
+
+    res.json({ success: true, payment });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Send Broadcast Notification ──
 exports.broadcastNotification = async (req, res) => {
   try {
