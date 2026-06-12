@@ -573,16 +573,24 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                 </div>
               )}
 
-              {/* Release Maid — admin-only, shown when maid is hired */}
-              {!isAgent && maid.isHired && (
-                <div style={{ background: '#0e1a0e', border: `1.5px solid rgba(93,214,168,0.4)`, borderRadius: 8, padding: 18, gridColumn: '1 / -1' }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: G.green, marginBottom: 4 }}>↩ Release Maid</div>
-                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 14 }}>
-                    Releases the maid from her current customer — identical to the customer releasing her from the app. The customer gets a 3-day free-replacement vacancy; the maid's profile becomes visible again.
+              {/* Release Maid — admin-only, always visible */}
+              {!isAgent && (
+                <div style={{ background: maid.isHired ? '#0e1a0e' : G.card, border: `1.5px solid ${maid.isHired ? 'rgba(93,214,168,0.4)' : G.border}`, borderRadius: 8, padding: 18, gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: maid.isHired ? G.green : G.muted }}>↩ Release Maid</div>
+                    {maid.isHired
+                      ? <span style={{ fontSize: 9, background: 'rgba(93,214,168,0.15)', color: G.green, border: '1px solid rgba(93,214,168,0.4)', borderRadius: 3, padding: '2px 7px', fontWeight: 700, textTransform: 'uppercase' }}>Currently Hired</span>
+                      : <span style={{ fontSize: 9, background: '#1e1e1e', color: G.muted, border: `1px solid ${G.border2}`, borderRadius: 3, padding: '2px 7px', fontWeight: 700, textTransform: 'uppercase' }}>Not Hired</span>
+                    }
                   </div>
-                  <button onClick={handleReleaseMaid} disabled={releasing}
-                    style={{ width: '100%', padding: '11px', background: 'rgba(93,214,168,0.14)', border: `1.5px solid rgba(93,214,168,0.45)`, borderRadius: 5, color: G.green, fontSize: 13, fontWeight: 700, cursor: releasing ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: releasing ? 0.6 : 1 }}>
-                    {releasing ? '⏳ Releasing…' : '↩ Release from Current Job'}
+                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 14 }}>
+                    {maid.isHired
+                      ? 'Releases the maid from her current customer — same flow as customer releasing her from the app. The customer gets a 3-day free-replacement vacancy; the maid\'s profile becomes visible again.'
+                      : 'This maid is not currently marked as hired. Nothing to release.'}
+                  </div>
+                  <button onClick={handleReleaseMaid} disabled={releasing || !maid.isHired}
+                    style={{ width: '100%', padding: '11px', background: maid.isHired ? 'rgba(93,214,168,0.14)' : '#1a1a1a', border: `1.5px solid ${maid.isHired ? 'rgba(93,214,168,0.45)' : G.border2}`, borderRadius: 5, color: maid.isHired ? G.green : G.muted, fontSize: 13, fontWeight: 700, cursor: (releasing || !maid.isHired) ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: releasing ? 0.6 : 1 }}>
+                    {releasing ? '⏳ Releasing…' : maid.isHired ? '↩ Release from Current Job' : 'Maid is not hired — nothing to release'}
                   </button>
                 </div>
               )}
