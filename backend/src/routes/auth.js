@@ -4,7 +4,9 @@ const router = express.Router();
 const ctrl = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 
-router.post('/register',          ctrl.register);
+router.post('/register',               ctrl.register);
+router.post('/send-register-otp',      ctrl.sendRegisterOTP);
+router.post('/verify-register-otp',    ctrl.verifyRegisterOTP);
 router.post('/login',             ctrl.login);
 router.post('/social',            ctrl.socialAuth);
 router.post('/verify-otp',        ctrl.verifyOTP);

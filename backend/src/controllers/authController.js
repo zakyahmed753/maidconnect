@@ -1,16 +1,18 @@
 const User = require('../models/User');
 const Maid = require('../models/Maid');
+const PreRegOTP = require('../models/PreRegOTP');
 const { HouseWife, Notification } = require('../models/index');
 const { generateToken } = require('../middleware/auth');
 const { sendOTPEmail, sendResetEmail } = require('../utils/email');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 // ── Register ──
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone, role, preRegToken } = req.body;
     if (!['maid','housewife'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid role' });
     }
@@ -25,34 +27,95 @@ exports.register = async (req, res) => {
     if (!phone || !phone.trim()) {
       return res.status(400).json({ success: false, message: 'Phone number is required' });
     }
-    const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
-    const normalizedPhone = phone.trim().replace(/\s|-/g, '');
-    if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
-      return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
+    const normalizedPhone = phone.trim().replace(/\s|-|\+/g, '');
+
+    // Mobile app: enforce Egyptian phone. Website (preRegToken present): allow international.
+    if (!preRegToken) {
+      const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
+      if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
+        return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
+      }
+    } else {
+      if (normalizedPhone.length < 7 || normalizedPhone.length > 15) {
+        return res.status(400).json({ success: false, message: 'Invalid phone number' });
+      }
+      // Verify the pre-registration token issued after OTP verification
+      try {
+        const decoded = jwt.verify(preRegToken, process.env.JWT_SECRET);
+        if (decoded.purpose !== 'pre-register' || decoded.email.toLowerCase() !== email.toLowerCase()) {
+          return res.status(400).json({ success: false, message: 'Invalid or mismatched verification token' });
+        }
+      } catch {
+        return res.status(400).json({ success: false, message: 'Verification token expired — please start over' });
+      }
     }
+
     const phoneExists = await User.findOne({ phone: normalizedPhone });
     if (phoneExists) {
       return res.status(400).json({ success: false, message: 'This phone number is already registered' });
     }
 
-    const otp = genCode();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+    // Website flow: email already verified via preRegToken — no OTP needed
+    const emailVerified = !!preRegToken;
+    const otp      = emailVerified ? null : genCode();
+    const otpExpiry = emailVerified ? null : new Date(Date.now() + 10 * 60 * 1000);
 
     const user = await User.create({
       name, email, password, phone: normalizedPhone, role,
-      emailVerified: false, otpCode: otp, otpExpiry,
+      emailVerified, otpCode: otp, otpExpiry,
     });
 
-    // Create role-specific profile
     if (role === 'housewife') {
       await HouseWife.create({ user: user._id, fullName: name });
     }
 
-    // Send OTP email (non-blocking — don't fail registration if email fails)
-    sendOTPEmail(email, otp).catch(e => console.error('[OTP email]', e.message));
+    if (!emailVerified) {
+      sendOTPEmail(email, otp).catch(e => console.error('[OTP email]', e.message));
+    }
 
     const token = generateToken(user._id);
-    res.status(201).json({ success: true, token, user: user.toSafeObject(), requiresOTP: true });
+    res.status(201).json({ success: true, token, user: user.toSafeObject(), requiresOTP: !emailVerified });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Send OTP before registration (website) — no user created yet ──
+exports.sendRegisterOTP = async (req, res) => {
+  try {
+    const email = (req.body.email || '').toLowerCase().trim();
+    if (!email) return res.status(400).json({ success: false, message: 'Email required' });
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ success: false, message: 'Email already registered' });
+    const otp = genCode();
+    await PreRegOTP.findOneAndUpdate(
+      { email },
+      { otp, createdAt: new Date() },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    sendOTPEmail(email, otp).catch(e => console.error('[Pre-reg OTP]', e.message));
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Verify OTP before registration (website) — returns signed preRegToken ──
+exports.verifyRegisterOTP = async (req, res) => {
+  try {
+    const email = (req.body.email || '').toLowerCase().trim();
+    const { otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ success: false, message: 'Email and code required' });
+    const record = await PreRegOTP.findOne({ email });
+    if (!record) return res.status(400).json({ success: false, message: 'Code expired — request a new one' });
+    if (record.otp !== String(otp)) return res.status(400).json({ success: false, message: 'Invalid code' });
+    await PreRegOTP.deleteOne({ email }); // single-use
+    const preRegToken = jwt.sign(
+      { email, purpose: 'pre-register' },
+      process.env.JWT_SECRET,
+      { expiresIn: '30m' }
+    );
+    res.json({ success: true, preRegToken });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

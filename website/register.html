@@ -316,26 +316,6 @@
           <input type="number" id="salary" placeholder="e.g. 3000" min="500"/>
           <div class="hint" id="salaryHint" style="color:#888;font-size:11px;margin-top:5px"></div>
         </div>
-        <div class="field">
-          <label>Area you will work in <span class="ar">المنطقة</span></label>
-          <select id="area">
-            <option value="">Select area…</option>
-            <option value="Maadi">Maadi ✓</option>
-            <option value="Zamalek">Zamalek ✓</option>
-            <option value="New Cairo">New Cairo ✓</option>
-            <option value="Heliopolis">Heliopolis ✓</option>
-            <option value="Sheikh Zayed">Sheikh Zayed ✓</option>
-            <option value="6th of October">6th of October ✓</option>
-            <option value="Nasr City">Nasr City</option>
-            <option value="Dokki">Dokki</option>
-            <option value="Mohandessin">Mohandessin</option>
-            <option value="Garden City">Garden City</option>
-            <option value="Rehab City">Rehab City</option>
-            <option value="Madinaty">Madinaty</option>
-            <option value="Other">Other</option>
-          </select>
-          <div class="hint">✓ = available at launch · Others coming soon</div>
-        </div>
       </div>
 
       <div class="field">
@@ -504,7 +484,8 @@
 
 <script>
 const API = 'https://api.servix.world/api';
-let authToken = null;
+let authToken    = null;
+let preRegToken  = null; // signed token returned after OTP verified (before account is created)
 let selectedOrigin = 'african';
 let otpEmail = '';
 let otpTimer = null;
@@ -581,7 +562,7 @@ function showErr(msg) {
 }
 function clearErr() { document.getElementById('err').classList.remove('show'); }
 
-// ── Step 1 → register → show OTP ──
+// ── Step 1 → send OTP only (no account created yet) ──
 async function goRegister() {
   clearErr();
   const name     = document.getElementById('name').value.trim();
@@ -598,22 +579,21 @@ async function goRegister() {
 
   const btn = document.querySelector('#step1 .btn-next');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Creating account…';
+  btn.innerHTML = '<span class="spinner"></span>Sending code…';
 
   try {
-    const res = await fetch(`${API}/auth/register`, {
+    const res = await fetch(`${API}/auth/send-register-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, password, role: 'maid' })
+      body: JSON.stringify({ email })
     });
     const data = await res.json();
     if (!data.success) {
       btn.disabled = false;
       btn.textContent = 'Continue →';
-      return showErr(data.message || 'Registration failed. Please try again.');
+      return showErr(data.message || 'Failed to send verification code.');
     }
-    authToken = data.token;
-    otpEmail  = email;
+    otpEmail = email;
     document.getElementById('otpEmailDisplay').textContent = email;
     btn.disabled = false;
     btn.textContent = 'Continue →';
@@ -674,7 +654,7 @@ function otpKeydown(e, idx) {
   }
 }
 
-// ── Verify OTP → go to profile ──
+// ── Verify OTP → store preRegToken → go to profile ──
 async function verifyEmailOTP() {
   clearErr();
   const code = [0,1,2,3,4,5].map(i => document.getElementById('otp'+i)?.value || '').join('');
@@ -685,9 +665,9 @@ async function verifyEmailOTP() {
   btn.innerHTML = '<span class="spinner"></span>Verifying…';
 
   try {
-    const res = await fetch(`${API}/auth/verify-otp`, {
+    const res = await fetch(`${API}/auth/verify-register-otp`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: otpEmail, otp: code })
     });
     const data = await res.json();
@@ -696,6 +676,7 @@ async function verifyEmailOTP() {
       btn.textContent = 'Verify Email →';
       return showErr(data.message || 'Invalid or expired code. Please try again.');
     }
+    preRegToken = data.preRegToken; // store for use in register call
     clearInterval(otpTimer);
     btn.disabled = false;
     btn.textContent = 'Verify Email →';
@@ -707,18 +688,24 @@ async function verifyEmailOTP() {
   }
 }
 
-// ── Resend OTP ──
+// ── Resend OTP (pre-registration) ──
 async function resendOTPCode() {
   if (otpSeconds > 0) return;
   const btn = document.getElementById('resendBtn');
   btn.disabled = true;
   btn.textContent = 'Sending…';
   try {
-    await fetch(`${API}/auth/resend-otp`, {
+    const res = await fetch(`${API}/auth/send-register-otp`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: otpEmail })
     });
+    const data = await res.json();
+    if (!data.success) {
+      btn.disabled = false;
+      btn.textContent = 'Resend code';
+      return showErr(data.message || 'Failed to resend code.');
+    }
     [0,1,2,3,4,5].forEach(i => {
       const box = document.getElementById('otp' + i);
       if (box) { box.value = ''; box.classList.remove('filled'); }
@@ -732,16 +719,18 @@ async function resendOTPCode() {
   }
 }
 
-// ── Step 3 (Profile) → Step 4 (Photos) ──
+// ── Step 3 (Profile) → register account → create maid profile → Step 4 (Photos) ──
 async function goPhotos() {
   clearErr();
   const nationality = document.getElementById('nationality').value;
   const age         = parseInt(document.getElementById('age').value);
   const experience  = parseInt(document.getElementById('experience').value);
   const salary      = parseInt(document.getElementById('salary').value);
-  const area        = document.getElementById('area').value;
   const bio         = document.getElementById('bio').value.trim();
   const name        = document.getElementById('name').value.trim();
+  const email       = document.getElementById('email').value.trim();
+  const phone       = document.getElementById('phone').value.trim();
+  const password    = document.getElementById('password').value;
   const langs       = getChecked('langGrid');
   const skills      = getChecked('skillGrid');
 
@@ -753,24 +742,40 @@ async function goPhotos() {
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Saving…';
+  btn.innerHTML = '<span class="spinner"></span>Creating account…';
 
   try {
-    const res = await fetch(`${API}/maids`, {
+    // 1. Register the user now (email already verified — preRegToken proves it)
+    const regRes = await fetch(`${API}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password, role: 'maid', preRegToken })
+    });
+    const regData = await regRes.json();
+    if (!regData.success) {
+      btn.disabled = false; btn.textContent = 'Continue →';
+      return showErr(regData.message || 'Account creation failed. Please start over.');
+    }
+    authToken = regData.token;
+
+    // 2. Create maid profile
+    btn.innerHTML = '<span class="spinner"></span>Saving profile…';
+    const profRes = await fetch(`${API}/maids`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
       body: JSON.stringify({
         fullName: name, nationality, origin: selectedOrigin, age,
         experienceYears: experience, expectedSalary: salary,
-        residentialArea: area || null, languages: langs, skills,
+        languages: langs, skills,
         bio: bio || undefined,
       })
     });
-    const data = await res.json();
-    if (!data.success) {
+    const profData = await profRes.json();
+    if (!profData.success) {
       btn.disabled = false; btn.textContent = 'Continue →';
-      return showErr(data.message || 'Failed to save profile.');
+      return showErr(profData.message || 'Failed to save profile.');
     }
+
     btn.disabled = false; btn.textContent = 'Continue →';
     showStep(4);
   } catch(e) {
