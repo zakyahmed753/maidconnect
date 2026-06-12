@@ -29,17 +29,13 @@ exports.register = async (req, res) => {
     }
     const normalizedPhone = phone.trim().replace(/\s|-|\+/g, '');
 
-    // Mobile app: enforce Egyptian phone. Website (preRegToken present): allow international.
-    if (!preRegToken) {
-      const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
-      if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
-        return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
-      }
-    } else {
-      if (normalizedPhone.length < 7 || normalizedPhone.length > 15) {
-        return res.status(400).json({ success: false, message: 'Invalid phone number' });
-      }
-      // Verify the pre-registration token issued after OTP verification
+    const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
+    if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
+      return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
+    }
+
+    // Website flow: verify the pre-registration token issued after OTP verification
+    if (preRegToken) {
       try {
         const decoded = jwt.verify(preRegToken, process.env.JWT_SECRET);
         if (decoded.purpose !== 'pre-register' || decoded.email.toLowerCase() !== email.toLowerCase()) {

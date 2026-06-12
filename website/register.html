@@ -535,8 +535,8 @@ const T = {
     'lbl.password':         'Password',
     'lbl.confirm':          'Confirm Password',
     'ph.name':              'e.g. Maria Santos',
-    'ph.phone':             'Enter with country code, e.g. +251 912 345 678',
-    'hint.phone':           'Include your country code — e.g. +63 for Philippines, +251 for Ethiopia',
+    'ph.phone':             'e.g. 01012345678',
+    'hint.phone':           'Egyptian mobile number — must start with 010, 011, 012, or 015',
     'ph.password':          'Min. 6 characters',
     'ph.confirm':           'Repeat password',
     'pw.enter':             'Enter a password',
@@ -616,6 +616,7 @@ const T = {
     'err.name':             'Please enter your full name.',
     'err.email':            'Please enter a valid email address.',
     'err.phone':            'Please enter your phone number.',
+    'err.phone.format':     'Please enter a valid Egyptian mobile number (010, 011, 012, or 015 followed by 8 digits).',
     'err.pw.short':         'Password must be at least 6 characters.',
     'err.pw.match':         'Passwords do not match.',
     'err.otp.incomplete':   'Please enter the complete 6-digit code.',
@@ -651,8 +652,8 @@ const T = {
     'lbl.password':         'كلمة المرور',
     'lbl.confirm':          'تأكيد كلمة المرور',
     'ph.name':              'مثال: ماريا سانتوس',
-    'ph.phone':             'أدخلي الرقم مع رمز الدولة، مثال: 251+ 912345678',
-    'hint.phone':           'أضيفي رمز الدولة — مثال: 63+ للفلبين، 251+ لإثيوبيا',
+    'ph.phone':             'مثال: 01012345678',
+    'hint.phone':           'رقم موبايل مصري — يجب أن يبدأ بـ 010 أو 011 أو 012 أو 015',
     'ph.password':          '6 أحرف على الأقل',
     'ph.confirm':           'أعيدي كتابة كلمة المرور',
     'pw.enter':             'أدخلي كلمة المرور',
@@ -732,6 +733,7 @@ const T = {
     'err.name':             'يرجى إدخال اسمك الكامل.',
     'err.email':            'يرجى إدخال بريد إلكتروني صحيح.',
     'err.phone':            'يرجى إدخال رقم هاتفك.',
+    'err.phone.format':     'يرجى إدخال رقم موبايل مصري صحيح (يبدأ بـ 010 أو 011 أو 012 أو 015).',
     'err.pw.short':         'يجب أن تكون كلمة المرور 6 أحرف على الأقل.',
     'err.pw.match':         'كلمتا المرور غير متطابقتين.',
     'err.otp.incomplete':   'يرجى إدخال الرمز المكون من 6 أرقام كاملاً.',
@@ -883,6 +885,8 @@ async function goRegister() {
   if (!name)                          return showErr(t('err.name'));
   if (!email || !email.includes('@')) return showErr(t('err.email'));
   if (!phone)                         return showErr(t('err.phone'));
+  const cleanPhone = phone.trim().replace(/\s|-/g, '');
+  if (!/^01[0125][0-9]{8}$/.test(cleanPhone)) return showErr(t('err.phone.format'));
   if (password.length < 6)           return showErr(t('err.pw.short'));
   if (password !== confirm)          return showErr(t('err.pw.match'));
 

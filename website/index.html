@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Servix — Launching July 1, 2026 · Egypt's Premium Domestic Staffing App</title>
   <meta name="description" content="Servix connects verified domestic workers with Cairo families. No agency commissions — keep 100% of your salary. Launching July 1, 2026. Apply as a maid now."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -18,14 +18,29 @@
     html{scroll-behavior:smooth}
     body{font-family:'Jost',sans-serif;background:var(--dark);color:#f0ece4;overflow-x:hidden;line-height:1.6}
 
+    /* ── Arabic mode ── */
+    [dir=rtl] body,[dir=rtl] button,[dir=rtl] a{font-family:'Cairo','Jost',sans-serif}
+    [dir=rtl] .sec-label,[dir=rtl] .sec-title,[dir=rtl] .sec-sub{letter-spacing:0;text-transform:none}
+    [dir=rtl] .why-text,[dir=rtl] .step-text,[dir=rtl] .ad-banner p,[dir=rtl] .hero-sub,[dir=rtl] .cta-section p{text-align:right}
+    [dir=rtl] .count-lbl{letter-spacing:0;text-transform:none;font-size:11px}
+    [dir=rtl] .launch-pill,[dir=rtl] .launch-badge{letter-spacing:0;text-transform:none}
+    [dir=rtl] .foot-text{text-align:right}
+    [dir=rtl] .why-title,[dir=rtl] .step-title{font-family:'Cairo',sans-serif}
+    [dir=rtl] .ad-banner h2,[dir=rtl] .cta-section h2,[dir=rtl] .sec-title{font-family:'Cairo',sans-serif}
+    [dir=rtl] .hero h1{font-family:'Cairo',sans-serif;font-size:clamp(38px,6vw,70px)}
+    [dir=rtl] .nav-cta,[dir=rtl] .btn-gold,[dir=rtl] .btn-ghost{letter-spacing:0}
+
     /* ── NAV ── */
     nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;background:rgba(15,12,9,0.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
     .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
     .logo img{height:44px;width:44px;border-radius:10px}
     .logo-text{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold-l);font-weight:700;letter-spacing:.02em}
     .launch-pill{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
-    .nav-cta{background:var(--gold);color:var(--dark2);padding:10px 22px;border-radius:7px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.03em;transition:all .2s}
+    .nav-right{display:flex;align-items:center;gap:12px}
+    .nav-cta{background:var(--gold);color:var(--dark2);padding:10px 22px;border-radius:7px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:.03em;transition:all .2s;font-family:'Cairo','Jost',sans-serif}
     .nav-cta:hover{background:var(--gold-l);transform:translateY(-1px)}
+    .lang-btn{background:none;border:1.5px solid rgba(201,168,76,0.3);border-radius:6px;padding:7px 14px;color:rgba(240,236,228,0.6);font-size:13px;font-family:'Cairo','Jost',sans-serif;cursor:pointer;transition:all .2s}
+    .lang-btn:hover{border-color:var(--gold);color:var(--gold-l)}
     @media(max-width:640px){nav{padding:14px 20px}.launch-pill{display:none}}
 
     /* ── HERO ── */
@@ -47,14 +62,15 @@
 
     /* ── BUTTONS ── */
     .hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-    .btn-gold{background:linear-gradient(135deg,#c9a84c,#e8c97a);color:var(--dark2);padding:16px 32px;border-radius:9px;font-size:15px;font-weight:700;text-decoration:none;letter-spacing:.04em;transition:all .25s;display:inline-flex;align-items:center;gap:9px;box-shadow:0 8px 28px rgba(201,168,76,0.3)}
+    .btn-gold{background:linear-gradient(135deg,#c9a84c,#e8c97a);color:var(--dark2);padding:16px 32px;border-radius:9px;font-size:15px;font-weight:700;text-decoration:none;letter-spacing:.04em;transition:all .25s;display:inline-flex;align-items:center;gap:9px;box-shadow:0 8px 28px rgba(201,168,76,0.3);font-family:'Cairo','Jost',sans-serif}
     .btn-gold:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(201,168,76,0.45)}
-    .btn-ghost{border:1.5px solid rgba(201,168,76,0.3);color:var(--gold-l);padding:15px 28px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;gap:8px}
+    .btn-ghost{border:1.5px solid rgba(201,168,76,0.3);color:var(--gold-l);padding:15px 28px;border-radius:9px;font-size:14px;font-weight:500;text-decoration:none;transition:all .25s;display:inline-flex;align-items:center;gap:8px;font-family:'Cairo','Jost',sans-serif}
     .btn-ghost:hover{border-color:var(--gold);background:rgba(201,168,76,0.08);transform:translateY(-1px)}
 
     /* ── AREAS BAR ── */
     .areas-bar{padding:16px 48px;background:rgba(201,168,76,0.04);border-top:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center}
     .areas-bar p{font-size:12px;color:rgba(240,236,228,0.4);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+    [dir=rtl] .areas-bar p{letter-spacing:0;text-transform:none}
     .areas-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
     .area-chip{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--gold);font-weight:500}
     @media(max-width:640px){.areas-bar{padding:14px 20px}}
@@ -91,8 +107,6 @@
     .step-num{width:52px;height:52px;border-radius:50%;background:rgba(201,168,76,0.1);border:1.5px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);font-weight:700}
     .step-title{font-family:'Cormorant Garamond',serif;font-size:19px;color:#fff8ee;font-weight:700;margin-bottom:8px}
     .step-text{font-size:13px;color:rgba(240,236,228,0.45);line-height:1.65}
-    .step-connector{display:none}
-    @media(min-width:768px){.steps{position:relative}}
 
     /* ── CTA SECTION ── */
     .cta-section{background:rgba(201,168,76,0.04);border-top:1px solid var(--border);border-bottom:1px solid var(--border);text-align:center;padding:80px 24px}
@@ -100,11 +114,11 @@
     .cta-section p{font-size:15px;color:rgba(240,236,228,0.5);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;font-weight:300}
 
     /* ── FOOTER ── */
-    footer{padding:36px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:gap}
+    footer{padding:36px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
     .foot-logo{font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--gold-l);font-weight:700}
     .foot-text{font-size:12px;color:rgba(240,236,228,0.3);margin-top:4px}
     .foot-links{display:flex;gap:20px;list-style:none}
-    .foot-links a{font-size:12px;color:rgba(240,236,228,0.35);text-decoration:none;transition:color .2s}
+    .foot-links a{font-size:12px;color:rgba(240,236,228,0.35);text-decoration:none;transition:color .2s;font-family:'Cairo','Jost',sans-serif}
     .foot-links a:hover{color:var(--gold)}
     @media(max-width:640px){footer{padding:28px 20px;flex-direction:column;text-align:center;gap:16px}}
   </style>
@@ -117,8 +131,11 @@
     <img src="assets/logo-square.svg" alt="Servix"/>
     <span class="logo-text">Servix</span>
   </a>
-  <span class="launch-pill">🗓 Launching July 1, 2026</span>
-  <a class="nav-cta" href="register.html">Apply as a Maid →</a>
+  <span class="launch-pill" data-i18n="nav.pill">🗓 Launching July 1, 2026</span>
+  <div class="nav-right">
+    <button class="lang-btn" id="langToggle" onclick="toggleLang()">العربية</button>
+    <a class="nav-cta" href="register.html" data-i18n="nav.cta">Apply as a Maid →</a>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -127,32 +144,31 @@
   <div class="hero-inner">
     <div class="launch-badge">
       <span class="badge-dot"></span>
-      Now Accepting Maid Applications · Cairo
+      <span data-i18n="hero.badge">Now Accepting Maid Applications · Cairo</span>
     </div>
-    <h1>Egypt's First<br/><em>Commission-Free</em><br/>Domestic Staffing App</h1>
-    <p class="hero-sub">
+    <h1 id="heroH1">Egypt's First<br/><em>Commission-Free</em><br/>Domestic Staffing App</h1>
+    <p class="hero-sub" data-i18n="hero.sub">
       Servix launches July 1, 2026 across Cairo's elite neighborhoods.
       We're building our verified maid roster now — apply today and be ready on launch day.
     </p>
 
-    <!-- Countdown -->
     <div class="countdown" id="countdown">
-      <div class="count-box"><span class="count-num" id="cd-d">—</span><span class="count-lbl">Days</span></div>
-      <div class="count-box"><span class="count-num" id="cd-h">—</span><span class="count-lbl">Hours</span></div>
-      <div class="count-box"><span class="count-num" id="cd-m">—</span><span class="count-lbl">Minutes</span></div>
-      <div class="count-box"><span class="count-num" id="cd-s">—</span><span class="count-lbl">Seconds</span></div>
+      <div class="count-box"><span class="count-num" id="cd-d">—</span><span class="count-lbl" data-i18n="cd.days">Days</span></div>
+      <div class="count-box"><span class="count-num" id="cd-h">—</span><span class="count-lbl" data-i18n="cd.hours">Hours</span></div>
+      <div class="count-box"><span class="count-num" id="cd-m">—</span><span class="count-lbl" data-i18n="cd.minutes">Minutes</span></div>
+      <div class="count-box"><span class="count-num" id="cd-s">—</span><span class="count-lbl" data-i18n="cd.seconds">Seconds</span></div>
     </div>
 
     <div class="hero-btns">
-      <a class="btn-gold" href="register.html">👩 Apply as a Maid</a>
-      <a class="btn-ghost" href="#how">How it works ↓</a>
+      <a class="btn-gold" href="register.html" data-i18n="hero.btn.apply">👩 Apply as a Maid</a>
+      <a class="btn-ghost" href="#how" data-i18n="hero.btn.how">How it works ↓</a>
     </div>
   </div>
 </section>
 
 <!-- ACTIVE AREAS BAR -->
 <div class="areas-bar">
-  <p>Launching first in</p>
+  <p data-i18n="areas.label">Launching first in</p>
   <div class="areas-chips">
     <span class="area-chip">📍 Maadi</span>
     <span class="area-chip">📍 Zamalek</span>
@@ -166,55 +182,55 @@
 <!-- WHY SERVIX FOR MAIDS -->
 <section>
   <div class="inner">
-    <p class="sec-label">Why choose Servix</p>
-    <h2 class="sec-title">Built for Maids — Not Agencies</h2>
-    <p class="sec-sub">We cut out the middleman entirely. Everything you earn goes directly to you.</p>
+    <p class="sec-label" data-i18n="why.label">Why choose Servix</p>
+    <h2 class="sec-title" data-i18n="why.title">Built for Maids — Not Agencies</h2>
+    <p class="sec-sub" data-i18n="why.sub">We cut out the middleman entirely. Everything you earn goes directly to you.</p>
 
     <div class="why-grid">
       <div class="why-card">
         <div class="why-icon">💰</div>
-        <div class="why-title">Zero Commission from Your Salary</div>
-        <p class="why-text">
+        <div class="why-title" data-i18n="why1.title">Zero Commission from Your Salary</div>
+        <p class="why-text" data-i18n-html="why1.text">
           Traditional agencies take <span class="why-highlight">30–50% of your first year's salary</span>.
           With Servix, you keep every pound. The family pays a small platform fee — you pay nothing from your income.
         </p>
       </div>
       <div class="why-card">
         <div class="why-icon">💬</div>
-        <div class="why-title">Direct Communication</div>
-        <p class="why-text">
+        <div class="why-title" data-i18n="why2.title">Direct Communication</div>
+        <p class="why-text" data-i18n-html="why2.text">
           Chat directly with families through our built-in messaging.
           <span class="why-highlight">No agency in the middle</span>, no miscommunication — just honest conversations between you and the household.
         </p>
       </div>
       <div class="why-card">
         <div class="why-icon">⭐</div>
-        <div class="why-title">Your Reviews = Higher Salary</div>
-        <p class="why-text">
+        <div class="why-title" data-i18n="why3.title">Your Reviews = Higher Salary</div>
+        <p class="why-text" data-i18n-html="why3.text">
           Families rate and review maids publicly. The better your reviews,
           <span class="why-highlight">the more you can charge</span>. Top-rated maids consistently earn 25–40% more than the market average.
         </p>
       </div>
       <div class="why-card">
         <div class="why-icon">🛡</div>
-        <div class="why-title">Verified & Protected</div>
-        <p class="why-text">
+        <div class="why-title" data-i18n="why4.title">Verified &amp; Protected</div>
+        <p class="why-text" data-i18n-html="why4.text">
           We verify every family on the platform. You only speak with
           <span class="why-highlight">real, identity-confirmed households</span> — making every placement safer.
         </p>
       </div>
       <div class="why-card">
         <div class="why-icon">📍</div>
-        <div class="why-title">Work in Your Area</div>
-        <p class="why-text">
+        <div class="why-title" data-i18n="why5.title">Work in Your Area</div>
+        <p class="why-text" data-i18n-html="why5.text">
           Choose which Cairo neighborhoods you're available to work in.
           <span class="why-highlight">No long commutes</span> — only families near you will see your profile.
         </p>
       </div>
       <div class="why-card">
         <div class="why-icon">🎁</div>
-        <div class="why-title">Referral Rewards</div>
-        <p class="why-text">
+        <div class="why-title" data-i18n="why6.title">Referral Rewards</div>
+        <p class="why-text" data-i18n-html="why6.text">
           Refer another maid to Servix and she gets
           <span class="why-highlight">15% off her first subscription</span> — and you earn a referral bonus applied to your next renewal.
         </p>
@@ -223,15 +239,15 @@
 
     <!-- Ads Banner -->
     <div class="ad-banner">
-      <h2>No More Agency Fees.<br/><em>Ever.</em></h2>
-      <p>Servix is the first platform in Egypt built entirely for domestic workers — not for recruiters. Your talent earns the trust. You keep the reward.</p>
+      <h2 data-i18n-html="ad.title">No More Agency Fees.<br/><em>Ever.</em></h2>
+      <p data-i18n="ad.sub">Servix is the first platform in Egypt built entirely for domestic workers — not for recruiters. Your talent earns the trust. You keep the reward.</p>
       <div class="ad-points">
-        <span class="ad-point">✓ 0% commission from salary</span>
-        <span class="ad-point">✓ Direct family contact</span>
-        <span class="ad-point">✓ Build your reputation</span>
-        <span class="ad-point">✓ Earn more with great reviews</span>
+        <span class="ad-point" data-i18n="ad.p1">✓ 0% commission from salary</span>
+        <span class="ad-point" data-i18n="ad.p2">✓ Direct family contact</span>
+        <span class="ad-point" data-i18n="ad.p3">✓ Build your reputation</span>
+        <span class="ad-point" data-i18n="ad.p4">✓ Earn more with great reviews</span>
       </div>
-      <a class="btn-gold" href="register.html">Start Your Application →</a>
+      <a class="btn-gold" href="register.html" data-i18n="ad.cta">Start Your Application →</a>
     </div>
   </div>
 </section>
@@ -239,29 +255,29 @@
 <!-- HOW IT WORKS -->
 <section id="how" style="background:rgba(255,255,255,0.01);border-top:1px solid var(--border)">
   <div class="inner">
-    <p class="sec-label">Simple process</p>
-    <h2 class="sec-title">How It Works</h2>
-    <p class="sec-sub">From application to your first hire in 4 easy steps.</p>
+    <p class="sec-label" data-i18n="how.label">Simple process</p>
+    <h2 class="sec-title" data-i18n="how.title">How It Works</h2>
+    <p class="sec-sub" data-i18n="how.sub">From application to your first hire in 4 easy steps.</p>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <div class="step-title">Apply Online</div>
-        <p class="step-text">Fill in your profile — nationality, skills, experience, and the areas you serve in Cairo.</p>
+        <div class="step-title" data-i18n="step1.title">Apply Online</div>
+        <p class="step-text" data-i18n="step1.text">Fill in your profile — nationality, skills, experience, and the areas you serve in Cairo.</p>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-title">Identity Verified</div>
-        <p class="step-text">Submit your passport or national ID. Our team reviews and approves your profile within 24 hours.</p>
+        <div class="step-title" data-i18n="step2.title">Identity Verified</div>
+        <p class="step-text" data-i18n="step2.text">Submit your passport or national ID. Our team reviews and approves your profile within 24 hours.</p>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-title">Subscribe & Go Live</div>
-        <p class="step-text">Pay a small monthly subscription fee. Your profile goes live immediately.</p>
+        <div class="step-title" data-i18n="step3.title">Subscribe &amp; Go Live</div>
+        <p class="step-text" data-i18n="step3.text">Pay a small monthly subscription fee. Your profile goes live immediately.</p>
       </div>
       <div class="step">
         <div class="step-num">4</div>
-        <div class="step-title">Get Hired Directly</div>
-        <p class="step-text">Families browse and chat with you directly. No agency, no middleman — just honest work and fair pay.</p>
+        <div class="step-title" data-i18n="step4.title">Get Hired Directly</div>
+        <p class="step-text" data-i18n="step4.text">Families browse and chat with you directly. No agency, no middleman — just honest work and fair pay.</p>
       </div>
     </div>
   </div>
@@ -269,10 +285,10 @@
 
 <!-- CTA -->
 <div class="cta-section">
-  <h2>Ready to Join?</h2>
-  <p>We're building our verified maid roster before the July 1st launch. Apply now and be among the first maids live on the platform.</p>
+  <h2 data-i18n="cta.title">Ready to Join?</h2>
+  <p data-i18n="cta.sub">We're building our verified maid roster before the July 1st launch. Apply now and be among the first maids live on the platform.</p>
   <div class="hero-btns" style="justify-content:center">
-    <a class="btn-gold" href="register.html">👩 Apply as a Maid — It's Free</a>
+    <a class="btn-gold" href="register.html" data-i18n="cta.btn">👩 Apply as a Maid — It's Free</a>
   </div>
 </div>
 
@@ -280,35 +296,179 @@
 <footer>
   <div>
     <img src="assets/logo-square.svg" alt="Servix" height="40" style="border-radius:8px;margin-bottom:8px"/>
-    <div class="foot-text">© 2026 Servix · Cairo, Egypt · Launching July 1, 2026</div>
+    <div class="foot-text" data-i18n="footer.copy">© 2026 Servix · Cairo, Egypt · Launching July 1, 2026</div>
   </div>
   <ul class="foot-links">
-    <li><a href="register.html">Maid Registration</a></li>
-    <li><a href="mailto:support@servix.world">Support</a></li>
+    <li><a href="register.html" data-i18n="footer.reg">Maid Registration</a></li>
+    <li><a href="mailto:support@servix.world" data-i18n="footer.support">Support</a></li>
   </ul>
 </footer>
 
 <script>
-  // Countdown to July 1, 2026
-  const launch = new Date('2026-07-01T00:00:00+02:00');
-  function tick() {
-    const now = new Date();
-    const diff = launch - now;
-    if (diff <= 0) {
-      document.getElementById('countdown').innerHTML = '<div class="count-box"><span class="count-num" style="font-size:28px;color:#5dd6a8">🎉 We\'re Live!</span></div>';
-      return;
-    }
-    const d = Math.floor(diff / 864e5);
-    const h = Math.floor((diff % 864e5) / 36e5);
-    const m = Math.floor((diff % 36e5) / 6e4);
-    const s = Math.floor((diff % 6e4) / 1e3);
-    document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
-    document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
-    document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
-    document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
+// ── Translations ──
+const T = {
+  en: {
+    'nav.pill':     '🗓 Launching July 1, 2026',
+    'nav.cta':      'Apply as a Maid →',
+    'hero.badge':   'Now Accepting Maid Applications · Cairo',
+    'hero.h1':      `Egypt's First<br/><em>Commission-Free</em><br/>Domestic Staffing App`,
+    'hero.sub':     "Servix launches July 1, 2026 across Cairo's elite neighborhoods. We're building our verified maid roster now — apply today and be ready on launch day.",
+    'cd.days':      'Days',
+    'cd.hours':     'Hours',
+    'cd.minutes':   'Minutes',
+    'cd.seconds':   'Seconds',
+    'cd.live':      "🎉 We're Live!",
+    'hero.btn.apply': '👩 Apply as a Maid',
+    'hero.btn.how':   'How it works ↓',
+    'areas.label':  'Launching first in',
+    'why.label':    'Why choose Servix',
+    'why.title':    'Built for Maids — Not Agencies',
+    'why.sub':      'We cut out the middleman entirely. Everything you earn goes directly to you.',
+    'why1.title':   'Zero Commission from Your Salary',
+    'why1.text':    `Traditional agencies take <span class="why-highlight">30–50% of your first year's salary</span>. With Servix, you keep every pound. The family pays a small platform fee — you pay nothing from your income.`,
+    'why2.title':   'Direct Communication',
+    'why2.text':    `Chat directly with families through our built-in messaging. <span class="why-highlight">No agency in the middle</span>, no miscommunication — just honest conversations between you and the household.`,
+    'why3.title':   'Your Reviews = Higher Salary',
+    'why3.text':    `Families rate and review maids publicly. The better your reviews, <span class="why-highlight">the more you can charge</span>. Top-rated maids consistently earn 25–40% more than the market average.`,
+    'why4.title':   'Verified & Protected',
+    'why4.text':    `We verify every family on the platform. You only speak with <span class="why-highlight">real, identity-confirmed households</span> — making every placement safer.`,
+    'why5.title':   'Work in Your Area',
+    'why5.text':    `Choose which Cairo neighborhoods you're available to work in. <span class="why-highlight">No long commutes</span> — only families near you will see your profile.`,
+    'why6.title':   'Referral Rewards',
+    'why6.text':    `Refer another maid to Servix and she gets <span class="why-highlight">15% off her first subscription</span> — and you earn a referral bonus applied to your next renewal.`,
+    'ad.title':     'No More Agency Fees.<br/><em>Ever.</em>',
+    'ad.sub':       'Servix is the first platform in Egypt built entirely for domestic workers — not for recruiters. Your talent earns the trust. You keep the reward.',
+    'ad.p1':        '✓ 0% commission from salary',
+    'ad.p2':        '✓ Direct family contact',
+    'ad.p3':        '✓ Build your reputation',
+    'ad.p4':        '✓ Earn more with great reviews',
+    'ad.cta':       'Start Your Application →',
+    'how.label':    'Simple process',
+    'how.title':    'How It Works',
+    'how.sub':      'From application to your first hire in 4 easy steps.',
+    'step1.title':  'Apply Online',
+    'step1.text':   'Fill in your profile — nationality, skills, experience, and the areas you serve in Cairo.',
+    'step2.title':  'Identity Verified',
+    'step2.text':   'Submit your passport or national ID. Our team reviews and approves your profile within 24 hours.',
+    'step3.title':  'Subscribe & Go Live',
+    'step3.text':   'Pay a small monthly subscription fee. Your profile goes live immediately.',
+    'step4.title':  'Get Hired Directly',
+    'step4.text':   'Families browse and chat with you directly. No agency, no middleman — just honest work and fair pay.',
+    'cta.title':    'Ready to Join?',
+    'cta.sub':      "We're building our verified maid roster before the July 1st launch. Apply now and be among the first maids live on the platform.",
+    'cta.btn':      "👩 Apply as a Maid — It's Free",
+    'footer.copy':  '© 2026 Servix · Cairo, Egypt · Launching July 1, 2026',
+    'footer.reg':   'Maid Registration',
+    'footer.support': 'Support',
+  },
+  ar: {
+    'nav.pill':     '🗓 الإطلاق في 1 يوليو 2026',
+    'nav.cta':      '← سجّلي كعاملة منزلية',
+    'hero.badge':   'نقبل طلبات العمالة المنزلية الآن · القاهرة',
+    'hero.h1':      `أول تطبيق مصري<br/><em>بدون عمولة</em><br/>للعمالة المنزلية`,
+    'hero.sub':     'سيرفيكس ينطلق في 1 يوليو 2026 في أرقى أحياء القاهرة. نبني الآن قاعدة عاملاتنا المعتمدات — سجّلي اليوم وكوني جاهزة يوم الإطلاق.',
+    'cd.days':      'أيام',
+    'cd.hours':     'ساعات',
+    'cd.minutes':   'دقائق',
+    'cd.seconds':   'ثوان',
+    'cd.live':      '🎉 انطلقنا!',
+    'hero.btn.apply': '👩 سجّلي كعاملة منزلية',
+    'hero.btn.how':   '↓ كيف يعمل',
+    'areas.label':  'الإطلاق أولاً في',
+    'why.label':    'لماذا تختارين سيرفيكس',
+    'why.title':    'مصمّم للعاملات المنزليات — لا للوكالات',
+    'why.sub':      'نلغي الوسيط تماماً. كل ما تكسبينه يذهب إليك مباشرة.',
+    'why1.title':   'صفر عمولة من راتبك',
+    'why1.text':    `الوكالات التقليدية تأخذ <span class="why-highlight">30–50% من راتب سنتك الأولى</span>. مع سيرفيكس، تحتفظين بكل جنيه. العائلة تدفع رسوم المنصة — أنتِ لا تدفعين شيئاً من دخلك.`,
+    'why2.title':   'تواصل مباشر',
+    'why2.text':    `تواصلي مباشرة مع العائلات عبر المحادثات المدمجة. <span class="why-highlight">لا وكالة في المنتصف</span>، لا سوء فهم — مجرد محادثات صادقة بينك وبين أصحاب المنزل.`,
+    'why3.title':   'تقييماتك = راتب أعلى',
+    'why3.text':    `العائلات تقيّم العاملات علنياً. كلما كانت تقييماتك أفضل، <span class="why-highlight">زادت قدرتك على طلب راتب أعلى</span>. أعلى العاملات تقييماً تكسبن 25–40% أكثر من متوسط السوق.`,
+    'why4.title':   'موثّقة ومحمية',
+    'why4.text':    `نتحقق من كل عائلة على المنصة. تتحدثين فقط مع <span class="why-highlight">أسر حقيقية موثّقة الهوية</span> — مما يجعل كل توظيف أكثر أماناً.`,
+    'why5.title':   'اعملي في منطقتك',
+    'why5.text':    `اختاري أحياء القاهرة التي تتوفرين للعمل فيها. <span class="why-highlight">لا تنقلات طويلة</span> — فقط العائلات القريبة منك ستشاهد ملفك.`,
+    'why6.title':   'مكافآت الإحالة',
+    'why6.text':    `أحيلي عاملة أخرى إلى سيرفيكس وستحصل على <span class="why-highlight">خصم 15% على اشتراكها الأول</span> — وتكسبين أنتِ مكافأة إحالة تُطبَّق على تجديدك التالي.`,
+    'ad.title':     'لا رسوم وكالات.<br/><em>أبداً.</em>',
+    'ad.sub':       'سيرفيكس هو أول منصة في مصر مبنية بالكامل للعاملات المنزليات — لا للوكالات. موهبتك تكسب الثقة. أنتِ تحتفظين بالمكافأة.',
+    'ad.p1':        '✓ 0% عمولة من الراتب',
+    'ad.p2':        '✓ تواصل مباشر مع العائلة',
+    'ad.p3':        '✓ ابني سمعتك المهنية',
+    'ad.p4':        '✓ اكسبي أكثر بتقييمات ممتازة',
+    'ad.cta':       '← ابدئي طلبك',
+    'how.label':    'خطوات بسيطة',
+    'how.title':    'كيف يعمل سيرفيكس',
+    'how.sub':      'من التسجيل إلى أول توظيف في 4 خطوات سهلة.',
+    'step1.title':  'سجّلي أونلاين',
+    'step1.text':   'أكملي ملفك — الجنسية والمهارات والخبرة والمناطق التي تخدمينها في القاهرة.',
+    'step2.title':  'التحقق من الهوية',
+    'step2.text':   'قدّمي جواز سفرك أو هويتك الوطنية. يراجع فريقنا ملفك ويوافق عليه خلال 24 ساعة.',
+    'step3.title':  'اشتركي وانطلقي',
+    'step3.text':   'ادفعي رسوم الاشتراك الشهري الصغيرة. يصبح ملفك مرئياً فوراً.',
+    'step4.title':  'احصلي على عمل مباشرة',
+    'step4.text':   'العائلات تتصفح وتتحدث معك مباشرة. لا وكالة، لا وسيط — مجرد عمل شريف وأجر عادل.',
+    'cta.title':    'هل أنتِ مستعدة للانضمام؟',
+    'cta.sub':      'نبني قاعدة عاملاتنا المعتمدات قبل إطلاق 1 يوليو. سجّلي الآن وكوني من أوائل العاملات على المنصة.',
+    'cta.btn':      '👩 سجّلي كعاملة منزلية — مجاناً',
+    'footer.copy':  '© 2026 سيرفيكس · القاهرة، مصر · الإطلاق في 1 يوليو 2026',
+    'footer.reg':   'تسجيل العاملات المنزليات',
+    'footer.support': 'الدعم',
   }
-  tick();
-  setInterval(tick, 1000);
+};
+
+let currentLang = 'en';
+function t(k) { return T[currentLang][k] || T.en[k] || k; }
+
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.documentElement.dir  = lang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('langToggle').textContent = lang === 'en' ? 'العربية' : 'English';
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const v = T[lang][el.dataset.i18n];
+    if (v !== undefined) el.textContent = v;
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const v = T[lang][el.dataset.i18nHtml];
+    if (v !== undefined) el.innerHTML = v;
+  });
+
+  // Hero h1 special (contains em tag)
+  document.getElementById('heroH1').innerHTML = t('hero.h1');
+
+  // Countdown live text update if already live
+  const liveEl = document.getElementById('countdown');
+  if (liveEl && liveEl.dataset.live === '1') {
+    liveEl.innerHTML = `<div class="count-box"><span class="count-num" style="font-size:28px;color:#5dd6a8">${t('cd.live')}</span></div>`;
+  }
+}
+
+function toggleLang() { setLang(currentLang === 'en' ? 'ar' : 'en'); }
+
+// ── Countdown ──
+const launch = new Date('2026-07-01T00:00:00+02:00');
+function tick() {
+  const now = new Date();
+  const diff = launch - now;
+  if (diff <= 0) {
+    const el = document.getElementById('countdown');
+    el.dataset.live = '1';
+    el.innerHTML = `<div class="count-box"><span class="count-num" style="font-size:28px;color:#5dd6a8">${t('cd.live')}</span></div>`;
+    return;
+  }
+  const d = Math.floor(diff / 864e5);
+  const h = Math.floor((diff % 864e5) / 36e5);
+  const m = Math.floor((diff % 36e5) / 6e4);
+  const s = Math.floor((diff % 6e4) / 1e3);
+  document.getElementById('cd-d').textContent = String(d).padStart(2,'0');
+  document.getElementById('cd-h').textContent = String(h).padStart(2,'0');
+  document.getElementById('cd-m').textContent = String(m).padStart(2,'0');
+  document.getElementById('cd-s').textContent = String(s).padStart(2,'0');
+}
+tick();
+setInterval(tick, 1000);
 </script>
 </body>
 </html>
