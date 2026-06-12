@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Maid = require('../models/Maid');
 const { HouseWife, Payment, Notification, Chat } = require('../models/index');
 const { sendPush } = require('../utils/push');
+const { sendProfileApprovedEmail, sendProfileRejectedEmail } = require('../utils/email');
 
 // ── Dashboard Stats ──
 exports.getDashboard = async (req, res) => {
@@ -124,6 +125,13 @@ exports.updateMaidStatus = async (req, res) => {
         user: maid.user._id, type: 'system',
         ...notifMessage[status]
       });
+    }
+
+    // Send email — critical for website-registered maids who may not have the app yet
+    if (status === 'approved') {
+      sendProfileApprovedEmail(maid.user.email, maid.fullName).catch(e => console.error('[Email] approval:', e.message));
+    } else if (status === 'rejected') {
+      sendProfileRejectedEmail(maid.user.email, maid.fullName, note).catch(e => console.error('[Email] rejection:', e.message));
     }
 
     res.json({ success: true, maid });

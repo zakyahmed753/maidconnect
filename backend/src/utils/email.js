@@ -47,6 +47,88 @@ exports.sendResetEmail = async (to, code) => {
   });
 };
 
+exports.sendProfileApprovedEmail = async (to, maidName) => {
+  await exports.sendEmail({
+    to,
+    subject: '✅ Your Servix Profile Has Been Approved!',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
+        <div style="background:linear-gradient(135deg,#0d2e1a,#1a3d25);padding:32px 28px;text-align:center">
+          <div style="font-size:52px;margin-bottom:12px">🎉</div>
+          <h1 style="color:#5dd6a8;font-size:26px;margin:0;letter-spacing:1px">You're Approved!</h1>
+          <p style="color:rgba(93,214,168,0.65);font-size:13px;margin:10px 0 0">Your Servix profile is now live</p>
+        </div>
+        <div style="padding:28px;background:#111">
+          <p style="color:#e0d0b0;font-size:15px;line-height:1.6">Hi <strong style="color:#5dd6a8">${maidName}</strong>,</p>
+          <p style="color:#b0a080;font-size:14px;line-height:1.8">
+            Great news — your profile has been <strong style="color:#5dd6a8">reviewed and approved</strong> by the Servix team.
+            Families can now find you and reach out directly through the app.
+          </p>
+          <div style="background:#0d1f15;border:1px solid #1e4d30;border-radius:8px;padding:18px;margin:22px 0">
+            <p style="color:#5dd6a8;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.5px">Next step</p>
+            <p style="color:#a0c8b0;font-size:13px;margin:0;line-height:1.7">
+              Download the Servix app (if you haven't already) and log in with your registered email to start receiving hire requests from verified families.
+            </p>
+          </div>
+          <div style="text-align:center;margin:24px 0">
+            <a href="https://servix.world" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#1a1108;font-weight:700;font-size:14px;padding:13px 32px;border-radius:6px;text-decoration:none;letter-spacing:0.5px">
+              Open Servix
+            </a>
+          </div>
+          <p style="color:#706050;font-size:12px;margin-top:20px">
+            Keep your profile updated and respond to hire requests promptly to maximise your chances of getting hired.
+          </p>
+        </div>
+        <div style="padding:16px 28px;background:#0a0a0a;text-align:center">
+          <p style="color:#504030;font-size:11px;margin:0">Servix — Domestic Staffing Platform · servix.world</p>
+        </div>
+      </div>
+    `,
+  });
+};
+
+exports.sendProfileRejectedEmail = async (to, maidName, reason) => {
+  await exports.sendEmail({
+    to,
+    subject: 'Servix — Profile Review Update',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
+        <div style="background:linear-gradient(135deg,#2e0d0d,#1a0808);padding:32px 28px;text-align:center">
+          <div style="font-size:52px;margin-bottom:12px">📋</div>
+          <h1 style="color:#f0a050;font-size:24px;margin:0">Profile Needs Attention</h1>
+          <p style="color:rgba(240,160,80,0.6);font-size:13px;margin:10px 0 0">Action required on your Servix profile</p>
+        </div>
+        <div style="padding:28px;background:#111">
+          <p style="color:#e0d0b0;font-size:15px;line-height:1.6">Hi <strong style="color:#f0a050">${maidName}</strong>,</p>
+          <p style="color:#b0a080;font-size:14px;line-height:1.8">
+            Thank you for registering on Servix. After reviewing your profile, our team was unable to approve it at this time.
+          </p>
+          ${reason ? `
+          <div style="background:#1f100a;border:1px solid #4d2010;border-radius:8px;padding:16px;margin:20px 0">
+            <p style="color:#f0a050;font-size:12px;font-weight:700;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.5px">Reason</p>
+            <p style="color:#c8a080;font-size:13px;margin:0;line-height:1.7">${reason}</p>
+          </div>
+          ` : ''}
+          <p style="color:#b0a080;font-size:14px;line-height:1.8">
+            You can log in to the Servix app, update your profile or resubmit your documents, and our team will review it again.
+          </p>
+          <div style="text-align:center;margin:24px 0">
+            <a href="https://servix.world" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#1a1108;font-weight:700;font-size:14px;padding:13px 32px;border-radius:6px;text-decoration:none;letter-spacing:0.5px">
+              Update My Profile
+            </a>
+          </div>
+          <p style="color:#706050;font-size:12px;margin-top:20px">
+            If you have questions, reply to this email or contact us through the app.
+          </p>
+        </div>
+        <div style="padding:16px 28px;background:#0a0a0a;text-align:center">
+          <p style="color:#504030;font-size:11px;margin:0">Servix — Domestic Staffing Platform · servix.world</p>
+        </div>
+      </div>
+    `,
+  });
+};
+
 exports.hireRequestEmail = (maidName, customerName) => `
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#3d2203,#1a1108);padding:32px 28px;text-align:center">
