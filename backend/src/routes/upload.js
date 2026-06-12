@@ -27,9 +27,18 @@ const voiceStorage = new CloudinaryStorage({
 const uploadImg   = multer({ storage: imgStorage,   limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadVoice = multer({ storage: voiceStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-router.post('/image', protect, uploadImg.single('photo'), (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: 'No file' });
-  res.json({ success: true, url: req.file.path, publicId: req.file.filename });
+router.post('/image', protect, (req, res) => {
+  uploadImg.single('photo')(req, res, (err) => {
+    if (err) {
+      console.error('[Upload] error:', err.message);
+      const msg = err.code === 'LIMIT_FILE_SIZE'
+        ? 'File too large — max 5 MB'
+        : (err.message || 'Upload failed');
+      return res.status(400).json({ success: false, message: msg });
+    }
+    if (!req.file) return res.status(400).json({ success: false, message: 'No file received' });
+    res.json({ success: true, url: req.file.path, publicId: req.file.filename });
+  });
 });
 
 router.post('/voice', protect, uploadVoice.single('voice'), (req, res) => {

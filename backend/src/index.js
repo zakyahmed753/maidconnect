@@ -61,6 +61,12 @@ app.use('/api/config',   require('./routes/config'));
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
 
+// Global error handler — returns JSON instead of HTML for all unhandled errors
+app.use((err, req, res, next) => {
+  console.error('[Server Error]', err.message);
+  res.status(err.status || 500).json({ success: false, message: err.message || 'Internal server error' });
+});
+
 // ── Socket.IO events ──
 const socketHandler = require('./utils/socketHandler');
 socketHandler(io);

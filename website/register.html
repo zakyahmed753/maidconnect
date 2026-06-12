@@ -858,6 +858,9 @@ function setProgress(pct) {
 }
 
 async function uploadImage(file) {
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error(`"${file.name}" is too large — max 5 MB per photo. Please compress or choose a smaller image.`);
+  }
   const form = new FormData();
   form.append('photo', file);
   const res = await fetch(`${API}/upload/image`, {
