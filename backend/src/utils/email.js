@@ -65,9 +65,10 @@ exports.sendProfileApprovedEmail = async (to, maidName) => {
             Families can now find you and reach out directly through the app.
           </p>
           <div style="background:#0d1f15;border:1px solid #1e4d30;border-radius:8px;padding:18px;margin:22px 0">
-            <p style="color:#5dd6a8;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.5px">Next step</p>
+            <p style="color:#5dd6a8;font-size:13px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.5px">What happens next?</p>
             <p style="color:#a0c8b0;font-size:13px;margin:0;line-height:1.7">
-              Download the Servix app (if you haven't already) and log in with your registered email to start receiving hire requests from verified families.
+              Servix officially launches on <strong style="color:#5dd6a8">1 July 2026</strong> — the app will be available on the <strong style="color:#5dd6a8">App Store & Google Play</strong> from that date.
+              Your profile will go live immediately on launch day so families can find you right away.
             </p>
           </div>
           <div style="text-align:center;margin:24px 0">
