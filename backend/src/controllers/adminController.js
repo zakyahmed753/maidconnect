@@ -429,13 +429,18 @@ exports.broadcastNotification = async (req, res) => {
     const notifications = users.map(u => ({ user: u._id, type: 'system', title, body }));
     await Notification.insertMany(notifications);
 
-    // Fire push notifications to devices (non-blocking)
-    const pushTargets = users.filter(u => u.fcmToken);
+    // Fire push notifications — deduplicate tokens so the same device never gets two alerts
+    const seenTokens = new Set();
+    const uniquePushTargets = users.filter(u => {
+      if (!u.fcmToken || seenTokens.has(u.fcmToken)) return false;
+      seenTokens.add(u.fcmToken);
+      return true;
+    });
     Promise.allSettled(
-      pushTargets.map(u => sendPush({ token: u.fcmToken, title, body }))
+      uniquePushTargets.map(u => sendPush({ token: u.fcmToken, title, body }))
     ).catch(() => {});
 
-    res.json({ success: true, sent: notifications.length, pushed: pushTargets.length });
+    res.json({ success: true, sent: notifications.length, pushed: uniquePushTargets.length });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
