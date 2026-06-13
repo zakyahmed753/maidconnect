@@ -92,4 +92,20 @@ router.post('/broadcast',               protect, adminOnly, ac.broadcastNotifica
 router.post('/agents',                  protect, adminOnly, ac.createAgent);
 router.get('/agents',                   protect, adminOnly, ac.listAgents);
 
+// One-shot: set Rodiyat as source for approved maids + Suliman Ashabi
+router.get('/fix/set-rodiyat', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const Maid = require('../models/Maid');
+  const approved = await Maid.find({ approvalStatus: 'approved' }).populate('user', 'email name');
+  const suliman  = await Maid.findOne({ fullName: /suliman/i }).populate('user', 'email name');
+  const ids = new Set(approved.map(m => m._id.toString()));
+  if (suliman) ids.add(suliman._id.toString());
+  const result = await Maid.updateMany(
+    { _id: { $in: [...ids] } },
+    { $set: { heardAboutUs: 'agent', agentName: 'rodiyat' }, $unset: { agentNameOther: '' } }
+  );
+  const names = [...approved.map(m => m.fullName), ...(suliman ? [suliman.fullName] : [])];
+  res.json({ ok: true, updated: result.modifiedCount, maids: [...new Set(names)] });
+});
+
 module.exports = router;

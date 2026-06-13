@@ -97,6 +97,10 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
   const [offlineNote,  setOfflineNote]  = useState('');
   const [offlineLoading, setOfflineLoading] = useState(false);
   const [releasing,    setReleasing]    = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody,    setEmailBody]    = useState('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent,    setEmailSent]    = useState(false);
 
   const refreshMaid = React.useCallback(() => {
     if (!initialMaid?._id) return;
@@ -202,6 +206,21 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
     } finally { setReleasing(false); }
   };
 
+  const handleSendEmail = async () => {
+    if (!emailSubject.trim() || !emailBody.trim()) return toast.error('Subject and message are required');
+    setSendingEmail(true);
+    try {
+      await adminAPI.sendEmailToMaid(maid._id, { subject: emailSubject.trim(), message: emailBody.trim() });
+      setEmailSent(true);
+      setEmailSubject('');
+      setEmailBody('');
+      setTimeout(() => setEmailSent(false), 4000);
+      toast.success('Email sent to ' + maid.user?.email);
+    } catch(err) {
+      toast.error(err.response?.data?.message || 'Failed to send email');
+    } finally { setSendingEmail(false); }
+  };
+
   const handleDeleteAccount = async () => {
     if (!window.confirm(maid.user?.deletedAt ? 'Restore this account?' : 'Soft-delete this account? Only admin can restore it.')) return;
     try {
@@ -292,6 +311,27 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                   <Field label="Origin"      value={maid.origin} />
                   <Field label="Residential Area" value={maid.residentialArea} />
                   <Field label="Languages"   value={(maid.languages || []).join(', ')} />
+                  {/* Lead Source */}
+                  <div style={{ marginBottom: 14 }}>
+                    <Label>How She Heard About Us</Label>
+                    {maid.heardAboutUs ? (() => {
+                      const srcLabel = { facebook:'📘 Facebook', instagram:'📸 Instagram', agent:'👤 Agent', other:'💬 Other' }[maid.heardAboutUs] || maid.heardAboutUs;
+                      const agentLabel = maid.agentName === 'victoria' ? 'Victoria' : maid.agentName === 'latifa' ? 'Latifa' : maid.agentName === 'rodiyat' ? 'Rodiyat' : maid.agentNameOther || 'Other';
+                      return (
+                        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                          <span style={{ fontSize:12, fontWeight:700, background:'rgba(201,168,76,0.14)', color:'#e8c97a', border:'1px solid rgba(201,168,76,0.35)', borderRadius:4, padding:'3px 10px' }}>{srcLabel}</span>
+                          {maid.heardAboutUs === 'agent' && maid.agentName && (
+                            <span style={{ fontSize:12, fontWeight:600, background:'rgba(106,171,204,0.12)', color:'#6aabcc', border:'1px solid rgba(106,171,204,0.3)', borderRadius:4, padding:'3px 10px' }}>→ {agentLabel}</span>
+                          )}
+                          {maid.heardAboutUs === 'other' && maid.heardAboutUsOther && (
+                            <span style={{ fontSize:12, color: G.muted }}>"{maid.heardAboutUsOther}"</span>
+                          )}
+                        </div>
+                      );
+                    })() : (
+                      <span style={{ fontSize:12, color: G.muted }}>— not provided</span>
+                    )}
+                  </div>
                   <div style={{ marginBottom: 14 }}>
                     <Label>Bio</Label>
                     <div style={{ fontSize: 13, color: maid.bio ? G.text : G.muted, lineHeight: 1.6, fontStyle: maid.bio ? 'normal' : 'italic' }}>
@@ -594,6 +634,29 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                   </button>
                 </div>
               )}
+
+              {/* Send Email */}
+              <div style={{ background: G.card, border: `1px solid ${G.border}`, borderRadius: 8, padding: 18 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: G.text, marginBottom: 2 }}>📧 Send Email to Maid</div>
+                <div style={{ fontSize: 11, color: G.muted, marginBottom: 12 }}>→ {maid.user?.email}</div>
+                <input
+                  value={emailSubject}
+                  onChange={e => setEmailSubject(e.target.value)}
+                  placeholder="Subject"
+                  style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 5, color: G.text, fontSize: 12, fontFamily: "'Jost',sans-serif", marginBottom: 8, boxSizing: 'border-box' }}
+                />
+                <textarea
+                  value={emailBody}
+                  onChange={e => setEmailBody(e.target.value)}
+                  placeholder="Write your message here…"
+                  rows={5}
+                  style={{ width: '100%', padding: '8px 10px', background: '#1a1a1a', border: `1px solid ${G.border2}`, borderRadius: 5, color: G.text, fontSize: 12, fontFamily: "'Jost',sans-serif", resize: 'vertical', boxSizing: 'border-box', marginBottom: 10 }}
+                />
+                <button onClick={handleSendEmail} disabled={sendingEmail}
+                  style={{ width: '100%', padding: '10px', background: emailSent ? 'rgba(93,214,168,0.15)' : 'rgba(201,168,76,0.14)', border: `1.5px solid ${emailSent ? 'rgba(93,214,168,0.45)' : 'rgba(201,168,76,0.45)'}`, borderRadius: 5, color: emailSent ? G.green : G.gold, fontSize: 13, fontWeight: 700, cursor: sendingEmail ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: sendingEmail ? 0.6 : 1 }}>
+                  {sendingEmail ? '⏳ Sending…' : emailSent ? '✅ Email Sent!' : '📤 Send Email'}
+                </button>
+              </div>
 
               {/* Account Status — admin-only */}
               {!isAgent && (

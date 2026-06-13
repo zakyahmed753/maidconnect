@@ -370,8 +370,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
 
       <div class="field">
-        <label><span data-i18n="lbl.bio">Short Bio</span> <span style="color:#555;font-size:10px;text-transform:none;letter-spacing:0" data-i18n="lbl.optional">(optional)</span></label>
+        <label><span data-i18n="lbl.bio">Short Bio</span> <span style="color:#e05555">*</span></label>
         <textarea id="bio" data-i18n-ph="ph.bio" placeholder="Tell employers about your experience, personality, and what makes you a great housekeeper…"></textarea>
+      </div>
+
+      <div class="field">
+        <label><span data-i18n="lbl.heardAboutUs">How did you hear about us?</span> <span style="color:#e05555">*</span></label>
+        <select id="heardAboutUs" onchange="handleHeardAboutUs()">
+          <option value="" data-i18n="ph.heardAboutUs">-- Select --</option>
+          <option value="facebook">Facebook</option>
+          <option value="instagram">Instagram</option>
+          <option value="agent" data-i18n="opt.agent">Agent</option>
+          <option value="other" data-i18n="opt.other">Other</option>
+        </select>
+      </div>
+
+      <div class="field" id="agentSubField" style="display:none">
+        <label><span data-i18n="lbl.agentName">Which agent referred you?</span> <span style="color:#e05555">*</span></label>
+        <select id="agentName" onchange="handleAgentName()">
+          <option value="" data-i18n="ph.agentSub">-- Select Agent --</option>
+          <option value="victoria">Victoria</option>
+          <option value="latifa">Latifa</option>
+          <option value="rodiyat">Rodiyat</option>
+          <option value="other" data-i18n="opt.other">Other</option>
+        </select>
+      </div>
+
+      <div class="field" id="agentOtherField" style="display:none">
+        <label><span data-i18n="lbl.agentOther">Agent name</span> <span style="color:#e05555">*</span></label>
+        <input type="text" id="agentOtherText" data-i18n-ph="ph.agentOther" placeholder="Enter agent name…"/>
+      </div>
+
+      <div class="field" id="heardOtherField" style="display:none">
+        <label><span data-i18n="lbl.heardOther">Please specify</span> <span style="color:#e05555">*</span></label>
+        <input type="text" id="heardOtherText" data-i18n-ph="ph.heardOther" placeholder="Tell us more…"/>
       </div>
 
       <div class="btn-row">
@@ -382,6 +414,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <!-- ── Step 4: Photos & ID ── -->
     <div id="step4" style="display:none">
+
+      <!-- Rejection resubmit notice — shown only when resuming after admin rejection -->
+      <div id="resubmitNotice" style="display:none;background:#1a0808;border:1.5px solid rgba(240,100,80,0.45);border-radius:8px;padding:14px 16px;margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;color:#f08060;margin-bottom:4px">❌ Your profile was not approved</div>
+        <div id="resubmitNote" style="font-size:12px;color:#c08070;margin-bottom:8px"></div>
+        <div style="font-size:12px;color:#a07060">Please re-upload your photos and documents below and submit again. Our team will review your updated profile.</div>
+      </div>
+
       <div class="step-title" data-i18n="s4.title">Photos & Identity</div>
       <div class="step-sub" data-i18n="s4.sub">Upload your profile photos and ID document. This helps families trust you and speeds up verification.</div>
 
@@ -644,6 +684,21 @@ const T = {
     'err.experience':       'Please enter your years of experience.',
     'err.salary':           'Please enter your expected monthly salary (min EGP 500).',
     'err.skills':           'Please select at least one skill.',
+    'err.bio':              'Please write a short bio about yourself.',
+    'lbl.heardAboutUs':    'How did you hear about us?',
+    'ph.heardAboutUs':     '-- Select --',
+    'opt.agent':           'Agent',
+    'opt.other':           'Other',
+    'lbl.agentName':       'Which agent referred you?',
+    'ph.agentSub':         '-- Select Agent --',
+    'lbl.agentOther':      'Agent name',
+    'ph.agentOther':       'Enter agent name…',
+    'lbl.heardOther':      'Please specify',
+    'ph.heardOther':       'Tell us more…',
+    'err.heardAboutUs':    'Please tell us how you heard about Servix.',
+    'err.agentName':       'Please select the agent who referred you.',
+    'err.agentOther':      'Please enter the agent name.',
+    'err.heardOther':      'Please specify how you heard about us.',
     'err.photos':           'Please upload at least 3 profile photos.',
     'err.selfie':           'Please upload a selfie photo.',
     'err.nationalid':       'Please enter your national ID number.',
@@ -761,6 +816,21 @@ const T = {
     'err.experience':       'يرجى إدخال سنوات خبرتك.',
     'err.salary':           'يرجى إدخال الراتب المتوقع (500 جنيه على الأقل).',
     'err.skills':           'يرجى اختيار مهارة واحدة على الأقل.',
+    'err.bio':              'يرجى كتابة نبذة مختصرة عن نفسك.',
+    'lbl.heardAboutUs':    'كيف عرفتِ عنّا؟',
+    'ph.heardAboutUs':     '-- اختر --',
+    'opt.agent':           'عن طريق وكيل',
+    'opt.other':           'أخرى',
+    'lbl.agentName':       'من هو الوكيل الذي أحالكِ؟',
+    'ph.agentSub':         '-- اختر الوكيل --',
+    'lbl.agentOther':      'اسم الوكيل',
+    'ph.agentOther':       'أدخلي اسم الوكيل…',
+    'lbl.heardOther':      'يرجى التوضيح',
+    'ph.heardOther':       'أخبرينا أكثر…',
+    'err.heardAboutUs':    'يرجى إخبارنا كيف عرفتِ عن سيرفيكس.',
+    'err.agentName':       'يرجى اختيار الوكيل الذي أحالكِ.',
+    'err.agentOther':      'يرجى إدخال اسم الوكيل.',
+    'err.heardOther':      'يرجى توضيح كيف عرفتِ عنّا.',
     'err.photos':           'يرجى رفع 3 صور شخصية على الأقل.',
     'err.selfie':           'يرجى رفع صورة سيلفي.',
     'err.nationalid':       'يرجى إدخال رقم الهوية الوطنية.',
@@ -921,6 +991,13 @@ async function goRegister() {
     const data = await res.json();
     if (!data.success) {
       btn.disabled = false; btn.textContent = t('btn.continue');
+      if (data.message === 'Email already registered') {
+        showResumePanel(email,
+          'هذا البريد الإلكتروني مسجّل بالفعل. أدخل كلمة مرورك لاستكمال رفع الصور.',
+          'This email is already registered. Enter your password to resume your photo upload.'
+        );
+        return;
+      }
       return showErr(data.message || t('err.network'));
     }
     otpEmail = email;
@@ -931,6 +1008,74 @@ async function goRegister() {
     setTimeout(() => document.getElementById('otp0')?.focus(), 300);
   } catch(e) {
     btn.disabled = false; btn.textContent = t('btn.continue');
+    showErr(t('err.network'));
+  }
+}
+
+// ── Shared resume panel ──
+function showResumePanel(prefillEmail, msgAr, msgEn) {
+  const isAr = (currentLang === 'ar');
+  const msg  = isAr ? msgAr : msgEn;
+  const errBox = document.getElementById('err');
+  errBox.innerHTML = `
+    <div style="margin-bottom:10px;font-size:13px">${msg}</div>
+    <input type="email" id="resumeEmail" value="${prefillEmail || ''}" placeholder="${isAr ? 'البريد الإلكتروني المسجّل' : 'Your registered email'}" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid #3a2e1e;background:#1a1208;color:#e0d0b0;font-size:14px;box-sizing:border-box;margin-bottom:8px"/>
+    <input type="password" id="resumePassword" placeholder="${isAr ? 'كلمة المرور' : 'Your password'}" style="width:100%;padding:10px 12px;border-radius:6px;border:1px solid #3a2e1e;background:#1a1208;color:#e0d0b0;font-size:14px;box-sizing:border-box;margin-bottom:10px"/>
+    <button onclick="resumeUpload()" style="width:100%;padding:11px;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#1a1108;font-weight:700;font-size:14px;border:none;border-radius:6px;cursor:pointer">${isAr ? 'استكمال الرفع ←' : 'Resume Upload →'}</button>
+  `;
+  errBox.classList.add('show');
+  setTimeout(() => document.getElementById(prefillEmail ? 'resumePassword' : 'resumeEmail')?.focus(), 100);
+}
+
+// ── Resume upload: login with existing account → skip to photo step ──
+async function resumeUpload() {
+  const email    = (document.getElementById('resumeEmail')?.value || '').trim();
+  const password = document.getElementById('resumePassword')?.value || '';
+  const btn      = document.querySelector('#errMsg button');
+  if (!email || !password) {
+    const errBox = document.getElementById('err');
+    const hint = document.createElement('div');
+    hint.style.cssText = 'color:#e05555;font-size:13px;margin-top:6px';
+    hint.textContent = (currentLang === 'ar') ? 'يرجى إدخال البريد الإلكتروني وكلمة المرور.' : 'Please enter your email and password.';
+    errBox.appendChild(hint);
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    const res  = await fetch(`${API}/auth/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, role: 'maid' })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      if (btn) { btn.disabled = false; btn.textContent = (currentLang === 'ar') ? 'استكمال الرفع ←' : 'Resume Upload →'; }
+      const extra = document.createElement('div');
+      extra.style.cssText = 'color:#e05555;font-size:13px;margin-top:8px';
+      extra.textContent = data.message || t('err.network');
+      document.getElementById('err').appendChild(extra);
+      return;
+    }
+    authToken = data.token;
+    clearErr();
+    document.getElementById('successEmail').textContent = email;
+
+    // Check maid profile status to decide whether to show rejection notice
+    try {
+      const pRes  = await fetch(`${API}/maids/me`, { headers: { 'Authorization': `Bearer ${authToken}` } });
+      const pData = await pRes.json();
+      const approvalStatus = pData?.maid?.approvalStatus;
+      const approvalNote   = pData?.maid?.approvalNote || '';
+      const rejNotice = document.getElementById('resubmitNotice');
+      const rejNote   = document.getElementById('resubmitNote');
+      if (approvalStatus === 'rejected' && rejNotice) {
+        rejNotice.style.display = 'block';
+        if (rejNote) rejNote.textContent = approvalNote;
+      }
+    } catch(_) {}
+
+    showStep(4);
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = (currentLang === 'ar') ? 'استكمال الرفع ←' : 'Resume Upload →'; }
     showErr(t('err.network'));
   }
 }
@@ -1028,6 +1173,21 @@ async function resendOTPCode() {
   } catch(e) { btn.disabled = false; btn.textContent = t('btn.resend'); }
 }
 
+// ── Referral source toggles ──
+function handleHeardAboutUs() {
+  const val = document.getElementById('heardAboutUs').value;
+  document.getElementById('agentSubField').style.display   = val === 'agent' ? 'block' : 'none';
+  document.getElementById('heardOtherField').style.display = val === 'other' ? 'block' : 'none';
+  if (val !== 'agent') {
+    document.getElementById('agentName').value = '';
+    document.getElementById('agentOtherField').style.display = 'none';
+  }
+}
+function handleAgentName() {
+  const val = document.getElementById('agentName').value;
+  document.getElementById('agentOtherField').style.display = val === 'other' ? 'block' : 'none';
+}
+
 // ── Step 3 → register account + create profile → Step 4 ──
 async function goPhotos() {
   clearErr();
@@ -1048,6 +1208,15 @@ async function goPhotos() {
   if (isNaN(experience))            return showErr(t('err.experience'));
   if (!salary || salary < 500)      return showErr(t('err.salary'));
   if (skills.length === 0)          return showErr(t('err.skills'));
+  if (!bio)                         return showErr(t('err.bio'));
+  const heardAboutUs   = document.getElementById('heardAboutUs').value;
+  const agentName      = document.getElementById('agentName').value;
+  const agentOtherText = document.getElementById('agentOtherText').value.trim();
+  const heardOtherText = document.getElementById('heardOtherText').value.trim();
+  if (!heardAboutUs)                                          return showErr(t('err.heardAboutUs'));
+  if (heardAboutUs === 'agent' && !agentName)                 return showErr(t('err.agentName'));
+  if (heardAboutUs === 'agent' && agentName === 'other' && !agentOtherText) return showErr(t('err.agentOther'));
+  if (heardAboutUs === 'other' && !heardOtherText)            return showErr(t('err.heardOther'));
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
@@ -1061,7 +1230,22 @@ async function goPhotos() {
     const regData = await regRes.json();
     if (!regData.success) {
       btn.disabled = false; btn.textContent = t('btn.continue');
-      return showErr(regData.message || t('err.network'));
+      const regMsg = regData.message || '';
+      if (regMsg.includes('phone number is already registered')) {
+        showResumePanel('',
+          'رقم هاتفك مسجّل بالفعل. أدخل بريدك الإلكتروني الأصلي وكلمة المرور للمتابعة.',
+          'Your phone number is already registered. Enter your original email and password to continue uploading.'
+        );
+        return;
+      }
+      if (regMsg === 'Email already in use') {
+        showResumePanel(email,
+          'هذا البريد الإلكتروني مستخدم بالفعل. أدخل كلمة مرورك لاستكمال رفع الصور.',
+          'This email is already in use. Enter your password to resume your photo upload.'
+        );
+        return;
+      }
+      return showErr(regMsg || t('err.network'));
     }
     authToken = regData.token;
 
@@ -1069,11 +1253,14 @@ async function goPhotos() {
     const profRes  = await fetch(`${API}/maids`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-      body: JSON.stringify({ fullName: name, nationality, origin: selectedOrigin, age, experienceYears: experience, expectedSalary: salary, languages: langs, skills, bio: bio || undefined })
+      body: JSON.stringify({ fullName: name, nationality, origin: selectedOrigin, age, experienceYears: experience, expectedSalary: salary, languages: langs, skills, bio: bio || undefined, heardAboutUs, agentName: heardAboutUs === 'agent' ? agentName : undefined, agentNameOther: (heardAboutUs === 'agent' && agentName === 'other') ? agentOtherText : undefined, heardAboutUsOther: heardAboutUs === 'other' ? heardOtherText : undefined })
     });
     const profData = await profRes.json();
     if (!profData.success) {
       btn.disabled = false; btn.textContent = t('btn.continue');
+      if ((profData.message || '').includes('Profile already exists')) {
+        return showStep(4);
+      }
       return showErr(profData.message || t('err.network'));
     }
     btn.disabled = false; btn.textContent = t('btn.continue');

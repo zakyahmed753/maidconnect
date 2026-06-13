@@ -13,7 +13,8 @@ import Notifications from './pages/Notifications';
 import SupportTickets from './pages/SupportTickets';
 import Coupons from './pages/Coupons';
 import Areas   from './pages/Areas';
-import Agents  from './pages/Agents';
+import Agents      from './pages/Agents';
+import LeadSources from './pages/LeadSources';
 
 const AGENT_ALLOWED = ['/maids', '/approvals', '/support'];
 
@@ -45,7 +46,8 @@ export default function App() {
           <Route path="support"  element={<SupportTickets />} />
           <Route path="coupons" element={<AdminRoute><Coupons /></AdminRoute>} />
           <Route path="areas"   element={<AdminRoute><Areas /></AdminRoute>} />
-          <Route path="agents"  element={<AdminRoute><Agents /></AdminRoute>} />
+          <Route path="agents"       element={<AdminRoute><Agents /></AdminRoute>} />
+          <Route path="lead-sources" element={<AdminRoute><LeadSources /></AdminRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>
