@@ -483,6 +483,37 @@ exports.releaseMaid = async (req, res) => {
   }
 };
 
+// ── Admin: Send custom email to maid ──
+exports.sendEmailToMaid = async (req, res) => {
+  try {
+    const { subject, message } = req.body;
+    if (!subject || !message) return res.status(400).json({ success: false, message: 'Subject and message are required' });
+    const maid = await Maid.findById(req.params.id).populate('user', 'email name');
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+    const { sendEmail } = require('../utils/email');
+    await sendEmail({
+      to: maid.user.email,
+      subject,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#3d2203,#1a1108);padding:24px 28px">
+            <p style="color:#c9a84c;font-size:13px;font-weight:700;margin:0;letter-spacing:2px;text-transform:uppercase">Servix Team</p>
+          </div>
+          <div style="padding:28px;background:#111">
+            <p style="color:#e0d0b0;font-size:14px;line-height:1.8;white-space:pre-wrap;margin:0">${message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>
+          </div>
+          <div style="padding:16px 28px;background:#0a0a0a;text-align:center">
+            <p style="color:#504030;font-size:11px;margin:0">Servix — Domestic Staffing Platform · servix.world</p>
+          </div>
+        </div>
+      `,
+    });
+    res.json({ success: true });
+  } catch(err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Offline Cash Subscription for Customer (housewife) ──
 exports.offlineCustomerSubscription = async (req, res) => {
   try {

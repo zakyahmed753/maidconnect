@@ -80,6 +80,7 @@ router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscript
 router.post('/maids/:id/offline-payment', protect, adminOnly, ac.offlinePayment);
 router.put('/maids/:id/hired',          protect, adminOnly, ac.toggleHired);
 router.post('/maids/:id/release',       protect, adminOnly, ac.releaseMaid);
+router.post('/maids/:id/send-email',    protect, adminOnly, ac.sendEmailToMaid);
 router.post('/housewives/:hwId/offline-subscription', protect, adminOnly, ac.offlineCustomerSubscription);
 router.get('/housewives',               protect, adminOnly, ac.getAllHouseWives);
 router.put('/users/:userId/suspend',    protect, adminOnly, ac.toggleSuspend);
