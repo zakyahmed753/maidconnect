@@ -126,4 +126,37 @@ router.post('/hire', protect, async (req, res) => {
   }
 });
 
+// POST /housewives/me/offline-payment-request
+// Customer submits a cash transfer receipt — creates pending payment for admin to confirm
+router.post('/me/offline-payment-request', protect, async (req, res) => {
+  try {
+    const { receiptUrl, receiptPublicId } = req.body;
+    if (!receiptUrl) return res.status(400).json({ success: false, message: 'receiptUrl required' });
+
+    const { Payment } = require('../models/index');
+
+    // Cancel any existing pending receipt for this user (only one active at a time)
+    await Payment.updateMany(
+      { user: req.user._id, type: 'customer_subscription', method: 'cash_transfer', status: 'pending' },
+      { status: 'failed', adminNote: 'Superseded by new receipt submission' }
+    );
+
+    const payment = await Payment.create({
+      user:             req.user._id,
+      type:             'customer_subscription',
+      method:           'cash_transfer',
+      amount:           1000,
+      status:           'pending',
+      receiptUrl,
+      receiptPublicId:  receiptPublicId || undefined,
+      adminNote:        'Customer submitted receipt — awaiting admin confirmation',
+      subscriptionPlan: 'monthly',
+    });
+
+    res.json({ success: true, payment });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

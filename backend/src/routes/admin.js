@@ -91,6 +91,7 @@ router.post('/payments/reject-offline', protect, adminOnly, ac.rejectOfflinePaym
 router.post('/broadcast',               protect, adminOnly, ac.broadcastNotification);
 router.post('/agents',                  protect, adminOnly, ac.createAgent);
 router.get('/agents',                   protect, adminOnly, ac.listAgents);
+router.post('/payments/:paymentId/confirm-customer', protect, adminOnly, ac.confirmCustomerOfflinePayment);
 
 
 module.exports = router;

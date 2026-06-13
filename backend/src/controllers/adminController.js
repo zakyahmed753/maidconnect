@@ -559,6 +559,55 @@ exports.offlineCustomerSubscription = async (req, res) => {
   }
 };
 
+// ── Confirm Customer (Housewife) Offline Receipt ──
+exports.confirmCustomerOfflinePayment = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.paymentId);
+    if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
+    if (payment.type !== 'customer_subscription') return res.status(400).json({ success: false, message: 'Not a customer subscription payment' });
+    if (payment.status !== 'pending') return res.status(400).json({ success: false, message: `Payment already ${payment.status}` });
+
+    const hw = await HouseWife.findOne({ user: payment.user }).populate('user', '_id name fcmToken');
+    if (!hw) return res.status(404).json({ success: false, message: 'Customer profile not found' });
+
+    const now = new Date();
+    const endDate = new Date(now);
+    endDate.setMonth(endDate.getMonth() + 1);
+
+    payment.status = 'completed';
+    payment.offlineByAdmin = true;
+    payment.adminNote = 'Receipt confirmed by admin';
+    payment.paidAt = now;
+    await payment.save();
+
+    await HouseWife.findByIdAndUpdate(hw._id, {
+      'subscription.status':    'active',
+      'subscription.startDate': now,
+      'subscription.endDate':   endDate,
+      'subscription.paymentId': payment._id,
+    });
+
+    await Notification.create({
+      user:  payment.user,
+      type:  'subscription',
+      title: '💵 Subscription Activated!',
+      body:  'Your monthly subscription has been activated. You can now chat with and hire maids!',
+    });
+
+    if (hw.user?.fcmToken) {
+      sendPush({
+        token: hw.user.fcmToken,
+        title: '💵 Subscription Activated!',
+        body:  'Your receipt was confirmed. You can now chat with and hire maids.',
+      }).catch(() => {});
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Send Broadcast Notification ──
 exports.broadcastNotification = async (req, res) => {
   try {

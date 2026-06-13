@@ -53,7 +53,7 @@ export function NotificationsScreen({ navigation }) {
 
 // ─── PaymentResultScreen ───
 export function PaymentResultScreen({ route, navigation }) {
-  const { amount, paymentId, isOffline } = route.params || {};
+  const { amount, paymentId, isOffline, goTo } = route.params || {};
   const completeAuth = useAuthStore(s => s.completeAuth);
   const [completing, setCompleting] = useState(false);
   const [checking,  setChecking]   = useState(false);
@@ -97,15 +97,13 @@ export function PaymentResultScreen({ route, navigation }) {
     // re-running completeAuth which would re-evaluate the subscription gate
     // and kick the maid out while the receipt is still awaiting admin approval.
     if (isOffline && status !== 'completed') {
-      navigation.canGoBack() ? navigation.goBack() : navigation.navigate('MaidDash');
+      navigation.canGoBack() ? navigation.goBack() : navigation.navigate(goTo || 'MaidDash');
       return;
     }
     setCompleting(true);
     try {
       await completeAuth();
-      // If still mounted after completeAuth, the navigator didn't switch stacks
-      // (renewal — maid was already in MaidTabs). Navigate to home explicitly.
-      if (mountedRef.current) navigation.navigate('MaidDash');
+      if (mountedRef.current) navigation.navigate(goTo || 'MaidDash');
     } catch {
       if (mountedRef.current) setCompleting(false);
     }

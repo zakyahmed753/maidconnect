@@ -42,10 +42,11 @@ export const authAPI = {
 };
 
 export const hwAPI = {
-  getProfile:          ()     => api.get('/housewives/me'),
-  updateProfile:       (data) => api.put('/housewives/me', data),
-  getSubscriptionStatus: ()   => api.get('/housewives/me'),
-  hireMaid:            (data) => api.post('/housewives/hire', data),
+  getProfile:            ()     => api.get('/housewives/me'),
+  updateProfile:         (data) => api.put('/housewives/me', data),
+  getSubscriptionStatus: ()     => api.get('/housewives/me'),
+  hireMaid:              (data) => api.post('/housewives/hire', data),
+  requestOfflinePayment: (data) => api.post('/housewives/me/offline-payment-request', data),
 };
 
 export const maidsAPI = {

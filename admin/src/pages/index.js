@@ -263,16 +263,21 @@ export function Payments() {
   useEffect(() => { fetchPayments(); }, [filter]);
 
   const handleConfirm = async (p) => {
-    if (!p.maidProfile?._id) return toast.error('No maid profile linked');
     if (!window.confirm(`Confirm EGP ${p.amount?.toLocaleString()} cash payment from ${p.user?.name}?`)) return;
     setActing(p._id);
     try {
-      await adminAPI.offlinePayment(p.maidProfile._id, {
-        plan: p.subscriptionPlan || 'monthly',
-        amount: p.amount,
-        note: 'Confirmed via Payments page',
-      });
-      toast.success('Payment confirmed — subscription activated');
+      if (p.type === 'customer_subscription') {
+        await adminAPI.confirmCustomerOfflinePayment(p._id);
+        toast.success('Customer subscription activated');
+      } else {
+        if (!p.maidProfile?._id) return toast.error('No maid profile linked');
+        await adminAPI.offlinePayment(p.maidProfile._id, {
+          plan: p.subscriptionPlan || 'monthly',
+          amount: p.amount,
+          note: 'Confirmed via Payments page',
+        });
+        toast.success('Maid subscription activated');
+      }
       setPayments(prev => prev.map(x => x._id === p._id ? { ...x, status: 'completed' } : x));
     } catch { toast.error('Failed to confirm'); }
     finally { setActing(null); }
@@ -284,7 +289,7 @@ export function Payments() {
     setActing(p._id);
     try {
       await adminAPI.rejectOfflinePayment({ paymentId: p._id, reason });
-      toast.success('Payment rejected — maid notified');
+      toast.success(`Receipt rejected — ${p.user?.name} notified`);
       setPayments(prev => prev.map(x => x._id === p._id ? { ...x, status: 'failed' } : x));
     } catch { toast.error('Failed to reject'); }
     finally { setActing(null); }
@@ -333,8 +338,10 @@ export function Payments() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#f0ece4', display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
                   {p.user?.name}
-                  {p.maidProfile?.fullName && <span style={{ color: '#666', fontSize: 11 }}>({p.maidProfile.fullName})</span>}
-                  — <span style={{ color: '#c9a84c', textTransform: 'capitalize' }}>{p.type}</span>
+                  {p.type === 'customer_subscription'
+                    ? <span style={{ fontSize: 10, background: 'rgba(106,171,204,0.15)', color: '#6aabcc', border: '1px solid rgba(106,171,204,0.3)', borderRadius: 3, padding: '2px 7px', fontWeight: 700, letterSpacing: '0.05em' }}>👤 CUSTOMER</span>
+                    : p.maidProfile?.fullName && <span style={{ color: '#666', fontSize: 11 }}>({p.maidProfile.fullName})</span>}
+                  — <span style={{ color: '#c9a84c', textTransform: 'capitalize' }}>{p.type?.replace(/_/g, ' ')}</span>
                   {p.offlineByAdmin && <span style={{ fontSize: 9, background: 'rgba(201,168,76,0.15)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.4)', borderRadius: 3, padding: '2px 6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Admin recorded</span>}
                   {isPendingCash && <span style={{ fontSize: 9, background: 'rgba(240,160,80,0.15)', color: '#f0a050', border: '1px solid rgba(240,160,80,0.4)', borderRadius: 3, padding: '2px 6px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>📎 Receipt submitted</span>}
                 </div>

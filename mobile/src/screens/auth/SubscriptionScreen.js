@@ -299,17 +299,6 @@ export default function SubscriptionScreen({ navigation }) {
           )}
         </View>
 
-        <TouchableOpacity
-          style={styles.btn}
-          onPress={() => navigation.navigate('Payment', {
-            type: 'subscription',
-            plan: 'monthly',
-            couponCode: couponResult ? couponInput.trim() : undefined,
-            discountedAmount: couponResult ? couponResult.finalAmount : undefined,
-          })}>
-          <Text style={styles.btnTxt}>{t('proceed_payment')}</Text>
-        </TouchableOpacity>
-
         {/* Offline / Cash Transfer option */}
         <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
           <Text style={styles.offlineIcon}>💵</Text>

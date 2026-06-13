@@ -1,168 +1,313 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, ActivityIndicator, Linking, AppState } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View, Text, TouchableOpacity, ScrollView, StyleSheet,
+  StatusBar, ActivityIndicator, Modal, Pressable,
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { paymentsAPI } from '../../services/api';
-import useAuthStore from '../../store/authStore';
-import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
+import { COLORS, FONTS } from '../../utils/theme';
+import useAuthStore from '../../store/authStore';
+import { hwAPI, paymentsAPI, uploadAPI } from '../../services/api';
+import * as ImagePicker from 'expo-image-picker';
 
-const POLL_INTERVAL = 2000;
-const POLL_ATTEMPTS = 8;
+const PRICE = 1000;
+
+const FEATURES = [
+  ['💬', 'Chat with any maid on the platform'],
+  ['📋', 'Full profile access & references'],
+  ['🤝', 'Complete hiring process in-app'],
+  ['⭐', 'Leave reviews after hiring'],
+  ['🔄', 'Free replacement if maid doesn\'t fit (within 3 days)'],
+];
 
 export default function CustomerSubscriptionScreen({ route, navigation }) {
-  const { maidUserId, maidProfileId, maidName, chatTarget } = route.params || {};
-  const [loading,  setLoading]  = useState(false);
-  const [checking, setChecking] = useState(false);
+  const { maidUserId, maidProfileId, maidName } = route.params || {};
+  const completeAuth = useAuthStore(s => s.completeAuth);
 
-  const pendingPaymentId = useRef(null);
-  const appStateRef      = useRef(AppState.currentState);
-  const pollTimer        = useRef(null);
-  const completeAuth     = useAuthStore(s => s.completeAuth);
+  const [offlineModal,   setOfflineModal]   = useState(false);
+  const [receiptUri,     setReceiptUri]     = useState(null);
+  const [submitting,     setSubmitting]     = useState(false);
+  const [submitError,    setSubmitError]    = useState(null);
+  const [pendingPayment, setPendingPayment] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
-  const pollStatus = (paymentId) => {
-    let attempts = 0;
-    setChecking(true);
-    const check = async () => {
-      attempts++;
-      try {
-        const res    = await paymentsAPI.checkStatus(paymentId);
-        const status = res.data?.status;
-        if (status === 'completed') {
-          clearTimeout(pollTimer.current);
-          await completeAuth();
-          // After subscription is active, open the chat
-          if (maidUserId) {
-            const { chatsAPI } = require('../../services/api');
-            const chatRes = await chatsAPI.startChat({ maidUserId, maidProfileId });
-            setChecking(false);
-            navigation.replace('Chat', { chatId: chatRes.data.chat._id, maidName });
-          } else {
-            setChecking(false);
-            navigation.goBack();
-          }
-          return;
-        }
-        if (status === 'failed') {
-          clearTimeout(pollTimer.current);
-          setChecking(false);
-          Toast.show({ type: 'error', text1: 'Payment failed', text2: 'Please try again.' });
-          return;
-        }
-        if (attempts < POLL_ATTEMPTS) {
-          pollTimer.current = setTimeout(check, POLL_INTERVAL);
-        } else {
-          setChecking(false);
-          Toast.show({ type: 'info', text1: 'Payment is being processed', text2: "You'll get a notification once confirmed.", visibilityTime: 5000 });
-        }
-      } catch {
-        if (attempts < POLL_ATTEMPTS) {
-          pollTimer.current = setTimeout(check, POLL_INTERVAL);
-        } else {
-          setChecking(false);
-          Toast.show({ type: 'error', text1: 'Could not verify payment' });
-        }
-      }
-    };
-    check();
-  };
+  // On every focus: check if subscription is already active or receipt pending
+  useFocusEffect(
+    React.useCallback(() => {
+      completeAuth().catch(() => {});
+      paymentsAPI.getHistory()
+        .then(r => {
+          const pending = (r.data?.payments || []).find(
+            p => p.type === 'customer_subscription' && p.method === 'cash_transfer' && p.status === 'pending'
+          );
+          setPendingPayment(pending || null);
+        })
+        .catch(() => {});
+    }, [])
+  );
 
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (nextState) => {
-      const wasBackground = appStateRef.current.match(/inactive|background/);
-      appStateRef.current = nextState;
-      if (wasBackground && nextState === 'active' && pendingPaymentId.current) {
-        const paymentId = pendingPaymentId.current;
-        pendingPaymentId.current = null;
-        pollStatus(paymentId);
-      }
-    });
-    return () => { sub.remove(); clearTimeout(pollTimer.current); };
-  }, []);
-
-  const handlePay = async () => {
-    setLoading(true);
+  const handleCheckPendingStatus = async () => {
+    if (!pendingPayment?._id) return;
+    setCheckingStatus(true);
     try {
-      const res = await paymentsAPI.initiatePaymob({ type: 'customer_subscription' });
-      const { iframeUrl, paymentId } = res.data;
-      pendingPaymentId.current = paymentId;
-      await Linking.openURL(iframeUrl);
-    } catch (err) {
-      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Payment initiation failed' });
+      const res = await paymentsAPI.checkStatus(pendingPayment._id);
+      if (res.data?.status === 'completed') {
+        await completeAuth();
+        if (maidUserId) {
+          const { chatsAPI } = require('../../services/api');
+          const chatRes = await chatsAPI.startChat({ maidUserId, maidProfileId });
+          navigation.replace('Chat', { chatId: chatRes.data.chat._id, maidName });
+        } else {
+          navigation.goBack();
+        }
+      } else if (res.data?.status === 'failed') {
+        setPendingPayment(null);
+        Toast.show({ type: 'info', text1: 'Receipt Rejected', text2: 'Please transfer again and upload a new receipt.' });
+      } else {
+        Toast.show({ type: 'info', text1: 'Still Pending', text2: "Admin hasn't confirmed yet. Check back soon." });
+      }
+    } catch {
+      Toast.show({ type: 'error', text1: 'Could not check status' });
     } finally {
-      setLoading(false);
+      setCheckingStatus(false);
     }
   };
 
+  const pickReceipt = async () => {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.85,
+    });
+    if (!res.canceled) setReceiptUri(res.assets[0].uri);
+  };
+
+  const submitOfflinePayment = async () => {
+    if (!receiptUri) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const up  = await uploadAPI.image(receiptUri);
+      const res = await hwAPI.requestOfflinePayment({
+        receiptUrl:      up.data.url,
+        receiptPublicId: up.data.publicId,
+      });
+      setOfflineModal(false);
+      setReceiptUri(null);
+      navigation.navigate('PaymentResult', {
+        amount:    PRICE,
+        paymentId: res.data.payment?._id,
+        isOffline: true,
+        goTo:      'Browse',
+      });
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to submit receipt. Check connection and try again.';
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const closeModal = () => { setOfflineModal(false); setReceiptUri(null); setSubmitError(null); };
+
   return (
-    <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
+    <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ alignSelf: 'flex-start', marginBottom: 10 }}>
           <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 32, marginBottom: 6 }}>💬</Text>
+        <Text style={{ fontSize: 36, marginBottom: 8 }}>💬</Text>
         <Text style={styles.heroTitle}>Unlock Chat Access</Text>
         <Text style={styles.heroSub}>Subscribe to start chatting with maids</Text>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
+      <ScrollView style={{ backgroundColor: COLORS.cream }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+
+        {/* Pending receipt banner */}
+        {pendingPayment && (
+          <View style={styles.pendingBanner}>
+            <Text style={styles.pendingTitle}>⏳ Receipt Under Review</Text>
+            <Text style={styles.pendingSub}>
+              Your receipt has been submitted and is awaiting admin confirmation. You'll be notified once it's approved.
+            </Text>
+            <TouchableOpacity
+              onPress={handleCheckPendingStatus}
+              disabled={checkingStatus}
+              style={[styles.checkBtn, checkingStatus && { opacity: 0.6 }]}>
+              {checkingStatus
+                ? <ActivityIndicator color="#e8c97a" size="small" />
+                : <Text style={styles.checkBtnTxt}>Check Confirmation Status</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setPendingPayment(null)} style={{ alignItems: 'center', paddingTop: 10 }}>
+              <Text style={{ fontSize: 11, color: COLORS.muted }}>Submit a new receipt instead</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Features card */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>What You Get</Text>
-          {[
-            ['💬', 'Chat with any maid on the platform'],
-            ['📋', 'Full profile access & references'],
-            ['🤝', 'Complete hiring process in-app'],
-            ['⭐', 'Leave reviews after hiring'],
-            ['🔄', "Free replacement if maid doesn't fit (within 3 days)"],
-          ].map(([icon, text]) => (
-            <View key={text} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: COLORS.border }}>
+          {FEATURES.map(([icon, text]) => (
+            <View key={text} style={styles.featureRow}>
               <Text style={{ fontSize: 18 }}>{icon}</Text>
               <Text style={{ fontSize: 13, color: COLORS.text, flex: 1 }}>{text}</Text>
             </View>
           ))}
         </View>
 
-        <View style={[styles.card, { alignItems: 'center', paddingVertical: 24 }]}>
+        {/* Price card */}
+        <View style={[styles.card, { alignItems: 'center', paddingVertical: 20 }]}>
           <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Monthly Subscription</Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: COLORS.gold }}>EGP 1,000</Text>
+          <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: COLORS.gold }}>EGP {PRICE.toLocaleString()}</Text>
           <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>per month · cancel anytime</Text>
         </View>
 
-        {checking ? (
-          <View style={styles.checkingBox}>
-            <ActivityIndicator color={COLORS.gold} style={{ marginRight: 10 }} />
-            <Text style={styles.checkingTxt}>Verifying payment…</Text>
+        {/* Cash Transfer button */}
+        <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
+          <Text style={{ fontSize: 24 }}>💵</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.offlineTxt}>Pay via Cash Transfer</Text>
+            <Text style={styles.offlineSub}>InstaPay or Vodafone Cash · upload receipt</Text>
           </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.payBtn, loading && { opacity: 0.6 }]}
-            onPress={handlePay}
-            disabled={loading}
-          >
-            {loading
-              ? <ActivityIndicator color={COLORS.dark} />
-              : <Text style={styles.payBtnTxt}>Subscribe — EGP 1,000/mo →</Text>}
-          </TouchableOpacity>
-        )}
+          <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
+        </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.cancelTxt}>Maybe later</Text>
+        {/* Already paid check */}
+        <TouchableOpacity
+          style={{ alignItems: 'center', paddingVertical: 12 }}
+          onPress={async () => {
+            try {
+              await completeAuth();
+              if (maidUserId) {
+                const { chatsAPI } = require('../../services/api');
+                const chatRes = await chatsAPI.startChat({ maidUserId, maidProfileId });
+                navigation.replace('Chat', { chatId: chatRes.data.chat._id, maidName });
+              } else {
+                navigation.goBack();
+              }
+            } catch {
+              Toast.show({ type: 'info', text1: 'Subscription not active yet' });
+            }
+          }}>
+          <Text style={{ fontSize: 12, color: COLORS.muted }}>Already paid? Tap to check</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={{ alignItems: 'center', padding: 12 }} onPress={() => navigation.goBack()}>
+          <Text style={{ fontSize: 13, color: COLORS.muted }}>Maybe later</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Offline Payment Modal */}
+      <Modal visible={offlineModal} transparent animationType="slide" statusBarTranslucent>
+        <Pressable style={styles.modalOverlay} onPress={closeModal} />
+        <ScrollView style={styles.modalSheet} contentContainerStyle={{ paddingBottom: 36 }} bounces={false}>
+          <View style={styles.modalHandle} />
+
+          <Text style={styles.modalTitle}>Cash Transfer</Text>
+          <Text style={styles.modalSub}>
+            Transfer EGP {PRICE.toLocaleString()} to the number below, then upload a screenshot of your receipt.
+          </Text>
+
+          {/* Amount box */}
+          <View style={styles.amountBox}>
+            <Text style={styles.amountLabel}>Amount Due</Text>
+            <Text style={styles.amountVal}>EGP {PRICE.toLocaleString()}</Text>
+            <Text style={styles.amountNote}>Monthly subscription · 1 month access</Text>
+          </View>
+
+          {/* Payment details */}
+          <Text style={styles.detailsHeader}>Transfer To</Text>
+          {[
+            { icon: '💸', label: 'Instapay',      value: '01022781113' },
+            { icon: '📱', label: 'Vodafone Cash', value: '01022781113' },
+          ].map(({ icon, label, value }) => (
+            <View key={label} style={styles.detailRow}>
+              <Text style={{ fontSize: 20 }}>{icon}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.detailLabel}>{label}</Text>
+                <Text style={styles.detailValue}>{value}</Text>
+              </View>
+            </View>
+          ))}
+          <View style={styles.nameRow}>
+            <Text style={styles.detailLabel}>Account Name</Text>
+            <Text style={styles.detailValue}>Ahmed Ibrahim Zaky Ahmed Ismail</Text>
+          </View>
+
+          {/* Receipt upload */}
+          <Text style={[styles.detailsHeader, { marginTop: 18 }]}>Upload Receipt</Text>
+          <TouchableOpacity style={styles.receiptBtn} onPress={pickReceipt}>
+            {receiptUri ? (
+              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>✓ Receipt selected — tap to change</Text>
+            ) : (
+              <>
+                <Text style={{ fontSize: 24, marginBottom: 6 }}>📎</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.gold }}>Tap to upload receipt</Text>
+                <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>Screenshot of your transfer confirmation</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {submitError && (
+            <View style={styles.errorBox}>
+              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠️ {submitError}</Text>
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={[styles.submitBtn, (!receiptUri || submitting) && { opacity: 0.5 }]}
+            onPress={submitOfflinePayment}
+            disabled={!receiptUri || submitting}>
+            {submitting
+              ? <ActivityIndicator color="#e8c97a" />
+              : <Text style={styles.submitTxt}>{submitError ? 'Try Again' : 'Submit Receipt'}</Text>}
+          </TouchableOpacity>
+
+          <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 12 }} onPress={closeModal}>
+            <Text style={{ fontSize: 13, color: COLORS.muted }}>Cancel</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  hero:        { paddingHorizontal: 20, paddingTop: 54, paddingBottom: 22 },
-  heroTitle:   { fontFamily: FONTS.display, fontSize: 24, color: '#fff8ee', marginBottom: 4 },
-  heroSub:     { fontSize: 12, color: 'rgba(232,201,122,0.55)' },
-  card:        { backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 8, padding: 16, marginBottom: 14 },
+  hero:        { padding: 22, paddingTop: 54, alignItems: 'center' },
+  heroTitle:   { fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginBottom: 5 },
+  heroSub:     { fontSize: 12, color: 'rgba(232,201,122,0.55)', textAlign: 'center' },
+
+  pendingBanner: { backgroundColor: 'rgba(201,168,76,0.08)', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 16, marginBottom: 16 },
+  pendingTitle:  { fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark, marginBottom: 4 },
+  pendingSub:    { fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 14 },
+  checkBtn:      { backgroundColor: COLORS.dark, padding: 12, borderRadius: 8, alignItems: 'center' },
+  checkBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a' },
+
+  card:        { backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 10, padding: 16, marginBottom: 12 },
   cardLabel:   { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, fontFamily: FONTS.bodySemiBold, marginBottom: 12 },
-  checkingBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 6, padding: 16, marginBottom: 10 },
-  checkingTxt: { fontSize: 14, color: COLORS.muted },
-  payBtn:      { backgroundColor: COLORS.gold, padding: 16, borderRadius: 6, alignItems: 'center', marginBottom: 10 },
-  payBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: COLORS.dark, letterSpacing: 0.5 },
-  cancelBtn:   { alignItems: 'center', padding: 12 },
-  cancelTxt:   { fontSize: 13, color: COLORS.muted },
+  featureRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+
+  offlineBtn:  { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 8, padding: 14, marginBottom: 10 },
+  offlineTxt:  { fontSize: 13, fontWeight: '600', color: COLORS.dark },
+  offlineSub:  { fontSize: 11, color: COLORS.muted, marginTop: 1 },
+
+  modalOverlay:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
+  modalSheet:    { backgroundColor: COLORS.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22 },
+  modalHandle:   { width: 40, height: 4, backgroundColor: COLORS.border, borderRadius: 2, alignSelf: 'center', marginBottom: 18 },
+  modalTitle:    { fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, marginBottom: 6 },
+  modalSub:      { fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 18 },
+  amountBox:     { backgroundColor: '#fef9ee', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 18 },
+  amountLabel:   { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: COLORS.muted, marginBottom: 4 },
+  amountVal:     { fontFamily: FONTS.display, fontSize: 28, color: COLORS.gold },
+  amountNote:    { fontSize: 11, color: COLORS.muted, marginTop: 3 },
+  detailsHeader: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.2, color: COLORS.muted, marginBottom: 8, fontWeight: '700' },
+  detailRow:     { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.cream, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 12, marginBottom: 8 },
+  nameRow:       { backgroundColor: COLORS.cream, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 12, marginBottom: 4 },
+  detailLabel:   { fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2 },
+  detailValue:   { fontSize: 15, fontWeight: '700', color: COLORS.dark, letterSpacing: 0.5 },
+  receiptBtn:    { borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.gold, borderRadius: 8, padding: 18, alignItems: 'center', backgroundColor: '#fef9ee', marginBottom: 16 },
+  errorBox:      { backgroundColor: 'rgba(224,85,85,0.12)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 7, padding: 12, marginBottom: 12 },
+  submitBtn:     { backgroundColor: COLORS.dark, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 4 },
+  submitTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a', letterSpacing: 0.3 },
 });
