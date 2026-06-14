@@ -21,6 +21,15 @@ router.get('/fix/reactivate-chats', async (req, res) => {
   res.json({ ok: true, reactivated: result.modifiedCount });
 });
 
+// Get referral link by maid name — /fix/ref-by-name?secret=servix2026&name=Lawal+fatima
+router.get('/fix/ref-by-name', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const Maid = require('../models/Maid');
+  const maid = await Maid.findOne({ fullName: new RegExp(req.query.name, 'i') });
+  if (!maid) return res.status(404).json({ ok: false, msg: 'Maid not found' });
+  res.json({ ok: true, name: maid.fullName, code: maid.referralCode, link: maid.referralCode ? `https://servix.world/register?mref=${maid.referralCode}` : null });
+});
+
 // Generate referral codes for all approved maids + create Coupon documents
 router.get('/fix/generate-maid-coupons', async (req, res) => {
   if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
