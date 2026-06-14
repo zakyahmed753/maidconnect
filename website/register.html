@@ -1470,10 +1470,19 @@ async function goToOTP() {
   }
 
   try {
-    await fetch(`${API}/auth/send-register-otp`, {
+    const otpCheckRes  = await fetch(`${API}/auth/send-register-otp`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: otpEmail })
     });
+    const otpCheckData = await otpCheckRes.json();
+    if (!otpCheckData.success && otpCheckData.rejectedMaid) {
+      btn.disabled = false; btn.textContent = t('btn.continue');
+      showResumePanel(otpEmail,
+        'طلبك السابق تم رفضه. سجّلي دخولك بكلمة مرورك لإعادة التقديم بتفاصيل وصور محدّثة.',
+        'Your previous application was rejected. Log in with your password to re-apply with updated details.'
+      );
+      return;
+    }
   } catch(_) {}
 
   [0,1,2,3,4,5].forEach(i => { const b = document.getElementById('otp'+i); if(b){b.value='';b.classList.remove('filled');} });
