@@ -21,6 +21,45 @@ router.get('/fix/reactivate-chats', async (req, res) => {
   res.json({ ok: true, reactivated: result.modifiedCount });
 });
 
+// Generate referral codes for all approved maids + create Coupon documents
+router.get('/fix/generate-maid-coupons', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const { randomBytes } = require('crypto');
+  const Maid = require('../models/Maid');
+  const { Coupon } = require('../models/index');
+  const maids = await Maid.find({ approvalStatus: 'approved' });
+  const results = [];
+  for (const maid of maids) {
+    // Assign referralCode if missing
+    if (!maid.referralCode) {
+      let code;
+      for (let i = 0; i < 20; i++) {
+        const candidate = randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+        const taken = await Maid.findOne({ referralCode: candidate });
+        if (!taken) { code = candidate; break; }
+      }
+      if (!code) continue;
+      maid.referralCode = code;
+      await maid.save();
+    }
+    // Upsert Coupon document
+    await Coupon.findOneAndUpdate(
+      { code: maid.referralCode },
+      {
+        code:          maid.referralCode,
+        type:          'referral',
+        discountType:  'percentage',
+        discountValue: 15,
+        maidRef:       maid._id,
+        isActive:      true,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    results.push({ name: maid.fullName, code: maid.referralCode });
+  }
+  res.json({ ok: true, total: results.length, maids: results });
+});
+
 // Remove test maids by name — usage: /fix/remove-test-maids?secret=servix2026&names=test,menna
 router.get('/fix/remove-test-maids', async (req, res) => {
   if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
