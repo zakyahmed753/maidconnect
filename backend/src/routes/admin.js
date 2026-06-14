@@ -21,6 +21,47 @@ router.get('/fix/reactivate-chats', async (req, res) => {
   res.json({ ok: true, reactivated: result.modifiedCount });
 });
 
+// Backfill missing referralCodes for all maids
+router.get('/fix/backfill-ref-codes', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const { randomBytes } = require('crypto');
+  const Maid = require('../models/Maid');
+  const maids = await Maid.find({ referralCode: { $in: [null, undefined, ''] } });
+  const assigned = [];
+  for (const maid of maids) {
+    let code;
+    for (let i = 0; i < 20; i++) {
+      const candidate = randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+      const taken = await Maid.findOne({ referralCode: candidate });
+      if (!taken) { code = candidate; break; }
+    }
+    if (!code) continue;
+    await Maid.updateOne({ _id: maid._id }, { referralCode: code });
+    assigned.push({ name: maid.fullName, code });
+  }
+  res.json({ ok: true, assigned });
+});
+
+// Manually apply a referral (for already-registered maids)
+// Usage: /fix/apply-referral?secret=servix2026&maidEmail=meena@x.com&refCode=ABC123
+router.get('/fix/apply-referral', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const { maidEmail, refCode } = req.query;
+  if (!maidEmail || !refCode) return res.status(400).json({ ok: false, msg: 'maidEmail and refCode required' });
+  const User = require('../models/User');
+  const Maid = require('../models/Maid');
+  const user = await User.findOne({ email: maidEmail.toLowerCase().trim() });
+  if (!user) return res.status(404).json({ ok: false, msg: 'User not found' });
+  const maid = await Maid.findOne({ user: user._id });
+  if (!maid) return res.status(404).json({ ok: false, msg: 'Maid profile not found' });
+  if (maid.referredBy) return res.json({ ok: true, msg: 'Already has referredBy: ' + maid.referredBy });
+  const referrer = await Maid.findOne({ referralCode: refCode.toUpperCase().trim() });
+  if (!referrer) return res.status(404).json({ ok: false, msg: 'Referral code not found: ' + refCode });
+  await Maid.updateOne({ _id: maid._id }, { referredBy: refCode.toUpperCase().trim() });
+  await Maid.updateOne({ referralCode: refCode.toUpperCase().trim() }, { $inc: { referralCount: 1 } });
+  res.json({ ok: true, msg: `Credited ${referrer.fullName} (${refCode}) for referring ${maid.fullName}` });
+});
+
 // Temp one-shot unblock fix
 router.get('/fix/unblock', async (req, res) => {
   if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });

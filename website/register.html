@@ -1045,17 +1045,26 @@ async function resumeUpload() {
     clearErr();
     document.getElementById('successEmail').textContent = email;
 
-    // Check maid profile status to decide whether to show rejection notice
+    // Check maid profile and apply referral if mref is in URL
     try {
       const pRes  = await fetch(`${API}/maids/me`, { headers: { 'Authorization': `Bearer ${authToken}` } });
       const pData = await pRes.json();
-      const approvalStatus = pData?.maid?.approvalStatus;
-      const approvalNote   = pData?.maid?.approvalNote || '';
+      const maidProf = pData?.maid;
+      const approvalStatus = maidProf?.approvalStatus;
+      const approvalNote   = maidProf?.approvalNote || '';
       const rejNotice = document.getElementById('resubmitNotice');
       const rejNote   = document.getElementById('resubmitNote');
       if (approvalStatus === 'rejected' && rejNotice) {
         rejNotice.style.display = 'block';
         if (rejNote) rejNote.textContent = approvalNote;
+      }
+      // Apply referral if mref in URL and not already credited
+      if (urlMref && maidProf && !maidProf.referredBy) {
+        fetch(`${API}/maids/me/referral`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ referralCode: urlMref })
+        }).catch(() => {});
       }
     } catch(_) {}
 
@@ -1192,6 +1201,14 @@ async function verifyEmailOTP() {
       return showErr(profData.message || t('err.network'));
     }
     maidRefCode = profData.maid?.referralCode || null;
+    // If profile already existed without a referral, apply it now (idempotent)
+    if (urlMref && !profData.maid?.referredBy) {
+      fetch(`${API}/maids/me/referral`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify({ referralCode: urlMref })
+      }).catch(() => {});
+    }
 
     // 4. Upload photos and ID
     btn.innerHTML = `<span class="spinner"></span>${t('spinner.uploading')}`;

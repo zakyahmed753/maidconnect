@@ -30,7 +30,7 @@ exports.getRefLink = async (req, res) => {
 exports.createProfile = async (req, res) => {
   try {
     const exists = await Maid.findOne({ user: req.user._id });
-    if (exists) return res.status(400).json({ success: false, message: 'Profile already exists. Use update.' });
+    if (exists) return res.status(400).json({ success: false, message: 'Profile already exists. Use update.', maid: exists });
 
     // Generate unique referral code
     const { randomBytes } = require('crypto');
@@ -57,6 +57,28 @@ exports.createProfile = async (req, res) => {
     } catch (_) {}
 
     res.status(201).json({ success: true, maid });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Apply referral (for resume-flow / retry — idempotent) ──
+exports.applyReferral = async (req, res) => {
+  try {
+    const { referralCode } = req.body;
+    if (!referralCode) return res.status(400).json({ success: false, message: 'referralCode required' });
+
+    const maid = await Maid.findOne({ user: req.user._id });
+    if (!maid) return res.status(404).json({ success: false, message: 'Profile not found' });
+    if (maid.referredBy) return res.json({ success: true, alreadyApplied: true }); // idempotent
+
+    const referrer = await Maid.findOne({ referralCode });
+    if (!referrer) return res.status(404).json({ success: false, message: 'Referral code not found' });
+
+    await Maid.updateOne({ _id: maid._id }, { referredBy: referralCode });
+    await Maid.updateOne({ referralCode }, { $inc: { referralCount: 1 } });
+
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
