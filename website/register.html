@@ -221,9 +221,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
   <div class="step-labels">
     <span class="step-label active" id="lbl1" data-i18n="step.account">Account</span>
-    <span class="step-label" id="lbl2" data-i18n="step.verify">Verify</span>
-    <span class="step-label" id="lbl3" data-i18n="step.profile">Profile</span>
-    <span class="step-label" id="lbl4" data-i18n="step.photos">Photos & ID</span>
+    <span class="step-label" id="lbl2" data-i18n="step.profile">Profile</span>
+    <span class="step-label" id="lbl3" data-i18n="step.photos">Photos & ID</span>
+    <span class="step-label" id="lbl4" data-i18n="step.verify">Verify</span>
     <span class="step-label" id="lbl5" data-i18n="step.done">Done</span>
   </div>
 </div>
@@ -247,8 +247,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <div class="field">
         <label data-i18n="lbl.phone">Phone Number</label>
-        <input type="tel" id="phone" data-i18n-ph="ph.phone" placeholder="Enter with country code, e.g. +251 912 345 678"/>
-        <div class="hint" data-i18n="hint.phone">Include your country code — e.g. +63 for Philippines, +251 for Ethiopia</div>
+        <input type="tel" id="phone" data-i18n-ph="ph.phone" placeholder="e.g. 01012345678"/>
+        <div class="hint" data-i18n="hint.phone">Egyptian mobile number — must start with 010, 011, 012, or 015</div>
       </div>
       <div class="row-2">
         <div class="field">
@@ -272,33 +272,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </div>
 
-    <!-- ── Step 2: Verify Email (OTP) ── -->
+    <!-- ── Step 2: Profile ── -->
     <div id="step2" style="display:none">
-      <div class="step-title" data-i18n="s2.title">Verify Your Email</div>
-      <div class="step-sub">
-        <span data-i18n="s2.sub1">We sent a 6-digit code to</span> <strong id="otpEmailDisplay" style="color:#e8c97a"></strong>. <span data-i18n="s2.sub2">Enter it below — expires in 10 minutes.</span>
-      </div>
-
-      <div class="otp-row">
-        <input class="otp-box" type="number" id="otp0" maxlength="1" min="0" max="9" oninput="otpInput(this,0)" onkeydown="otpKeydown(event,0)"/>
-        <input class="otp-box" type="number" id="otp1" maxlength="1" min="0" max="9" oninput="otpInput(this,1)" onkeydown="otpKeydown(event,1)"/>
-        <input class="otp-box" type="number" id="otp2" maxlength="1" min="0" max="9" oninput="otpInput(this,2)" onkeydown="otpKeydown(event,2)"/>
-        <input class="otp-box" type="number" id="otp3" maxlength="1" min="0" max="9" oninput="otpInput(this,3)" onkeydown="otpKeydown(event,3)"/>
-        <input class="otp-box" type="number" id="otp4" maxlength="1" min="0" max="9" oninput="otpInput(this,4)" onkeydown="otpKeydown(event,4)"/>
-        <input class="otp-box" type="number" id="otp5" maxlength="1" min="0" max="9" oninput="otpInput(this,5)" onkeydown="otpKeydown(event,5)"/>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn-next" id="otpVerifyBtn" data-i18n="btn.verify" onclick="verifyEmailOTP()">Verify Email →</button>
-      </div>
-
-      <div class="otp-resend">
-        <button id="resendBtn" onclick="resendOTPCode()" disabled></button>
-      </div>
-    </div>
-
-    <!-- ── Step 3: Profile ── -->
-    <div id="step3" style="display:none">
       <div class="step-title" data-i18n="s3.title">Your Work Profile</div>
       <div class="step-sub" data-i18n="s3.sub">This information will be shown to potential employers. Fill in as accurately as possible.</div>
 
@@ -407,13 +382,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
 
       <div class="btn-row">
-        <button class="btn-back" data-i18n="btn.back" onclick="showStep(2)">← Back</button>
+        <button class="btn-back" data-i18n="btn.back" onclick="showStep(1)">← Back</button>
         <button class="btn-next" id="submitBtn" data-i18n="btn.continue" onclick="goPhotos()">Continue →</button>
       </div>
     </div>
 
-    <!-- ── Step 4: Photos & ID ── -->
-    <div id="step4" style="display:none">
+    <!-- ── Step 3: Photos & ID ── -->
+    <div id="step3" style="display:none">
 
       <!-- Rejection resubmit notice — shown only when resuming after admin rejection -->
       <div id="resubmitNotice" style="display:none;background:#1a0808;border:1.5px solid rgba(240,100,80,0.45);border-radius:8px;padding:14px 16px;margin-bottom:20px">
@@ -479,13 +454,39 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
       </div>
 
+      <div class="btn-row">
+        <button class="btn-back" data-i18n="btn.back" onclick="showStep(2)">← Back</button>
+        <button class="btn-next" id="uploadSubmitBtn" data-i18n="btn.continue" onclick="goToOTP()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- ── Step 4: Verify Email (OTP) ── -->
+    <div id="step4" style="display:none">
+      <div class="step-title" data-i18n="s2.title">Verify Your Email</div>
+      <div class="step-sub">
+        <span data-i18n="s2.sub1">We sent a 6-digit code to</span> <strong id="otpEmailDisplay" style="color:#e8c97a"></strong>. <span data-i18n="s2.sub2">Enter it below — expires in 10 minutes.</span>
+      </div>
+
+      <div class="otp-row">
+        <input class="otp-box" type="number" id="otp0" maxlength="1" min="0" max="9" oninput="otpInput(this,0)" onkeydown="otpKeydown(event,0)"/>
+        <input class="otp-box" type="number" id="otp1" maxlength="1" min="0" max="9" oninput="otpInput(this,1)" onkeydown="otpKeydown(event,1)"/>
+        <input class="otp-box" type="number" id="otp2" maxlength="1" min="0" max="9" oninput="otpInput(this,2)" onkeydown="otpKeydown(event,2)"/>
+        <input class="otp-box" type="number" id="otp3" maxlength="1" min="0" max="9" oninput="otpInput(this,3)" onkeydown="otpKeydown(event,3)"/>
+        <input class="otp-box" type="number" id="otp4" maxlength="1" min="0" max="9" oninput="otpInput(this,4)" onkeydown="otpKeydown(event,4)"/>
+        <input class="otp-box" type="number" id="otp5" maxlength="1" min="0" max="9" oninput="otpInput(this,5)" onkeydown="otpKeydown(event,5)"/>
+      </div>
+
       <div class="upload-progress" id="uploadProgressBar" style="display:none">
         <div class="upload-progress-bar" id="uploadProgressFill"></div>
       </div>
 
       <div class="btn-row">
         <button class="btn-back" data-i18n="btn.back" onclick="showStep(3)">← Back</button>
-        <button class="btn-next" id="uploadSubmitBtn" data-i18n="btn.submit" onclick="submitAll()">Submit Application →</button>
+        <button class="btn-next" id="otpVerifyBtn" data-i18n="btn.verify" onclick="verifyEmailOTP()">Verify Email →</button>
+      </div>
+
+      <div class="otp-resend">
+        <button id="resendBtn" onclick="resendOTPCode()" disabled></button>
       </div>
     </div>
 
@@ -962,8 +963,8 @@ function showErr(msg) {
 }
 function clearErr() { document.getElementById('err').classList.remove('show'); }
 
-// ── Step 1 → send OTP ──
-async function goRegister() {
+// ── Step 1 → validate account fields → Step 2 ──
+function goRegister() {
   clearErr();
   const name     = document.getElementById('name').value.trim();
   const email    = document.getElementById('email').value.trim();
@@ -979,37 +980,9 @@ async function goRegister() {
   if (password.length < 6)           return showErr(t('err.pw.short'));
   if (password !== confirm)          return showErr(t('err.pw.match'));
 
-  const btn = document.getElementById('continueBtn1');
-  btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span>${t('spinner.sending')}`;
-
-  try {
-    const res  = await fetch(`${API}/auth/send-register-otp`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json();
-    if (!data.success) {
-      btn.disabled = false; btn.textContent = t('btn.continue');
-      if (data.message === 'Email already registered') {
-        showResumePanel(email,
-          'هذا البريد الإلكتروني مسجّل بالفعل. أدخل كلمة مرورك لاستكمال رفع الصور.',
-          'This email is already registered. Enter your password to resume your photo upload.'
-        );
-        return;
-      }
-      return showErr(data.message || t('err.network'));
-    }
-    otpEmail = email;
-    document.getElementById('otpEmailDisplay').textContent = email;
-    btn.disabled = false; btn.textContent = t('btn.continue');
-    showStep(2);
-    startOTPCountdown();
-    setTimeout(() => document.getElementById('otp0')?.focus(), 300);
-  } catch(e) {
-    btn.disabled = false; btn.textContent = t('btn.continue');
-    showErr(t('err.network'));
-  }
+  otpEmail = email;
+  document.getElementById('otpEmailDisplay').textContent = email;
+  showStep(2);
 }
 
 // ── Shared resume panel ──
@@ -1073,7 +1046,7 @@ async function resumeUpload() {
       }
     } catch(_) {}
 
-    showStep(4);
+    showStep(3);
   } catch(e) {
     if (btn) { btn.disabled = false; btn.textContent = (currentLang === 'ar') ? 'استكمال الرفع ←' : 'Resume Upload →'; }
     showErr(t('err.network'));
@@ -1124,7 +1097,7 @@ function otpKeydown(e, idx) {
   }
 }
 
-// ── Verify OTP ──
+// ── Verify OTP → register account → create profile → upload photos → Done ──
 async function verifyEmailOTP() {
   clearErr();
   const code = [0,1,2,3,4,5].map(i => document.getElementById('otp'+i)?.value || '').join('');
@@ -1135,6 +1108,7 @@ async function verifyEmailOTP() {
   btn.innerHTML = `<span class="spinner"></span>${t('spinner.verifying')}`;
 
   try {
+    // 1. Verify OTP
     const res  = await fetch(`${API}/auth/verify-register-otp`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: otpEmail, otp: code })
@@ -1146,11 +1120,113 @@ async function verifyEmailOTP() {
     }
     preRegToken = data.preRegToken;
     clearInterval(otpTimer);
+
+    // 2. Register account
+    btn.innerHTML = `<span class="spinner"></span>${t('spinner.creating')}`;
+    const name     = document.getElementById('name').value.trim();
+    const email    = document.getElementById('email').value.trim();
+    const phone    = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+
+    const regRes  = await fetch(`${API}/auth/register`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone, password, role: 'maid', preRegToken })
+    });
+    const regData = await regRes.json();
+    if (!regData.success) {
+      btn.disabled = false; btn.textContent = t('btn.verify');
+      const regMsg = regData.message || '';
+      if (regMsg.includes('phone number is already registered')) {
+        showResumePanel('',
+          'رقم هاتفك مسجّل بالفعل. أدخل بريدك الإلكتروني الأصلي وكلمة المرور للمتابعة.',
+          'Your phone number is already registered. Enter your original email and password to continue uploading.'
+        );
+        return;
+      }
+      if (regMsg === 'Email already in use') {
+        showResumePanel(email,
+          'هذا البريد الإلكتروني مستخدم بالفعل. أدخل كلمة مرورك لاستكمال رفع الصور.',
+          'This email is already in use. Enter your password to resume your photo upload.'
+        );
+        return;
+      }
+      return showErr(regMsg || t('err.network'));
+    }
+    authToken = regData.token;
+
+    // 3. Create profile
+    btn.innerHTML = `<span class="spinner"></span>${t('spinner.saving')}`;
+    const nationality  = document.getElementById('nationality').value;
+    const age          = parseInt(document.getElementById('age').value);
+    const experience   = parseInt(document.getElementById('experience').value);
+    const salary       = parseInt(document.getElementById('salary').value);
+    const bio          = document.getElementById('bio').value.trim();
+    const langs        = getChecked('langGrid');
+    const skills       = getChecked('skillGrid');
+    const heardAboutUs   = document.getElementById('heardAboutUs').value;
+    const agentName      = document.getElementById('agentName').value;
+    const agentOtherText = document.getElementById('agentOtherText').value.trim();
+    const heardOtherText = document.getElementById('heardOtherText').value.trim();
+
+    const profRes  = await fetch(`${API}/maids`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ fullName: name, nationality, origin: selectedOrigin, age, experienceYears: experience, expectedSalary: salary, languages: langs, skills, bio: bio || undefined, heardAboutUs, agentName: heardAboutUs === 'agent' ? agentName : undefined, agentNameOther: (heardAboutUs === 'agent' && agentName === 'other') ? agentOtherText : undefined, heardAboutUsOther: heardAboutUs === 'other' ? heardOtherText : undefined })
+    });
+    const profData = await profRes.json();
+    if (!profData.success && !(profData.message || '').includes('Profile already exists')) {
+      btn.disabled = false; btn.textContent = t('btn.verify');
+      return showErr(profData.message || t('err.network'));
+    }
+
+    // 4. Upload photos and ID
+    btn.innerHTML = `<span class="spinner"></span>${t('spinner.uploading')}`;
+    setProgress(5);
+    const photoUrls = [];
+    for (let i = 0; i < 3; i++) {
+      const r = await uploadImage(photoFiles[i]);
+      photoUrls.push({ url: r.url, publicId: r.publicId, isPrimary: i === 0 });
+      setProgress(5 + (i + 1) * 15);
+    }
+
+    const selfieResult = await uploadImage(document.getElementById('selfieFile').files[0]);
+    setProgress(65);
+
+    let passportPhotoUrl = null, passportPhotoPublicId = null;
+    if (selectedIdType === 'passport') {
+      const pp = await uploadImage(document.getElementById('passportFile').files[0]);
+      passportPhotoUrl = pp.url; passportPhotoPublicId = pp.publicId;
+    }
+    setProgress(80);
+
+    for (const photo of photoUrls) {
+      await fetch(`${API}/maids/me/photos`, {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},
+        body: JSON.stringify(photo)
+      });
+    }
+    setProgress(90);
+
+    const verifyBody = { selfieUrl: selfieResult.url, selfiePublicId: selfieResult.publicId };
+    if (selectedIdType === 'egyptian') {
+      verifyBody.nationalId = document.getElementById('nationalId').value.trim();
+    } else {
+      verifyBody.passportNumber        = document.getElementById('passportNumber').value.trim();
+      verifyBody.passportPhotoUrl      = passportPhotoUrl;
+      verifyBody.passportPhotoPublicId = passportPhotoPublicId;
+    }
+    await fetch(`${API}/maids/me/verification`, {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},
+      body: JSON.stringify(verifyBody)
+    });
+    setProgress(100);
+
+    document.getElementById('successEmail').textContent = document.getElementById('email').value.trim();
     btn.disabled = false; btn.textContent = t('btn.verify');
-    showStep(3);
+    showStep(5);
   } catch(e) {
     btn.disabled = false; btn.textContent = t('btn.verify');
-    showErr(t('err.network'));
+    showErr(e.message || t('err.network'));
   }
 }
 
@@ -1188,20 +1264,19 @@ function handleAgentName() {
   document.getElementById('agentOtherField').style.display = val === 'other' ? 'block' : 'none';
 }
 
-// ── Step 3 → register account + create profile → Step 4 ──
-async function goPhotos() {
+// ── Step 2 → validate profile → Step 3 ──
+function goPhotos() {
   clearErr();
   const nationality = document.getElementById('nationality').value;
   const age         = parseInt(document.getElementById('age').value);
   const experience  = parseInt(document.getElementById('experience').value);
   const salary      = parseInt(document.getElementById('salary').value);
   const bio         = document.getElementById('bio').value.trim();
-  const name        = document.getElementById('name').value.trim();
-  const email       = document.getElementById('email').value.trim();
-  const phone       = document.getElementById('phone').value.trim();
-  const password    = document.getElementById('password').value;
-  const langs       = getChecked('langGrid');
   const skills      = getChecked('skillGrid');
+  const heardAboutUs   = document.getElementById('heardAboutUs').value;
+  const agentName      = document.getElementById('agentName').value;
+  const agentOtherText = document.getElementById('agentOtherText').value.trim();
+  const heardOtherText = document.getElementById('heardOtherText').value.trim();
 
   if (!nationality)                 return showErr(t('err.nationality'));
   if (!age || age < 18 || age > 60) return showErr(t('err.age'));
@@ -1209,66 +1284,12 @@ async function goPhotos() {
   if (!salary || salary < 500)      return showErr(t('err.salary'));
   if (skills.length === 0)          return showErr(t('err.skills'));
   if (!bio)                         return showErr(t('err.bio'));
-  const heardAboutUs   = document.getElementById('heardAboutUs').value;
-  const agentName      = document.getElementById('agentName').value;
-  const agentOtherText = document.getElementById('agentOtherText').value.trim();
-  const heardOtherText = document.getElementById('heardOtherText').value.trim();
   if (!heardAboutUs)                                          return showErr(t('err.heardAboutUs'));
   if (heardAboutUs === 'agent' && !agentName)                 return showErr(t('err.agentName'));
   if (heardAboutUs === 'agent' && agentName === 'other' && !agentOtherText) return showErr(t('err.agentOther'));
   if (heardAboutUs === 'other' && !heardOtherText)            return showErr(t('err.heardOther'));
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span>${t('spinner.creating')}`;
-
-  try {
-    const regRes  = await fetch(`${API}/auth/register`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone, password, role: 'maid', preRegToken })
-    });
-    const regData = await regRes.json();
-    if (!regData.success) {
-      btn.disabled = false; btn.textContent = t('btn.continue');
-      const regMsg = regData.message || '';
-      if (regMsg.includes('phone number is already registered')) {
-        showResumePanel('',
-          'رقم هاتفك مسجّل بالفعل. أدخل بريدك الإلكتروني الأصلي وكلمة المرور للمتابعة.',
-          'Your phone number is already registered. Enter your original email and password to continue uploading.'
-        );
-        return;
-      }
-      if (regMsg === 'Email already in use') {
-        showResumePanel(email,
-          'هذا البريد الإلكتروني مستخدم بالفعل. أدخل كلمة مرورك لاستكمال رفع الصور.',
-          'This email is already in use. Enter your password to resume your photo upload.'
-        );
-        return;
-      }
-      return showErr(regMsg || t('err.network'));
-    }
-    authToken = regData.token;
-
-    btn.innerHTML = `<span class="spinner"></span>${t('spinner.saving')}`;
-    const profRes  = await fetch(`${API}/maids`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-      body: JSON.stringify({ fullName: name, nationality, origin: selectedOrigin, age, experienceYears: experience, expectedSalary: salary, languages: langs, skills, bio: bio || undefined, heardAboutUs, agentName: heardAboutUs === 'agent' ? agentName : undefined, agentNameOther: (heardAboutUs === 'agent' && agentName === 'other') ? agentOtherText : undefined, heardAboutUsOther: heardAboutUs === 'other' ? heardOtherText : undefined })
-    });
-    const profData = await profRes.json();
-    if (!profData.success) {
-      btn.disabled = false; btn.textContent = t('btn.continue');
-      if ((profData.message || '').includes('Profile already exists')) {
-        return showStep(4);
-      }
-      return showErr(profData.message || t('err.network'));
-    }
-    btn.disabled = false; btn.textContent = t('btn.continue');
-    showStep(4);
-  } catch(e) {
-    btn.disabled = false; btn.textContent = t('btn.continue');
-    showErr(t('err.network'));
-  }
+  showStep(3);
 }
 
 // ── Upload helpers ──
@@ -1356,8 +1377,8 @@ async function uploadImage(file) {
   return data;
 }
 
-// ── Step 4: upload → Step 5 success ──
-async function submitAll() {
+// ── Step 3 → validate photos/ID → resend fresh OTP → Step 4 ──
+async function goToOTP() {
   clearErr();
   if (photoFiles.length < 3) return showErr(t('err.photos'));
   if (!document.getElementById('selfieFile').files[0]) return showErr(t('err.selfie'));
@@ -1371,55 +1392,20 @@ async function submitAll() {
 
   const btn = document.getElementById('uploadSubmitBtn');
   btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span>${t('spinner.uploading')}`;
+  btn.innerHTML = `<span class="spinner"></span>${t('spinner.sending')}`;
 
   try {
-    setProgress(5);
-    const photoUrls = [];
-    for (let i = 0; i < 3; i++) {
-      const r = await uploadImage(photoFiles[i]);
-      photoUrls.push({ url: r.url, publicId: r.publicId, isPrimary: i === 0 });
-      setProgress(5 + (i + 1) * 15);
-    }
-
-    const selfieResult = await uploadImage(document.getElementById('selfieFile').files[0]);
-    setProgress(65);
-
-    let passportPhotoUrl = null, passportPhotoPublicId = null;
-    if (selectedIdType === 'passport') {
-      const pp = await uploadImage(document.getElementById('passportFile').files[0]);
-      passportPhotoUrl = pp.url; passportPhotoPublicId = pp.publicId;
-    }
-    setProgress(80);
-
-    for (const photo of photoUrls) {
-      await fetch(`${API}/maids/me/photos`, {
-        method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},
-        body: JSON.stringify(photo)
-      });
-    }
-    setProgress(90);
-
-    const verifyBody = { selfieUrl: selfieResult.url, selfiePublicId: selfieResult.publicId };
-    if (selectedIdType === 'egyptian') {
-      verifyBody.nationalId = document.getElementById('nationalId').value.trim();
-    } else {
-      verifyBody.passportNumber        = document.getElementById('passportNumber').value.trim();
-      verifyBody.passportPhotoUrl      = passportPhotoUrl;
-      verifyBody.passportPhotoPublicId = passportPhotoPublicId;
-    }
-    await fetch(`${API}/maids/me/verification`, {
-      method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},
-      body: JSON.stringify(verifyBody)
+    await fetch(`${API}/auth/send-register-otp`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: otpEmail })
     });
-    setProgress(100);
+  } catch(_) {}
 
-    document.getElementById('successEmail').textContent = document.getElementById('email').value.trim();
-    showStep(5);
-  } catch(e) {
-    btn.disabled = false; btn.textContent = t('btn.submit');
-    showErr(e.message || t('err.network'));
-  }
+  [0,1,2,3,4,5].forEach(i => { const b = document.getElementById('otp'+i); if(b){b.value='';b.classList.remove('filled');} });
+  startOTPCountdown();
+  btn.disabled = false; btn.textContent = t('btn.continue');
+  showStep(4);
+  setTimeout(() => document.getElementById('otp0')?.focus(), 300);
 }
 
 // ── Forgot Password Modal ──
