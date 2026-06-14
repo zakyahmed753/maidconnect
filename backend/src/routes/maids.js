@@ -10,6 +10,7 @@ router.get('/hire-requests',           protect, maidOnly, mc.getHireRequests);
 router.put('/hire-requests/:id/respond', protect, maidOnly, mc.respondHireRequest);
 router.get('/ref-link',                mc.getRefLink);
 router.post('/me/referral',            protect, maidOnly, mc.applyReferral);
+router.post('/me/reapply',             protect, maidOnly, mc.reapply);
 router.get('/:id',                     protect, mc.getMaid);
 router.post('/',                       protect, maidOnly, mc.createProfile);
 router.put('/me',                      protect, maidOnly, mc.updateProfile);

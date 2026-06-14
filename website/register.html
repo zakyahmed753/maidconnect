@@ -600,6 +600,7 @@ let otpTimer = null;
 let otpSeconds = 0;
 let currentLang = 'en';
 let maidRefCode  = null;
+let isReapplying = false;
 const urlMref = new URLSearchParams(window.location.search).get('mref') || null;
 
 // ── Translations ──
@@ -1067,12 +1068,19 @@ async function resumeUpload() {
       const maidProf = pData?.maid;
       const approvalStatus = maidProf?.approvalStatus;
       const approvalNote   = maidProf?.approvalNote || '';
-      const rejNotice = document.getElementById('resubmitNotice');
-      const rejNote   = document.getElementById('resubmitNote');
-      if (approvalStatus === 'rejected' && rejNotice) {
-        rejNotice.style.display = 'block';
-        if (rejNote) rejNote.textContent = approvalNote;
+
+      if (approvalStatus === 'rejected') {
+        // Rejected maid re-apply flow: go to profile step so she can update details
+        isReapplying = true;
+        clearErr();
+        const isAr = (currentLang === 'ar');
+        const notice = document.getElementById('err');
+        notice.innerHTML = `<div style="background:rgba(232,201,122,.08);border:1px solid #c9a84c;border-radius:8px;padding:12px 14px;font-size:13px;color:#e8c97a;line-height:1.6;">${isAr ? '⚠️ تم رفض طلبك السابق' : '⚠️ Your previous application was rejected'}${approvalNote ? `<br><span style="color:#aaa;font-size:12px">${approvalNote}</span>` : ''}<br><span style="color:#f0ece4;font-size:12px">${isAr ? 'يمكنك تحديث بياناتك وإعادة التقديم.' : 'Update your details and photos below, then re-submit.'}</span></div>`;
+        notice.classList.add('show');
+        showStep(2);
+        return;
       }
+
       // Apply referral if mref in URL and not already credited
       if (urlMref && maidProf && !maidProf.referredBy) {
         fetch(`${API}/maids/me/referral`, {
@@ -1293,7 +1301,17 @@ async function resendOTPCode() {
       body: JSON.stringify({ email: otpEmail })
     });
     const data = await res.json();
-    if (!data.success) { btn.disabled = false; btn.textContent = t('btn.resend'); return showErr(data.message); }
+    if (!data.success) {
+      btn.disabled = false; btn.textContent = t('btn.resend');
+      if (data.rejectedMaid) {
+        showResumePanel(otpEmail,
+          'طلبك السابق تم رفضه. سجّلي دخولك لإعادة التقديم بصور ومعلومات محدّثة.',
+          'Your previous application was rejected. Log in below to re-apply with updated details.'
+        );
+        return;
+      }
+      return showErr(data.message);
+    }
     [0,1,2,3,4,5].forEach(i => { const b = document.getElementById('otp'+i); if(b){b.value='';b.classList.remove('filled');} });
     document.getElementById('otp0')?.focus();
     clearErr();
@@ -1446,6 +1464,11 @@ async function goToOTP() {
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span>${t('spinner.sending')}`;
 
+  if (isReapplying) {
+    await submitReapplication(btn);
+    return;
+  }
+
   try {
     await fetch(`${API}/auth/send-register-otp`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1458,6 +1481,93 @@ async function goToOTP() {
   btn.disabled = false; btn.textContent = t('btn.continue');
   showStep(4);
   setTimeout(() => document.getElementById('otp0')?.focus(), 300);
+}
+
+// ── Re-apply after rejection (skips OTP — already authenticated) ──
+async function submitReapplication(btn) {
+  try {
+    const name            = document.getElementById('name').value.trim();
+    const nationality     = document.getElementById('nationality').value;
+    const age             = parseInt(document.getElementById('age').value);
+    const experience      = parseInt(document.getElementById('experience').value);
+    const salary          = parseInt(document.getElementById('salary').value);
+    const bio             = document.getElementById('bio').value.trim();
+    const langs           = getChecked('langGrid');
+    const skills          = getChecked('skillGrid');
+    const heardAboutUs    = document.getElementById('heardAboutUs').value;
+    const agentName       = document.getElementById('agentName').value;
+    const agentOtherText  = document.getElementById('agentOtherText').value.trim();
+    const heardOtherText  = document.getElementById('heardOtherText').value.trim();
+
+    // 1. Reset maid profile + update details
+    btn.innerHTML = `<span class="spinner"></span>${t('spinner.saving')}`;
+    const reapplyRes  = await fetch(`${API}/maids/me/reapply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ fullName: name, nationality, origin: selectedOrigin, age, experienceYears: experience, expectedSalary: salary, languages: langs, skills, bio: bio || undefined, heardAboutUs, agentName: heardAboutUs === 'agent' ? agentName : undefined, agentNameOther: (heardAboutUs === 'agent' && agentName === 'other') ? agentOtherText : undefined, heardAboutUsOther: heardAboutUs === 'other' ? heardOtherText : undefined })
+    });
+    const reapplyData = await reapplyRes.json();
+    if (!reapplyData.success) {
+      btn.disabled = false; btn.textContent = t('btn.continue');
+      return showErr(reapplyData.message || t('err.network'));
+    }
+    maidRefCode = reapplyData.maid?.referralCode || null;
+
+    // 2. Upload photos
+    btn.innerHTML = `<span class="spinner"></span>${t('spinner.uploading')}`;
+    setProgress(5);
+    const photoUrls = [];
+    for (let i = 0; i < 3; i++) {
+      const r = await uploadImage(photoFiles[i]);
+      photoUrls.push({ url: r.url, publicId: r.publicId, isPrimary: i === 0 });
+      setProgress(5 + (i + 1) * 15);
+    }
+
+    const selfieResult = await uploadImage(document.getElementById('selfieFile').files[0]);
+    setProgress(65);
+
+    let passportPhotoUrl = null, passportPhotoPublicId = null;
+    if (selectedIdType === 'passport') {
+      const pp = await uploadImage(document.getElementById('passportFile').files[0]);
+      passportPhotoUrl = pp.url; passportPhotoPublicId = pp.publicId;
+    }
+    setProgress(80);
+
+    for (const photo of photoUrls) {
+      await fetch(`${API}/maids/me/photos`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+        body: JSON.stringify(photo)
+      });
+    }
+    setProgress(90);
+
+    const verifyBody = { selfieUrl: selfieResult.url, selfiePublicId: selfieResult.publicId };
+    if (selectedIdType === 'egyptian') {
+      verifyBody.nationalId = document.getElementById('nationalId').value.trim();
+    } else {
+      verifyBody.passportNumber        = document.getElementById('passportNumber').value.trim();
+      verifyBody.passportPhotoUrl      = passportPhotoUrl;
+      verifyBody.passportPhotoPublicId = passportPhotoPublicId;
+    }
+    await fetch(`${API}/maids/me/verification`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify(verifyBody)
+    });
+    setProgress(100);
+
+    document.getElementById('successEmail').textContent = document.getElementById('resumeEmail')?.value || otpEmail || '';
+    btn.disabled = false; btn.textContent = t('btn.continue');
+    if (maidRefCode) {
+      const refLink = `https://servix.world/register?mref=${maidRefCode}`;
+      document.getElementById('refLinkText').textContent = refLink;
+      document.getElementById('waShareBtn').href = `https://wa.me/?text=${encodeURIComponent('Join Servix and hire a trusted maid! Use my referral link: ' + refLink)}`;
+      document.getElementById('refLinkBox').style.display = 'block';
+    }
+    showStep(5);
+  } catch(e) {
+    btn.disabled = false; btn.textContent = t('btn.continue');
+    showErr(e.message || t('err.network'));
+  }
 }
 
 // ── Forgot Password Modal ──

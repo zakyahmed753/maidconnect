@@ -82,7 +82,15 @@ exports.sendRegisterOTP = async (req, res) => {
     const email = (req.body.email || '').toLowerCase().trim();
     if (!email) return res.status(400).json({ success: false, message: 'Email required' });
     const existing = await User.findOne({ email });
-    if (existing) return res.status(400).json({ success: false, message: 'Email already registered' });
+    if (existing) {
+      if (existing.role === 'maid') {
+        const maidProfile = await Maid.findOne({ user: existing._id }).select('approvalStatus');
+        if (maidProfile?.approvalStatus === 'rejected') {
+          return res.status(400).json({ success: false, message: 'Email already registered', rejectedMaid: true });
+        }
+      }
+      return res.status(400).json({ success: false, message: 'Email already registered' });
+    }
     const otp = genCode();
     await PreRegOTP.findOneAndUpdate(
       { email },

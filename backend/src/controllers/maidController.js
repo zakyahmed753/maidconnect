@@ -62,6 +62,51 @@ exports.createProfile = async (req, res) => {
   }
 };
 
+// ── Re-apply after rejection ──
+exports.reapply = async (req, res) => {
+  try {
+    const maid = await Maid.findOne({ user: req.user._id });
+    if (!maid) return res.status(404).json({ success: false, message: 'Profile not found' });
+    if (maid.approvalStatus !== 'rejected') {
+      return res.status(400).json({ success: false, message: 'Only rejected profiles can re-apply' });
+    }
+
+    const { fullName, nationality, origin, age, experienceYears, expectedSalary, languages, skills, bio, heardAboutUs, agentName, agentNameOther, heardAboutUsOther } = req.body;
+
+    await Maid.updateOne({ _id: maid._id }, {
+      // Update profile fields
+      ...(fullName        && { fullName }),
+      ...(nationality     && { nationality }),
+      ...(origin          && { origin }),
+      ...(age             && { age }),
+      ...(experienceYears !== undefined && { experienceYears }),
+      ...(expectedSalary  !== undefined && { expectedSalary }),
+      ...(languages       && { languages }),
+      ...(skills          && { skills }),
+      ...(bio             !== undefined && { bio }),
+      ...(heardAboutUs    && { heardAboutUs }),
+      ...(agentName       !== undefined && { agentName }),
+      ...(agentNameOther  !== undefined && { agentNameOther }),
+      ...(heardAboutUsOther !== undefined && { heardAboutUsOther }),
+      // Reset approval + verification state for fresh review
+      approvalStatus:     'pending',
+      approvalNote:       '',
+      approvedBy:         null,
+      photos:             [],
+      selfie:             {},
+      passport:           {},
+      nationalId:         null,
+      verificationStatus: 'unverified',
+      verificationNote:   '',
+    });
+
+    const updated = await Maid.findById(maid._id);
+    res.json({ success: true, maid: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Apply referral (for resume-flow / retry — idempotent) ──
 exports.applyReferral = async (req, res) => {
   try {
