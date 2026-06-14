@@ -180,6 +180,52 @@ router.get('/fix/test-email', async (req, res) => {
   }
 });
 
+// Send referral campaign email to all approved maids
+// Usage: GET /api/admin/fix/send-referral-campaign?secret=servix2026
+// Returns: { ok, sent, failed, results: [{ name, email, code, link, sent }] }
+router.get('/fix/send-referral-campaign', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const { randomBytes } = require('crypto');
+  const User = require('../models/User');
+  const Maid = require('../models/Maid');
+  const { sendReferralCampaignEmail } = require('../utils/email');
+
+  const maids = await Maid.find({ approvalStatus: 'approved' }).populate('user', 'email');
+  const results = [];
+
+  for (const maid of maids) {
+    const email = maid.user?.email;
+    if (!email) {
+      results.push({ name: maid.fullName, email: null, code: null, link: null, sent: false, reason: 'no user email' });
+      continue;
+    }
+
+    // Backfill referralCode if missing
+    let code = maid.referralCode;
+    if (!code) {
+      for (let i = 0; i < 20; i++) {
+        const candidate = randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+        const taken = await Maid.findOne({ referralCode: candidate });
+        if (!taken) { code = candidate; break; }
+      }
+      if (code) await Maid.updateOne({ _id: maid._id }, { referralCode: code });
+    }
+
+    const link = code ? `https://servix.world/register?mref=${code}` : null;
+
+    try {
+      await sendReferralCampaignEmail(email, maid.fullName, code);
+      results.push({ name: maid.fullName, email, code, link, sent: true });
+    } catch (err) {
+      results.push({ name: maid.fullName, email, code, link, sent: false, reason: err.message });
+    }
+  }
+
+  const sent = results.filter(r => r.sent).length;
+  const failed = results.filter(r => !r.sent).length;
+  res.json({ ok: true, sent, failed, results });
+});
+
 // Admin-only routes
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
