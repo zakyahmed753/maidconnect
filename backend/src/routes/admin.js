@@ -59,20 +59,6 @@ router.get('/fix/test-push', async (req, res) => {
   }
 });
 
-// One-shot: delete test maids by name
-router.get('/fix/delete-test-maids', async (req, res) => {
-  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
-  const User = require('../models/User');
-  const Maid = require('../models/Maid');
-  const names = ['teyb', 'fag', 'aaaa'];
-  const regex = new RegExp(`^(${names.join('|')})$`, 'i');
-  const maids = await Maid.find({ fullName: regex });
-  const userIds = maids.map(m => m.user);
-  const deleted = { maids: maids.map(m => m.fullName), count: maids.length };
-  await Maid.deleteMany({ _id: { $in: maids.map(m => m._id) } });
-  await User.deleteMany({ _id: { $in: userIds } });
-  res.json({ ok: true, deleted });
-});
 
 // Test email delivery — returns Resend response or error
 router.get('/fix/test-email', async (req, res) => {
