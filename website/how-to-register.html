@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>How to Register on Servix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0f0c09;min-height:100vh;font-family:'Jost',sans-serif;color:#f0ece4}
+  .header{padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e1a14}
+  .logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#e8c97a;text-decoration:none}
+  .back-link{font-size:13px;color:#666;text-decoration:none;transition:color .2s}
+  .back-link:hover{color:#e8c97a}
+  .page{max-width:640px;margin:0 auto;padding:32px 24px 60px}
+  .page-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:#e8c97a;margin-bottom:6px}
+  .page-sub{font-size:14px;color:#7a6a50;margin-bottom:32px}
+  .video-wrap{background:#1a1510;border:1px solid #2a2318;border-radius:14px;overflow:hidden;margin-bottom:36px;position:relative}
+  .video-wrap video{width:100%;display:block;max-height:400px;background:#000}
+  .no-video{padding:60px 24px;text-align:center;color:#5a4a38}
+  .no-video .icon{font-size:40px;margin-bottom:12px}
+  .no-video p{font-size:14px;line-height:1.7}
+  .steps-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7a6a50;margin-bottom:20px}
+  .step{display:flex;gap:16px;margin-bottom:24px}
+  .step-num{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#e8c97a,#c9a84c);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#1a1108;flex-shrink:0;margin-top:2px}
+  .step-body h3{font-size:15px;font-weight:700;color:#f0ece4;margin-bottom:4px}
+  .step-body p{font-size:13px;color:#7a6a50;line-height:1.7}
+  .cta{display:block;text-align:center;background:linear-gradient(135deg,#e8c97a,#c9a84c);color:#1a1108;font-weight:700;font-size:15px;padding:16px 24px;border-radius:10px;text-decoration:none;margin-top:36px;transition:opacity .2s}
+  .cta:hover{opacity:.9}
+  .lang-toggle{background:none;border:1.5px solid #2a2318;border-radius:6px;padding:6px 14px;color:#888;font-size:13px;cursor:pointer;transition:all .2s;font-family:'Cairo','Jost',sans-serif}
+  .lang-toggle:hover{border-color:#c9a84c;color:#e8c97a}
+  .ar{display:none}
+  body.rtl{direction:rtl;font-family:'Cairo',sans-serif}
+  body.rtl .ar{display:block}
+  body.rtl .en{display:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="/" class="logo">Servix</a>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="lang-toggle" onclick="toggleLang()">العربية</button>
+    <a href="/register" class="back-link en">← Back to Register</a>
+    <a href="/register" class="back-link ar" style="display:none">التسجيل →</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="en">
+    <h1 class="page-title">How to Register</h1>
+    <p class="page-sub">Watch the video below, then follow the steps to create your Servix profile.</p>
+  </div>
+  <div class="ar" style="direction:rtl">
+    <h1 class="page-title">كيفية التسجيل</h1>
+    <p class="page-sub">شاهد الفيديو أدناه، ثم اتبع الخطوات لإنشاء ملفك الشخصي على Servix.</p>
+  </div>
+
+  <!-- Video player -->
+  <div class="video-wrap">
+    <video id="tutVideo" controls playsinline preload="metadata" poster="">
+      <source src="/video/tutorial.mp4" type="video/mp4"/>
+    </video>
+    <div class="no-video" id="noVideoMsg" style="display:none">
+      <div class="icon">🎬</div>
+      <p class="en">Tutorial video coming soon.<br>Follow the steps below to register.</p>
+      <p class="ar" style="display:none">فيديو تعليمي قريباً.<br>اتبع الخطوات أدناه للتسجيل.</p>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <p class="steps-title en">Step-by-step guide</p>
+  <p class="steps-title ar" style="display:none;direction:rtl">دليل خطوة بخطوة</p>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h3 class="en">Enter your phone number</h3>
+      <h3 class="ar" style="display:none">أدخل رقم هاتفك</h3>
+      <p class="en">Type your Egyptian mobile number (starting with 01). You'll receive a 6-digit code by SMS.</p>
+      <p class="ar" style="display:none">أدخل رقم هاتفك المصري (يبدأ بـ 01). ستستقبل رمزاً مكوناً من 6 أرقام عبر الرسائل.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h3 class="en">Enter the OTP code</h3>
+      <h3 class="ar" style="display:none">أدخل رمز التحقق</h3>
+      <p class="en">Check your SMS messages for a 6-digit code and type it in the box to verify your number.</p>
+      <p class="ar" style="display:none">تحقق من رسائلك وأدخل الرمز المكون من 6 أرقام في الخانة للتحقق من رقمك.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h3 class="en">Fill in your personal details</h3>
+      <h3 class="ar" style="display:none">أدخل بياناتك الشخصية</h3>
+      <p class="en">Enter your full name, nationality, age, and the areas where you can work in Egypt.</p>
+      <p class="ar" style="display:none">أدخل اسمك الكامل، جنسيتك، عمرك، والمناطق التي يمكنك العمل بها في مصر.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <h3 class="en">Upload your photos and ID</h3>
+      <h3 class="ar" style="display:none">ارفع صورك وهويتك</h3>
+      <p class="en">Upload a clear profile photo, a photo of yourself at work, and a photo of your ID (passport or residence card).</p>
+      <p class="ar" style="display:none">ارفع صورة شخصية واضحة، وصورة أثناء العمل، وصورة هويتك (جواز سفر أو بطاقة إقامة).</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <h3 class="en">Wait for approval</h3>
+      <h3 class="ar" style="display:none">انتظري الموافقة</h3>
+      <p class="en">Once submitted, the Servix team reviews your profile. You'll receive an email when you're approved — usually within 24–48 hours.</p>
+      <p class="ar" style="display:none">بعد الإرسال، يراجع فريق Servix ملفك الشخصي. ستتلقى بريداً إلكترونياً عند الموافقة — عادةً خلال 24–48 ساعة.</p>
+    </div>
+  </div>
+
+  <a href="/register" class="cta">
+    <span class="en">Start Registration →</span>
+    <span class="ar" style="display:none">ابدأ التسجيل ←</span>
+  </a>
+
+</div>
+
+<script>
+  // Check if video file exists — hide player and show message if not
+  const vid = document.getElementById('tutVideo');
+  vid.addEventListener('error', function() {
+    vid.style.display = 'none';
+    document.getElementById('noVideoMsg').style.display = 'block';
+  });
+
+  let isAr = false;
+  function toggleLang() {
+    isAr = !isAr;
+    document.body.classList.toggle('rtl', isAr);
+    document.querySelector('.lang-toggle').textContent = isAr ? 'English' : 'العربية';
+    document.querySelectorAll('.en').forEach(el => el.style.display = isAr ? 'none' : '');
+    document.querySelectorAll('.ar').forEach(el => el.style.display = isAr ? 'block' : 'none');
+  }
+</script>
+
+</body>
+</html>
