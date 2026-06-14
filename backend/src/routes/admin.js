@@ -60,6 +60,14 @@ router.get('/fix/test-push', async (req, res) => {
 });
 
 
+// One-shot: wipe all payment records (test data cleanup)
+router.get('/fix/clear-payments', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const { Payment } = require('../models/index');
+  const result = await Payment.deleteMany({});
+  res.json({ ok: true, deleted: result.deletedCount });
+});
+
 // Test email delivery — returns Resend response or error
 router.get('/fix/test-email', async (req, res) => {
   if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
