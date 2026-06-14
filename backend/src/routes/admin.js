@@ -21,6 +21,21 @@ router.get('/fix/reactivate-chats', async (req, res) => {
   res.json({ ok: true, reactivated: result.modifiedCount });
 });
 
+// Remove test maids by name — usage: /fix/remove-test-maids?secret=servix2026&names=test,menna
+router.get('/fix/remove-test-maids', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const User = require('../models/User');
+  const Maid = require('../models/Maid');
+  const names = (req.query.names || '').split(',').map(n => n.trim().toLowerCase()).filter(Boolean);
+  if (!names.length) return res.status(400).json({ ok: false, msg: 'Provide ?names=name1,name2' });
+  const regex = new RegExp(names.map(n => `^${n}$`).join('|'), 'i');
+  const maids = await Maid.find({ fullName: regex });
+  const userIds = maids.map(m => m.user);
+  await Maid.deleteMany({ _id: { $in: maids.map(m => m._id) } });
+  await User.deleteMany({ _id: { $in: userIds } });
+  res.json({ ok: true, removed: maids.map(m => ({ name: m.fullName, userId: m.user })) });
+});
+
 // Backfill missing referralCodes for all maids
 router.get('/fix/backfill-ref-codes', async (req, res) => {
   if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
