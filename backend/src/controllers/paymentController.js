@@ -59,7 +59,7 @@ exports.initiatePaymob = async (req, res) => {
     const { type, plan, maidProfileId, chatId, couponCode } = req.body;
     const merchantOrderId = uuidv4();
 
-    let amountCents, description, appliedCouponCode, couponDiscount = 0;
+    let amountCents, description, appliedCouponCode, couponDiscount = 0, referralCreditApplied = 0;
 
     if (type === 'subscription') {
       // Maid paying for their own subscription
@@ -68,7 +68,7 @@ exports.initiatePaymob = async (req, res) => {
       amountCents = getMaidPriceCents(maidProfile.nationality);
       description = `Servix monthly subscription`;
 
-      // Apply coupon/referral discount
+      // Apply coupon discount
       if (couponCode) {
         const { applyDiscount } = require('./couponController');
         const discountResult = await applyDiscount(req.user._id, couponCode.trim().toUpperCase(), amountCents / 100);
@@ -77,6 +77,38 @@ exports.initiatePaymob = async (req, res) => {
           amountCents = Math.max(100, amountCents - couponDiscount * 100);
           appliedCouponCode = couponCode.trim().toUpperCase();
         }
+      }
+
+      // Apply referral credit (EGP, no carry-over — always resets to 0 after payment)
+      const referralCredit = maidProfile.referralCredit || 0;
+      referralCreditApplied = Math.min(referralCredit, Math.floor(amountCents / 100));
+      amountCents = Math.max(0, amountCents - referralCreditApplied * 100);
+
+      // If credit fully covers the subscription — activate without going to Paymob
+      if (amountCents === 0) {
+        const now = new Date();
+        const endDate = new Date(now);
+        endDate.setMonth(endDate.getMonth() + 1);
+        await Maid.findOneAndUpdate({ user: req.user._id }, {
+          'subscription.plan': plan || 'monthly',
+          'subscription.status': 'active',
+          'subscription.startDate': now,
+          'subscription.endDate': endDate,
+          referralCredit: 0,
+          'monthlyHires.count': 0,
+          'monthlyHires.month': now.toISOString().slice(0, 7),
+        });
+        await Payment.create({
+          user: req.user._id, type: 'subscription', method: 'referral_credit',
+          amount: 0, status: 'completed', subscriptionPlan: plan || 'monthly',
+          referralCreditApplied, paidAt: now,
+        });
+        await Notification.create({
+          user: req.user._id, type: 'subscription',
+          title: '🎉 Subscription Activated!',
+          body: 'Your monthly subscription is now active — fully covered by your referral credit!',
+        });
+        return res.json({ success: true, freeViaCredit: true, creditApplied: referralCreditApplied, amount: 0 });
       }
 
     } else if (type === 'customer_subscription') {
@@ -155,6 +187,7 @@ exports.initiatePaymob = async (req, res) => {
       commissionRate: type === 'commission' ? COMMISSION_RATE * 100 : null,
       couponCode: appliedCouponCode || undefined,
       couponDiscount: couponDiscount || 0,
+      referralCreditApplied: referralCreditApplied || 0,
     });
 
     const billingData = {
@@ -184,6 +217,7 @@ exports.initiatePaymob = async (req, res) => {
       amount: amountCents / 100,
       currency: 'EGP',
       description,
+      referralCreditApplied,
     });
   } catch (err) {
     console.error('Paymob initiate error:', err.response?.data || err.message);
@@ -264,6 +298,8 @@ async function handlePaymentSuccess(payment) {
       const { applyUsage } = require('./couponController');
       await applyUsage(payment.user, payment.couponCode, payment.amount);
     }
+    // Reset referral credit — no carry-over policy
+    await Maid.findOneAndUpdate({ user: payment.user }, { referralCredit: 0 });
     await Notification.create({
       user: payment.user, type: 'subscription',
       title: '🎉 Subscription Activated!',

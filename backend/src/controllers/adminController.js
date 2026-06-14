@@ -285,9 +285,12 @@ exports.offlinePayment = async (req, res) => {
     if (plan === 'annual') endDate.setFullYear(endDate.getFullYear() + 1);
     else endDate.setMonth(endDate.getMonth() + 1);
 
-    // Use provided amount or compute by origin
+    // Use provided amount or compute by origin, then deduct referral credit (no carry-over)
     const originPrices = { philippine: 1000, filipino: 1000, indonesian: 800, ethiopian: 800 };
-    const computedAmount = amount || originPrices[(maid.origin || '').toLowerCase()] || 500;
+    const baseAmount = amount || originPrices[(maid.origin || '').toLowerCase()] || 500;
+    const referralCredit = maid.referralCredit || 0;
+    const creditApplied  = Math.min(referralCredit, baseAmount);
+    const computedAmount = Math.max(0, baseAmount - creditApplied);
 
     // Confirm existing maid-submitted receipt if present; otherwise create new record
     let payment = await Payment.findOne({
@@ -325,13 +328,15 @@ exports.offlinePayment = async (req, res) => {
       'subscription.paymentId': payment._id,
       'monthlyHires.count': 0,
       'monthlyHires.month': now.toISOString().slice(0, 7),
+      referralCredit: 0, // reset — no carry-over
     });
 
+    const creditMsg = creditApplied > 0 ? ` (EGP ${creditApplied} referral credit applied)` : '';
     await Notification.create({
       user: maid.user._id,
       type: 'subscription',
       title: '💵 Subscription Activated!',
-      body: `Your ${plan} subscription has been activated via offline cash payment.`,
+      body: `Your ${plan} subscription has been activated via offline cash payment${creditMsg}.`,
     });
 
     res.json({ success: true, payment });

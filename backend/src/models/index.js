@@ -93,7 +93,7 @@ const couponSchema = new mongoose.Schema({
 const paymentSchema = new mongoose.Schema({
   user:        { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   type:        { type: String, enum: ['subscription','commission','customer_subscription','release_fee','replacement_fee'], required: true },
-  method:      { type: String, enum: ['fawry','vodafone_cash','instapay','amazon_pay','paymob','cash_transfer'], required: true },
+  method:      { type: String, enum: ['fawry','vodafone_cash','instapay','amazon_pay','paymob','cash_transfer','referral_credit'], required: true },
   offlineByAdmin: { type: Boolean, default: false },
   adminNote:   { type: String },
   receiptUrl:  { type: String },
@@ -121,8 +121,9 @@ const paymentSchema = new mongoose.Schema({
   maidSalary:     { type: Number },
 
   // Coupon / discount
-  couponCode:     { type: String },
-  couponDiscount: { type: Number, default: 0 },
+  couponCode:           { type: String },
+  couponDiscount:       { type: Number, default: 0 },
+  referralCreditApplied:{ type: Number, default: 0 },
 
   paidAt:    { type: Date },
   createdAt: { type: Date, default: Date.now }

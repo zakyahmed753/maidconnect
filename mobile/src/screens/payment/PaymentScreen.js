@@ -29,7 +29,8 @@ export default function PaymentScreen({ route, navigation }) {
   const user             = useAuthStore(s => s.user);
 
   const [backendAmount, setBackendAmount] = useState(null);
-  const displayAmount = backendAmount || discountedAmount || amount || (plan ? PLANS[plan]?.price : 0);
+  const [referralCreditApplied, setReferralCreditApplied] = useState(0);
+  const displayAmount = backendAmount ?? discountedAmount ?? amount ?? (plan ? PLANS[plan]?.price : 0);
   const planInfo      = plan ? PLANS[plan] : null;
 
   // Poll backend until payment is confirmed or all attempts exhausted
@@ -115,8 +116,16 @@ export default function PaymentScreen({ route, navigation }) {
     setLoading(true);
     try {
       const res = await paymentsAPI.initiatePaymob({ type, plan, maidProfileId, chatId, couponCode });
-      const { iframeUrl, paymentId, amount: returnedAmount } = res.data;
-      if (returnedAmount) setBackendAmount(returnedAmount);
+      const { iframeUrl, paymentId, amount: returnedAmount, freeViaCredit, creditApplied, referralCreditApplied: rca } = res.data;
+
+      // Subscription fully covered by referral credit — already activated
+      if (freeViaCredit) {
+        await completeAuth();
+        return;
+      }
+
+      if (returnedAmount !== undefined) setBackendAmount(returnedAmount);
+      if (rca) setReferralCreditApplied(rca);
       pendingPaymentId.current = paymentId;
       await Linking.openURL(iframeUrl);
     } catch (err) {
@@ -165,6 +174,12 @@ export default function PaymentScreen({ route, navigation }) {
               <View style={[styles.badge, { backgroundColor: 'rgba(46,125,94,0.1)' }]}>
                 <Text style={[styles.badgeTxt, { color: '#2e7d5e' }]}>Discount applied</Text>
               </View>
+            </View>
+          )}
+          {referralCreditApplied > 0 && (
+            <View style={styles.row}>
+              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🎁 Referral credit</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>−EGP {referralCreditApplied}</Text>
             </View>
           )}
           <View style={[styles.row, styles.totalRow]}>

@@ -381,6 +381,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                 <Section title="Referral">
                   <Field label="Referral Code" value={maid.referralCode || '—'} />
                   <Field label="Friends Referred" value={maid.referralCount ?? 0} />
+                  <Field label="Referral Credit (EGP)" value={maid.referralCredit ?? 0} />
                   <Field label="Referred By (code)" value={maid.referredBy || '—'} />
                   {maid.referralCode && (
                     <div style={{ marginTop: 8 }}>

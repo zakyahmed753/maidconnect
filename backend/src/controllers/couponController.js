@@ -30,6 +30,7 @@ exports.getMyCode = async (req, res) => {
       success: true,
       referralCode: maid.referralCode,
       referralCount: maid.referralCount || 0,
+      referralCredit: maid.referralCredit || 0,
       discountOffered: REFERRAL_DISCOUNT_PCT,
     });
   } catch (err) {

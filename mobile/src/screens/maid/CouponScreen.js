@@ -52,9 +52,10 @@ export default function CouponScreen({ navigation }) {
     );
   }
 
-  const code     = data?.referralCode   || '—';
-  const count    = data?.referralCount  || 0;
-  const discount = data?.discountOffered || 15;
+  const code           = data?.referralCode   || '—';
+  const count          = data?.referralCount  || 0;
+  const credit         = data?.referralCredit || 0;
+  const discount       = data?.discountOffered || 15;
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
@@ -95,10 +96,20 @@ export default function CouponScreen({ navigation }) {
             <Text style={styles.statLbl}>Maids Referred</Text>
           </View>
           <View style={[styles.statBox, { borderLeftWidth: 1, borderLeftColor: COLORS.border }]}>
-            <Text style={styles.statNum}>{discount}%</Text>
-            <Text style={styles.statLbl}>Discount You Give</Text>
+            <Text style={[styles.statNum, { color: credit > 0 ? '#2e7d5e' : COLORS.muted }]}>
+              EGP {credit}
+            </Text>
+            <Text style={styles.statLbl}>Referral Credit</Text>
           </View>
         </View>
+
+        {credit > 0 && (
+          <View style={[styles.infoBox, { backgroundColor: '#f0fff8', borderColor: '#a8dfc8', marginBottom: 14 }]}>
+            <Text style={{ fontSize: 12, color: '#1a5c40', lineHeight: 19 }}>
+              🎁 <Text style={{ fontWeight: '700' }}>EGP {credit} credit</Text> will be automatically deducted from your next subscription payment. Unused credit does not carry over to the following month.
+            </Text>
+          </View>
+        )}
 
         {/* How it works */}
         <View style={styles.howCard}>

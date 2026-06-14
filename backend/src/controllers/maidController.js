@@ -45,7 +45,7 @@ exports.createProfile = async (req, res) => {
     const data = { ...rest, user: req.user._id, referralCode };
     if (referredBy) {
       data.referredBy = referredBy;
-      await Maid.updateOne({ referralCode: referredBy }, { $inc: { referralCount: 1 } });
+      await Maid.updateOne({ referralCode: referredBy }, { $inc: { referralCount: 1, referralCredit: 100 } });
     }
 
     const maid = await Maid.create(data);
@@ -76,7 +76,7 @@ exports.applyReferral = async (req, res) => {
     if (!referrer) return res.status(404).json({ success: false, message: 'Referral code not found' });
 
     await Maid.updateOne({ _id: maid._id }, { referredBy: referralCode });
-    await Maid.updateOne({ referralCode }, { $inc: { referralCount: 1 } });
+    await Maid.updateOne({ referralCode }, { $inc: { referralCount: 1, referralCredit: 100 } });
 
     res.json({ success: true });
   } catch (err) {
