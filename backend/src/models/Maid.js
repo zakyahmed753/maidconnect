@@ -87,6 +87,7 @@ const maidSchema = new mongoose.Schema({
   // ── Referral ──
   referralCode:        { type: String, unique: true, sparse: true },
   referralCount:       { type: Number, default: 0 },
+  referredBy:          { type: String, default: null }, // refCode of who referred this maid
   heardAboutUs:        { type: String, enum: ['facebook', 'instagram', 'agent', 'other'] },
   agentName:           { type: String, enum: ['victoria', 'latifa', 'rodiyat', 'other'] },
   agentNameOther:      { type: String },

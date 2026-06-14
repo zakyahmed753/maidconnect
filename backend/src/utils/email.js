@@ -184,6 +184,44 @@ exports.hireApprovedEmailToCustomer = (customerName, maidName) => `
 </div>
 `;
 
+exports.sendReferralEmail = async (to, maidName, refCode) => {
+  const link = `https://servix.world/register?mref=${refCode}`;
+  await exports.sendEmail({
+    to,
+    subject: '🔗 Your Servix Referral Link',
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
+        <div style="background:linear-gradient(135deg,#3d2203,#1a1108);padding:32px 28px;text-align:center">
+          <div style="font-size:48px;margin-bottom:12px">🔗</div>
+          <h1 style="color:#e8c97a;font-size:24px;margin:0">Your Referral Link</h1>
+          <p style="color:rgba(232,201,122,0.6);font-size:13px;margin:8px 0 0">Share this with maid friends and earn rewards</p>
+        </div>
+        <div style="padding:28px;background:#111">
+          <p style="color:#e0d0b0;font-size:15px;line-height:1.6">Hi <strong style="color:#e8c97a">${maidName}</strong>,</p>
+          <p style="color:#b0a080;font-size:14px;line-height:1.8">
+            Welcome to Servix! Share your personal referral link with maid friends. Every friend who registers and subscribes through your link earns you <strong style="color:#e8c97a">EGP 100 off</strong> your subscription.
+          </p>
+          <div style="background:#1a1108;border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:18px;margin:20px 0;text-align:center">
+            <p style="color:#666;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px">Your Referral Link</p>
+            <p style="color:#e8c97a;font-size:14px;font-weight:700;margin:0;word-break:break-all">${link}</p>
+          </div>
+          <div style="text-align:center;margin:24px 0">
+            <a href="https://wa.me/?text=${encodeURIComponent('Join me on Servix — find domestic work in Egypt! Register here: ' + link)}" style="display:inline-block;background:linear-gradient(135deg,#c9a84c,#e8c97a);color:#1a1108;font-weight:700;font-size:14px;padding:13px 32px;border-radius:6px;text-decoration:none;letter-spacing:0.5px;margin-right:10px">
+              Share on WhatsApp
+            </a>
+          </div>
+          <p style="color:#706050;font-size:12px;margin-top:10px">
+            You can also retrieve this link anytime at <a href="https://servix.world/my-link" style="color:#c9a84c">servix.world/my-link</a>
+          </p>
+        </div>
+        <div style="padding:16px 28px;background:#0a0a0a;text-align:center">
+          <p style="color:#504030;font-size:11px;margin:0">Servix — Domestic Staffing Platform · servix.world</p>
+        </div>
+      </div>
+    `,
+  });
+};
+
 exports.hireRejectedEmailToCustomer = (customerName, maidName) => `
 <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0a0a0a;border-radius:12px;overflow:hidden">
   <div style="background:linear-gradient(135deg,#2e0d0d,#1a0808);padding:32px 28px;text-align:center">

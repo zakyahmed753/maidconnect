@@ -502,6 +502,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <strong id="successEmail"></strong>
         </div>
 
+        <!-- Referral box — shown after profile is created -->
+        <div id="refLinkBox" style="display:none;background:rgba(201,168,76,0.07);border:1.5px solid rgba(201,168,76,0.35);border-radius:10px;padding:18px;margin:20px 0;text-align:left">
+          <p style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin:0 0 6px">🔗 Your Referral Link</p>
+          <p style="font-size:12px;color:#a08060;margin:0 0 12px;line-height:1.6">Share with maid friends — earn <strong style="color:#e8c97a">EGP 100 off</strong> your subscription for every friend who joins.</p>
+          <div style="background:#1a1108;border-radius:6px;padding:10px 14px;margin-bottom:12px;word-break:break-all;font-size:13px;color:#e8c97a;font-weight:700" id="refLinkText"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button onclick="copyRefLink()" id="copyRefBtn" style="flex:1;padding:10px;background:#1a1108;border:1px solid rgba(201,168,76,0.5);border-radius:6px;color:#e8c97a;font-size:13px;font-weight:700;cursor:pointer;font-family:'Cairo','Jost',sans-serif">📋 Copy Link</button>
+            <a id="waShareBtn" href="#" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;padding:10px;background:linear-gradient(135deg,#128c3e,#25d366);border-radius:6px;color:#fff;font-size:13px;font-weight:700;text-decoration:none">💬 WhatsApp</a>
+          </div>
+        </div>
+
         <div class="success-steps">
           <h4 data-i18n="s5.next.title">What happens next?</h4>
           <div class="success-step">
@@ -577,6 +588,8 @@ let otpEmail = '';
 let otpTimer = null;
 let otpSeconds = 0;
 let currentLang = 'en';
+let maidRefCode  = null;
+const urlMref = new URLSearchParams(window.location.search).get('mref') || null;
 
 // ── Translations ──
 const T = {
@@ -1171,13 +1184,14 @@ async function verifyEmailOTP() {
     const profRes  = await fetch(`${API}/maids`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-      body: JSON.stringify({ fullName: name, nationality, origin: selectedOrigin, age, experienceYears: experience, expectedSalary: salary, languages: langs, skills, bio: bio || undefined, heardAboutUs, agentName: heardAboutUs === 'agent' ? agentName : undefined, agentNameOther: (heardAboutUs === 'agent' && agentName === 'other') ? agentOtherText : undefined, heardAboutUsOther: heardAboutUs === 'other' ? heardOtherText : undefined })
+      body: JSON.stringify({ fullName: name, nationality, origin: selectedOrigin, age, experienceYears: experience, expectedSalary: salary, languages: langs, skills, bio: bio || undefined, heardAboutUs, agentName: heardAboutUs === 'agent' ? agentName : undefined, agentNameOther: (heardAboutUs === 'agent' && agentName === 'other') ? agentOtherText : undefined, heardAboutUsOther: heardAboutUs === 'other' ? heardOtherText : undefined, referredBy: urlMref || undefined })
     });
     const profData = await profRes.json();
     if (!profData.success && !(profData.message || '').includes('Profile already exists')) {
       btn.disabled = false; btn.textContent = t('btn.verify');
       return showErr(profData.message || t('err.network'));
     }
+    maidRefCode = profData.maid?.referralCode || null;
 
     // 4. Upload photos and ID
     btn.innerHTML = `<span class="spinner"></span>${t('spinner.uploading')}`;
@@ -1223,6 +1237,12 @@ async function verifyEmailOTP() {
 
     document.getElementById('successEmail').textContent = document.getElementById('email').value.trim();
     btn.disabled = false; btn.textContent = t('btn.verify');
+    if (maidRefCode) {
+      const refLink = `https://servix.world/register?mref=${maidRefCode}`;
+      document.getElementById('refLinkText').textContent = refLink;
+      document.getElementById('waShareBtn').href = `https://wa.me/?text=${encodeURIComponent('Join Servix and hire a trusted maid! Use my referral link: ' + refLink)}`;
+      document.getElementById('refLinkBox').style.display = 'block';
+    }
     showStep(5);
   } catch(e) {
     btn.disabled = false; btn.textContent = t('btn.verify');
@@ -1409,6 +1429,16 @@ async function goToOTP() {
 }
 
 // ── Forgot Password Modal ──
+function copyRefLink() {
+  const link = document.getElementById('refLinkText').textContent;
+  if (!link) return;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.getElementById('copyRefBtn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy Link'; }, 2000);
+  });
+}
+
 function openForgotPw() {
   document.getElementById('forgotModal').classList.add('open');
   document.getElementById('forgotEmail').value = document.getElementById('email').value.trim();

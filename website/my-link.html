@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Referral Link — Servix</title>
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Jost:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Jost', 'Cairo', sans-serif;
+      background: #0d0900;
+      color: #e8dcc8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .card {
+      background: #1a1108;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .logo img { height: 48px; }
+    .logo-text {
+      font-size: 26px;
+      font-weight: 700;
+      color: #e8c97a;
+      letter-spacing: 1px;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #e8c97a;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #a08060;
+      text-align: center;
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: #a08060;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+    input[type="tel"] {
+      width: 100%;
+      padding: 12px 14px;
+      background: #0d0900;
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 8px;
+      color: #e8dcc8;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input[type="tel"]:focus { border-color: #e8c97a; }
+    .hint { font-size: 11px; color: #7a6a50; margin-top: 5px; }
+    .btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 13px;
+      background: linear-gradient(135deg, #e8c97a, #c9a84c);
+      border: none;
+      border-radius: 8px;
+      color: #0d0900;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .err {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(200,60,60,0.1);
+      border: 1px solid rgba(200,60,60,0.35);
+      border-radius: 8px;
+      color: #e88a8a;
+      font-size: 13px;
+    }
+    .err.show { display: block; }
+    .result {
+      display: none;
+      margin-top: 24px;
+    }
+    .result.show { display: block; }
+    .greeting {
+      font-size: 15px;
+      color: #e8dcc8;
+      margin-bottom: 14px;
+      text-align: center;
+    }
+    .link-box {
+      background: #0d0900;
+      border: 1.5px solid rgba(201,168,76,0.4);
+      border-radius: 8px;
+      padding: 12px 14px;
+      word-break: break-all;
+      font-size: 14px;
+      color: #e8c97a;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .stat {
+      font-size: 12px;
+      color: #a08060;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .stat span { color: #e8c97a; font-weight: 700; }
+    .actions { display: flex; gap: 10px; }
+    .btn-copy {
+      flex: 1;
+      padding: 11px;
+      background: #0d0900;
+      border: 1px solid rgba(201,168,76,0.5);
+      border-radius: 8px;
+      color: #e8c97a;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-wa {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px;
+      background: linear-gradient(135deg,#128c3e,#25d366);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-text">Servix</div>
+    </div>
+    <h1>🔗 My Referral Link</h1>
+    <p class="subtitle">Enter your registered phone number to retrieve your referral link and earn <strong style="color:#e8c97a">EGP 100 off</strong> for each friend who joins.</p>
+
+    <label for="phone">Phone Number</label>
+    <input type="tel" id="phone" placeholder="e.g. 01012345678" inputmode="numeric" maxlength="11" />
+    <p class="hint">Egyptian mobile number starting with 010, 011, 012, or 015</p>
+
+    <button class="btn" id="lookupBtn" onclick="lookupLink()">Get My Link</button>
+
+    <div class="err" id="errBox"></div>
+
+    <div class="result" id="resultBox">
+      <p class="greeting" id="greeting"></p>
+      <div class="link-box" id="linkText"></div>
+      <p class="stat" id="statLine"></p>
+      <div class="actions">
+        <button class="btn-copy" id="copyBtn" onclick="copyLink()">📋 Copy Link</button>
+        <a class="btn-wa" id="waBtn" href="#" target="_blank">💬 WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://api.servix.world/api';
+
+    async function lookupLink() {
+      const phone = document.getElementById('phone').value.trim();
+      const errBox = document.getElementById('errBox');
+      const btn = document.getElementById('lookupBtn');
+
+      errBox.classList.remove('show');
+      document.getElementById('resultBox').classList.remove('show');
+
+      if (!/^01[0125]\d{8}$/.test(phone)) {
+        errBox.textContent = 'Please enter a valid Egyptian mobile number (e.g. 01012345678).';
+        errBox.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Looking up…';
+
+      try {
+        const res = await fetch(`${API}/maids/ref-link?phone=${encodeURIComponent(phone)}`);
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          errBox.textContent = data.message || 'No account found with that phone number. Make sure you use the number you registered with.';
+          errBox.classList.add('show');
+          return;
+        }
+
+        const refLink = `https://servix.world/register?mref=${data.refCode}`;
+        document.getElementById('greeting').textContent = `Welcome back, ${data.name || 'Maid'}! 👋`;
+        document.getElementById('linkText').textContent = refLink;
+        document.getElementById('statLine').innerHTML = `You have referred <span>${data.referralCount || 0}</span> friend${data.referralCount === 1 ? '' : 's'} so far.`;
+        document.getElementById('waBtn').href = `https://wa.me/?text=${encodeURIComponent('Join Servix and hire a trusted maid! Use my referral link: ' + refLink)}`;
+        document.getElementById('resultBox').classList.add('show');
+      } catch (e) {
+        errBox.textContent = 'Network error — please try again.';
+        errBox.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Get My Link';
+      }
+    }
+
+    function copyLink() {
+      const link = document.getElementById('linkText').textContent;
+      navigator.clipboard.writeText(link).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => { btn.textContent = '📋 Copy Link'; }, 2000);
+      });
+    }
+
+    document.getElementById('phone').addEventListener('keydown', e => {
+      if (e.key === 'Enter') lookupLink();
+    });
+  </script>
+</body>
+</html>

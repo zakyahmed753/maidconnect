@@ -11,15 +11,51 @@ function getMaidPriceEGP(nationality = '') {
   return 500;
 }
 
+// ── Get ref link by phone (public) ──
+exports.getRefLink = async (req, res) => {
+  try {
+    const { phone } = req.query;
+    if (!phone) return res.status(400).json({ success: false, message: 'Phone required' });
+    const user = await User.findOne({ phone: phone.trim() });
+    if (!user) return res.status(404).json({ success: false, message: 'Not found' });
+    const maid = await Maid.findOne({ user: user._id }).select('referralCode referralCount fullName');
+    if (!maid) return res.status(404).json({ success: false, message: 'Not found' });
+    res.json({ success: true, refCode: maid.referralCode, referralCount: maid.referralCount, name: maid.fullName });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Create / Update Maid Profile ──
 exports.createProfile = async (req, res) => {
   try {
     const exists = await Maid.findOne({ user: req.user._id });
     if (exists) return res.status(400).json({ success: false, message: 'Profile already exists. Use update.' });
 
-    const data = { ...req.body, user: req.user._id };
-    // photos come from upload route, stored in req.body.photos
+    // Generate unique referral code
+    const { randomBytes } = require('crypto');
+    let referralCode;
+    for (let i = 0; i < 10; i++) {
+      const candidate = randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+      const taken = await Maid.findOne({ referralCode: candidate });
+      if (!taken) { referralCode = candidate; break; }
+    }
+
+    const { referredBy, ...rest } = req.body;
+    const data = { ...rest, user: req.user._id, referralCode };
+    if (referredBy) {
+      data.referredBy = referredBy;
+      await Maid.updateOne({ referralCode: referredBy }, { $inc: { referralCount: 1 } });
+    }
+
     const maid = await Maid.create(data);
+
+    // Send referral link email (non-blocking)
+    try {
+      const { sendReferralEmail } = require('../utils/email');
+      await sendReferralEmail(req.user.email, maid.fullName, maid.referralCode);
+    } catch (_) {}
+
     res.status(201).json({ success: true, maid });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

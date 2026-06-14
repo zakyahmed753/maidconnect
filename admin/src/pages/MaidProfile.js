@@ -378,6 +378,20 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                   <Field label="End Date"   value={maid.subscription?.endDate   ? new Date(maid.subscription.endDate).toLocaleDateString()   : null} />
                 </Section>
 
+                <Section title="Referral">
+                  <Field label="Referral Code" value={maid.referralCode || '—'} />
+                  <Field label="Friends Referred" value={maid.referralCount ?? 0} />
+                  <Field label="Referred By (code)" value={maid.referredBy || '—'} />
+                  {maid.referralCode && (
+                    <div style={{ marginTop: 8 }}>
+                      <Label>Referral Link</Label>
+                      <div style={{ fontSize: 11, color: G.goldL, wordBreak: 'break-all', background: G.card, border: `1px solid ${G.border2}`, borderRadius: 5, padding: '7px 10px' }}>
+                        {`https://servix.world/register?mref=${maid.referralCode}`}
+                      </div>
+                    </div>
+                  )}
+                </Section>
+
                 <Section title="Stats">
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
                     {[['👁', maid.stats?.views || 0, 'Views'], ['❤️', maid.stats?.likes || 0, 'Likes'], ['💬', maid.stats?.chats || 0, 'Chats'], ['🏠', maid.stats?.hireCount || 0, 'Hires']].map(([icon, val, lbl]) => (
