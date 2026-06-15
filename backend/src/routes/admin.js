@@ -180,6 +180,20 @@ router.get('/fix/test-email', async (req, res) => {
   }
 });
 
+// Update a maid's agentName by name match
+// Usage: GET /api/admin/fix/set-agent?secret=servix2026&maidName=asisat&agent=rodiyat
+router.get('/fix/set-agent', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const Maid = require('../models/Maid');
+  const { maidName, agent } = req.query;
+  if (!maidName || !agent) return res.status(400).json({ ok: false, msg: 'Pass ?maidName=&agent=' });
+  const maid = await Maid.findOne({ fullName: new RegExp(maidName, 'i') });
+  if (!maid) return res.status(404).json({ ok: false, msg: 'Maid not found' });
+  const prev = maid.agentName;
+  await Maid.updateOne({ _id: maid._id }, { agentName: agent.toLowerCase().trim(), heardAboutUs: 'agent' });
+  res.json({ ok: true, name: maid.fullName, prev, now: agent.toLowerCase().trim() });
+});
+
 // Count registrations by agent lead source
 // Usage: GET /api/admin/fix/agent-count?secret=servix2026&agent=rodiyat
 router.get('/fix/agent-count', async (req, res) => {
