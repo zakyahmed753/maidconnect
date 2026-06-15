@@ -12,6 +12,17 @@ import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
 
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
+const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
+function getReplacementFee(hiredAt) {
+  const ms = Date.now() - new Date(hiredAt || 0).getTime();
+  if (ms <= THREE_DAYS_MS) return { amount: 0,   isFree: true  };
+  if (ms <= WEEK_MS)       return { amount: 500,  isFree: false };
+  if (ms <= MONTH_MS)      return { amount: 700,  isFree: false };
+  return                          { amount: 1000, isFree: false };
+}
+
 export default function MaidDetailScreen({ route, navigation }) {
   const { maid } = route.params;
   const { t } = useTranslation();
@@ -33,6 +44,10 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [galleryVisible, setGalleryVisible]   = useState(false);
   const [galleryIndex, setGalleryIndex]       = useState(0);
   const galleryRef                            = useRef(null);
+  const [activeHire, setActiveHire]           = useState(null); // hired maid that is NOT this one
+  const [releaseModal, setReleaseModal]       = useState(false);
+  const [releaseLoading, setReleaseLoading]   = useState(false);
+  const [pendingAction, setPendingAction]     = useState(null); // 'chat' | 'hire'
 
   const photos = (maid.photos || []).filter(p => p?.url);
   const socketRef = useRef();
@@ -80,10 +95,17 @@ export default function MaidDetailScreen({ route, navigation }) {
         .catch(() => {});
       hwAPI.getProfile().then(r => {
         const hw = r.data?.profile;
-        const hired = (hw?.hiredMaids || []).some(h =>
+        const hiredMaids = hw?.hiredMaids || [];
+        const hired = hiredMaids.some(h =>
           h.maid === maid._id || h.maid?._id === maid._id
         );
         setIsHired(hired);
+        // Track any OTHER hired maid (different from the one being viewed)
+        const other = hiredMaids.find(h => {
+          const hId = h.maid?._id || h.maid;
+          return String(hId) !== String(maid._id);
+        });
+        setActiveHire(other || null);
         const pending = (r.data?.pendingHireRequests || []);
         setHireRequestSent(pending.includes(maid._id));
         const isSaved = (hw?.savedMaids || []).some(s =>
@@ -103,11 +125,11 @@ export default function MaidDetailScreen({ route, navigation }) {
   };
 
   const handleHire = () => {
-    // Guard: active subscription required
     const sub = profile?.subscription;
     const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
     if (!active) { goToSubscription(); return; }
-    // Show T&C modal before sending request
+    // Block if customer already has a different maid hired — must release first
+    if (activeHire) { setPendingAction('hire'); setReleaseModal(true); return; }
     setTermsAgreed(false);
     setTermsModal(true);
   };
@@ -163,11 +185,42 @@ export default function MaidDetailScreen({ route, navigation }) {
     maidName:      maid.fullName,
   });
 
+  const handleReleaseAndContinue = async () => {
+    if (!activeHire) return;
+    setReleaseLoading(true);
+    try {
+      const maidProfileId = activeHire.maid?._id || activeHire.maid;
+      await paymentsAPI.returnMaid({ maidProfileId });
+      setActiveHire(null);
+      setReleaseModal(false);
+      if (pendingAction === 'chat') {
+        setLoading(true);
+        try {
+          const res = await chatsAPI.startChat({ maidUserId: maid.user?._id || maid.user, maidProfileId: maid._id });
+          navigation.navigate('Chat', { chatId: res.data.chat._id, maidName: maid.fullName });
+        } catch (err) {
+          Toast.show({ type: 'error', text1: err.response?.data?.message || t('chat_open_failed') });
+        } finally {
+          setLoading(false);
+        }
+      } else if (pendingAction === 'hire') {
+        setTermsAgreed(false);
+        setTermsModal(true);
+      }
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.response?.data?.message || t('release_failed') });
+    } finally {
+      setReleaseLoading(false);
+    }
+  };
+
   const handleOpenChat = async () => {
     if (user?.role === 'housewife') {
       const sub = profile?.subscription;
       const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
       if (!active) { goToSubscription(); return; }
+      // Block if customer already has a different maid hired — must release first
+      if (activeHire) { setPendingAction('chat'); setReleaseModal(true); return; }
     }
     setLoading(true);
     try {
@@ -222,6 +275,47 @@ export default function MaidDetailScreen({ route, navigation }) {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setTermsModal(false)} style={{ alignItems:'center', padding:10 }}>
               <Text style={{ fontSize:13, color:COLORS.muted }}>{t('cancel')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Release current maid to chat/hire a new one */}
+      <Modal visible={releaseModal} transparent animationType="fade" onRequestClose={() => { if (!releaseLoading) setReleaseModal(false); }}>
+        <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'center', alignItems:'center', padding:24 }}>
+          <View style={{ backgroundColor:COLORS.surface, borderRadius:16, padding:24, width:'100%' }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.dark, marginBottom:8 }}>
+              {t('release_to_chat_title') || 'You have a maid hired'}
+            </Text>
+            <Text style={{ fontSize:13, color:COLORS.muted, lineHeight:20, marginBottom:6 }}>
+              {`${activeHire?.maid?.fullName || 'Your current maid'} ${t('release_to_chat_body') || 'is currently hired. Release her to chat with or hire a new maid.'}`}
+            </Text>
+            {activeHire && (() => {
+              const fee = getReplacementFee(activeHire.hiredAt);
+              return (
+                <View style={{ backgroundColor: fee.isFree ? 'rgba(46,125,94,0.08)' : 'rgba(224,85,85,0.08)', borderRadius:8, padding:12, marginBottom:16 }}>
+                  <Text style={{ fontSize:13, color: fee.isFree ? '#2e7d5e' : '#c0392b', fontWeight:'600' }}>
+                    {fee.isFree
+                      ? (t('release_free_grace') || '✓ Within grace period — release is free')
+                      : `${t('release_fee_label') || '⚠️ Replacement fee applies'}: EGP ${fee.amount}`}
+                  </Text>
+                </View>
+              );
+            })()}
+            <TouchableOpacity
+              style={{ backgroundColor: COLORS.gold, padding:14, borderRadius:8, alignItems:'center', marginBottom:10, opacity: releaseLoading ? 0.6 : 1 }}
+              onPress={handleReleaseAndContinue}
+              disabled={releaseLoading}>
+              {releaseLoading
+                ? <ActivityIndicator color={COLORS.dark} />
+                : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
+                    {pendingAction === 'chat'
+                      ? (t('release_and_chat') || 'Release & Open Chat')
+                      : (t('release_and_hire') || 'Release & Send Hire Request')}
+                  </Text>}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setReleaseModal(false)} style={{ alignItems:'center', padding:10 }} disabled={releaseLoading}>
+              <Text style={{ fontSize:13, color:COLORS.muted }}>{t('cancel') || 'Cancel'}</Text>
             </TouchableOpacity>
           </View>
         </View>
