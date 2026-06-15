@@ -237,6 +237,27 @@ router.get('/fix/send-referral-campaign', async (req, res) => {
   res.json({ ok: true, sent, failed, results });
 });
 
+// Seed existing hardcoded agents into LeadSource collection (one-time)
+router.get('/fix/seed-lead-sources', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const LeadSource = require('../models/LeadSource');
+  const defaults = [
+    { name: 'Victoria', slug: 'victoria', color: '#5dd6a8' },
+    { name: 'Latifa',   slug: 'latifa',   color: '#5dd6a8' },
+    { name: 'Rodiyat',  slug: 'rodiyat',  color: '#b47adb' },
+  ];
+  const results = [];
+  for (const d of defaults) {
+    const doc = await LeadSource.findOneAndUpdate(
+      { slug: d.slug },
+      { $setOnInsert: d },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    results.push({ slug: d.slug, id: doc._id });
+  }
+  res.json({ ok: true, seeded: results });
+});
+
 // Admin-only routes
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
@@ -254,6 +275,9 @@ router.post('/payments/reject-offline', protect, adminOnly, ac.rejectOfflinePaym
 router.post('/broadcast',               protect, adminOnly, ac.broadcastNotification);
 router.post('/agents',                  protect, adminOnly, ac.createAgent);
 router.get('/agents',                   protect, adminOnly, ac.listAgents);
+router.get('/lead-sources',             protect, adminOnly, ac.getLeadSources);
+router.post('/lead-sources',            protect, adminOnly, ac.createLeadSource);
+router.delete('/lead-sources/:id',      protect, adminOnly, ac.deleteLeadSource);
 router.post('/payments/:paymentId/confirm-customer', protect, adminOnly, ac.confirmCustomerOfflinePayment);
 
 

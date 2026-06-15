@@ -64,4 +64,15 @@ router.put('/terms', protect, adminOnly, async (req, res) => {
   }
 });
 
+// GET /api/config/lead-sources — public (for register form dropdown)
+router.get('/lead-sources', async (req, res) => {
+  try {
+    const LeadSource = require('../models/LeadSource');
+    const sources = await LeadSource.find({ isActive: true }).select('name slug color').sort({ createdAt: 1 });
+    res.json({ success: true, sources });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 module.exports = router;

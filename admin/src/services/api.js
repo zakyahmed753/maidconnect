@@ -45,6 +45,9 @@ export const adminAPI = {
   broadcast:            (data)         => api.post('/admin/broadcast', data),
   listAgents:           ()             => api.get('/admin/agents'),
   createAgent:          (data)         => api.post('/admin/agents', data),
+  getLeadSources:       ()             => api.get('/admin/lead-sources'),
+  createLeadSource:     (data)         => api.post('/admin/lead-sources', data),
+  deleteLeadSource:     (id)           => api.delete(`/admin/lead-sources/${id}`),
 };
 
 export const configAPI = {

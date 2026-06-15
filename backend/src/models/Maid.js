@@ -90,7 +90,7 @@ const maidSchema = new mongoose.Schema({
   referralCredit:      { type: Number, default: 0 }, // accumulated EGP discount — resets to 0 after each subscription payment, no carry-over
   referredBy:          { type: String, default: null }, // refCode of who referred this maid
   heardAboutUs:        { type: String, enum: ['facebook', 'instagram', 'agent', 'other'] },
-  agentName:           { type: String, enum: ['victoria', 'latifa', 'rodiyat', 'other'] },
+  agentName:           { type: String },
   agentNameOther:      { type: String },
   heardAboutUsOther:   { type: String },
 

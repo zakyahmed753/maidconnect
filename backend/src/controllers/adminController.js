@@ -640,3 +640,39 @@ exports.broadcastNotification = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// ── Lead Sources (agent referral tracking) ──
+exports.getLeadSources = async (req, res) => {
+  try {
+    const LeadSource = require('../models/LeadSource');
+    const sources = await LeadSource.find().sort({ createdAt: 1 });
+    res.json({ success: true, sources });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.createLeadSource = async (req, res) => {
+  try {
+    const LeadSource = require('../models/LeadSource');
+    const { name, color } = req.body;
+    if (!name?.trim()) return res.status(400).json({ success: false, message: 'Name is required' });
+    const slug = name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const existing = await LeadSource.findOne({ slug });
+    if (existing) return res.status(409).json({ success: false, message: 'An agent with this name already exists' });
+    const source = await LeadSource.create({ name: name.trim(), slug, color: color || '#5dd6a8' });
+    res.status(201).json({ success: true, source });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.deleteLeadSource = async (req, res) => {
+  try {
+    const LeadSource = require('../models/LeadSource');
+    await LeadSource.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

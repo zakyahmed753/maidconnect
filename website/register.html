@@ -375,9 +375,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label><span data-i18n="lbl.agentName">Which agent referred you?</span> <span style="color:#e05555">*</span></label>
         <select id="agentName" onchange="handleAgentName()">
           <option value="" data-i18n="ph.agentSub">-- Select Agent --</option>
-          <option value="victoria">Victoria</option>
-          <option value="latifa">Latifa</option>
-          <option value="rodiyat">Rodiyat</option>
+          <!-- populated dynamically from /api/config/lead-sources -->
           <option value="other" data-i18n="opt.other">Other</option>
         </select>
       </div>
@@ -603,18 +601,39 @@ let maidRefCode  = null;
 let isReapplying = false;
 const urlMref  = new URLSearchParams(window.location.search).get('mref')  || null;
 const urlAgent = new URLSearchParams(window.location.search).get('agent') || null;
-// Auto-fill agent source fields if coming via agent referral link
-if (urlAgent) {
-  document.addEventListener('DOMContentLoaded', () => {
-    const heard = document.getElementById('heardAboutUs');
-    const agent = document.getElementById('agentName');
-    if (heard) { heard.value = 'agent'; }
-    if (agent && ['victoria','latifa','rodiyat'].includes(urlAgent.toLowerCase())) {
-      agent.value = urlAgent.toLowerCase();
+// Load dynamic agent lead sources and populate the agentName dropdown
+let _loadedAgentSlugs = [];
+async function loadAgentSources() {
+  try {
+    const res  = await fetch('https://api.servix.world/api/config/lead-sources');
+    const data = await res.json();
+    if (!data.success || !data.sources) return;
+    const sel  = document.getElementById('agentName');
+    if (!sel) return;
+    // Remove existing dynamic options (keep blank + "Other" at end)
+    Array.from(sel.options).forEach(o => {
+      if (o.value && o.value !== 'other') sel.removeChild(o);
+    });
+    const otherOpt = sel.querySelector('option[value="other"]');
+    data.sources.forEach(src => {
+      const opt = document.createElement('option');
+      opt.value       = src.slug;
+      opt.textContent = src.name;
+      sel.insertBefore(opt, otherOpt);
+      _loadedAgentSlugs.push(src.slug);
+    });
+    // Auto-fill if agent URL param matches a loaded slug
+    if (urlAgent) {
+      const heard = document.getElementById('heardAboutUs');
+      if (heard) { heard.value = 'agent'; }
+      if (_loadedAgentSlugs.includes(urlAgent.toLowerCase())) {
+        sel.value = urlAgent.toLowerCase();
+      }
+      if (typeof handleHeardAboutUs === 'function') handleHeardAboutUs();
     }
-    if (typeof handleHeardAboutUs === 'function') handleHeardAboutUs();
-  });
+  } catch (_) { /* fall back to static "Other" option */ }
 }
+document.addEventListener('DOMContentLoaded', loadAgentSources);
 
 // ── Translations ──
 const T = {
