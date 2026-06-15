@@ -601,7 +601,20 @@ let otpSeconds = 0;
 let currentLang = 'en';
 let maidRefCode  = null;
 let isReapplying = false;
-const urlMref = new URLSearchParams(window.location.search).get('mref') || null;
+const urlMref  = new URLSearchParams(window.location.search).get('mref')  || null;
+const urlAgent = new URLSearchParams(window.location.search).get('agent') || null;
+// Auto-fill agent source fields if coming via agent referral link
+if (urlAgent) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const heard = document.getElementById('heardAboutUs');
+    const agent = document.getElementById('agentName');
+    if (heard) { heard.value = 'agent'; }
+    if (agent && ['victoria','latifa','rodiyat'].includes(urlAgent.toLowerCase())) {
+      agent.value = urlAgent.toLowerCase();
+    }
+    if (typeof handleHeardAboutUs === 'function') handleHeardAboutUs();
+  });
+}
 
 // ── Translations ──
 const T = {

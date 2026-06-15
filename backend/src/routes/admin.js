@@ -180,6 +180,17 @@ router.get('/fix/test-email', async (req, res) => {
   }
 });
 
+// Count registrations by agent lead source
+// Usage: GET /api/admin/fix/agent-count?secret=servix2026&agent=rodiyat
+router.get('/fix/agent-count', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const Maid = require('../models/Maid');
+  const agent = (req.query.agent || '').toLowerCase().trim();
+  if (!agent) return res.status(400).json({ ok: false, msg: 'Pass ?agent=name' });
+  const maids = await Maid.find({ agentName: agent }).select('fullName approvalStatus createdAt').sort({ createdAt: -1 });
+  res.json({ ok: true, agent, total: maids.length, maids: maids.map(m => ({ name: m.fullName, status: m.approvalStatus, joinedAt: m.createdAt })) });
+});
+
 // Send referral campaign email to all approved maids
 // Usage: GET /api/admin/fix/send-referral-campaign?secret=servix2026
 // Returns: { ok, sent, failed, results: [{ name, email, code, link, sent }] }
