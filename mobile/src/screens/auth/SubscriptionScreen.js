@@ -26,7 +26,6 @@ export default function SubscriptionScreen({ navigation }) {
   const { profile }  = useAuthStore();
   const mountedRef   = React.useRef(true);
   React.useEffect(() => { return () => { mountedRef.current = false; }; }, []);
-  const [skipping, setSkipping]           = useState(false);
   const [nationality, setNationality]     = useState(profile?.nationality || '');
   const [offlineModal, setOfflineModal]   = useState(false);
   const [receiptUri, setReceiptUri]       = useState(null);
@@ -123,36 +122,6 @@ export default function SubscriptionScreen({ navigation }) {
   const handleRemoveCoupon = () => {
     setCouponResult(null);
     setCouponInput('');
-  };
-
-  const handleSkip = async () => {
-    setSkipping(true);
-    try { await completeAuth(); } catch {}
-    const store = useAuthStore.getState();
-    let token = store.token;
-    if (!token) {
-      try {
-        const SecureStore = require('expo-secure-store');
-        token = await SecureStore.getItemAsync('maidconnect_token');
-      } catch {}
-    }
-    const fakeEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    useAuthStore.setState({
-      token,
-      user: store.user,
-      profile: {
-        ...(store.profile || {}),
-        verificationStatus: 'verified',
-        approvalStatus:     'approved',
-        subscription: {
-          status:    'active',
-          plan:      'monthly',
-          startDate: new Date().toISOString(),
-          endDate:   fakeEndDate,
-        },
-      },
-    });
-    setSkipping(false);
   };
 
   const pickReceipt = async () => {
@@ -324,11 +293,6 @@ export default function SubscriptionScreen({ navigation }) {
           <Text style={{ fontSize: 12, color: COLORS.muted }}>{t('already_paid_check')}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip} disabled={skipping}>
-          {skipping
-            ? <ActivityIndicator size="small" color={COLORS.muted} />
-            : <Text style={styles.skipTxt}>{t('skip_dev')}</Text>}
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Offline Payment Modal */}
@@ -430,9 +394,6 @@ const styles = StyleSheet.create({
 
   btn:          { backgroundColor: COLORS.gold, padding: 15, borderRadius: 5, alignItems: 'center' },
   btnTxt:       { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark, letterSpacing: 0.5 },
-  skipBtn:      { alignItems: 'center', paddingVertical: 14 },
-  skipTxt:      { fontSize: 12, color: COLORS.muted, textDecorationLine: 'underline' },
-
   // Offline payment button
   offlineBtn:   { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 8, padding: 14, marginTop: 10 },
   offlineIcon:  { fontSize: 24 },
