@@ -591,7 +591,6 @@ export function MaidDashScreen({ navigation }) {
             {[
               ['🎫', t('open_support'),     t('contact_admin_note'),   () => navigation.navigate('Support'), false],
               ['🌐', t('language'),         '',                          () => setLangVisible(true),            false],
-              ['🗑️', t('delete_account'),  t('deactivates_profile'),  handleDeleteAccount,                   true],
               ['🚪', t('menu_sign_out'),    '',                          logout,                                true],
             ].map(([icon,title,sub,onPress,isRed])=>(
               <TouchableOpacity key={icon} onPress={onPress}
