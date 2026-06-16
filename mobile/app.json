@@ -50,6 +50,7 @@
       }
     },
     "plugins": [
+      "./plugins/withAdiRegistration",
       "expo-font",
       "expo-secure-store",
       "expo-asset",
