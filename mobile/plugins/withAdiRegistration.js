@@ -15,7 +15,7 @@ module.exports = function withAdiRegistration(config) {
       }
       fs.writeFileSync(
         path.join(assetsDir, 'adi-registration.properties'),
-        'token=CTHZ30IRL2U7MAAAAAAAAAAAA\n'
+        'CTHZ3OIRL2U7MAAAAAAAAAAAAA'
       );
       return config;
     },
