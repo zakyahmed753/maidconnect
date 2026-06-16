@@ -613,7 +613,7 @@ export function MaidDashScreen({ navigation }) {
               { icon:'🌐', id:'language',  title:t('language'),           sub: '',                                                       isRed:false, onPress: () => setLangVisible(true) },
               { icon:'🔔', id:'notifs',    title:t('menu_notifications2'),sub: '',                                                       isRed:false, onPress: () => navigation.navigate('MaidAlerts') },
               { icon:'🎫', id:'support',   title:t('menu_support2'),      sub: t('contact_admin_note'),                                  isRed:false, onPress: () => navigation.navigate('Support') },
-              { icon:'🗑️', id:'delete',   title:t('menu_delete_account'),sub: t('deactivates_profile'),                                 isRed:true,  onPress: handleDeleteAccount },
+              ...(!maidProfile?.isHired ? [{ icon:'🗑️', id:'delete', title:t('menu_delete_account'), sub: t('deactivates_profile'), isRed:true, onPress: handleDeleteAccount }] : []),
               { icon:'🚪', id:'sign_out',  title:t('menu_sign_out'),      sub: '',                                                       isRed:true,  onPress: logout },
             ].map(({ icon, id, title, sub, isRed, onPress }) => (
               <TouchableOpacity key={id} onPress={onPress}
