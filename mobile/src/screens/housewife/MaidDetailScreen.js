@@ -12,6 +12,83 @@ import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
 
+const TERMS_EN = `TERMS & CONDITIONS – Servix Platform
+
+1. PLATFORM NATURE
+Servix is a technology platform that facilitates communication between independent service providers ("Workers") and customers. Servix is not an employer, recruitment agency, labor office, sponsor, guarantor, or representative of any Worker listed on the platform.
+
+2. INDEPENDENT RELATIONSHIP
+Any agreement, engagement, employment, payment, accommodation, transportation, supervision, or other arrangement made between a customer and a Worker is solely between those parties.
+
+3. NO RESPONSIBILITY FOR WORKER CONDUCT
+Servix does not control, supervise, monitor, direct, or manage Workers during or after any engagement.
+
+Accordingly, Servix shall not be liable for:
+• The behavior, attitude, actions, negligence, misconduct, or performance of any Worker.
+• Theft, fraud, misrepresentation, property damage, personal injury, disputes, conflicts, or any unlawful acts committed by any Worker.
+• Any losses, damages, costs, claims, injuries, or expenses arising from interactions between customers and Workers.
+
+4. CUSTOMER DUE DILIGENCE
+Customers are solely responsible for:
+• Verifying the identity and legal status of any Worker.
+• Conducting interviews and background checks where appropriate.
+• Monitoring and supervising the Worker during any service period.
+• Taking reasonable security measures to protect family members, children, elderly persons, valuables, and property.
+
+5. SAFETY RECOMMENDATION
+Customers are strongly advised to:
+• Never leave children unattended with a Worker before establishing trust.
+• Secure valuables, cash, documents, jewelry, and sensitive information.
+• Verify identity documents when required by law.
+• Maintain appropriate supervision during service delivery.
+
+6. NO GUARANTEES
+Servix makes no warranties or guarantees regarding:
+• Character, honesty, reliability, qualifications, skills, experience, behavior, availability, or suitability of any Worker.
+
+7. CUSTOMER ASSUMPTION OF RISK
+The customer voluntarily assumes all risks associated with hiring, engaging, communicating with, or allowing access to any Worker.
+
+8. LIMITATION OF LIABILITY
+To the maximum extent permitted by applicable law, Servix, its owners, employees, affiliates, and partners shall not be liable for any direct, indirect, incidental, consequential, special, punitive, or exemplary damages arising from use of the platform.
+
+9. USER ACCEPTANCE
+By clicking "Accept", the customer confirms that they understand and agree that Servix acts solely as a communication and marketplace platform and is not responsible for the acts, omissions, conduct, or performance of Workers.`;
+
+const TERMS_AR = `الشروط والأحكام – منصة Servix
+
+1. طبيعة المنصة
+تطبيق Servix هو منصة تقنية تهدف فقط إلى تسهيل التواصل بين العملاء ومقدمي الخدمات المستقلين، ولا يعتبر صاحب عمل أو مكتب توظيف أو جهة كفالة أو ممثلًا لأي عاملة أو مقدم خدمة.
+
+2. العلاقة بين الأطراف
+أي اتفاق أو تعاقد أو تشغيل أو دفع أو إقامة أو إشراف يتم بين العميل والعاملة يكون مسؤولية الطرفين فقط دون أي مسؤولية على Servix.
+
+3. إخلاء المسؤولية
+لا يقوم Servix بالإشراف أو الإدارة أو المراقبة المستمرة للعاملات، وبالتالي لا يتحمل أي مسؤولية عن:
+• سلوك أو تصرفات أو أداء أي عاملة.
+• السرقة أو الاحتيال أو إساءة التصرف أو الإهمال أو الأضرار المادية أو الجسدية.
+• أي نزاعات أو خلافات أو مطالبات تنشأ بين العميل والعاملة.
+• أي خسائر مباشرة أو غير مباشرة تنتج عن استخدام المنصة.
+
+4. مسؤولية العميل
+يقر العميل بأنه المسؤول الوحيد عن:
+• التحقق من هوية العاملة وصحة مستنداتها.
+• إجراء المقابلات والفحص المناسب قبل التعاقد.
+• متابعة العاملة والإشراف عليها أثناء تقديم الخدمة.
+• حماية الأطفال وكبار السن والمقتنيات الثمينة والممتلكات الخاصة.
+
+5. تنبيه أمني
+ينصح Servix العملاء بعدم ترك الأطفال أو الأشخاص المحتاجين للرعاية دون إشراف مناسب، والاحتفاظ بالمقتنيات الثمينة والأموال والمستندات المهمة في أماكن آمنة.
+
+6. عدم تقديم ضمانات
+لا يقدم Servix أي ضمان أو تعهد يتعلق بأخلاق أو أمانة أو كفاءة أو خبرة أو سلوك أو ملاءمة أي عاملة.
+
+7. تحمل المخاطر
+يوافق العميل على أنه يتحمل كامل المسؤولية والمخاطر الناتجة عن التعامل أو التعاقد أو التواصل مع أي عاملة من خلال المنصة.
+
+8. الموافقة
+بالضغط على زر "موافق"، يقر العميل بأنه فهم ووافق على أن Servix مجرد منصة ربط وتواصل بين الأطراف ولا يتحمل مسؤولية أفعال أو تصرفات أو أداء العاملات.`;
+
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
 const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
@@ -25,7 +102,8 @@ function getReplacementFee(hiredAt) {
 
 export default function MaidDetailScreen({ route, navigation }) {
   const { maid } = route.params;
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const isAr = lang === 'ar';
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hireLoading, setHireLoading] = useState(false);
@@ -40,6 +118,7 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [hireRequestSent, setHireRequestSent] = useState(false);
   const [termsModal, setTermsModal]           = useState(false);
   const [termsAgreed, setTermsAgreed]         = useState(false);
+  const [termsError, setTermsError]           = useState(false);
   const [termsUrl, setTermsUrl]               = useState(null);
   const [galleryVisible, setGalleryVisible]   = useState(false);
   const [galleryIndex, setGalleryIndex]       = useState(0);
@@ -131,14 +210,16 @@ export default function MaidDetailScreen({ route, navigation }) {
     // Block if customer already has a different maid hired — must release first
     if (activeHire) { setPendingAction('hire'); setReleaseModal(true); return; }
     setTermsAgreed(false);
+    setTermsError(false);
     setTermsModal(true);
   };
 
   const confirmHire = async () => {
     if (!termsAgreed) {
-      Toast.show({ type: 'error', text1: t('please_agree_terms') });
+      setTermsError(true);
       return;
     }
+    setTermsError(false);
     setTermsModal(false);
     setHireLoading(true);
     try {
@@ -248,34 +329,61 @@ export default function MaidDetailScreen({ route, navigation }) {
       {/* Terms & Conditions Modal */}
       <Modal visible={termsModal} transparent animationType="slide" onRequestClose={() => setTermsModal(false)}>
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
-          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:22 }}>
-            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:8 }}>{t('terms_title')}</Text>
-            <Text style={{ fontSize:13, color:COLORS.muted, lineHeight:20, marginBottom:16 }}>
-              {t('terms_body_short')}
-            </Text>
-            {termsUrl && (
-              <TouchableOpacity onPress={() => Linking.openURL(termsUrl)} style={{ marginBottom:16 }}>
-                <Text style={{ fontSize:13, color:COLORS.gold, textDecorationLine:'underline' }}>{t('terms_read_full')}</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              style={{ flexDirection:'row', alignItems:'center', gap:12, marginBottom:20, padding:12, borderRadius:8, backgroundColor: termsAgreed ? 'rgba(46,125,94,0.08)' : '#f8f5f0', borderWidth:1, borderColor: termsAgreed ? '#2e7d5e' : COLORS.border }}
-              onPress={() => setTermsAgreed(!termsAgreed)}>
-              <View style={{ width:22, height:22, borderRadius:4, borderWidth:1.5, borderColor: termsAgreed ? '#2e7d5e' : COLORS.border, backgroundColor: termsAgreed ? '#2e7d5e' : 'transparent', alignItems:'center', justifyContent:'center' }}>
-                {termsAgreed && <Text style={{ color:'#fff', fontSize:13, fontWeight:'700' }}>✓</Text>}
-              </View>
-              <Text style={{ fontSize:13, color:COLORS.text, flex:1 }}>{t('terms_agree_label')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{ backgroundColor: termsAgreed ? COLORS.gold : COLORS.border, padding:14, borderRadius:8, alignItems:'center', marginBottom:10 }}
-              onPress={confirmHire} disabled={!termsAgreed}>
-              <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color: termsAgreed ? COLORS.dark : COLORS.muted }}>
-                {t('confirm_hire_btn')}
+          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, maxHeight:'90%' }}>
+            {/* Header */}
+            <View style={{ padding:20, paddingBottom:12, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+              <View style={{ width:36, height:4, backgroundColor:COLORS.border, borderRadius:2, alignSelf:'center', marginBottom:14 }}/>
+              <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.dark, textAlign: isAr ? 'right' : 'left' }}>
+                {t('terms_title')}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setTermsModal(false)} style={{ alignItems:'center', padding:10 }}>
-              <Text style={{ fontSize:13, color:COLORS.muted }}>{t('cancel')}</Text>
-            </TouchableOpacity>
+            </View>
+
+            {/* Scrollable T&C body */}
+            <ScrollView style={{ paddingHorizontal:20 }} contentContainerStyle={{ paddingVertical:16 }}>
+              <Text style={{ fontSize:12.5, color:COLORS.text, lineHeight:22, textAlign: isAr ? 'right' : 'left', writingDirection: isAr ? 'rtl' : 'ltr' }}>
+                {isAr ? TERMS_AR : TERMS_EN}
+              </Text>
+            </ScrollView>
+
+            {/* Checkbox + actions pinned at bottom */}
+            <View style={{ padding:20, paddingTop:12, borderTopWidth:1, borderTopColor:COLORS.border }}>
+              <TouchableOpacity
+                style={{ flexDirection: isAr ? 'row-reverse' : 'row', alignItems:'flex-start', gap:12, marginBottom:8,
+                  padding:12, borderRadius:8,
+                  backgroundColor: termsError ? 'rgba(224,85,85,0.06)' : termsAgreed ? 'rgba(46,125,94,0.08)' : '#f8f5f0',
+                  borderWidth:1.5,
+                  borderColor: termsError ? '#e05555' : termsAgreed ? '#2e7d5e' : COLORS.border }}
+                onPress={() => { setTermsAgreed(!termsAgreed); setTermsError(false); }}>
+                <View style={{ width:22, height:22, borderRadius:4, borderWidth:1.5, flexShrink:0, marginTop:1,
+                  borderColor: termsError ? '#e05555' : termsAgreed ? '#2e7d5e' : COLORS.border,
+                  backgroundColor: termsAgreed ? '#2e7d5e' : 'transparent',
+                  alignItems:'center', justifyContent:'center' }}>
+                  {termsAgreed && <Text style={{ color:'#fff', fontSize:13, fontWeight:'700' }}>✓</Text>}
+                </View>
+                <Text style={{ fontSize:12.5, color: termsError ? '#e05555' : COLORS.text, flex:1, lineHeight:19, textAlign: isAr ? 'right' : 'left' }}>
+                  {isAr
+                    ? 'أقر بأن Servix مجرد منصة تواصل وربط بين الأطراف ولا يتحمل أي مسؤولية عن تصرفات أو أداء أو الوضع القانوني لأي عاملة.'
+                    : 'I understand that Servix is only a communication platform and is not responsible for the conduct, actions, performance, safety, or legal status of any worker.'}
+                </Text>
+              </TouchableOpacity>
+
+              {termsError && (
+                <Text style={{ fontSize:12, color:'#e05555', marginBottom:10, textAlign: isAr ? 'right' : 'left' }}>
+                  {isAr ? '⚠ يرجى قراءة الشروط والموافقة عليها أولاً' : '⚠ Please read the terms and check the box to continue'}
+                </Text>
+              )}
+
+              <TouchableOpacity
+                style={{ backgroundColor: COLORS.gold, padding:14, borderRadius:8, alignItems:'center', marginBottom:8, opacity: hireLoading ? 0.6 : 1 }}
+                onPress={confirmHire} disabled={hireLoading}>
+                <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
+                  {t('confirm_hire_btn')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setTermsModal(false)} style={{ alignItems:'center', padding:8 }}>
+                <Text style={{ fontSize:13, color:COLORS.muted }}>{t('cancel')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
