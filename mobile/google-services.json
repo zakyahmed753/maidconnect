@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:789599116184:android:89859581e0e5d2eb6f29ed",
         "android_client_info": {
-          "package_name": "com.servix.app"
+          "package_name": "world.servix.app"
         }
       },
       "oauth_client": [],
