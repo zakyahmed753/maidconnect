@@ -58,6 +58,11 @@ exports.createProfile = async (req, res) => {
 
     res.status(201).json({ success: true, maid });
   } catch (err) {
+    // Race condition: two concurrent requests both passed the exists check
+    if (err.code === 11000) {
+      const existing = await Maid.findOne({ user: req.user._id });
+      return res.status(200).json({ success: true, maid: existing });
+    }
     res.status(500).json({ success: false, message: err.message });
   }
 };

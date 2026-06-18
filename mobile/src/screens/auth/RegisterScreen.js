@@ -1,5 +1,5 @@
 // src/screens/auth/RegisterScreen.js
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +31,7 @@ export default function RegisterScreen({ navigation }) {
   const [photos, setPhotos] = useState([]);
   const [idPhoto, setIdPhoto] = useState(null); // passport photo (non-Egyptian only)
   const [loading, setLoading] = useState(false);
+  const submitting = useRef(false);
   const register = useAuthStore(s => s.register);
 
   const isEgyptian = form.nationality === 'Egypt';
@@ -70,6 +71,7 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const handleSubmit = async () => {
+    if (submitting.current) return;
     if (!form.name || !form.email || !form.password) return Toast.show({ type:'error', text1: t('fill_required') });
     if (photos.length < 3) return Toast.show({ type:'error', text1: t('min_photos') });
 
@@ -100,6 +102,7 @@ export default function RegisterScreen({ navigation }) {
       if (!idPhoto) return Toast.show({ type:'error', text1: t('upload_passport_photo_err') });
     }
 
+    submitting.current = true;
     setLoading(true);
     try {
       await register({ ...form, phone: phoneNorm, role:'maid' });
@@ -137,7 +140,7 @@ export default function RegisterScreen({ navigation }) {
       });
     } catch (err) {
       Toast.show({ type:'error', text1: err.response?.data?.message || t('registration_failed') });
-    } finally { setLoading(false); }
+    } finally { submitting.current = false; setLoading(false); }
   };
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
