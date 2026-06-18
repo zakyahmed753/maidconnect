@@ -294,7 +294,7 @@ exports.resendOTP = async (req, res) => {
     const otp = genCode();
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
     await User.findByIdAndUpdate(user._id, { otpCode: otp, otpExpiry });
-    await sendOTPEmail(email, otp);
+    await sendOTPEmail(email, otp, { throwOnError: true });
     res.json({ success: true, message: 'New code sent' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -311,7 +311,7 @@ exports.forgotPassword = async (req, res) => {
     const code = genCode();
     const resetExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
     await User.findByIdAndUpdate(user._id, { resetCode: code, resetExpiry });
-    await sendResetEmail(email, code);
+    await sendResetEmail(email, code, { throwOnError: true });
     res.json({ success: true, message: 'Reset code sent to your email' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

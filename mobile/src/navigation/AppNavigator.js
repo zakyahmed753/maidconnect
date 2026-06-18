@@ -187,12 +187,14 @@ export default function AppNavigator() {
         }
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== 'granted') return;
-        const { data: expoPushToken } = await Notifications.getExpoPushTokenAsync({
+        const tokenResult = await Notifications.getExpoPushTokenAsync({
           projectId: 'aaf38d20-cf98-4589-b23d-1e6838133970',
         });
+        const expoPushToken = tokenResult.data;
+        console.log('[Push] token:', expoPushToken);
         await authAPI.updateFCMToken(expoPushToken);
       } catch (e) {
-        console.warn('[Push] token registration failed:', e.message);
+        console.error('[Push] token registration failed:', e.message);
       }
     })();
   }, [token]);

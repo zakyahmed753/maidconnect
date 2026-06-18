@@ -2,9 +2,11 @@ const { Resend } = require('resend');
 
 const FROM_ADDRESS = process.env.EMAIL_FROM || 'Servix <noreply@servix.world>';
 
-exports.sendEmail = async ({ to, subject, html }) => {
+exports.sendEmail = async ({ to, subject, html, throwOnError = false }) => {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] RESEND_API_KEY not set — skipping:', subject, '→', to);
+    const msg = 'RESEND_API_KEY not set';
+    console.warn('[Email] Skipping — ' + msg, subject, '→', to);
+    if (throwOnError) throw new Error(msg);
     return;
   }
   try {
@@ -14,12 +16,14 @@ exports.sendEmail = async ({ to, subject, html }) => {
     console.log('[Email] Sent:', subject, '→', to);
   } catch (err) {
     console.error('[Email] Failed:', err.message);
+    if (throwOnError) throw err;
   }
 };
 
-exports.sendOTPEmail = async (to, otp) => {
+exports.sendOTPEmail = async (to, otp, { throwOnError = false } = {}) => {
   await exports.sendEmail({
     to,
+    throwOnError,
     subject: 'Servix — Verify Your Email',
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#fffcf5;border-radius:12px;border:1px solid #e8dcc8">
@@ -32,9 +36,10 @@ exports.sendOTPEmail = async (to, otp) => {
   });
 };
 
-exports.sendResetEmail = async (to, code) => {
+exports.sendResetEmail = async (to, code, { throwOnError = false } = {}) => {
   await exports.sendEmail({
     to,
+    throwOnError,
     subject: 'Servix — Reset Your Password',
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;background:#fffcf5;border-radius:12px;border:1px solid #e8dcc8">
