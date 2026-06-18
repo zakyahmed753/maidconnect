@@ -252,6 +252,20 @@ router.get('/fix/send-referral-campaign', async (req, res) => {
 });
 
 // Seed existing hardcoded agents into LeadSource collection (one-time)
+// DELETE test maids with single-letter names (m, k, etc.)
+router.get('/fix/delete-test-maids', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const Maid = require('../models/Maid');
+  const User = require('../models/User');
+  const testNames = ['m', 'k', 'M', 'K', 'mm', 'kk', 'test', 'Test'];
+  const maids = await Maid.find({ fullName: { $in: testNames } }).select('fullName user createdAt');
+  const ids = maids.map(m => m._id);
+  const userIds = maids.map(m => m.user);
+  await Maid.deleteMany({ _id: { $in: ids } });
+  await User.deleteMany({ _id: { $in: userIds } });
+  res.json({ ok: true, deleted: maids.map(m => ({ id: m._id, name: m.fullName, user: m.user })) });
+});
+
 router.get('/fix/seed-lead-sources', async (req, res) => {
   if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
   const LeadSource = require('../models/LeadSource');
