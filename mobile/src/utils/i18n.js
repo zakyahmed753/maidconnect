@@ -213,7 +213,7 @@ const T = {
     go_to_dashboard: 'Go to Dashboard →',
 
     // MaidDash
-    active_subscription: 'Active Subscription',
+    active_subscription: 'Active Subscription', sub_ends: 'Ends',
     areas_you_serve: 'Areas You Serve',
     areas_serve_sub: "Select all Cairo areas where you're available to work",
     service_areas_updated: 'Service areas updated!', save_areas_fail: 'Failed to save areas',
@@ -558,7 +558,7 @@ const T = {
     go_to_dashboard: 'روحي للوحة التحكم →',
 
     // MaidDash
-    active_subscription: 'اشتراكك شغال',
+    active_subscription: 'اشتراكك شغال', sub_ends: 'ينتهي',
     areas_you_serve: 'مناطقك في القاهرة',
     areas_serve_sub: 'اختاري كل المناطق اللي تقدري تشتغلي فيها',
     service_areas_updated: 'المناطق اتحدثت! 🎉', save_areas_fail: 'الحفظ مش تمام',
@@ -893,7 +893,7 @@ const T = {
     go_to_dashboard: 'Aller au tableau de bord →',
 
     // MaidDash
-    active_subscription: 'Abonnement actif',
+    active_subscription: 'Abonnement actif', sub_ends: 'Expire le',
     areas_you_serve: 'Zones desservies',
     areas_serve_sub: 'Sélectionnez toutes les zones du Caire où vous pouvez travailler',
     service_areas_updated: 'Zones mises à jour !', save_areas_fail: 'Échec de la sauvegarde',
@@ -1228,7 +1228,7 @@ const T = {
     go_to_dashboard: 'Tafi ga Allon Sarrafa →',
 
     // MaidDash
-    active_subscription: 'Biyan kuɗi mai aiki',
+    active_subscription: 'Biyan kuɗi mai aiki', sub_ends: 'Ƙarewa',
     areas_you_serve: 'Yankuna da kuke Bauta',
     areas_serve_sub: 'Zaɓi duk yankuna a Alkahira da za ku iya aiki a cikinsu',
     service_areas_updated: 'An sabunta yankuna!', save_areas_fail: 'Ajiye yankuna ya kasa',

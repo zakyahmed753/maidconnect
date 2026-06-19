@@ -29,10 +29,10 @@ export default function LoginScreen({ navigation, route }) {
   }, []);
 
   useEffect(() => {
-    checkAndTriggerBiometric();
+    checkBiometricAvailability();
   }, []);
 
-  const checkAndTriggerBiometric = async () => {
+  const checkBiometricAvailability = async () => {
     try {
       const hasHw   = await LocalAuthentication.hasHardwareAsync();
       const enrolled = await LocalAuthentication.isEnrolledAsync();
@@ -47,9 +47,9 @@ export default function LoginScreen({ navigation, route }) {
 
       let bType = null;
       if (Platform.OS === 'ios') {
-        bType = hasFace ? 'faceid' : null;
+        bType = hasFace ? 'faceid' : null;         // iOS: Face ID only
       } else {
-        bType = hasFace ? 'faceid' : hasFingerprint ? 'fingerprint' : null;
+        bType = hasFingerprint ? 'fingerprint' : null; // Android: fingerprint only
       }
       if (!bType) return;
 
@@ -57,8 +57,7 @@ export default function LoginScreen({ navigation, route }) {
         setBiometricType(bType);
         setBiometricReady(true);
       }
-
-      await triggerBiometric();
+      // No auto-trigger — user must press the button
     } catch { /* hardware not available */ }
   };
 
@@ -80,6 +79,11 @@ export default function LoginScreen({ navigation, route }) {
 
       const { email: savedEmail, password: savedPass, role: savedRole } = JSON.parse(savedJson);
       if (!mountedRef.current) return;
+
+      // Fill the visible fields so the user can see which account is logging in
+      setEmail(savedEmail);
+      setPassword(savedPass);
+      setRole(savedRole);
 
       setLoading(true);
       try {

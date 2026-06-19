@@ -214,7 +214,7 @@ export default function RegisterScreen({ navigation }) {
               {idPhoto
                 ? <Image source={{ uri: idPhoto }} style={{ width:'100%', height:120, borderRadius:4, resizeMode:'cover' }}/>
                 : <>
-                    <Text style={{ fontSize:24, marginBottom:4 }}>ðŸªª</Text>
+                    <Text style={{ fontSize:24, marginBottom:4 }}>🪪</Text>
                     <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.green }}>{t('tap_upload_passport')}</Text>
                     <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>{t('clear_photo_of_page')}</Text>
                   </>}
@@ -246,9 +246,9 @@ export default function RegisterScreen({ navigation }) {
           ))}
         </View>
 
-        <Text style={styles.label}>{t('photos')} (minimum 3) — {photos.length}/5</Text>
+        <Text style={styles.label}>{t('photos')} — {photos.length}/5</Text>
         <TouchableOpacity style={styles.uploadBox} onPress={pickPhoto}>
-          <Text style={{ fontSize:28, marginBottom:6 }}>ðŸ“¸</Text>
+          <Text style={{ fontSize:28, marginBottom:6 }}>📸</Text>
           <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.green }}>{t('tap_upload_photos')}</Text>
           <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>{t('professional_photos_note')}</Text>
         </TouchableOpacity>
@@ -257,12 +257,12 @@ export default function RegisterScreen({ navigation }) {
             <View key={i} style={styles.photoThumb}>
               <Image source={{ uri }} style={{ width:'100%', height:'100%', borderRadius:4 }}/>
               <TouchableOpacity onPress={() => setPhotos(p=>p.filter((_,idx)=>idx!==i))} style={styles.photoDel}>
-                <Text style={{ fontSize:9, color:'#fff' }}>âœ•</Text>
+                <Text style={{ fontSize:9, color:'#fff' }}>✕</Text>
               </TouchableOpacity>
             </View>
           ))}
         </View>
-        {photos.length < 3 && <Text style={{ fontSize:11, color:COLORS.red, marginTop:4 }}>{3-photos.length} more photo{3-photos.length!==1?'s':''} needed</Text>}
+        {photos.length < 3 && <Text style={{ fontSize:11, color:COLORS.red, marginTop:4 }}>{t('min_photos')}</Text>}
 
         <TouchableOpacity style={[styles.btn, (photos.length < 3 || loading) && styles.btnDisabled]}
           onPress={handleSubmit} disabled={photos.length < 3 || loading}>

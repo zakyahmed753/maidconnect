@@ -282,7 +282,10 @@ export function ChatsListScreen({ navigation }) {
       navigation.navigate('Browse', { screen: 'CustomerSubscription', params: {} });
       return;
     }
-    navigation.navigate('Chat', { chatId: item._id, maidName: other?.fullName || other?.name });
+    const partnerName = user?.role === 'maid'
+      ? (item.housewife?.name || item.housewife?.fullName)
+      : (item.maidProfile?.fullName || item.maid?.name);
+    navigation.navigate('Chat', { chatId: item._id, maidName: partnerName });
   };
 
   return (
@@ -611,21 +614,21 @@ export function MaidDashScreen({ navigation }) {
       <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.green} colors={[COLORS.green]} />}>
         <View style={{ backgroundColor:'#0D3827', padding:20, paddingTop:54 }}>
           <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
-            <View style={{ backgroundColor:'rgba(255,255,255,0.15)', borderWidth:1, borderColor:'rgba(255,255,255,0.3)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
-              <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#fff' }}>{t('active_subscription')}</Text>
-            </View>
-            <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
-              {profile?.subscription?.plan && profile.subscription.plan !== 'none' && (
-                <View style={{ backgroundColor:'rgba(255,255,255,0.15)', borderWidth:1, borderColor:'rgba(255,255,255,0.4)', paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}>
-                  <Text style={{ fontSize:9, color:'#fff', fontWeight:'700', textTransform:'capitalize' }}>{profile.subscription.plan}</Text>
-                </View>
+            <View>
+              <View style={{ backgroundColor:'rgba(255,255,255,0.15)', borderWidth:1, borderColor:'rgba(255,255,255,0.3)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
+                <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#fff' }}>{t('active_subscription')}</Text>
+              </View>
+              {profile?.subscription?.endDate && (
+                <Text style={{ fontSize:9, color:'rgba(255,255,255,0.6)', marginTop:3 }}>
+                  {t('sub_ends')} {new Date(profile.subscription.endDate).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}
+                </Text>
               )}
-              <NotifBell color="rgba(255,255,255,0.9)" />
             </View>
+            <NotifBell color="rgba(255,255,255,0.9)" />
           </View>
           <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:8 }}><Ionicons name="person" size={30} color="rgba(255,255,255,0.85)" /></View>
           <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
-          <Text style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} Â· {profile?.nationality || 'Ethiopia'}</Text>
+          <Text style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
         </View>
         <View style={{ flexDirection:'row', gap:10, padding:14 }}>
           {[[String(stats.views),t('views')],[String(stats.likes),t('likes')],[String(stats.chats),t('chats_stat')]].map(([n,l])=>(
@@ -676,11 +679,11 @@ export function MaidDashScreen({ navigation }) {
         ) : (
           <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
             {[
-              { icon:'person-circle-outline', iconColor:'#d97706',   bg:'#fef3e2', id:'hire_req',  title:t('menu_hire_requests'), sub: pendingRequests > 0 ? `${pendingRequests} pending` : '', isRed:false, onPress: () => navigation.navigate('HireRequest') },
-              { icon:'chatbubbles-outline',   iconColor:'#7c3aed',   bg:'#ede8fd', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} active`,                                  isRed:false, onPress: () => navigation.navigate('MaidChats') },
-              { icon:'card-outline',          iconColor:'#2563eb',   bg:'#e8f0fe', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.plan ? `${profile.subscription.plan} Â· ${profile.subscription.status}` : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
+              { icon:'person-circle-outline', iconColor:'#d97706',   bg:'#fef3e2', id:'hire_req',  title:t('menu_hire_requests'), sub: pendingRequests > 0 ? `${pendingRequests} ${t('incoming_label')}` : '', isRed:false, onPress: () => navigation.navigate('HireRequest') },
+              { icon:'chatbubbles-outline',   iconColor:'#7c3aed',   bg:'#ede8fd', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} ${t('chats_stat')}`,                      isRed:false, onPress: () => navigation.navigate('MaidChats') },
+              { icon:'card-outline',          iconColor:'#2563eb',   bg:'#e8f0fe', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.endDate ? `${t('active_subscription')} · ${new Date(profile.subscription.endDate).toLocaleDateString([], { day:'numeric', month:'short' })}` : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
               { icon:'gift-outline',          iconColor:'#d97706',   bg:'#fef3e2', id:'referrals', title:t('menu_referrals'),     sub: t('share_code_earn'),                                     isRed:false, onPress: () => navigation.navigate('Coupons') },
-              { icon:'bar-chart-outline',     iconColor:'#0891b2',   bg:'#e0f2fe', id:'analytics', title:t('menu_analytics'),     sub: `${stats.views} ${t('views')} Â· ${stats.likes} ${t('likes')}`, isRed:false, onPress: () => navigation.navigate('Analytics') },
+              { icon:'bar-chart-outline',     iconColor:'#0891b2',   bg:'#e0f2fe', id:'analytics', title:t('menu_analytics'),     sub: `${stats.views} ${t('views')} · ${stats.likes} ${t('likes')}`, isRed:false, onPress: () => navigation.navigate('Analytics') },
               { icon:'globe-outline',         iconColor:'#4f46e5',   bg:'#f0f4ff', id:'language',  title:t('language'),           sub: '',                                                       isRed:false, onPress: () => setLangVisible(true) },
               { icon:'notifications-outline', iconColor:'#ef4444',   bg:'#fef2f2', id:'notifs',    title:t('menu_notifications2'),sub: '',                                                       isRed:false, onPress: () => navigation.navigate('MaidAlerts') },
               { icon:'help-circle-outline',   iconColor:COLORS.green,bg:'#e8f4f1', id:'support',   title:t('menu_support2'),      sub: t('contact_admin_note'),                                  isRed:false, onPress: () => navigation.navigate('Support') },

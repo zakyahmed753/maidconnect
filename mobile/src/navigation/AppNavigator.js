@@ -214,7 +214,7 @@ function MaidTabs() {
   }, [loadUnread]);
   return (
     <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:64 + insets.bottom, paddingBottom: insets.bottom, elevation:8, shadowColor:'#000', shadowOpacity:0.06, shadowRadius:8 }, tabBarShowLabel:false }}>
-      <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon name="home" focused={focused} labelKey="tab_home" badge={unreadCount}/> }}/>
+      <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon name="home" focused={focused} labelKey="tab_home"/> }}/>
       <Tab.Screen name="MaidChats"  component={MaidChatsStack}    options={{ tabBarIcon:({focused})=><TabIcon name="chatbubbles" focused={focused} labelKey="tab_chats"/> }}/>
       <Tab.Screen name="MaidAlerts" component={NotificationsScreen} options={{ tabBarButton:() => null, listeners:{ focus: loadUnread } }}/>
     </Tab.Navigator>

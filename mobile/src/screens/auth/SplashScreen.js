@@ -1,6 +1,7 @@
 // src/screens/auth/SplashScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Modal, ActivityIndicator, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -15,6 +16,7 @@ export function SplashScreen({ navigation }) {
   const { lang, setLang } = useLangStore();
   const { t } = useTranslation();
   const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     SecureStore.getItemAsync(ROLE_KEY)
@@ -41,7 +43,6 @@ export function SplashScreen({ navigation }) {
         <View style={styles.loadingLogo}>
           <Ionicons name="home" size={40} color="#fff" />
         </View>
-        <Text style={styles.loadingName}>Servix</Text>
         <ActivityIndicator color={COLORS.green} style={{ marginTop: 32 }}/>
       </View>
     );
@@ -101,7 +102,7 @@ export function SplashScreen({ navigation }) {
               <Ionicons name="home" size={28} color={COLORS.green} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>I need a Maid</Text>
+              <Text style={styles.cardTitle}>I need a Helper</Text>
               <Text style={styles.cardSub}>Find trusted, vetted domestic staff for your home</Text>
             </View>
           </View>
@@ -129,12 +130,13 @@ export function SplashScreen({ navigation }) {
         </TouchableOpacity>
 
         {/* Sign in */}
-        <View style={styles.footer}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Login')}
+          style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
+          activeOpacity={0.7}>
           <Text style={styles.footerText}>Already a member?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')} style={{ marginLeft: 5 }}>
-            <Text style={styles.footerLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
+          <Text style={[styles.footerLink, { marginLeft: 5 }]}>Sign In</Text>
+        </TouchableOpacity>
 
       </ScrollView>
     </View>
@@ -147,7 +149,7 @@ const styles = StyleSheet.create({
   loadingName:      { fontFamily: FONTS.display, fontSize: 32, color: COLORS.dark },
 
   container:        { flex: 1, backgroundColor: COLORS.cream },
-  scroll:           { paddingHorizontal: 22, paddingTop: 110, paddingBottom: 36 },
+  scroll:           { paddingHorizontal: 22, paddingTop: 110, paddingBottom: 0 },
 
   langBtn:          { position: 'absolute', top: 54, right: 18, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: COLORS.border, backgroundColor: COLORS.surface, zIndex: 10 },
   langGlobe:        { fontSize: 16 },

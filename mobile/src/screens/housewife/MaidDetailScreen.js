@@ -21,78 +21,144 @@ const SKILL_KEYS = {
 };
 const LANG_KEYS = { English: 'lang_en', Arabic: 'lang_ar', French: 'lang_fr', Hausa: 'lang_ha' };
 
-const TERMS_EN = `TERMS & CONDITIONS – Servix Platform
+const TERMS_EN = `Servix Terms & Conditions
 
-1. PLATFORM NATURE
-Servix is a technology platform that facilitates communication between independent service providers ("Workers") and customers. Servix is not an employer, recruitment agency, labor office, sponsor, guarantor, or representative of any Worker listed on the platform.
+Welcome to Servix. By accessing or using the Servix platform, website, or mobile application, you agree to be bound by these Terms & Conditions.
 
-2. INDEPENDENT RELATIONSHIP
-Any agreement, engagement, employment, payment, accommodation, transportation, supervision, or other arrangement made between a customer and a Worker is solely between those parties.
+1. Platform Purpose
+Servix is a digital marketplace designed to connect homeowners with domestic helpers. Servix is not an employer, recruitment agency, sponsor, staffing company, or party to any employment or service agreement between users.
 
-3. NO RESPONSIBILITY FOR WORKER CONDUCT
-Servix does not control, supervise, monitor, direct, or manage Workers during or after any engagement.
+2. User Accounts
+Users must provide accurate, complete, and up-to-date information when creating an account.
+Each user is responsible for maintaining the confidentiality of their account credentials and for all activities that occur under their account.
+Servix reserves the right to suspend or terminate any account that violates these Terms or applicable laws.
 
-Accordingly, Servix shall not be liable for:
-• The behavior, attitude, actions, negligence, misconduct, or performance of any Worker.
-• Theft, fraud, misrepresentation, property damage, personal injury, disputes, conflicts, or any unlawful acts committed by any Worker.
-• Any losses, damages, costs, claims, injuries, or expenses arising from interactions between customers and Workers.
+3. Acceptable Use
+Users agree to use the platform in a lawful, respectful, and responsible manner.
+Users may not:
+• Provide false or misleading information.
+• Use the platform for unlawful activities.
+• Harass, abuse, or threaten other users.
+• Attempt to interfere with the operation or security of the platform.
 
-4. CUSTOMER DUE DILIGENCE
-Customers are solely responsible for:
-• Verifying the identity and legal status of any Worker.
-• Conducting interviews and background checks where appropriate.
-• Monitoring and supervising the Worker during any service period.
-• Taking reasonable security measures to protect family members, children, elderly persons, valuables, and property.
+4. Agreements Between Users
+Any agreement made through Servix is concluded directly between the homeowner and the helper.
+The parties are solely responsible for agreeing upon:
+• Job responsibilities
+• Salary
+• Working hours
+• Workplace
+• Employment duration
+• Any additional employment terms
 
-5. SAFETY RECOMMENDATION
-Customers are strongly advised to:
-• Never leave children unattended with a Worker before establishing trust.
-• Secure valuables, cash, documents, jewelry, and sensitive information.
-• Verify identity documents when required by law.
-• Maintain appropriate supervision during service delivery.
+5. Information Verification
+Servix may review certain information or documentation to improve platform quality and user experience.
+However, such review does not constitute a guarantee, certification, or endorsement of the accuracy, completeness, reliability, qualifications, or suitability of any user.
+Users are encouraged to independently verify the identity and suitability of the other party before entering into any agreement.
 
-6. NO GUARANTEES
-Servix makes no warranties or guarantees regarding:
-• Character, honesty, reliability, qualifications, skills, experience, behavior, availability, or suitability of any Worker.
+6. Ratings & Reviews
+Ratings and reviews reflect the personal opinions and experiences of individual users.
+They do not represent endorsements, guarantees, or official opinions of Servix.
 
-7. CUSTOMER ASSUMPTION OF RISK
-The customer voluntarily assumes all risks associated with hiring, engaging, communicating with, or allowing access to any Worker.
+7. Payments & Subscriptions
+Certain features of the platform may require subscription fees or service payments.
+Applicable prices, billing terms, and payment details will be presented before completing the purchase.
+Refunds, where applicable, are governed by the Servix Refund Policy.
 
-8. LIMITATION OF LIABILITY
-To the maximum extent permitted by applicable law, Servix, its owners, employees, affiliates, and partners shall not be liable for any direct, indirect, incidental, consequential, special, punitive, or exemplary damages arising from use of the platform.
+8. Limitation of Liability
+Servix provides a technology platform that facilitates introductions between users.
+To the maximum extent permitted by applicable law, Servix shall not be liable for disputes, damages, losses, injuries, delays, contractual disagreements, or any direct or indirect consequences arising from interactions or agreements between users.
+Nothing in these Terms excludes liability where such exclusion is prohibited by law.
 
-9. USER ACCEPTANCE
-By clicking "Accept", the customer confirms that they understand and agree that Servix acts solely as a communication and marketplace platform and is not responsible for the acts, omissions, conduct, or performance of Workers.`;
+9. Compliance with Laws
+Users are responsible for complying with all applicable local laws and regulations in the country where services are performed, including employment, immigration, residency, identity verification, taxation, and other legal requirements.
 
-const TERMS_AR = `الشروط والأحكام – منصة Servix
+10. Reporting Misconduct
+Users may report suspected misuse, fraud, or violations through Servix Support.
+Servix may investigate reports and take reasonable actions in accordance with its internal policies.
 
-1. طبيعة المنصة
-Servix تطبيق تقني بيسهّل التواصل بين ستات البيوت ومقدمات الخدمات المنزلية. Servix مش صاحب عمل ولا مكتب توظيف ولا ضامن ولا ممثل لأي عاملة على المنصة.
+11. Intellectual Property
+All trademarks, logos, software, designs, graphics, text, and other content available on Servix are owned by or licensed to Servix and are protected under applicable intellectual property laws.
+No content may be copied, reproduced, distributed, or used without prior written permission.
 
-2. العلاقة بين الأطراف
-أي اتفاق أو ترتيب أو دفع أو إشراف بيتم بين العميلة والعاملة هو مسؤولية الطرفين بس، من غير أي مسؤولية على Servix.
+12. Changes to These Terms
+Servix reserves the right to modify these Terms at any time.
+Updated versions will become effective once published on the platform.
+Continued use of Servix after such updates constitutes acceptance of the revised Terms.
 
-3. إخلاء المسؤولية
-Servix مش بتشرف ولا بتراقب العاملات، وبالتالي مش مسؤولة عن:
-• أي تصرفات أو سلوك أو أداء من أي عاملة.
-• السرقة أو الاحتيال أو الأضرار المادية أو الجسدية.
-• أي خسائر أو نزاعات تنشأ بين العميلة والعاملة.
+13. Independent Relationship
+Use of the Servix platform does not create any employment, agency, partnership, joint venture, representative, or contractual relationship between Servix and any user.
+Servix acts solely as a technology platform facilitating communication between independent users.
+Any employment, service arrangement, or contractual relationship established through the platform exists exclusively between the homeowner and the domestic helper.`;
 
-4. مسؤولية العميلة
-العميلة مسؤولة وحدها عن:
-• التحقق من هوية العاملة ومستنداتها.
-• إجراء المقابلات والفحص المناسب قبل التعاقد.
-• متابعة العاملة والإشراف عليها.
-• حماية الأطفال وكبار السن والممتلكات الثمينة.
+const TERMS_AR = `الشروط والأحكام - Servix
 
-5. تنبيه أمني
-بتنصح Servix بعدم ترك الأطفال بدون إشراف مناسب، والاحتفاظ بالمقتنيات الثمينة في أماكن آمنة.
+مرحبًا بك في Servix. باستخدامك للمنصة أو الموقع الإلكتروني أو التطبيق، فإنك توافق على الالتزام بالشروط والأحكام التالية.
 
-6. عدم تقديم ضمانات
-Servix مش بتضمن أخلاق أو أمانة أو كفاءة أو سلوك أي عاملة.
+1. طبيعة الخدمة
+Servix منصة إلكترونية تهدف إلى تسهيل التواصل بين أصحاب المنازل والعمالة المنزلية.
+ولا تعتبر Servix جهة توظيف أو مكتب استقدام أو كفيل أو شركة تشغيل أو طرفًا في أي علاقة عمل أو اتفاق يتم بين المستخدمين.
 
-7. الموافقة
-بالضغط على تأكيد، بتوافقي إن Servix مجرد منصة تواصل ومش مسؤولة عن تصرفات أو أداء العاملات.`
+2. الحسابات
+يلتزم المستخدم بتقديم بيانات صحيحة ومحدثة عند إنشاء الحساب.
+ويتحمل مسؤولية الحفاظ على سرية بيانات تسجيل الدخول الخاصة به.
+ويحق لـ Servix تعليق أو إيقاف أي حساب يخالف هذه الشروط أو القوانين المعمول بها.
+
+3. استخدام المنصة
+يوافق المستخدم على استخدام المنصة بطريقة قانونية ومسؤولة.
+ويحظر عليه:
+• تقديم بيانات غير صحيحة.
+• استخدام المنصة لأي نشاط غير قانوني.
+• الإساءة أو التهديد أو مضايقة أي مستخدم.
+• محاولة تعطيل أو اختراق المنصة.
+
+4. الاتفاق بين المستخدمين
+أي اتفاق يتم من خلال Servix يكون مباشرة بين صاحب المنزل والعاملة.
+ويتحمل الطرفان مسؤولية الاتفاق على:
+• طبيعة العمل
+• الراتب
+• ساعات العمل
+• مكان العمل
+• مدة العمل
+• أي شروط إضافية
+
+5. التحقق من البيانات
+قد تقوم Servix بمراجعة بعض البيانات أو المستندات بهدف تحسين جودة الخدمة.
+ولا يُعد ذلك ضمانًا أو اعتمادًا لصحة أو اكتمال أو دقة المعلومات أو مؤهلات أي مستخدم.
+وينصح كل مستخدم بالتحقق بنفسه من هوية الطرف الآخر وملاءمته قبل بدء أي تعاون.
+
+6. التقييمات
+تعكس التقييمات والمراجعات آراء أصحابها فقط.
+ولا تمثل اعتمادًا أو توصية رسمية من Servix.
+
+7. الاشتراكات والمدفوعات
+قد تتطلب بعض خدمات المنصة رسوم اشتراك أو مدفوعات.
+وسيتم توضيح جميع الرسوم قبل إتمام عملية الدفع.
+وتخضع عمليات الاسترداد - إن وجدت - لسياسة الاسترداد الخاصة بـ Servix.
+
+8. حدود المسؤولية
+تقتصر مهمة Servix على توفير منصة إلكترونية لتسهيل التواصل بين المستخدمين.
+وفي الحدود التي يسمح بها القانون، لا تتحمل Servix المسؤولية عن أي نزاعات أو مطالبات أو خسائر أو أضرار أو إصابات أو نتائج تنشأ عن العلاقة أو الاتفاقات التي تتم مباشرة بين المستخدمين.
+ولا يؤثر ذلك على أي مسؤولية لا يجوز استبعادها بموجب القانون.
+
+9. الالتزام بالقوانين
+يلتزم جميع المستخدمين بالامتثال لكافة القوانين واللوائح المعمول بها في الدولة التي يتم تقديم الخدمة فيها، بما في ذلك قوانين العمل والإقامة والهوية والضرائب وغيرها.
+
+10. الإبلاغ عن المخالفات
+يجوز للمستخدمين الإبلاغ عن أي إساءة استخدام أو مخالفة من خلال فريق الدعم.
+ويحق لـ Servix مراجعة البلاغات واتخاذ الإجراءات المناسبة وفقًا لسياساتها.
+
+11. الملكية الفكرية
+جميع العلامات التجارية والشعارات والتصاميم والبرمجيات والمحتوى داخل Servix مملوكة أو مرخصة لصالح Servix، ويحظر استخدامها أو إعادة نشرها دون موافقة كتابية مسبقة.
+
+12. تعديل الشروط
+يجوز لـ Servix تعديل هذه الشروط في أي وقت.
+ويصبح التعديل نافذًا بمجرد نشره داخل المنصة.
+ويعد استمرار استخدام المنصة موافقة على النسخة المحدثة.
+
+13. استقلالية العلاقة بين المستخدمين
+لا يؤدي استخدام منصة Servix إلى إنشاء أي علاقة عمل أو وكالة أو شراكة أو مشروع مشترك أو تمثيل قانوني أو علاقة تعاقدية بين Servix وأي من المستخدمين.
+ويقتصر دور Servix على توفير منصة تقنية لتسهيل التواصل بين المستخدمين، بينما تنشأ أي علاقة عمل أو اتفاق أو التزام قانوني حصريًا بين صاحب المنزل والعاملة دون أن تكون Servix طرفًا فيها.`
 
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;

@@ -19,7 +19,8 @@ const POLL_MS = 3000; // fallback poll interval when socket is unreliable
 export default function ChatScreen({ route, navigation }) {
   const { chatId, maidName } = route.params || {};
   const { user } = useAuthStore();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const isAr = lang === 'ar';
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
@@ -202,7 +203,7 @@ export default function ChatScreen({ route, navigation }) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'#e8f4f1', alignItems:'center', justifyContent:'center' }}>
+        <TouchableOpacity onPress={() => user?.role === 'maid' ? navigation.navigate('MaidChatsList') : navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'#e8f4f1', alignItems:'center', justifyContent:'center' }}>
           <BackChevron color={COLORS.green} />
         </TouchableOpacity>
         <View style={styles.chatAva}><Text style={{ fontSize: 16, color: '#fff', fontWeight: 'bold' }}>{(maidName || 'M').replace(/[^a-zA-Z؀-ۿ]/g, '').charAt(0).toUpperCase() || 'M'}</Text></View>
@@ -232,7 +233,7 @@ export default function ChatScreen({ route, navigation }) {
 
       <View style={styles.inputRow}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, isAr && { textAlign: 'right' }]}
           value={text}
           onChangeText={setText}
           placeholder={t('type_message')}
@@ -244,7 +245,7 @@ export default function ChatScreen({ route, navigation }) {
           onPress={sendText}
           style={[styles.sendBtn, !text.trim() && { opacity: 0.35 }]}
           disabled={!text.trim()}>
-          <Ionicons name="send" size={18} color="#fff" />
+          <Ionicons name="send" size={18} color="#fff" style={isAr ? { transform: [{ scaleX: -1 }] } : undefined} />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
