@@ -1,15 +1,15 @@
 export const COLORS = {
-  cream:   '#fdf6ec',
-  gold:    '#c9a84c',
-  gold2:   '#e8c97a',
-  dark:    '#1a1108',
-  brown:   '#3d2b1f',
-  surface: '#fff9f0',
-  border:  '#ede0cc',
-  muted:   '#a08c6e',
+  cream:   '#f4f4f1',
+  gold:    '#0D3827',
+  gold2:   '#2e7d5e',
+  dark:    '#222222',
+  brown:   '#444444',
+  surface: '#ffffff',
+  border:  '#e0e0e0',
+  muted:   '#666666',
   red:     '#c0392b',
-  green:   '#2e7d5e',
-  text:    '#2c1a0e',
+  green:   '#0D3827',
+  text:    '#333333',
 };
 
 export const FONTS = {
@@ -23,7 +23,7 @@ export const FONTS = {
 
 export const SHADOWS = {
   card: {
-    shadowColor: '#c9a84c',
+    shadowColor: '#0D3827',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 12,

@@ -1,7 +1,8 @@
-// src/screens/auth/PendingApprovalScreen.js
+﻿// src/screens/auth/PendingApprovalScreen.js
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ActivityIndicator, BackHandler } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { maidsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -29,7 +30,7 @@ export default function PendingApprovalScreen({ navigation }) {
       const n        = maid?.verificationNote || maid?.approvalNote || '';
 
       const isApproved = verif === 'verified' || approval === 'approved';
-      const isRejected = verif === 'rejected';
+      const isRejected = verif === 'rejected' || approval === 'rejected';
 
       setNote(n);
       if (isApproved) {
@@ -60,9 +61,9 @@ export default function PendingApprovalScreen({ navigation }) {
   }, []);
 
   const STATUS_CONFIG = {
-    pending:  { icon:'⏳', title: t('under_review'),   subtitle: t('review_sub'),   color: COLORS.gold,   bg:'#1a1108' },
-    verified: { icon:'✅', title: t('verified_title'), subtitle: t('verified_sub'), color: '#5dd6a8',     bg:'#0a1a0f' },
-    rejected: { icon:'❌', title: t('rejected_title'), subtitle: note || t('rejected_sub'), color:'#f87171', bg:'#1a0808' },
+    pending:  { icon:'time-outline',            iconColor:'#fff',     title: t('under_review'),   subtitle: t('review_sub'),   color: '#fff',        bg:'#0D3827' },
+    verified: { icon:'checkmark-circle',        iconColor:'#5dd6a8',  title: t('verified_title'), subtitle: t('verified_sub'), color: '#5dd6a8',     bg:'#0a4a39' },
+    rejected: { icon:'close-circle',            iconColor:'#f87171',  title: t('rejected_title'), subtitle: note || t('rejected_sub'), color:'#f87171', bg:'#2d0a0a' },
   };
 
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
@@ -77,9 +78,9 @@ export default function PendingApprovalScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content"/>
-      <LinearGradient colors={[cfg.bg, '#1a1108']} style={styles.container}>
+      <LinearGradient colors={[cfg.bg, '#0a4a39']} style={styles.container}>
         <Text style={styles.appName}>Servix</Text>
-        <Text style={{ fontSize: 64, marginBottom: 16 }}>{cfg.icon}</Text>
+        <Ionicons name={cfg.icon} size={64} color={cfg.iconColor} style={{ marginBottom: 16 }} />
         <Text style={[styles.title, { color: cfg.color }]}>{cfg.title}</Text>
         <Text style={styles.subtitle}>{cfg.subtitle}</Text>
 
@@ -89,12 +90,12 @@ export default function PendingApprovalScreen({ navigation }) {
               <View key={i} style={styles.stepRow}>
                 <View style={[styles.stepDot,
                   s.done   && { backgroundColor: '#5dd6a8' },
-                  s.active && { backgroundColor: COLORS.gold },
+                  s.active && { backgroundColor: '#4db595' },
                   !s.done && !s.active && { backgroundColor: 'rgba(255,255,255,0.1)' }
                 ]}>
-                  <Text style={{ fontSize: 10, color: '#fff' }}>{s.done ? '✓' : s.active ? '●' : String(i+1)}</Text>
+                  <Text style={{ fontSize: 10, color: '#fff' }}>{s.done ? '✓' : s.active ? 'â—' : String(i+1)}</Text>
                 </View>
-                <Text style={[styles.stepLabel, (s.done || s.active) && { color: '#fff8ee' }]}>{s.label}</Text>
+                <Text style={[styles.stepLabel, (s.done || s.active) && { color: '#fff' }]}>{s.label}</Text>
               </View>
             ))}
           </View>
@@ -134,18 +135,18 @@ export default function PendingApprovalScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container:     { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
-  appName:       { fontFamily: FONTS.display, fontSize: 14, color: 'rgba(232,201,122,0.4)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 24 },
+  appName:       { fontFamily: FONTS.display, fontSize: 14, color: 'rgba(255,255,255,0.5)', letterSpacing: 3, textTransform: 'uppercase', marginBottom: 24 },
   title:         { fontFamily: FONTS.display, fontSize: 28, textAlign: 'center', marginBottom: 10 },
-  subtitle:      { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 20, marginBottom: 28, maxWidth: 300 },
-  stepsBox:      { width: '100%', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: 16, marginBottom: 24 },
+  subtitle:      { fontSize: 13, color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 20, marginBottom: 28, maxWidth: 300 },
+  stepsBox:      { width: '100%', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: 16, marginBottom: 24 },
   stepRow:       { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   stepDot:       { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  stepLabel:     { fontSize: 13, color: 'rgba(255,255,255,0.35)' },
-  checkBtn:      { backgroundColor: COLORS.gold, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 5, marginBottom: 12, minWidth: 160, alignItems: 'center' },
-  checkBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark },
-  proceedBtn:    { backgroundColor: '#2e7d5e', paddingHorizontal: 28, paddingVertical: 13, borderRadius: 5, marginBottom: 12 },
+  stepLabel:     { fontSize: 13, color: 'rgba(255,255,255,0.4)' },
+  checkBtn:      { backgroundColor: '#fff', paddingHorizontal: 28, paddingVertical: 13, borderRadius: 5, marginBottom: 12, minWidth: 160, alignItems: 'center' },
+  checkBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.green },
+  proceedBtn:    { backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 28, paddingVertical: 13, borderRadius: 5, marginBottom: 12 },
   proceedBtnTxt: { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' },
-  resubmitBtn:   { borderWidth: 1.5, borderColor: 'rgba(232,201,122,0.35)', paddingHorizontal: 28, paddingVertical: 13, borderRadius: 5, marginBottom: 12 },
-  resubmitBtnTxt:{ fontSize: 14, color: '#e8c97a' },
+  resubmitBtn:   { borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)', paddingHorizontal: 28, paddingVertical: 13, borderRadius: 5, marginBottom: 12 },
+  resubmitBtnTxt:{ fontSize: 14, color: '#fff' },
   hint:          { fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', marginTop: 10 },
 });

@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   container:  { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 28 },
   circle:     { position: 'absolute', borderRadius: 999, borderWidth: 2, borderColor: '#5dd6a8' },
   congrats:   { fontSize: 14, letterSpacing: 3, textTransform: 'uppercase', color: '#5dd6a8', fontFamily: FONTS.bodySemiBold, marginBottom: 6 },
-  headline:   { fontFamily: FONTS.display, fontSize: 38, color: '#fff8ee', textAlign: 'center', lineHeight: 44 },
+  headline:   { fontFamily: FONTS.display, fontSize: 38, color: '#fff', textAlign: 'center', lineHeight: 44 },
   dividerLine:{ width: 60, height: 2, backgroundColor: 'rgba(93,214,168,0.4)', borderRadius: 1, marginVertical: 20 },
   body:       { fontSize: 14, color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 22, marginBottom: 24 },
   infoBox:    { width: '100%', backgroundColor: 'rgba(93,214,168,0.06)', borderWidth: 1, borderColor: 'rgba(93,214,168,0.15)', borderRadius: 10, padding: 16, marginBottom: 32, gap: 12 },

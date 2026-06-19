@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
-import { authAPI } from '../services/api';
+import { authAPI, notificationsAPI } from '../services/api';
 
 // Show notifications + play sound even when app is in foreground
 Notifications.setNotificationHandler({
@@ -17,6 +18,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
 import useAuthStore from '../store/authStore';
+import useNotifStore from '../store/notifStore';
 import { COLORS } from '../utils/theme';
 import { useTranslation } from '../utils/i18n';
 import HiredMaidsScreen from '../screens/housewife/HiredMaidsScreen';
@@ -58,18 +60,43 @@ import HireRequestScreen from '../screens/maid/HireRequestScreen';
 import HiredCelebrationScreen from '../screens/maid/HiredCelebrationScreen';
 import CouponScreen from '../screens/maid/CouponScreen';
 import AreaSelectScreen from '../screens/housewife/AreaSelectScreen';
-import WaitlistScreen from '../screens/housewife/WaitlistScreen';
 import { AnalyticsScreen, EditHWProfileScreen, SupportScreen, PaymentHistoryScreen } from '../screens/screens';
 
 const Stack = createStackNavigator();
 const Tab   = createBottomTabNavigator();
 
-const TabIcon = ({ icon, focused, labelKey }) => {
+const TabIcon = ({ name, focused, labelKey, badge = 0 }) => {
   const { t } = useTranslation();
   return (
-    <View style={{ alignItems:'center', gap:3 }}>
-      <Text style={{ fontSize:20 }}>{icon}</Text>
-      <Text style={{ fontSize:8, letterSpacing:0.8, textTransform:'uppercase', color: focused ? COLORS.gold : COLORS.muted, fontWeight: focused ? '700' : '400' }}>{t(labelKey)}</Text>
+    <View style={{ alignItems: 'center', paddingTop: 2 }}>
+      <View style={{
+        width: 54, height: 30, borderRadius: 15,
+        backgroundColor: focused ? 'rgba(13,56,39,0.12)' : 'transparent',
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Ionicons
+          name={focused ? name : `${name}-outline`}
+          size={22}
+          color={focused ? COLORS.green : COLORS.muted}
+        />
+        {badge > 0 && (
+          <View style={{
+            position: 'absolute', top: -4, right: 0,
+            backgroundColor: '#e53e3e', borderRadius: 8,
+            minWidth: 16, height: 16, alignItems: 'center',
+            justifyContent: 'center', paddingHorizontal: 3,
+          }}>
+            <Text style={{ fontSize: 9, color: '#fff', fontWeight: '800' }}>
+              {badge > 9 ? '9+' : String(badge)}
+            </Text>
+          </View>
+        )}
+      </View>
+      <Text style={{
+        fontSize: 9, marginTop: 2, letterSpacing: 0.4,
+        color: focused ? COLORS.green : COLORS.muted,
+        fontWeight: focused ? '700' : '400',
+      }}>{t(labelKey)}</Text>
     </View>
   );
 };
@@ -101,13 +128,30 @@ function HWChatsStack() {
 // Housewife bottom tabs
 function HouseWifeTabs() {
   const insets = useSafeAreaInsets();
+  const { unreadCount, setCount } = useNotifStore();
+  const refreshProfile = useAuthStore(s => s.refreshProfile);
+  const loadUnread = useCallback(() => {
+    notificationsAPI.getAll()
+      .then(r => setCount((r.data.notifications || []).filter(n => !n.isRead).length))
+      .catch(() => {});
+  }, [setCount]);
+  useEffect(() => {
+    loadUnread();
+    const iv = setInterval(loadUnread, 30000);
+    return () => clearInterval(iv);
+  }, [loadUnread]);
+  // Poll profile so subscription approvals by admin are reflected promptly
+  useEffect(() => {
+    const iv = setInterval(refreshProfile, 15000);
+    return () => clearInterval(iv);
+  }, [refreshProfile]);
   return (
-    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
-      <Tab.Screen name="Browse"  component={BrowseStack}   options={{ tabBarIcon:({focused})=><TabIcon icon="🔍" focused={focused} labelKey="tab_browse"/> }}/>
-      <Tab.Screen name="Saved"   component={SavedScreen}   options={{ tabBarIcon:({focused})=><TabIcon icon="❤️" focused={focused} labelKey="tab_saved"/> }}/>
-      <Tab.Screen name="Chats"   component={HWChatsStack}  options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
-      <Tab.Screen name="Alerts"  component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} labelKey="tab_alerts"/> }}/>
-      <Tab.Screen name="Me"      component={HWProfileStack} options={{ tabBarIcon:({focused})=><TabIcon icon="👤" focused={focused} labelKey="tab_me"/> }}/>
+    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:64 + insets.bottom, paddingBottom: insets.bottom, elevation:8, shadowColor:'#000', shadowOpacity:0.06, shadowRadius:8 }, tabBarShowLabel:false }}>
+      <Tab.Screen name="Browse"  component={BrowseStack}   options={{ tabBarIcon:({focused})=><TabIcon name="home" focused={focused} labelKey="tab_home"/> }}/>
+      <Tab.Screen name="Saved"   component={SavedScreen}   options={{ tabBarIcon:({focused})=><TabIcon name="bookmark" focused={focused} labelKey="tab_saved"/> }}/>
+      <Tab.Screen name="Chats"   component={HWChatsStack}  options={{ tabBarIcon:({focused})=><TabIcon name="chatbubbles" focused={focused} labelKey="tab_chats"/> }}/>
+      <Tab.Screen name="Alerts"  component={NotificationsScreen} options={{ tabBarButton:() => null, listeners:{ focus: loadUnread } }}/>
+      <Tab.Screen name="Me"      component={HWProfileStack} options={{ tabBarIcon:({focused})=><TabIcon name="person" focused={focused} labelKey="tab_me" badge={unreadCount}/> }} listeners={({ navigation }) => ({ tabPress: e => { e.preventDefault(); navigation.navigate('Me', { screen: 'HWProfile' }); } })}/>
     </Tab.Navigator>
   );
 }
@@ -157,18 +201,29 @@ function MaidChatsStack() {
 // Maid bottom tabs
 function MaidTabs() {
   const insets = useSafeAreaInsets();
+  const { unreadCount, setCount } = useNotifStore();
+  const loadUnread = useCallback(() => {
+    notificationsAPI.getAll()
+      .then(r => setCount((r.data.notifications || []).filter(n => !n.isRead).length))
+      .catch(() => {});
+  }, [setCount]);
+  useEffect(() => {
+    loadUnread();
+    const iv = setInterval(loadUnread, 30000);
+    return () => clearInterval(iv);
+  }, [loadUnread]);
   return (
-    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:60 + insets.bottom, paddingBottom: insets.bottom }, tabBarShowLabel:false }}>
-      <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon icon="🏠" focused={focused} labelKey="tab_home"/> }}/>
-      <Tab.Screen name="MaidChats"  component={MaidChatsStack}    options={{ tabBarIcon:({focused})=><TabIcon icon="💬" focused={focused} labelKey="tab_chats"/> }}/>
-      <Tab.Screen name="MaidAlerts" component={NotificationsScreen} options={{ tabBarIcon:({focused})=><TabIcon icon="🔔" focused={focused} labelKey="tab_alerts"/> }}/>
+    <Tab.Navigator screenOptions={{ headerShown:false, tabBarStyle:{ backgroundColor:COLORS.surface, borderTopColor:COLORS.border, height:64 + insets.bottom, paddingBottom: insets.bottom, elevation:8, shadowColor:'#000', shadowOpacity:0.06, shadowRadius:8 }, tabBarShowLabel:false }}>
+      <Tab.Screen name="MaidHome"   component={MaidHomeStack}     options={{ tabBarIcon:({focused})=><TabIcon name="home" focused={focused} labelKey="tab_home" badge={unreadCount}/> }}/>
+      <Tab.Screen name="MaidChats"  component={MaidChatsStack}    options={{ tabBarIcon:({focused})=><TabIcon name="chatbubbles" focused={focused} labelKey="tab_chats"/> }}/>
+      <Tab.Screen name="MaidAlerts" component={NotificationsScreen} options={{ tabBarButton:() => null, listeners:{ focus: loadUnread } }}/>
     </Tab.Navigator>
   );
 }
 
 // Root navigator
 export default function AppNavigator() {
-  const { token, user, profile, activeAreas } = useAuthStore();
+  const { token, user, profile } = useAuthStore();
 
   // Register Expo push token whenever the user logs in
   useEffect(() => {
@@ -182,7 +237,7 @@ export default function AppNavigator() {
             importance: Notifications.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
             sound: 'default',
-            lightColor: '#C9A84C',
+            lightColor: '#0D3827',
           });
         }
         const { status } = await Notifications.requestPermissionsAsync();
@@ -246,11 +301,6 @@ export default function AppNavigator() {
           // Housewife hasn't picked an area yet
           <>
             <Stack.Screen name="AreaSelect" component={AreaSelectScreen}/>
-          </>
-        ) : !activeAreas.includes(profile?.residentialArea) ? (
-          // Area not yet active — waitlist
-          <>
-            <Stack.Screen name="Waitlist" component={WaitlistScreen}/>
           </>
         ) : (
           <Stack.Screen name="HWMain" component={HouseWifeTabs}/>

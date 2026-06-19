@@ -1,4 +1,4 @@
-// src/screens/auth/SelfieVerificationScreen.js
+﻿// src/screens/auth/SelfieVerificationScreen.js
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, StatusBar, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +8,7 @@ import { maidsAPI, uploadAPI } from '../../services/api';
 // Toast is kept for camera permission errors
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
+import BackChevron from '../../components/BackChevron';
 
 export default function SelfieVerificationScreen({ route, navigation }) {
   const { isEgyptian, idNumber, idPhotoUri, passportNumber, passportPhotoUri, isResubmit } = route.params || {};
@@ -98,10 +99,10 @@ export default function SelfieVerificationScreen({ route, navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content"/>
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
         {navigation.canGoBack() && (
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+            <BackChevron />
           </TouchableOpacity>
         )}
         <Text style={styles.heroTitle}>Selfie Verification</Text>
@@ -111,7 +112,7 @@ export default function SelfieVerificationScreen({ route, navigation }) {
       <ScrollView style={{ flex: 1, backgroundColor: COLORS.cream, padding: 20 }}>
         {/* Instructions */}
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>📸 Take a Clear Selfie</Text>
+          <Text style={styles.infoTitle}>ðŸ“¸ Take a Clear Selfie</Text>
           {['Face the camera directly in good lighting',
             'Remove glasses or hats',
             'Plain background preferred',
@@ -123,10 +124,10 @@ export default function SelfieVerificationScreen({ route, navigation }) {
         {/* Passport re-upload — only for non-Egyptian resubmission */}
         {needsPassportPhoto && (
           <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>🪪 Re-upload Passport Photo</Text>
+            <Text style={styles.infoTitle}>ðŸªª Re-upload Passport Photo</Text>
             <Text style={styles.infoItem}>Your previous passport photo upload failed. Please upload it again.</Text>
             <TouchableOpacity style={[styles.galleryBtn, { marginTop: 10, marginBottom: 0 }]} onPress={pickPassportPhoto}>
-              <Text style={styles.galleryBtnTxt}>{resubmitPassportUri ? '✅ Passport photo selected — tap to change' : '📎  Upload Passport Photo'}</Text>
+              <Text style={styles.galleryBtnTxt}>{resubmitPassportUri ? 'âœ… Passport photo selected — tap to change' : 'ðŸ“Ž  Upload Passport Photo'}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -141,22 +142,22 @@ export default function SelfieVerificationScreen({ route, navigation }) {
           </View>
         ) : (
           <View style={styles.selfieEmpty}>
-            <Text style={{ fontSize: 48, marginBottom: 10 }}>🤳</Text>
+            <Text style={{ fontSize: 48, marginBottom: 10 }}>ðŸ¤³</Text>
             <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center' }}>No selfie yet</Text>
           </View>
         )}
 
         {/* Buttons */}
         <TouchableOpacity style={styles.cameraBtn} onPress={takeSelfie}>
-          <Text style={styles.cameraBtnTxt}>📷  Open Camera</Text>
+          <Text style={styles.cameraBtnTxt}>ðŸ“·  Open Camera</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.galleryBtn} onPress={pickSelfie}>
-          <Text style={styles.galleryBtnTxt}>🖼  Choose from Gallery</Text>
+          <Text style={styles.galleryBtnTxt}>ðŸ–¼  Choose from Gallery</Text>
         </TouchableOpacity>
 
         {submitError && (
           <View style={{ backgroundColor: 'rgba(224,85,85,0.1)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 8, padding: 12, marginBottom: 12 }}>
-            <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 18 }}>⚠️ {submitError}</Text>
+            <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 18 }}>⚠ {submitError}</Text>
           </View>
         )}
 
@@ -179,22 +180,22 @@ export default function SelfieVerificationScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   hero:            { padding: 20, paddingTop: 54 },
-  heroTitle:       { fontFamily: FONTS.display, fontSize: 24, color: '#e8c97a', marginTop: 8 },
-  heroSub:         { fontSize: 12, color: 'rgba(232,201,122,0.5)', marginTop: 3 },
-  infoBox:         { backgroundColor: '#fff9f0', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 14, borderLeftWidth: 3, borderLeftColor: COLORS.gold, marginBottom: 20 },
+  heroTitle:       { fontFamily: FONTS.display, fontSize: 24, color: '#fff', marginTop: 8 },
+  heroSub:         { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 3 },
+  infoBox:         { backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 14, borderLeftWidth: 3, borderLeftColor: COLORS.green, marginBottom: 20 },
   infoTitle:       { fontSize: 13, fontWeight: '700', color: COLORS.dark, marginBottom: 8 },
   infoItem:        { fontSize: 12, color: COLORS.muted, lineHeight: 20 },
   selfiePreview:   { alignItems: 'center', marginBottom: 16 },
-  selfieImg:       { width: 180, height: 180, borderRadius: 90, borderWidth: 3, borderColor: COLORS.gold },
+  selfieImg:       { width: 180, height: 180, borderRadius: 90, borderWidth: 3, borderColor: COLORS.green },
   retakeBtn:       { marginTop: 10, paddingHorizontal: 20, paddingVertical: 8, borderWidth: 1, borderColor: COLORS.border, borderRadius: 4 },
   retakeTxt:       { fontSize: 12, color: COLORS.muted },
   selfieEmpty:     { alignItems: 'center', justifyContent: 'center', height: 180, borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.border, borderRadius: 90, alignSelf: 'center', width: 180, marginBottom: 16 },
-  cameraBtn:       { backgroundColor: COLORS.gold, padding: 14, borderRadius: 5, alignItems: 'center', marginBottom: 10 },
-  cameraBtnTxt:    { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark },
+  cameraBtn:       { backgroundColor: COLORS.green, padding: 14, borderRadius: 5, alignItems: 'center', marginBottom: 10 },
+  cameraBtnTxt:    { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' },
   galleryBtn:      { padding: 13, borderRadius: 5, alignItems: 'center', marginBottom: 20, borderWidth: 1.5, borderColor: COLORS.border },
-  galleryBtnTxt:   { fontSize: 14, color: COLORS.brown },
-  submitBtn:       { backgroundColor: '#1a1108', padding: 15, borderRadius: 5, alignItems: 'center', marginBottom: 14 },
+  galleryBtnTxt:   { fontSize: 14, color: COLORS.dark },
+  submitBtn:       { backgroundColor: COLORS.green, padding: 15, borderRadius: 5, alignItems: 'center', marginBottom: 14 },
   submitBtnDisabled: { opacity: 0.4 },
-  submitBtnTxt:    { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#e8c97a', letterSpacing: 0.5 },
+  submitBtnTxt:    { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff', letterSpacing: 0.5 },
   disclaimer:      { fontSize: 11, color: COLORS.muted, textAlign: 'center', lineHeight: 16, marginBottom: 30 },
 });

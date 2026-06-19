@@ -1,10 +1,18 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
-import { I18nManager, Alert } from 'react-native';
+import * as Updates from 'expo-updates';
+import { Alert, BackHandler, I18nManager, Platform } from 'react-native';
 
 I18nManager.allowRTL(true);
 
-const useLangStore = create((set, get) => ({
+const RESTART_LABELS = {
+  en: { title: 'Restart Required', body: 'Close and reopen the app to apply RTL changes.', btn: 'Close App' },
+  ar: { title: 'يلزم إغلاق التطبيق', body: 'أغلقي التطبيق وافتحيه تاني عشان اللغة تتطبق صح.', btn: 'أغلقي دلوقتي' },
+  fr: { title: 'Redémarrage requis', body: "Fermez et rouvrez l'application pour appliquer la langue.", btn: 'Fermer' },
+  ha: { title: 'Ana buƙatar sake farawa', body: 'Rufe kuma sake bude app don canza yaren.', btn: 'Rufe' },
+};
+
+const useLangStore = create((set) => ({
   lang: 'en',
 
   init: async () => {
@@ -19,20 +27,29 @@ const useLangStore = create((set, get) => ({
 
   setLang: async (lang) => {
     try {
-      const prev = get().lang;
       await SecureStore.setItemAsync('app_lang', lang);
-      set({ lang });
-      const needsReload = lang === 'ar' || prev === 'ar';
       I18nManager.forceRTL(lang === 'ar');
-      if (needsReload) {
-        Alert.alert(
-          lang === 'ar' ? 'إعادة تشغيل مطلوبة' : 'Restart Required',
-          lang === 'ar'
-            ? 'يرجى إغلاق التطبيق وإعادة فتحه لتطبيق تخطيط اللغة العربية.'
-            : 'Please close and reopen the app to apply the full layout.',
-          [{ text: lang === 'ar' ? 'حسنًا' : 'OK' }]
-        );
-      }
+      set({ lang });
+      // Wait for modal close animation before showing Alert
+      setTimeout(() => {
+        const lbl = RESTART_LABELS[lang] || RESTART_LABELS.en;
+        Alert.alert(lbl.title, lbl.body, [
+          {
+            text: lbl.btn,
+            style: 'destructive',
+            onPress: () => {
+              if (Platform.OS === 'android') {
+                // True process kill — guarantees cold start with fresh RTL on reopen
+                BackHandler.exitApp();
+              } else {
+                // iOS: reload JS bundle (best available without native exit)
+                Updates.reloadAsync().catch(() => {});
+              }
+            },
+          },
+          { text: 'Later', style: 'cancel' },
+        ]);
+      }, 500);
     } catch {}
   },
 }));

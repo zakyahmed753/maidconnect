@@ -1,4 +1,4 @@
-// src/screens/auth/RegisterScreen.js
+﻿// src/screens/auth/RegisterScreen.js
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
@@ -11,6 +11,7 @@ import { COLORS, FONTS } from '../../utils/theme';
 import { validatePassport } from '../../utils/passportValidator';
 import CountryPicker from '../../components/CountryPicker';
 import { useTranslation } from '../../utils/i18n';
+import BackChevron from '../../components/BackChevron';
 
 
 // Validate Egyptian National ID (14 digits)
@@ -43,7 +44,7 @@ export default function RegisterScreen({ navigation }) {
 
   const getOrigin = (nat) => {
     if (nat === 'Egypt') return 'egyptian';
-    const african = ['Ethiopia','Kenya','Uganda','Tanzania','Sudan','South Sudan','Ghana','Nigeria','Cameroon','Côte d\'Ivoire','Senegal','Somalia','Rwanda','Burundi','Madagascar','Congo','Mozambique','Zimbabwe','Zambia','Malawi','Togo','Sierra Leone','Eritrea','Guinea','Morocco'];
+    const african = ['Ethiopia','Kenya','Uganda','Tanzania','Sudan','South Sudan','Ghana','Nigeria','Cameroon','CÃ´te d\'Ivoire','Senegal','Somalia','Rwanda','Burundi','Madagascar','Congo','Mozambique','Zimbabwe','Zambia','Malawi','Togo','Sierra Leone','Eritrea','Guinea','Morocco'];
     if (african.includes(nat)) return 'african';
     const asian = ['Philippines','Indonesia','Malaysia','Sri Lanka','India','Bangladesh','Nepal','Vietnam','Myanmar'];
     if (asian.includes(nat)) return 'asian';
@@ -150,8 +151,8 @@ export default function RegisterScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':undefined}>
       <StatusBar barStyle="light-content"/>
-      <LinearGradient colors={['#1a1108','#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()}><Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text></TouchableOpacity>
+      <LinearGradient colors={['#0D3827','#0d5e4a']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}><BackChevron /></TouchableOpacity>
         <Text style={styles.heroTitle}>{t('create_profile')}</Text>
         <Text style={styles.heroSub}>{t('step1')}</Text>
       </LinearGradient>
@@ -213,8 +214,8 @@ export default function RegisterScreen({ navigation }) {
               {idPhoto
                 ? <Image source={{ uri: idPhoto }} style={{ width:'100%', height:120, borderRadius:4, resizeMode:'cover' }}/>
                 : <>
-                    <Text style={{ fontSize:24, marginBottom:4 }}>🪪</Text>
-                    <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.gold }}>{t('tap_upload_passport')}</Text>
+                    <Text style={{ fontSize:24, marginBottom:4 }}>ðŸªª</Text>
+                    <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.green }}>{t('tap_upload_passport')}</Text>
                     <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>{t('clear_photo_of_page')}</Text>
                   </>}
             </TouchableOpacity>
@@ -247,8 +248,8 @@ export default function RegisterScreen({ navigation }) {
 
         <Text style={styles.label}>{t('photos')} (minimum 3) — {photos.length}/5</Text>
         <TouchableOpacity style={styles.uploadBox} onPress={pickPhoto}>
-          <Text style={{ fontSize:28, marginBottom:6 }}>📸</Text>
-          <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.gold }}>{t('tap_upload_photos')}</Text>
+          <Text style={{ fontSize:28, marginBottom:6 }}>ðŸ“¸</Text>
+          <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.green }}>{t('tap_upload_photos')}</Text>
           <Text style={{ fontSize:10, color:COLORS.muted, marginTop:2 }}>{t('professional_photos_note')}</Text>
         </TouchableOpacity>
         <View style={styles.photoRow}>
@@ -256,7 +257,7 @@ export default function RegisterScreen({ navigation }) {
             <View key={i} style={styles.photoThumb}>
               <Image source={{ uri }} style={{ width:'100%', height:'100%', borderRadius:4 }}/>
               <TouchableOpacity onPress={() => setPhotos(p=>p.filter((_,idx)=>idx!==i))} style={styles.photoDel}>
-                <Text style={{ fontSize:9, color:'#fff' }}>✕</Text>
+                <Text style={{ fontSize:9, color:'#fff' }}>âœ•</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -268,7 +269,7 @@ export default function RegisterScreen({ navigation }) {
           <Text style={styles.btnTxt}>{loading ? t('loading') : t('continue') + ' →'}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.linkTxt}>{t('have_account')} <Text style={{ color:COLORS.gold }}>{t('sign_in_link')}</Text></Text>
+          <Text style={styles.linkTxt}>{t('have_account')} <Text style={{ color:COLORS.green }}>{t('sign_in_link')}</Text></Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -277,24 +278,24 @@ export default function RegisterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   hero:        { padding:20, paddingTop:54 },
-  heroTitle:   { fontFamily:FONTS.display, fontSize:26, color:'#e8c97a', marginTop:8 },
-  heroSub:     { fontSize:12, color:'rgba(232,201,122,0.5)', marginTop:3 },
+  heroTitle:   { fontFamily:FONTS.display, fontSize:26, color:'#fff', marginTop:8 },
+  heroSub:     { fontSize:12, color:'rgba(255,255,255,0.6)', marginTop:3 },
   body:        { flex:1, backgroundColor:COLORS.cream, padding:20 },
   label:       { fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, marginTop:13, fontFamily:FONTS.bodySemiBold },
   input:       { borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:12, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface },
   twoCol:      { flexDirection:'row', gap:12 },
   skillsWrap:  { flexDirection:'row', flexWrap:'wrap', gap:7, marginBottom:4 },
   skillChip:   { paddingHorizontal:13, paddingVertical:7, borderRadius:20, borderWidth:1.5, borderColor:COLORS.border, backgroundColor:COLORS.cream },
-  skillChipOn: { backgroundColor:COLORS.gold, borderColor:COLORS.gold },
+  skillChipOn: { backgroundColor:COLORS.green, borderColor:COLORS.green },
   skillTxt:    { fontSize:12, color:COLORS.muted },
-  skillTxtOn:  { color:COLORS.dark, fontWeight:'700' },
+  skillTxtOn:  { color:'#fff', fontWeight:'700' },
   uploadBox:   { borderWidth:1.5, borderColor:COLORS.border, borderStyle:'dashed', borderRadius:7, padding:20, alignItems:'center', backgroundColor:COLORS.surface },
   photoRow:    { flexDirection:'row', flexWrap:'wrap', gap:8, marginTop:10 },
   photoThumb:  { width:68, height:68, borderRadius:4, borderWidth:1, borderColor:COLORS.border, position:'relative' },
   photoDel:    { position:'absolute', top:-6, right:-6, width:18, height:18, borderRadius:9, backgroundColor:COLORS.red, alignItems:'center', justifyContent:'center' },
-  btn:         { backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', marginTop:20, marginBottom:10 },
+  btn:         { backgroundColor:COLORS.green, padding:15, borderRadius:5, alignItems:'center', marginTop:20, marginBottom:10 },
   btnDisabled: { opacity:0.45 },
-  btnTxt:      { fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark, letterSpacing:0.5 },
+  btnTxt:      { fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff', letterSpacing:0.5 },
   link:        { alignItems:'center', marginBottom:30 },
   linkTxt:     { fontSize:13, color:COLORS.muted },
 });

@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, StatusBar, ActivityIndicator, Modal, Pressable
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
 import { useTranslation } from '../../utils/i18n';
 import { maidsAPI, couponsAPI, uploadAPI, paymentsAPI } from '../../services/api';
 import * as ImagePicker from 'expo-image-picker';
+import BackChevron from '../../components/BackChevron';
 
 function getMaidPrice(nationality = '') {
   const n = nationality.toLowerCase();
@@ -160,11 +162,11 @@ export default function SubscriptionScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.canGoBack() ? navigation.goBack() : logout()} style={{ alignSelf: 'flex-start', marginBottom: 10 }}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.canGoBack() ? navigation.goBack() : logout()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontSize: 36, marginBottom: 8 }}>👑</Text>
+        <Ionicons name="star" size={36} color="#fff" style={{ marginBottom: 8 }} />
         <Text style={styles.heroT}>{t('subscription_title')}</Text>
         <Text style={styles.heroS}>{t('subscription_sub')}</Text>
       </LinearGradient>
@@ -173,7 +175,7 @@ export default function SubscriptionScreen({ navigation }) {
 
         {/* Pending receipt banner — shown when maid already submitted but admin hasn't confirmed yet */}
         {pendingPayment && (
-          <View style={{ backgroundColor: 'rgba(201,168,76,0.08)', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 16, marginBottom: 16 }}>
+          <View style={{ backgroundColor: 'rgba(13,56,39,0.08)', borderWidth: 1.5, borderColor: COLORS.green, borderRadius: 10, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark, marginBottom: 4 }}>{t('receipt_under_review')}</Text>
             <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 14 }}>
               {t('receipt_review_body')}
@@ -181,10 +183,10 @@ export default function SubscriptionScreen({ navigation }) {
             <TouchableOpacity
               onPress={handleCheckPendingStatus}
               disabled={checkingStatus}
-              style={{ backgroundColor: COLORS.dark, padding: 12, borderRadius: 8, alignItems: 'center', opacity: checkingStatus ? 0.6 : 1 }}>
+              style={{ backgroundColor: COLORS.green, padding: 12, borderRadius: 8, alignItems: 'center', opacity: checkingStatus ? 0.6 : 1 }}>
               {checkingStatus
-                ? <ActivityIndicator color="#e8c97a" size="small" />
-                : <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a' }}>{t('check_confirmation_status')}</Text>}
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#fff' }}>{t('check_confirmation_status')}</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setPendingPayment(null)} style={{ alignItems: 'center', paddingTop: 10 }}>
               <Text style={{ fontSize: 11, color: COLORS.muted }}>{t('submit_new_receipt')}</Text>
@@ -209,13 +211,12 @@ export default function SubscriptionScreen({ navigation }) {
                   </Text>
                   <Text style={styles.planPrice}>EGP {couponResult.finalAmount.toLocaleString()}</Text>
                   <Text style={{ fontSize: 10, color: '#2e7d5e', fontWeight: '700', marginTop: 1 }}>
-                    −{couponResult.discountValue}% off
+                    âˆ’{couponResult.discountValue}% off
                   </Text>
                 </>
               ) : (
                 <>
                   <Text style={styles.planPrice}>EGP {monthlyPrice.toLocaleString()}</Text>
-                  <Text style={styles.planPer}>{t('per_month')}</Text>
                 </>
               )}
             </View>
@@ -270,7 +271,7 @@ export default function SubscriptionScreen({ navigation }) {
 
         {/* Offline / Cash Transfer option */}
         <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
-          <Text style={styles.offlineIcon}>💵</Text>
+          <Ionicons name="cash-outline" size={24} color={COLORS.green} style={{ marginRight: 4 }} />
           <View style={{ flex: 1 }}>
             <Text style={styles.offlineTxt}>{t('pay_cash')}</Text>
             <Text style={styles.offlineSub}>{t('arrange_offline')}</Text>
@@ -310,17 +311,17 @@ export default function SubscriptionScreen({ navigation }) {
           <View style={styles.amountBox}>
             <Text style={styles.amountLabel}>{t('amount_due')}</Text>
             <Text style={styles.amountVal}>EGP {displayPrice.toLocaleString()}</Text>
-            <Text style={styles.amountNote}>Monthly plan · {nationality || 'Standard'} pricing</Text>
+            <Text style={styles.amountNote}>Monthly plan Â· {nationality || 'Standard'} pricing</Text>
           </View>
 
           {/* Payment details */}
           <Text style={styles.detailsHeader}>{t('transfer_to')}</Text>
           {[
-            { icon: '💸', label: 'Instapay', value: '01022781113' },
-            { icon: '📱', label: 'Vodafone Cash', value: '01022781113' },
+            { icon: 'flash-outline',          label: 'Instapay',       value: '01022781113' },
+            { icon: 'phone-portrait-outline', label: 'Vodafone Cash',  value: '01022781113' },
           ].map(({ icon, label, value }) => (
             <View key={label} style={styles.detailRow}>
-              <Text style={{ fontSize: 20 }}>{icon}</Text>
+              <Ionicons name={icon} size={20} color={COLORS.green} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.detailLabel}>{label}</Text>
                 <Text style={styles.detailValue}>{value}</Text>
@@ -341,8 +342,8 @@ export default function SubscriptionScreen({ navigation }) {
               </View>
             ) : (
               <>
-                <Text style={{ fontSize: 24, marginBottom: 6 }}>📎</Text>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.gold }}>{t('tap_upload_receipt')}</Text>
+                <Text style={{ fontSize: 24, marginBottom: 6 }}>ðŸ“Ž</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>{t('tap_upload_receipt')}</Text>
                 <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t('receipt_screenshot_note')}</Text>
               </>
             )}
@@ -350,7 +351,7 @@ export default function SubscriptionScreen({ navigation }) {
 
           {submitError && (
             <View style={{ backgroundColor: 'rgba(224,85,85,0.12)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 7, padding: 12, marginBottom: 12 }}>
-              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠️ {submitError}</Text>
+              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠ {submitError}</Text>
             </View>
           )}
 
@@ -359,7 +360,7 @@ export default function SubscriptionScreen({ navigation }) {
             onPress={submitOfflinePayment}
             disabled={!receiptUri || submitting}>
             {submitting
-              ? <ActivityIndicator color="#e8c97a" />
+              ? <ActivityIndicator color="#fff" />
               : <Text style={styles.gotItTxt}>{submitError ? t('try_again_btn') : t('submit_receipt_btn')}</Text>}
           </TouchableOpacity>
 
@@ -374,12 +375,12 @@ export default function SubscriptionScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   hero:         { padding: 22, paddingTop: 54, alignItems: 'center' },
-  heroT:        { fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginBottom: 5 },
-  heroS:        { fontSize: 12, color: 'rgba(232,201,122,0.55)', textAlign: 'center' },
+  heroT:        { fontFamily: FONTS.display, fontSize: 26, color: '#fff', marginBottom: 5 },
+  heroS:        { fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
   planCard:     { backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 10, padding: 16, marginBottom: 12 },
-  planSelected: { borderColor: COLORS.gold, backgroundColor: '#fef9ee' },
+  planSelected: { borderColor: COLORS.green, backgroundColor: '#e8f4f1' },
   planName:     { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark, marginBottom: 4 },
-  planPrice:    { fontFamily: FONTS.display, fontSize: 24, color: COLORS.gold },
+  planPrice:    { fontFamily: FONTS.display, fontSize: 24, color: COLORS.green },
   planPer:      { fontSize: 10, color: COLORS.muted },
   featureRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 5 },
   featureTxt:   { fontSize: 13, color: COLORS.brown },
@@ -388,12 +389,12 @@ const styles = StyleSheet.create({
   couponLabel:  { fontSize: 11, color: COLORS.muted, marginBottom: 10 },
   couponRow:    { flexDirection: 'row', gap: 8 },
   couponInput:  { flex: 1, backgroundColor: COLORS.cream, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: COLORS.dark, letterSpacing: 1 },
-  applyBtn:     { backgroundColor: COLORS.gold, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  applyBtnTxt:  { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: COLORS.dark },
+  applyBtn:     { backgroundColor: COLORS.green, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  applyBtnTxt:  { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#fff' },
   appliedRow:   { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(46,125,94,0.08)', borderRadius: 8, padding: 10 },
 
-  btn:          { backgroundColor: COLORS.gold, padding: 15, borderRadius: 5, alignItems: 'center' },
-  btnTxt:       { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark, letterSpacing: 0.5 },
+  btn:          { backgroundColor: COLORS.green, padding: 15, borderRadius: 5, alignItems: 'center' },
+  btnTxt:       { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff', letterSpacing: 0.5 },
   // Offline payment button
   offlineBtn:   { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 8, padding: 14, marginTop: 10 },
   offlineIcon:  { fontSize: 24 },
@@ -406,9 +407,9 @@ const styles = StyleSheet.create({
   modalHandle:  { width: 40, height: 4, backgroundColor: COLORS.border, borderRadius: 2, alignSelf: 'center', marginBottom: 18 },
   modalTitle:   { fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, marginBottom: 6 },
   modalSub:     { fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 18 },
-  amountBox:    { backgroundColor: '#fef9ee', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 18 },
+  amountBox:    { backgroundColor: '#e8f4f1', borderWidth: 1.5, borderColor: COLORS.green, borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 18 },
   amountLabel:  { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: COLORS.muted, marginBottom: 4 },
-  amountVal:    { fontFamily: FONTS.display, fontSize: 28, color: COLORS.gold },
+  amountVal:    { fontFamily: FONTS.display, fontSize: 28, color: COLORS.green },
   amountNote:   { fontSize: 11, color: COLORS.muted, marginTop: 3 },
   stepRow:      { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
   stepNum:      { width: 22, height: 22, borderRadius: 11, backgroundColor: COLORS.dark, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
@@ -418,7 +419,7 @@ const styles = StyleSheet.create({
   nameRow:      { backgroundColor: COLORS.cream, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 12, marginBottom: 4 },
   detailLabel:  { fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2 },
   detailValue:  { fontSize: 15, fontWeight: '700', color: COLORS.dark, letterSpacing: 0.5 },
-  receiptUploadBtn: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.gold, borderRadius: 8, padding: 18, alignItems: 'center', backgroundColor: '#fef9ee', marginBottom: 16 },
-  gotItBtn:     { backgroundColor: COLORS.dark, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 4 },
-  gotItTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a', letterSpacing: 0.3 },
+  receiptUploadBtn: { borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.green, borderRadius: 8, padding: 18, alignItems: 'center', backgroundColor: '#e8f4f1', marginBottom: 16 },
+  gotItBtn:     { backgroundColor: COLORS.green, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 4 },
+  gotItTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#fff', letterSpacing: 0.3 },
 });

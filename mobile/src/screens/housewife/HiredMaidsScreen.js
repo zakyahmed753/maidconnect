@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { hwAPI, paymentsAPI, maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
+import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
+import BackChevron from '../../components/BackChevron';
 
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
@@ -140,7 +142,7 @@ export default function HiredMaidsScreen({ navigation }) {
             <View style={{ flexDirection:'row', gap:8, marginBottom:16, justifyContent:'center' }}>
               {[1,2,3,4,5].map(s => (
                 <TouchableOpacity key={s} onPress={() => setReviewStar(s)}>
-                  <Text style={{ fontSize:34 }}>{s <= reviewStar ? '⭐' : '☆'}</Text>
+                  <Ionicons name={s <= reviewStar ? 'star' : 'star-outline'} size={34} color={s <= reviewStar ? '#f59e0b' : COLORS.muted} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -170,8 +172,8 @@ export default function HiredMaidsScreen({ navigation }) {
       </Modal>
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('hired_maid_title')}</Text>
         <Text style={styles.headerSub}>{t('hired_maid_sub')}</Text>
@@ -179,17 +181,17 @@ export default function HiredMaidsScreen({ navigation }) {
 
       {loading ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color={COLORS.gold} />
+          <ActivityIndicator size="large" color={COLORS.green} />
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           {hired.length === 0 && pastHired.length === 0 ? (
             <View style={{ alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-              <Text style={{ fontSize: 52, marginBottom: 16 }}>🏠</Text>
+              <Ionicons name="home-outline" size={52} color={COLORS.muted} style={{ marginBottom: 16 }} />
               <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, textAlign: 'center' }}>{t('no_hired_maid')}</Text>
               <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>{t('no_hired_sub')}</Text>
-              <TouchableOpacity style={{ backgroundColor: COLORS.gold, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 6, marginTop: 24 }} onPress={() => navigation.navigate('Browse')}>
-                <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark }}>{t('browse_maids_btn')}</Text>
+              <TouchableOpacity style={{ backgroundColor: COLORS.green, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 6, marginTop: 24 }} onPress={() => navigation.navigate('Browse')}>
+                <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>{t('browse_maids_btn')}</Text>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -204,17 +206,17 @@ export default function HiredMaidsScreen({ navigation }) {
               <View key={String(maidId) + idx} style={styles.card}>
                 <View style={styles.cardTop}>
                   <View style={styles.avatar}>
-                    <Text style={{ fontSize: 30 }}>👩</Text>
+                    <Ionicons name="person" size={30} color="rgba(255,255,255,0.8)" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.maidName}>{maidName}</Text>
-                    <Text style={styles.maidSub}>{maid.nationality || ''}{maid.age ? ` · ${maid.age} yrs` : ''}</Text>
+                    <Text style={styles.maidSub}>{maid.nationality || ''}{maid.age ? ` Â· ${maid.age} yrs` : ''}</Text>
                     {maid.expectedSalary ? (
                       <Text style={styles.maidSalary}>EGP {maid.expectedSalary.toLocaleString()}/mo</Text>
                     ) : null}
                   </View>
                   <View style={styles.hiredBadge}>
-                    <Text style={{ fontSize: 9, color: '#2e7d5e', fontWeight: '700', letterSpacing: 0.8 }}>HIRED ✓</Text>
+                    <Text style={{ fontSize: 9, color: '#2e7d5e', fontWeight: '700', letterSpacing: 0.8 }}>PLACED ✓</Text>
                   </View>
                 </View>
 
@@ -248,7 +250,7 @@ export default function HiredMaidsScreen({ navigation }) {
           {hired.length > 0 && (
             <View style={styles.infoBox}>
               <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 20 }}>
-                <Text style={{ fontWeight: '700', color: COLORS.dark }}>📋 How replacement fees work{'\n'}</Text>
+                <Text style={{ fontWeight: '700', color: COLORS.dark }}>How replacement fees work{'\n'}</Text>
                 {'\n'}
                 <Text>If you encounter any issues with your maid and need to replace her, a fee applies based on how long you have been working together:{'\n'}</Text>
                 {'\n'}
@@ -266,11 +268,11 @@ export default function HiredMaidsScreen({ navigation }) {
           <TouchableOpacity
             style={styles.prevHiredBtn}
             onPress={() => navigation.navigate('PreviouslyHired', { pastHired })}>
-            <Text style={{ fontSize: 20 }}>📋</Text>
+            <Ionicons name="time-outline" size={20} color={COLORS.muted} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.dark }}>Previously Hired Maids</Text>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.dark }}>{t('old_helpers')}</Text>
               <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 1 }}>
-                {pastHired.length > 0 ? `${pastHired.length} past maid${pastHired.length !== 1 ? 's' : ''}` : 'No history yet'}
+                {pastHired.length > 0 ? `${pastHired.length} ${t('past_placements')}` : t('no_history_yet')}
               </Text>
             </View>
             <Text style={{ color: COLORS.muted, fontSize: 18 }}>›</Text>
@@ -282,23 +284,23 @@ export default function HiredMaidsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header:       { backgroundColor: '#3d2203', padding: 20, paddingTop: 54 },
-  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff8ee', marginTop: 10 },
-  headerSub:    { fontSize: 11, color: 'rgba(232,201,122,0.45)', marginTop: 2 },
-  card:         { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: '#f0e8d8', elevation: 2, shadowColor: '#c9a84c', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
+  header:       { backgroundColor: '#0D3827', padding: 20, paddingTop: 54 },
+  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff', marginTop: 10 },
+  headerSub:    { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  card:         { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: COLORS.border, elevation: 2, shadowColor: '#0D3827', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
   cardTop:      { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  avatar:       { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fef6e4', borderWidth: 2, borderColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
+  avatar:       { width: 56, height: 56, borderRadius: 28, backgroundColor: '#e8f4f1', borderWidth: 2, borderColor: COLORS.green, alignItems: 'center', justifyContent: 'center' },
   maidName:     { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
   maidSub:      { fontSize: 11, color: COLORS.muted, marginTop: 2 },
-  maidSalary:   { fontSize: 12, color: COLORS.gold, fontWeight: '600', marginTop: 2 },
+  maidSalary:   { fontSize: 12, color: COLORS.green, fontWeight: '600', marginTop: 2 },
   hiredBadge:   { backgroundColor: 'rgba(46,125,94,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(46,125,94,0.25)' },
-  infoRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: '#f5ede0' },
+  infoRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: COLORS.border },
   infoLabel:    { fontSize: 11, color: COLORS.muted },
   infoVal:      { fontSize: 11, color: COLORS.dark, fontWeight: '500', flex: 1, textAlign: 'right' },
   penaltyBadge: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 7, marginTop: 10, marginBottom: 2 },
   penaltyTxt:   { fontSize: 11, fontWeight: '600' },
   btnRelease:   { marginTop: 12, padding: 13, borderRadius: 8, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
   btnReleaseTxt:{ fontSize: 14, fontWeight: '700', color: '#e05555' },
-  infoBox:      { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14, marginTop: 4, marginBottom: 12 },
-  prevHiredBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 10, padding: 14, marginBottom: 20, borderWidth: 1, borderColor: '#f0e8d8' },
+  infoBox:      { backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 14, marginTop: 4, marginBottom: 12 },
+  prevHiredBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 10, padding: 14, marginBottom: 20, borderWidth: 1, borderColor: COLORS.border },
 });

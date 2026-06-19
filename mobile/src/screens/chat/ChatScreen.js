@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
   StyleSheet, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator, Keyboard
 } from 'react-native';
 import { chatsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
+import { Ionicons } from '@expo/vector-icons';
 import io from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import Toast from 'react-native-toast-message';
 import useAuthStore from '../../store/authStore';
 import { useTranslation } from '../../utils/i18n';
+import BackChevron from '../../components/BackChevron';
 
 const POLL_MS = 3000; // fallback poll interval when socket is unreliable
 
@@ -200,10 +202,10 @@ export default function ChatScreen({ route, navigation }) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 4 }}>
-          <Text style={{ fontSize: 22, color: COLORS.muted }}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'#e8f4f1', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron color={COLORS.green} />
         </TouchableOpacity>
-        <View style={styles.chatAva}><Text style={{ fontSize: 18 }}>👩🏽</Text></View>
+        <View style={styles.chatAva}><Text style={{ fontSize: 16, color: '#fff', fontWeight: 'bold' }}>{(maidName || 'M').replace(/[^a-zA-Z؀-ۿ]/g, '').charAt(0).toUpperCase() || 'M'}</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={styles.chatName}>{maidName || 'Maid'}</Text>
           <Text style={styles.chatOnline}>{t('chat_online')}</Text>
@@ -211,7 +213,7 @@ export default function ChatScreen({ route, navigation }) {
       </View>
 
       {loading
-        ? <ActivityIndicator size="large" color={COLORS.gold} style={{ flex: 1 }} />
+        ? <ActivityIndicator size="large" color={COLORS.green} style={{ flex: 1 }} />
         : <FlatList
             ref={listRef}
             data={messages}
@@ -242,7 +244,7 @@ export default function ChatScreen({ route, navigation }) {
           onPress={sendText}
           style={[styles.sendBtn, !text.trim() && { opacity: 0.35 }]}
           disabled={!text.trim()}>
-          <Text style={{ fontSize: 16, color: COLORS.dark }}>➤</Text>
+          <Ionicons name="send" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -251,16 +253,16 @@ export default function ChatScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   header:     { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, paddingTop: 54, backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  chatAva:    { width: 38, height: 38, borderRadius: 19, backgroundColor: '#e8c97a', alignItems: 'center', justifyContent: 'center' },
+  chatAva:    { width: 38, height: 38, borderRadius: 19, backgroundColor: '#0D3827', alignItems: 'center', justifyContent: 'center' },
   chatName:   { fontFamily: FONTS.display, fontSize: 16, color: COLORS.dark },
   chatOnline: { fontSize: 10, color: COLORS.green },
   bubble:     { borderRadius: 12, paddingHorizontal: 13, paddingVertical: 9 },
   bubbleThem: { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderBottomLeftRadius: 3 },
-  bubbleMe:   { backgroundColor: COLORS.gold, borderBottomRightRadius: 3 },
+  bubbleMe:   { backgroundColor: COLORS.green, borderBottomRightRadius: 3 },
   bubbleTxt:  { fontSize: 14, color: COLORS.text, lineHeight: 20 },
-  bubbleTxtMe:{ color: COLORS.dark },
+  bubbleTxtMe:{ color: '#fff' },
   btime:      { fontSize: 10, color: COLORS.muted, marginTop: 2, marginHorizontal: 4 },
   inputRow:   { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, paddingBottom: Platform.OS === 'ios' ? 28 : 14, backgroundColor: COLORS.surface, borderTopWidth: 1, borderTopColor: COLORS.border },
   textInput:  { flex: 1, backgroundColor: COLORS.cream, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 22, paddingHorizontal: 15, paddingVertical: 10, fontSize: 14, color: COLORS.text, maxHeight: 100 },
-  sendBtn:    { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
+  sendBtn:    { width: 40, height: 40, borderRadius: 20, backgroundColor: COLORS.green, alignItems: 'center', justifyContent: 'center' },
 });

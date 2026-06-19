@@ -1,16 +1,34 @@
-// ─── NotificationsScreen ───
+﻿// ─── NotificationsScreen ───
 import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
+import useNotifStore from '../store/notifStore';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl, Image } from 'react-native';
 import { LANGUAGES, useTranslation } from '../utils/i18n';
 import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI } from '../services/api';
+import NotifBell from '../components/NotifBell';
 import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../utils/theme';
+import { Ionicons } from '@expo/vector-icons';
+import BackChevron from '../components/BackChevron';
+
+const translateNotifTitle = (title = '', t) => {
+  if (title.includes('Hire Request!') || title.includes('New Hire')) return t('notif_new_hire_title');
+  if (title.includes('Declined') && title.includes('Hire')) return t('notif_hire_declined_title');
+  if (title.includes('Approved') || title.includes('Verified!')) return t('notif_approved_title');
+  if (title.includes('Rejected') || title.includes('Verification Rejected')) return t('notif_rejected_title');
+  if (title.includes('Subscription') || title.includes('💵')) return t('notif_sub_title');
+  if (title.includes('Released by Admin') || title.includes('Maid Released')) return t('notif_released_hw_title');
+  if (title.includes('Available Again') || title.includes('Available')) return t('notif_released_maid_title');
+  if (title.includes('Support Reply') || title.includes('Support')) return t('notif_support_reply_title') || title;
+  return title;
+};
 
 export function NotificationsScreen({ navigation }) {
   const { t } = useTranslation();
+  const user = useAuthStore(s => s.user);
+  const { decrement, reset } = useNotifStore();
   const [notifs, setNotifs] = useState([]);
   useFocusEffect(
     React.useCallback(() => {
@@ -19,27 +37,36 @@ export function NotificationsScreen({ navigation }) {
   );
 
   const markRead = async (id) => {
+    const wasUnread = notifs.find(x => x._id === id && !x.isRead);
+    if (wasUnread) decrement();
     await notificationsAPI.markRead(id);
     setNotifs(n => n.map(x => x._id===id ? {...x, isRead:true} : x));
   };
 
-  const ICONS = { like:'❤️', chat:'💬', approval:'✅', payment:'💳', new_maid:'👩', hire_confirmed:'🎉', subscription:'👑', system:'📢' };
+  const ICONS = { like:'heart', chat:'chatbubble', approval:'checkmark-circle', payment:'card', new_maid:'person-add', hire_confirmed:'checkmark-circle', subscription:'star', system:'information-circle' };
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <StatusBar barStyle="dark-content"/>
       <View style={styles.topBar}>
         <Text style={styles.pageTitle}>{t('notifications_title')}</Text>
-        <TouchableOpacity onPress={() => notificationsAPI.markAll().then(() => setNotifs(n=>n.map(x=>({...x,isRead:true}))))}>
-          <Text style={{ fontSize:12, color:COLORS.gold, fontFamily:FONTS.bodySemiBold }}>{t('mark_all_read')}</Text>
+        <TouchableOpacity onPress={() => notificationsAPI.markAll().then(() => { setNotifs(n=>n.map(x=>({...x,isRead:true}))); reset(); })}>
+          <Text style={{ fontSize:12, color:COLORS.green, fontFamily:FONTS.bodySemiBold }}>{t('mark_all_read')}</Text>
         </TouchableOpacity>
       </View>
       <FlatList data={notifs} keyExtractor={i=>i._id}
         renderItem={({ item }) => (
-          <TouchableOpacity style={[styles.notifItem, !item.isRead && styles.notifUnread]} onPress={() => markRead(item._id)}>
-            <View style={[styles.notifIcon, { backgroundColor:`${COLORS.gold}15` }]}><Text style={{ fontSize:18 }}>{ICONS[item.type]||'🔔'}</Text></View>
+          <TouchableOpacity style={[styles.notifItem, !item.isRead && styles.notifUnread]} onPress={() => {
+              markRead(item._id);
+              if (item.type === 'chat' && (item.data?.chatId || item.chatId)) {
+                const chatId = item.data?.chatId || item.chatId;
+                const tab = user?.role === 'maid' ? 'MaidChats' : 'Chats';
+                try { navigation.navigate(tab, { screen: 'Chat', params: { chatId } }); } catch {}
+              }
+            }}>
+            <View style={[styles.notifIcon, { backgroundColor:`${COLORS.green}15` }]}><Ionicons name={ICONS[item.type]||'notifications'} size={18} color={COLORS.green} /></View>
             <View style={{ flex:1 }}>
-              <Text style={styles.notifTitle}>{item.title}</Text>
+              <Text style={styles.notifTitle}>{translateNotifTitle(item.title, t)}</Text>
               <Text style={styles.notifBody}>{item.body}</Text>
               <Text style={styles.notifTime}>{new Date(item.createdAt).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })}</Text>
             </View>
@@ -128,24 +155,24 @@ export function PaymentResultScreen({ route, navigation }) {
   // ── Offline waiting screen ──
   if (isOffline) {
     return (
-      <View style={{ flex:1, backgroundColor:'#0a0e1a', alignItems:'center', justifyContent:'center', padding:28 }}>
-        <Text style={{ fontSize:64, marginBottom:16 }}>{status === 'completed' ? '🎉' : '⏳'}</Text>
-        <Text style={{ fontFamily:FONTS.display, fontSize:26, color:'#fff8ee', textAlign:'center', marginBottom:10 }}>
+      <View style={{ flex:1, backgroundColor:'#0d2e23', alignItems:'center', justifyContent:'center', padding:28 }}>
+        <Ionicons name={status === 'completed' ? 'checkmark-circle' : 'time-outline'} size={64} color={status === 'completed' ? '#4ade80' : COLORS.muted} style={{ marginBottom:16 }} />
+        <Text style={{ fontFamily:FONTS.display, fontSize:26, color:'#fff', textAlign:'center', marginBottom:10 }}>
           {status === 'completed' ? t('sub_activated') : t('receipt_submitted_title')}
         </Text>
         <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:22, marginBottom:28 }}>
           {status === 'completed' ? t('offline_confirmed_body') : t('offline_pending_body')}
         </Text>
 
-        <View style={{ backgroundColor:'rgba(201,168,76,0.08)', borderWidth:1, borderColor:'rgba(201,168,76,0.25)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
-          <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>
+        <View style={{ backgroundColor:'rgba(13,56,39,0.15)', borderWidth:1, borderColor:'rgba(13,56,39,0.35)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
+          <Text style={{ fontSize:10, color:'#4db595', letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>
             {status === 'completed' ? t('amount_confirmed_label') : t('amount_submitted_label')}
           </Text>
-          <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#e8c97a' }}>EGP {amount?.toLocaleString()}</Text>
+          <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff' }}>EGP {amount?.toLocaleString()}</Text>
           <View style={{ marginTop:8, paddingHorizontal:10, paddingVertical:4, borderRadius:10,
-            backgroundColor: status === 'completed' ? 'rgba(46,125,94,0.2)' : 'rgba(201,168,76,0.12)',
-            borderWidth:1, borderColor: status === 'completed' ? 'rgba(46,125,94,0.5)' : 'rgba(201,168,76,0.3)' }}>
-            <Text style={{ fontSize:11, color: status === 'completed' ? '#5dd6a8' : COLORS.gold, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>
+            backgroundColor: status === 'completed' ? 'rgba(77,181,149,0.2)' : 'rgba(13,56,39,0.15)',
+            borderWidth:1, borderColor: status === 'completed' ? 'rgba(77,181,149,0.5)' : 'rgba(13,56,39,0.3)' }}>
+            <Text style={{ fontSize:11, color: status === 'completed' ? '#5dd6a8' : '#4db595', fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>
               {status === 'completed' ? t('confirmed_badge') : t('pending_admin_badge')}
             </Text>
           </View>
@@ -153,18 +180,18 @@ export function PaymentResultScreen({ route, navigation }) {
 
         {status === 'completed' ? (
           <TouchableOpacity onPress={handleGoHome} disabled={completing}
-            style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, width:'100%', alignItems:'center', opacity: completing ? 0.6 : 1 }}>
-            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
+            style={{ backgroundColor:COLORS.green, paddingHorizontal:32, paddingVertical:14, borderRadius:5, width:'100%', alignItems:'center', opacity: completing ? 0.6 : 1 }}>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff' }}>
               {completing ? t('loading') : t('go_to_app')}
             </Text>
           </TouchableOpacity>
         ) : (
           <>
             <TouchableOpacity onPress={handleCheckStatus} disabled={checking}
-              style={{ backgroundColor:'rgba(255,255,255,0.07)', borderWidth:1, borderColor:'rgba(255,255,255,0.15)', paddingHorizontal:28, paddingVertical:13, borderRadius:5, width:'100%', alignItems:'center', marginBottom:12, opacity: checking ? 0.6 : 1 }}>
+              style={{ backgroundColor:'rgba(255,255,255,0.1)', borderWidth:1, borderColor:'rgba(255,255,255,0.25)', paddingHorizontal:28, paddingVertical:13, borderRadius:5, width:'100%', alignItems:'center', marginBottom:12, opacity: checking ? 0.6 : 1 }}>
               {checking
-                ? <ActivityIndicator color={COLORS.gold} />
-                : <Text style={{ fontSize:14, color:'#e8c97a', fontWeight:'600' }}>{t('check_status_btn2')}</Text>}
+                ? <ActivityIndicator color={'#fff'} />
+                : <Text style={{ fontSize:14, color:'#fff', fontWeight:'600' }}>{t('check_status_btn2')}</Text>}
             </TouchableOpacity>
             <Text style={{ fontSize:11, color:'rgba(255,255,255,0.3)', textAlign:'center', lineHeight:17 }}>
               {t('offline_notification_note')}
@@ -177,27 +204,27 @@ export function PaymentResultScreen({ route, navigation }) {
 
   // ── Online payment result screen ──
   return (
-    <View style={{ flex:1, backgroundColor:'#0a1208', alignItems:'center', justifyContent:'center', padding:28 }}>
-      <Text style={{ fontSize:64, marginBottom:16 }}>🎉</Text>
-      <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff8ee', textAlign:'center', marginBottom:10 }}>
+    <View style={{ flex:1, backgroundColor:'#0d2e23', alignItems:'center', justifyContent:'center', padding:28 }}>
+      <Ionicons name="checkmark-circle" size={64} color="#4ade80" style={{ marginBottom:16 }} />
+      <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff', textAlign:'center', marginBottom:10 }}>
         {t('payment_confirmed_online')}
       </Text>
       <Text style={{ fontSize:13, color:'rgba(255,255,255,0.55)', textAlign:'center', lineHeight:22, marginBottom:28 }}>
         {t('payment_of_egp')}{amount?.toLocaleString()}{t('payment_was_successful')}
       </Text>
-      <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
-        <Text style={{ fontSize:10, color:COLORS.gold, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>{t('amount_paid_label')}</Text>
-        <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#e8c97a' }}>EGP {amount?.toLocaleString()}</Text>
+      <View style={{ backgroundColor:'rgba(13,56,39,0.15)', borderWidth:1, borderColor:'rgba(13,56,39,0.35)', borderRadius:8, padding:14, width:'100%', alignItems:'center', marginBottom:28 }}>
+        <Text style={{ fontSize:10, color:'#4db595', letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>{t('amount_paid_label')}</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:28, color:'#fff' }}>EGP {amount?.toLocaleString()}</Text>
       </View>
       {status === 'verifying' ? (
         <View style={{ flexDirection:'row', alignItems:'center', gap:10 }}>
-          <ActivityIndicator color={COLORS.gold}/>
+          <ActivityIndicator color={'#fff'}/>
           <Text style={{ color:'rgba(255,255,255,0.5)', fontSize:13 }}>{t('verifying_payment')}</Text>
         </View>
       ) : (
         <TouchableOpacity onPress={handleGoHome} disabled={completing}
-          style={{ backgroundColor:COLORS.gold, paddingHorizontal:32, paddingVertical:14, borderRadius:5, opacity: completing ? 0.6 : 1 }}>
-          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>
+          style={{ backgroundColor:COLORS.green, paddingHorizontal:32, paddingVertical:14, borderRadius:5, opacity: completing ? 0.6 : 1 }}>
+          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff' }}>
             {completing ? t('loading') : t('go_home')}
           </Text>
         </TouchableOpacity>
@@ -260,21 +287,24 @@ export function ChatsListScreen({ navigation }) {
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={styles.topBar}><Text style={styles.pageTitle}>{t('chats_title')}</Text></View>
+      <View style={{ backgroundColor:'#0D3827', padding:16, paddingTop:54, flexDirection:'row', justifyContent:'space-between', alignItems:'center' }}>
+        <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff' }}>{t('chats_title')}</Text>
+        <NotifBell color="rgba(255,255,255,0.9)" />
+      </View>
       {user?.role === 'housewife' && !isSubscribed() ? (
         <View style={{ flex:1, alignItems:'center', justifyContent:'center', padding:30 }}>
-          <Text style={{ fontSize:40, marginBottom:14 }}>💬</Text>
+          <Ionicons name="chatbubbles-outline" size={48} color={COLORS.muted} style={{ marginBottom:14 }} />
           <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, textAlign:'center', marginBottom:8 }}>{t('subscribe_chat_title')}</Text>
           <Text style={{ fontSize:13, color:COLORS.muted, textAlign:'center', lineHeight:20, marginBottom:24 }}>{t('subscribe_chat_body')}</Text>
           <TouchableOpacity
-            style={{ backgroundColor:COLORS.gold, paddingHorizontal:28, paddingVertical:13, borderRadius:6 }}
+            style={{ backgroundColor:COLORS.green, paddingHorizontal:28, paddingVertical:13, borderRadius:6 }}
             onPress={() => navigation.navigate('Browse', { screen:'CustomerSubscription', params:{} })}>
-            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{t('subscribe_btn')}</Text>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff' }}>{t('subscribe_btn')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <FlatList data={chats} keyExtractor={i=>i._id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} colors={[COLORS.gold]} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.green} colors={[COLORS.green]} />}
           renderItem={({ item }) => {
             // Maid sees the customer (housewife); customer sees the maid profile
             const other = user?.role === 'maid'
@@ -286,7 +316,7 @@ export function ChatsListScreen({ navigation }) {
                 <View style={styles.chatAva}>
                   {photoUrl
                     ? <Image source={{ uri: photoUrl }} style={{ width:'100%', height:'100%', borderRadius:22 }} resizeMode="cover"/>
-                    : <Text style={{ fontSize:20 }}>👩</Text>}
+                    : <Ionicons name="person" size={22} color="rgba(255,255,255,0.8)" />}
                 </View>
                 <View style={{ flex:1 }}>
                   <Text style={styles.chatName}>{other?.fullName || other?.name || 'Chat'}</Text>
@@ -321,37 +351,43 @@ export function SavedScreen({ navigation }) {
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={styles.topBar}><Text style={styles.pageTitle}>{t('saved_title')}</Text></View>
+      <View style={{ backgroundColor:'#0D3827', padding:16, paddingTop:54, flexDirection:'row', justifyContent:'space-between', alignItems:'center' }}>
+        <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff' }}>{t('saved_title')}</Text>
+        <NotifBell color="rgba(255,255,255,0.9)" />
+      </View>
       {loading
         ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
-            <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.gold, borderTopColor:'transparent' }}/>
+            <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.green, borderTopColor:'transparent' }}/>
           </View>
         : <FlatList data={maids} keyExtractor={i=>i._id}
-            contentContainerStyle={{ padding:14 }}
+            contentContainerStyle={{ padding:14, gap:12 }}
             renderItem={({ item }) => (
-              <TouchableOpacity style={styles.savedCard}
-                onPress={() => navigation.navigate('Browse', { screen:'MaidDetail', params:{ maid:item } })}>
-                <View style={[styles.savedAva, { backgroundColor: item.origin==='african'?'#2d1a0a':'#1a0d2e' }]}>
+              <TouchableOpacity
+                style={{ backgroundColor:COLORS.surface, borderRadius:14, borderWidth:1, borderColor:COLORS.border, overflow:'hidden', elevation:2, shadowColor:'#000', shadowOpacity:0.06, shadowRadius:6 }}
+                onPress={() => navigation.navigate('Browse', { screen:'MaidDetail', params:{ maid:item } })}
+                activeOpacity={0.88}
+              >
+                {/* Photo banner */}
+                <View style={{ height:140, backgroundColor: item.origin==='african'?'#1e3a2f':'#1a1a2e', alignItems:'center', justifyContent:'center' }}>
                   {item.photos?.[0]?.url
-                    ? <View style={{ width:44, height:44, borderRadius:22, overflow:'hidden' }}>
-                        <View style={{ width:'100%', height:'100%', alignItems:'center', justifyContent:'center', backgroundColor: item.origin==='african'?'#2d1a0a':'#1a0d2e' }}>
-                          <Text style={{ fontSize:22 }}>👩</Text>
-                        </View>
-                      </View>
-                    : <Text style={{ fontSize:26 }}>👩</Text>}
+                    ? <Image source={{ uri: item.photos[0].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
+                    : <Ionicons name="person" size={52} color="rgba(255,255,255,0.35)" />}
+                  <View style={{ position:'absolute', top:8, right:8, backgroundColor:'rgba(13,56,39,0.85)', borderRadius:14, paddingHorizontal:8, paddingVertical:3 }}>
+                    <Ionicons name="bookmark" size={14} color="#fff" />
+                  </View>
                 </View>
-                <View style={{ flex:1 }}>
+                {/* Info row */}
+                <View style={{ padding:12 }}>
                   <Text style={styles.savedName}>{item.fullName}</Text>
-                  <Text style={styles.savedSub}>{item.nationality} · {item.age}yrs · EGP {(item.expectedSalary||0).toLocaleString()}/mo</Text>
-                  <View style={{ flexDirection:'row', gap:5, marginTop:4 }}>
+                  <Text style={styles.savedSub}>{item.nationality} Â· {item.age}yrs Â· EGP {(item.expectedSalary||0).toLocaleString()}/mo</Text>
+                  <View style={{ flexDirection:'row', gap:5, marginTop:6, flexWrap:'wrap' }}>
                     {(item.skills||[]).slice(0,3).map(s=>(
-                      <View key={s} style={{ backgroundColor:'#f4ede0', paddingHorizontal:6, paddingVertical:2, borderRadius:2 }}>
-                        <Text style={{ fontSize:9, color:COLORS.muted }}>{s}</Text>
+                      <View key={s} style={{ backgroundColor:'#e8f4f1', paddingHorizontal:7, paddingVertical:3, borderRadius:4 }}>
+                        <Text style={{ fontSize:10, color:COLORS.green }}>{s}</Text>
                       </View>
                     ))}
                   </View>
                 </View>
-                <Text style={{ fontSize:18 }}>❤️</Text>
               </TouchableOpacity>
             )}
             ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>{t('no_saved_maids')}</Text>}
@@ -364,19 +400,20 @@ export function SavedScreen({ navigation }) {
 // ─── LanguageModal ───
 function LanguageModal({ visible, onClose }) {
   const { lang, setLang } = useLangStore();
+  const { t } = useTranslation();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'center', alignItems:'center' }} activeOpacity={1} onPress={onClose}>
         <View style={{ backgroundColor:COLORS.surface, borderRadius:10, overflow:'hidden', width:280, borderWidth:1, borderColor:COLORS.border }}>
-          <View style={{ backgroundColor:'#1a1108', padding:16 }}>
-            <Text style={{ fontFamily:FONTS.display, fontSize:18, color:'#e8c97a' }}>🌐 Language / اللغة</Text>
+          <View style={{ backgroundColor:'#0D3827', padding:16 }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:18, color:'#fff' }}>{t('change_language')}</Text>
           </View>
           {LANGUAGES.map(l => (
-            <TouchableOpacity key={l.code} onPress={() => { setLang(l.code); onClose(); }}
-              style={{ flexDirection:'row', alignItems:'center', gap:12, padding:14, borderTopWidth:1, borderTopColor:COLORS.border, backgroundColor: lang===l.code ? '#fef9ee' : COLORS.surface }}>
+            <TouchableOpacity key={l.code} onPress={() => { onClose(); setLang(l.code); }}
+              style={{ flexDirection:'row', alignItems:'center', gap:12, padding:14, borderTopWidth:1, borderTopColor:COLORS.border, backgroundColor: lang===l.code ? '#e8f4f1' : COLORS.surface }}>
               <Text style={{ fontSize:22 }}>{l.flag}</Text>
-              <Text style={{ fontSize:14, color: lang===l.code ? COLORS.gold : COLORS.text, fontWeight: lang===l.code ? '700':'400', flex:1 }}>{l.label}</Text>
-              {lang===l.code && <Text style={{ color:COLORS.gold, fontSize:16 }}>✓</Text>}
+              <Text style={{ fontSize:14, color: lang===l.code ? COLORS.green : COLORS.text, fontWeight: lang===l.code ? '700':'400', flex:1 }}>{l.label}</Text>
+              {lang===l.code && <Text style={{ color:COLORS.green, fontSize:16 }}>✓</Text>}
             </TouchableOpacity>
           ))}
         </View>
@@ -388,7 +425,7 @@ function LanguageModal({ visible, onClose }) {
 // ─── HWProfileScreen ───
 export function HWProfileScreen({ navigation }) {
   const { t } = useTranslation();
-  const { user, logout } = useAuthStore();
+  const { user, profile, logout } = useAuthStore();
   const [langVisible, setLangVisible] = useState(false);
 
   const handleDeleteAccount = () => {
@@ -424,40 +461,72 @@ export function HWProfileScreen({ navigation }) {
     );
   };
 
-  const MENU = [
-    { icon:'❤️', title: t('menu_saved'),         color:'',    onPress: () => navigation.navigate('Saved') },
-    { icon:'💬', title: t('menu_messages'),       color:'',    onPress: () => navigation.navigate('Chats') },
-    { icon:'👑', title: t('my_hired_maid'),       color:'',    onPress: () => navigation.navigate('HiredMaids') },
-    { icon:'💳', title: t('menu_payments'),       color:'',    onPress: () => navigation.navigate('PaymentHistory') },
-    { icon:'🔔', title: t('menu_notifications'),  color:'',    onPress: () => navigation.navigate('Alerts') },
-    { icon:'🌐', title: t('language'),            color:'',    onPress: () => setLangVisible(true) },
-    { icon:'🎫', title: t('menu_support'),        color:'',    onPress: () => navigation.navigate('Support') },
-    { icon:'🗑️', title: t('delete_account'),      color:'red', onPress: handleDeleteAccount },
-    { icon:'🚪', title: t('menu_sign_out'),       color:'red', onPress: logout },
+  const MENU_SECTIONS = [
+    {
+      label: t('menu_activity'),
+      items: [
+        { icon:'bookmark-outline',      iconColor:COLORS.green,  bg:'#e8f4f1', title: t('menu_saved'),        onPress: () => navigation.navigate('Saved') },
+        { icon:'chatbubbles-outline',   iconColor:'#7c3aed',     bg:'#ede8fd', title: t('menu_messages'),      onPress: () => navigation.navigate('Chats') },
+        { icon:'home-outline',          iconColor:'#d97706',     bg:'#fef3e2', title: t('my_hired_maid'),      onPress: () => navigation.navigate('HiredMaids') },
+        { icon:'card-outline',          iconColor:'#2563eb',     bg:'#e8f0fe', title: t('menu_payments'),      onPress: () => navigation.navigate('PaymentHistory') },
+        { icon:'notifications-outline', iconColor:'#ef4444',     bg:'#fef2f2', title: t('menu_notifications'), onPress: () => navigation.navigate('Alerts') },
+      ],
+    },
+    {
+      label: t('menu_settings'),
+      items: [
+        { icon:'globe-outline',         iconColor:'#4f46e5',     bg:'#f0f4ff', title: t('language'),      onPress: () => setLangVisible(true) },
+        { icon:'help-circle-outline',   iconColor:COLORS.green,  bg:'#e8f4f1', title: t('menu_support'),  onPress: () => navigation.navigate('Support') },
+      ],
+    },
+    {
+      label: t('menu_account'),
+      items: [
+        { icon:'trash-outline',         iconColor:'#e05555',     bg:'#fef2f2', title: t('delete_account'), color:'red', onPress: handleDeleteAccount },
+        { icon:'log-out-outline',       iconColor:'#e05555',     bg:'#fef2f2', title: t('menu_sign_out'),   color:'red', onPress: logout },
+      ],
+    },
   ];
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
       <LanguageModal visible={langVisible} onClose={() => setLangVisible(false)}/>
-      <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false}>
-        <View style={{ backgroundColor:'#3d2203', padding:20, paddingTop:54, paddingBottom:20 }}>
-          <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:12 }}>
-            <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:28 }}>👩</Text></View>
-            <TouchableOpacity onPress={() => navigation.navigate('EditHWProfile')} style={{ borderWidth:1, borderColor:'rgba(201,168,76,0.35)', paddingHorizontal:14, paddingVertical:8, borderRadius:4, alignSelf:'flex-start' }}><Text style={{ fontSize:12, color:'#e8c97a' }}>{t('edit_btn')}</Text></TouchableOpacity>
+      <ScrollView contentContainerStyle={{ paddingBottom:48 }} showsVerticalScrollIndicator={false}>
+        {/* Profile header */}
+        <View style={{ backgroundColor:'#0D3827', padding:20, paddingTop:54, paddingBottom:28 }}>
+          <View style={{ flexDirection:'row', justifyContent:'flex-end', alignItems:'center', marginBottom:14 }}>
+            <NotifBell color="rgba(255,255,255,0.9)" />
           </View>
-          <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{user?.name || 'Customer'}</Text>
-          <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', fontFamily:FONTS.body, marginTop:2 }}>{user?.email}</Text>
+          <View style={{ flexDirection:'row', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff' }}>{user?.name || 'Customer'}</Text>
+            {profile?.subscription?.status === 'active' && (
+              <View style={{ backgroundColor:'rgba(255,255,255,0.2)', paddingHorizontal:10, paddingVertical:4, borderRadius:10, borderWidth:1, borderColor:'rgba(255,255,255,0.35)' }}>
+                <Text style={{ fontSize:11, color:'#fff', fontWeight:'700', textTransform:'capitalize', letterSpacing:0.5 }}>
+                  {profile.subscription.plan || 'Active'}
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={{ fontSize:12, color:'rgba(255,255,255,0.65)', fontFamily:FONTS.body, marginTop:3 }}>{user?.email}</Text>
         </View>
-        <View style={{ margin:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
-          {MENU.map(({ icon, title, color, onPress }) => (
-            <TouchableOpacity key={title} onPress={onPress}
-              style={{ flexDirection:'row', alignItems:'center', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-              <View style={{ width:32, height:32, borderRadius:6, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:15 }}>{icon}</Text></View>
-              <Text style={{ fontSize:14, fontWeight:'500', color: color==='red' ? COLORS.red : COLORS.text, flex:1 }}>{title}</Text>
-              <Text style={{ color:COLORS.muted, fontSize:16 }}>›</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* Sectioned menu */}
+        {MENU_SECTIONS.map(section => (
+          <View key={section.label} style={{ marginHorizontal:16, marginTop:18 }}>
+            <Text style={{ fontSize:10, letterSpacing:1.3, textTransform:'uppercase', color:COLORS.muted, fontFamily:FONTS.bodySemiBold, marginBottom:8, marginLeft:2 }}>{section.label}</Text>
+            <View style={{ backgroundColor:COLORS.surface, borderRadius:14, borderWidth:1, borderColor:COLORS.border, overflow:'hidden', elevation:1, shadowColor:'#000', shadowOpacity:0.04, shadowRadius:6 }}>
+              {section.items.map(({ icon, iconColor, bg, title, color, onPress }, i) => (
+                <TouchableOpacity key={title} onPress={onPress}
+                  style={{ flexDirection:'row', alignItems:'center', gap:12, paddingHorizontal:16, paddingVertical:15, borderBottomWidth: i < section.items.length - 1 ? 1 : 0, borderBottomColor:COLORS.border }}>
+                  <View style={{ width:38, height:38, borderRadius:11, backgroundColor: bg, alignItems:'center', justifyContent:'center' }}>
+                    <Ionicons name={icon} size={19} color={iconColor} />
+                  </View>
+                  <Text style={{ fontSize:14, fontWeight:'500', color: color==='red' ? '#e05555' : COLORS.text, flex:1 }}>{title}</Text>
+                  <Text style={{ color:COLORS.muted, fontSize:20 }}>›</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ))}
       </ScrollView>
     </View>
   );
@@ -539,26 +608,29 @@ export function MaidDashScreen({ navigation }) {
       <LanguageModal visible={langVisible} onClose={() => setLangVisible(false)}/>
 
 
-      <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.gold} colors={[COLORS.gold]} />}>
-        <View style={{ backgroundColor:'#1a1108', padding:20, paddingTop:54 }}>
-          <View style={{ flexDirection:'row', justifyContent:'space-between', marginBottom:10 }}>
-            <View style={{ backgroundColor:'rgba(46,125,94,0.2)', borderWidth:1, borderColor:'rgba(46,125,94,0.35)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
-              <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#5dd6a8' }}>{t('active_subscription')}</Text>
+      <ScrollView contentContainerStyle={{ paddingBottom:40 }} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.green} colors={[COLORS.green]} />}>
+        <View style={{ backgroundColor:'#0D3827', padding:20, paddingTop:54 }}>
+          <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+            <View style={{ backgroundColor:'rgba(255,255,255,0.15)', borderWidth:1, borderColor:'rgba(255,255,255,0.3)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
+              <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#fff' }}>{t('active_subscription')}</Text>
             </View>
-            {profile?.subscription?.plan && profile.subscription.plan !== 'none' && (
-              <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1, borderColor:COLORS.gold, paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}>
-                <Text style={{ fontSize:9, color:COLORS.gold, fontWeight:'700', textTransform:'capitalize' }}>{profile.subscription.plan}</Text>
-              </View>
-            )}
+            <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
+              {profile?.subscription?.plan && profile.subscription.plan !== 'none' && (
+                <View style={{ backgroundColor:'rgba(255,255,255,0.15)', borderWidth:1, borderColor:'rgba(255,255,255,0.4)', paddingHorizontal:8, paddingVertical:3, borderRadius:2 }}>
+                  <Text style={{ fontSize:9, color:'#fff', fontWeight:'700', textTransform:'capitalize' }}>{profile.subscription.plan}</Text>
+                </View>
+              )}
+              <NotifBell color="rgba(255,255,255,0.9)" />
+            </View>
           </View>
-          <View style={{ width:64, height:64, borderRadius:32, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center', marginBottom:8 }}><Text style={{ fontSize:28 }}>👩🏿</Text></View>
-          <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff8ee' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
-          <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
+          <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:8 }}><Ionicons name="person" size={30} color="rgba(255,255,255,0.85)" /></View>
+          <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
+          <Text style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} Â· {profile?.nationality || 'Ethiopia'}</Text>
         </View>
         <View style={{ flexDirection:'row', gap:10, padding:14 }}>
           {[[String(stats.views),t('views')],[String(stats.likes),t('likes')],[String(stats.chats),t('chats_stat')]].map(([n,l])=>(
             <View key={l} style={{ flex:1, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:7, padding:12, alignItems:'center' }}>
-              <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.gold }}>{n}</Text>
+              <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.green }}>{n}</Text>
               <Text style={{ fontSize:9, textTransform:'uppercase', letterSpacing:0.5, color:COLORS.muted, marginTop:2 }}>{l}</Text>
             </View>
           ))}
@@ -566,16 +638,16 @@ export function MaidDashScreen({ navigation }) {
         {/* Pending hire requests banner */}
         {pendingRequests > 0 && (
           <TouchableOpacity onPress={() => navigation.navigate('HireRequest')}
-            style={{ marginHorizontal:14, marginBottom:10, backgroundColor:'#fff8ee', borderWidth:1.5, borderColor:COLORS.gold, borderRadius:8, padding:13, flexDirection:'row', alignItems:'center', gap:10 }}>
-            <Text style={{ fontSize:22 }}>👑</Text>
+            style={{ marginHorizontal:14, marginBottom:10, backgroundColor:'#e8f4f1', borderWidth:1.5, borderColor:COLORS.green, borderRadius:8, padding:13, flexDirection:'row', alignItems:'center', gap:10 }}>
+            <Ionicons name="person-circle-outline" size={22} color={COLORS.green} />
             <View style={{ flex:1 }}>
               <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>
                 {pendingRequests} {pendingRequests > 1 ? t('hire_reqs_waiting') : t('hire_req_waiting')}
               </Text>
               <Text style={{ fontSize:11, color:COLORS.muted, marginTop:1 }}>{t('tap_review_decide')}</Text>
             </View>
-            <View style={{ backgroundColor:COLORS.gold, width:24, height:24, borderRadius:12, alignItems:'center', justifyContent:'center' }}>
-              <Text style={{ fontSize:12, fontWeight:'700', color:COLORS.dark }}>{pendingRequests}</Text>
+            <View style={{ backgroundColor:COLORS.green, width:24, height:24, borderRadius:12, alignItems:'center', justifyContent:'center' }}>
+              <Text style={{ fontSize:12, fontWeight:'700', color:'#fff' }}>{pendingRequests}</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -589,13 +661,13 @@ export function MaidDashScreen({ navigation }) {
               <Text style={{ fontSize:12, color:COLORS.muted, marginTop:2 }}>{t('currently_hired_desc')}</Text>
             </View>
             {[
-              ['🎫', t('open_support'),     t('contact_admin_note'),   () => navigation.navigate('Support'), false],
-              ['🌐', t('language'),         '',                          () => setLangVisible(true),            false],
-              ['🚪', t('menu_sign_out'),    '',                          logout,                                true],
-            ].map(([icon,title,sub,onPress,isRed])=>(
+              { icon:'help-circle-outline', iconColor:COLORS.green, bg:'#e8f4f1', title:t('open_support'),  sub:t('contact_admin_note'), onPress:() => navigation.navigate('Support'), isRed:false },
+              { icon:'globe-outline',       iconColor:'#4f46e5',    bg:'#f0f4ff', title:t('language'),       sub:'',                     onPress:() => setLangVisible(true),           isRed:false },
+              { icon:'log-out-outline',     iconColor:'#e05555',    bg:'#fef2f2', title:t('menu_sign_out'), sub:'',                     onPress:logout,                               isRed:true },
+            ].map(({ icon, iconColor, bg, title, sub, onPress, isRed })=>(
               <TouchableOpacity key={icon} onPress={onPress}
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-                <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
+                <View style={{ width:30, height:30, borderRadius:5, backgroundColor:bg, alignItems:'center', justifyContent:'center' }}><Ionicons name={icon} size={16} color={iconColor} /></View>
                 <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
                 <Text style={{ color:COLORS.muted }}>›</Text>
               </TouchableOpacity>
@@ -604,20 +676,20 @@ export function MaidDashScreen({ navigation }) {
         ) : (
           <View style={{ marginHorizontal:14, backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, overflow:'hidden' }}>
             {[
-              { icon:'👑', id:'hire_req',  title:t('menu_hire_requests'), sub: pendingRequests > 0 ? `${pendingRequests} pending` : '', isRed:false, onPress: () => navigation.navigate('HireRequest') },
-              { icon:'💬', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} active`,                                  isRed:false, onPress: () => navigation.navigate('MaidChats') },
-              { icon:'💳', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.plan ? `${profile.subscription.plan} · ${profile.subscription.status}` : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
-              { icon:'🎁', id:'referrals', title:t('menu_referrals'),     sub: t('share_code_earn'),                                     isRed:false, onPress: () => navigation.navigate('Coupons') },
-              { icon:'📊', id:'analytics', title:t('menu_analytics'),     sub: `${stats.views} ${t('views')} · ${stats.likes} ${t('likes')}`, isRed:false, onPress: () => navigation.navigate('Analytics') },
-              { icon:'🌐', id:'language',  title:t('language'),           sub: '',                                                       isRed:false, onPress: () => setLangVisible(true) },
-              { icon:'🔔', id:'notifs',    title:t('menu_notifications2'),sub: '',                                                       isRed:false, onPress: () => navigation.navigate('MaidAlerts') },
-              { icon:'🎫', id:'support',   title:t('menu_support2'),      sub: t('contact_admin_note'),                                  isRed:false, onPress: () => navigation.navigate('Support') },
-              ...(!maidProfile?.isHired ? [{ icon:'🗑️', id:'delete', title:t('menu_delete_account'), sub: t('deactivates_profile'), isRed:true, onPress: handleDeleteAccount }] : []),
-              { icon:'🚪', id:'sign_out',  title:t('menu_sign_out'),      sub: '',                                                       isRed:true,  onPress: logout },
-            ].map(({ icon, id, title, sub, isRed, onPress }) => (
+              { icon:'person-circle-outline', iconColor:'#d97706',   bg:'#fef3e2', id:'hire_req',  title:t('menu_hire_requests'), sub: pendingRequests > 0 ? `${pendingRequests} pending` : '', isRed:false, onPress: () => navigation.navigate('HireRequest') },
+              { icon:'chatbubbles-outline',   iconColor:'#7c3aed',   bg:'#ede8fd', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} active`,                                  isRed:false, onPress: () => navigation.navigate('MaidChats') },
+              { icon:'card-outline',          iconColor:'#2563eb',   bg:'#e8f0fe', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.plan ? `${profile.subscription.plan} Â· ${profile.subscription.status}` : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
+              { icon:'gift-outline',          iconColor:'#d97706',   bg:'#fef3e2', id:'referrals', title:t('menu_referrals'),     sub: t('share_code_earn'),                                     isRed:false, onPress: () => navigation.navigate('Coupons') },
+              { icon:'bar-chart-outline',     iconColor:'#0891b2',   bg:'#e0f2fe', id:'analytics', title:t('menu_analytics'),     sub: `${stats.views} ${t('views')} Â· ${stats.likes} ${t('likes')}`, isRed:false, onPress: () => navigation.navigate('Analytics') },
+              { icon:'globe-outline',         iconColor:'#4f46e5',   bg:'#f0f4ff', id:'language',  title:t('language'),           sub: '',                                                       isRed:false, onPress: () => setLangVisible(true) },
+              { icon:'notifications-outline', iconColor:'#ef4444',   bg:'#fef2f2', id:'notifs',    title:t('menu_notifications2'),sub: '',                                                       isRed:false, onPress: () => navigation.navigate('MaidAlerts') },
+              { icon:'help-circle-outline',   iconColor:COLORS.green,bg:'#e8f4f1', id:'support',   title:t('menu_support2'),      sub: t('contact_admin_note'),                                  isRed:false, onPress: () => navigation.navigate('Support') },
+              ...(!maidProfile?.isHired ? [{ icon:'trash-outline', iconColor:'#e05555', bg:'#fef2f2', id:'delete', title:t('menu_delete_account'), sub: t('deactivates_profile'), isRed:true, onPress: handleDeleteAccount }] : []),
+              { icon:'log-out-outline',       iconColor:'#e05555',   bg:'#fef2f2', id:'sign_out',  title:t('menu_sign_out'),      sub: '',                                                       isRed:true,  onPress: logout },
+            ].map(({ icon, iconColor, bg, id, title, sub, isRed, onPress }) => (
               <TouchableOpacity key={id} onPress={onPress}
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-                <View style={{ width:30, height:30, borderRadius:5, backgroundColor:'#f4ede0', alignItems:'center', justifyContent:'center' }}><Text style={{ fontSize:14 }}>{icon}</Text></View>
+                <View style={{ width:30, height:30, borderRadius:5, backgroundColor:bg, alignItems:'center', justifyContent:'center' }}><Ionicons name={icon} size={16} color={iconColor} /></View>
                 <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
                 <Text style={{ color:COLORS.muted }}>›</Text>
               </TouchableOpacity>
@@ -632,8 +704,8 @@ export function MaidDashScreen({ navigation }) {
               {t('my_reviews')}
             </Text>
             {maidProfile?.rating > 0 && (
-              <View style={{ backgroundColor:'rgba(201,168,76,0.12)', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, paddingHorizontal:10, paddingVertical:5 }}>
-                <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.gold }}>
+              <View style={{ backgroundColor:'rgba(13,56,39,0.12)', borderWidth:1, borderColor:'rgba(13,56,39,0.3)', borderRadius:8, paddingHorizontal:10, paddingVertical:5 }}>
+                <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.green }}>
                   {maidProfile.rating?.toFixed(1)} ★
                 </Text>
               </View>
@@ -642,7 +714,7 @@ export function MaidDashScreen({ navigation }) {
 
           {myReviews.length === 0 ? (
             <View style={{ backgroundColor:COLORS.surface, borderRadius:10, borderWidth:1, borderColor:COLORS.border, padding:20, alignItems:'center' }}>
-              <Text style={{ fontSize:28, marginBottom:8 }}>💬</Text>
+              <Ionicons name="star-outline" size={32} color={COLORS.muted} style={{ marginBottom:8 }} />
               <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'600' }}>{t('no_reviews_maid')}</Text>
               <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4, textAlign:'center', lineHeight:18 }}>
                 {t('no_reviews_maid_sub')}
@@ -657,17 +729,19 @@ export function MaidDashScreen({ navigation }) {
                 return (
                   <View style={{ backgroundColor:COLORS.surface, borderRadius:12, borderWidth:1, borderColor:COLORS.border, padding:16, marginBottom:12, flexDirection:'row', gap:16, alignItems:'center' }}>
                     <View style={{ alignItems:'center', minWidth:64 }}>
-                      <Text style={{ fontFamily:FONTS.display, fontSize:40, color:COLORS.gold, lineHeight:44 }}>{avg}</Text>
-                      <Text style={{ fontSize:16, marginTop:2 }}>{'⭐'.repeat(Math.round(Number(avg)))}</Text>
+                      <Text style={{ fontFamily:FONTS.display, fontSize:40, color:COLORS.green, lineHeight:44 }}>{avg}</Text>
+                      <View style={{ flexDirection:'row', gap:1, marginTop:2 }}>
+                        {Array.from({ length: Math.round(Number(avg)) }).map((_, i) => <Ionicons key={i} name="star" size={13} color="#f59e0b" />)}
+                      </View>
                       <Text style={{ fontSize:10, color:COLORS.muted, marginTop:3 }}>{myReviews.length} review{myReviews.length!==1?'s':''}</Text>
                     </View>
                     <View style={{ flex:1 }}>
                       {counts.map(({ star, count }) => (
                         <View key={star} style={{ flexDirection:'row', alignItems:'center', gap:6, marginBottom:4 }}>
                           <Text style={{ fontSize:10, color:COLORS.muted, width:10 }}>{star}</Text>
-                          <Text style={{ fontSize:10 }}>⭐</Text>
+                          <Ionicons name="star" size={10} color="#f59e0b" />
                           <View style={{ flex:1, height:6, backgroundColor:COLORS.border, borderRadius:3, overflow:'hidden' }}>
-                            <View style={{ height:'100%', width: myReviews.length ? `${(count/myReviews.length)*100}%` : '0%', backgroundColor:COLORS.gold, borderRadius:3 }}/>
+                            <View style={{ height:'100%', width: myReviews.length ? `${(count/myReviews.length)*100}%` : '0%', backgroundColor:COLORS.green, borderRadius:3 }}/>
                           </View>
                           <Text style={{ fontSize:10, color:COLORS.muted, width:16, textAlign:'right' }}>{count}</Text>
                         </View>
@@ -678,10 +752,10 @@ export function MaidDashScreen({ navigation }) {
               })()}
 
               {myReviews.map(rv => (
-                <View key={rv._id} style={{ backgroundColor:'#fff', borderWidth:1, borderColor:COLORS.border, borderRadius:12, padding:16, marginBottom:10, shadowColor:'#c9a84c', shadowOpacity:0.05, shadowRadius:4, elevation:1 }}>
+                <View key={rv._id} style={{ backgroundColor:'#fff', borderWidth:1, borderColor:COLORS.border, borderRadius:12, padding:16, marginBottom:10, shadowColor:'#0D3827', shadowOpacity:0.05, shadowRadius:4, elevation:1 }}>
                   <View style={{ flexDirection:'row', alignItems:'center', gap:10, marginBottom:8 }}>
-                    <View style={{ width:36, height:36, borderRadius:18, backgroundColor:'#fef6e4', borderWidth:1.5, borderColor:COLORS.gold, alignItems:'center', justifyContent:'center' }}>
-                      <Text style={{ fontSize:16 }}>👤</Text>
+                    <View style={{ width:36, height:36, borderRadius:18, backgroundColor:'#e8f4f1', borderWidth:1.5, borderColor:COLORS.green, alignItems:'center', justifyContent:'center' }}>
+                      <Ionicons name="person" size={16} color={COLORS.green} />
                     </View>
                     <View style={{ flex:1 }}>
                       <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>{rv.housewife?.name || 'Customer'}</Text>
@@ -719,25 +793,25 @@ export function ApprovalScreen({ route, navigation }) {
     { title: 'Review Profile',   desc: 'Check experience, skills, and references.',   state: 'done' },
     { title: 'Hire the Maid',    desc: 'Tap "Hire this Maid" on her profile page.',   state: 'active' },
   ];
-  const stateColors = { done: '#2e7d5e', active: COLORS.gold };
+  const stateColors = { done: '#2e7d5e', active: COLORS.green };
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
-      <View style={{ backgroundColor: '#1a1108', padding: 18, paddingTop: 54 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <View style={{ backgroundColor: '#0D3827', padding: 18, paddingTop: 54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 }}>Hire Flow</Text>
-        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: '#fff8ee', marginTop: 3 }}>{maidName || 'How to Hire'}</Text>
+        <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 10 }}>Hire Flow</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: '#fff', marginTop: 3 }}>{maidName || 'How to Hire'}</Text>
       </View>
       <View style={{ flex: 1, padding: 18 }}>
-        <Text style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.gold, marginBottom: 14, fontFamily: FONTS.bodySemiBold }}>Steps to Hire</Text>
+        <Text style={{ fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.green, marginBottom: 14, fontFamily: FONTS.bodySemiBold }}>Steps to Hire</Text>
         {STEPS.map((s, i) => (
           <View key={i} style={{ flexDirection: 'row', gap: 12, marginBottom: 18 }}>
             <View style={{ alignItems: 'center' }}>
               <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: stateColors[s.state] || COLORS.border, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ fontSize: 12, color: '#fff' }}>
-                  {s.state === 'done' ? '✓' : '▶'}
+                  {s.state === 'done' ? '✓' : 'â–¶'}
                 </Text>
               </View>
               {i < STEPS.length - 1 && <View style={{ width: 1.5, flex: 1, backgroundColor: COLORS.border, marginVertical: 3 }} />}
@@ -748,15 +822,15 @@ export function ApprovalScreen({ route, navigation }) {
             </View>
           </View>
         ))}
-        <View style={{ backgroundColor: '#fff9f0', borderWidth: 1, borderColor: COLORS.border, borderRadius: 7, padding: 14, borderLeftWidth: 3, borderLeftColor: COLORS.gold, marginTop: 8 }}>
+        <View style={{ backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: COLORS.border, borderRadius: 7, padding: 14, borderLeftWidth: 3, borderLeftColor: COLORS.green, marginTop: 8 }}>
           <Text style={{ fontSize: 13, color: COLORS.dark, lineHeight: 20 }}>
-            👑 To hire a maid, open her profile from Browse and tap <Text style={{ fontWeight:'700' }}>"Hire this Maid"</Text>. She will be marked as unavailable until you release the vacancy.
+            To hire a helper, open her profile from Browse and tap <Text style={{ fontWeight:'700' }}>"Hire this Maid"</Text>. She will be marked as unavailable until you release the vacancy.
           </Text>
         </View>
         <TouchableOpacity
-          style={{ backgroundColor: COLORS.gold, padding: 14, borderRadius: 5, alignItems: 'center', marginTop: 20 }}
+          style={{ backgroundColor: COLORS.green, padding: 14, borderRadius: 5, alignItems: 'center', marginTop: 20 }}
           onPress={() => navigation.navigate('BrowseMain')}>
-          <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark }}>🔍 Browse Maids</Text>
+          <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>Browse Maids</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -770,73 +844,67 @@ export function SupportScreen({ navigation }) {
 
   const [subject, setSubject]   = useState('');
   const [message, setMessage]   = useState('');
-  const [priority, setPriority] = useState('medium');
   const [loading, setLoading]   = useState(false);
   const [tickets, setTickets]   = useState([]);
   const [tab, setTab]           = useState('new'); // 'new' | 'history'
 
+  const loadTickets = React.useCallback(() => {
+    supportAPI.getMine().then(r => setTickets(r.data.tickets || [])).catch(() => {});
+  }, []);
+
   useEffect(() => {
-    if (tab === 'history') {
-      supportAPI.getMine().then(r => setTickets(r.data.tickets || [])).catch(() => {});
-    }
-  }, [tab]);
+    if (tab === 'history') loadTickets();
+  }, [tab, loadTickets]);
+
+  useFocusEffect(React.useCallback(() => {
+    if (tab === 'history') loadTickets();
+  }, [tab, loadTickets]));
 
   const handleSubmit = async () => {
     if (!subject.trim() || !message.trim()) return Toast.show({ type:'error', text1:t('subject_msg_required') });
     setLoading(true);
     try {
-      await supportAPI.create({ subject: subject.trim(), message: message.trim(), priority });
+      await supportAPI.create({ subject: subject.trim(), message: message.trim() });
       Toast.show({ type:'success', text1:t('ticket_submitted'), text2:t('ticket_submitted_sub') });
-      setSubject(''); setMessage(''); setPriority('medium');
+      setSubject(''); setMessage('');
       setTab('history');
     } catch (err) {
       Toast.show({ type:'error', text1: err.response?.data?.message || 'Failed to submit' });
     } finally { setLoading(false); }
   };
 
-  const STATUS_COLOR = { open:'#C9A84C', in_progress:'#2196F3', resolved:'#2e7d5e', closed:COLORS.muted };
+  const STATUS_COLOR = { open:COLORS.green, in_progress:'#2196F3', resolved:'#2e7d5e', closed:COLORS.muted };
 
   return (
     <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':undefined}>
-      <View style={{ backgroundColor:'#1a1108', padding:18, paddingTop:54 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+      <View style={{ backgroundColor:'#0D3827', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('support_title')}</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>{t('support_sub')}</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff', marginTop:10 }}>{t('support_title')}</Text>
+        <Text style={{ fontSize:11, color:'rgba(255,255,255,0.6)', marginTop:2 }}>{t('support_sub')}</Text>
       </View>
       {/* Tabs */}
       <View style={{ flexDirection:'row', backgroundColor:COLORS.surface, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
         {[['new', t('new_ticket')],['history', t('my_tickets')]].map(([key, label]) => (
           <TouchableOpacity key={key} onPress={() => setTab(key)}
-            style={{ flex:1, padding:14, alignItems:'center', borderBottomWidth:2, borderBottomColor: tab===key ? COLORS.gold : 'transparent' }}>
-            <Text style={{ fontSize:13, fontFamily:FONTS.bodySemiBold, color: tab===key ? COLORS.gold : COLORS.muted }}>{label}</Text>
+            style={{ flex:1, padding:14, alignItems:'center', borderBottomWidth:2, borderBottomColor: tab===key ? COLORS.green : 'transparent' }}>
+            <Text style={{ fontSize:13, fontFamily:FONTS.bodySemiBold, color: tab===key ? COLORS.green : COLORS.muted }}>{label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {tab === 'new' ? (
         <ScrollView style={{ flex:1, backgroundColor:COLORS.cream }} contentContainerStyle={{ padding:20 }} keyboardShouldPersistTaps="handled">
-          <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>{t('priority_label')}</Text>
-          <View style={{ flexDirection:'row', gap:8, marginBottom:16 }}>
-            {[['low', t('priority_low')],['medium', t('priority_medium')],['high', t('priority_high')]].map(([val, label]) => (
-              <TouchableOpacity key={val} onPress={() => setPriority(val)}
-                style={{ flex:1, padding:10, borderRadius:5, borderWidth:1.5, alignItems:'center',
-                  borderColor: priority===val ? COLORS.gold : COLORS.border,
-                  backgroundColor: priority===val ? `${COLORS.gold}15` : COLORS.surface }}>
-                <Text style={{ fontSize:12, color: priority===val ? COLORS.gold : COLORS.muted, fontFamily:FONTS.bodySemiBold }}>{label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
           <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>{t('subject_label')}</Text>
           <TextInput style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, marginBottom:16 }}
             value={subject} onChangeText={setSubject} placeholder={t('subject_ph')} placeholderTextColor={COLORS.muted}/>
           <Text style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', color:COLORS.muted, marginBottom:5, fontFamily:FONTS.bodySemiBold }}>{t('message_label2')}</Text>
           <TextInput style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:5, padding:13, fontSize:14, color:COLORS.text, backgroundColor:COLORS.surface, height:140, textAlignVertical:'top', marginBottom:20 }}
             value={message} onChangeText={setMessage} placeholder={t('message_ph')} placeholderTextColor={COLORS.muted} multiline/>
-          <TouchableOpacity style={{ backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', opacity: loading ? 0.6 : 1 }}
+          <TouchableOpacity style={{ backgroundColor:COLORS.green, padding:15, borderRadius:5, alignItems:'center', opacity: loading ? 0.6 : 1 }}
             onPress={handleSubmit} disabled={loading}>
-            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? t('submitting') : t('submit_ticket')}</Text>
+            <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff' }}>{loading ? t('submitting') : t('submit_ticket')}</Text>
           </TouchableOpacity>
         </ScrollView>
       ) : (
@@ -853,7 +921,13 @@ export function SupportScreen({ navigation }) {
                 </View>
               </View>
               <Text style={{ fontSize:12, color:COLORS.muted, lineHeight:18 }} numberOfLines={2}>{item.message}</Text>
-              {item.adminNotes ? <Text style={{ fontSize:12, color:'#2e7d5e', marginTop:6, fontStyle:'italic' }}>Admin: {item.adminNotes}</Text> : null}
+              {item.adminReply ? (
+                <View style={{ backgroundColor:'#f0f7f4', borderLeftWidth:3, borderLeftColor:'#2e7d5e', borderRadius:4, padding:8, marginTop:8 }}>
+                  <Text style={{ fontSize:11, color:'#2e7d5e', fontFamily:FONTS.bodySemiBold, marginBottom:3 }}>💬 Support</Text>
+                  <Text style={{ fontSize:12, color:'#1a4a35', lineHeight:18 }}>{item.adminReply}</Text>
+                  {item.repliedAt ? <Text style={{ fontSize:10, color:COLORS.muted, marginTop:4 }}>{new Date(item.repliedAt).toLocaleDateString()}</Text> : null}
+                </View>
+              ) : null}
               <Text style={{ fontSize:10, color:COLORS.muted, marginTop:6 }}>{new Date(item.createdAt).toLocaleDateString()}</Text>
             </View>
           )}
@@ -912,11 +986,11 @@ export function EditHWProfileScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={{ flex:1 }} behavior={Platform.OS==='ios'?'padding':undefined}>
-      <View style={{ backgroundColor:'#3d2203', padding:18, paddingTop:54 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+      <View style={{ backgroundColor:'#0D3827', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('edit_profile_title2')}</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff', marginTop:10 }}>{t('edit_profile_title2')}</Text>
       </View>
       <ScrollView style={{ flex:1, backgroundColor:COLORS.cream }} contentContainerStyle={{ padding:20 }} keyboardShouldPersistTaps="handled">
         <Field label={t('field_full_name')} value={name}    onChange={setName}    placeholder={t('name_ph')} />
@@ -924,9 +998,9 @@ export function EditHWProfileScreen({ navigation }) {
         <Field label={t('field_city')}      value={city}    onChange={setCity}    placeholder={t('city_ph')} />
         <Field label={t('field_country')}   value={country} onChange={setCountry} placeholder={t('country_ph')} />
         <TouchableOpacity
-          style={{ backgroundColor:COLORS.gold, padding:15, borderRadius:5, alignItems:'center', marginTop:8, opacity: loading ? 0.6 : 1 }}
+          style={{ backgroundColor:COLORS.green, padding:15, borderRadius:5, alignItems:'center', marginTop:8, opacity: loading ? 0.6 : 1 }}
           onPress={handleSave} disabled={loading}>
-          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:COLORS.dark }}>{loading ? t('saving') : t('save_changes')}</Text>
+          <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff' }}>{loading ? t('saving') : t('save_changes')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -950,40 +1024,43 @@ export function AnalyticsScreen({ navigation }) {
   );
 
   const rows = [
-    { icon:'👁️', label:t('stat_views'),   value: stats?.views     ?? 0 },
-    { icon:'❤️', label:t('stat_likes'),   value: stats?.likes     ?? 0 },
-    { icon:'💬', label:t('stat_chats2'),  value: stats?.chats     ?? 0 },
-    { icon:'🏠', label:t('stat_hired'),   value: stats?.hireCount ?? 0 },
+    { icon:'eye-outline',          iconColor:'#0891b2', label:t('stat_views'),   value: stats?.views     ?? 0 },
+    { icon:'heart-outline',        iconColor:'#e05555', label:t('stat_likes'),   value: stats?.likes     ?? 0 },
+    { icon:'chatbubbles-outline',  iconColor:'#7c3aed', label:t('stat_chats2'),  value: stats?.chats     ?? 0 },
+    { icon:'home-outline',         iconColor:COLORS.green, label:t('stat_hired'), value: stats?.hireCount ?? 0 },
   ];
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={{ backgroundColor:'#1a1108', padding:18, paddingTop:54 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+      <View style={{ backgroundColor:'#0D3827', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('analytics_title')}</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>{t('analytics_sub')}</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff', marginTop:10 }}>{t('analytics_title')}</Text>
+        <Text style={{ fontSize:11, color:'rgba(255,255,255,0.6)', marginTop:2 }}>{t('analytics_sub')}</Text>
       </View>
       {loading
         ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
-            <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.gold, borderTopColor:'transparent' }}/>
+            <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.green, borderTopColor:'transparent' }}/>
           </View>
         : <ScrollView contentContainerStyle={{ padding:16 }}>
             <View style={{ flexDirection:'row', flexWrap:'wrap', gap:10, marginBottom:16 }}>
-              {rows.map(({ icon, label, value }) => (
+              {rows.map(({ icon, iconColor, label, value }) => (
                 <View key={label} style={{ width:'47%', backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:16, alignItems:'center' }}>
-                  <Text style={{ fontSize:26, marginBottom:6 }}>{icon}</Text>
-                  <Text style={{ fontFamily:FONTS.display, fontSize:30, color:COLORS.gold }}>{value}</Text>
+                  <Ionicons name={icon} size={28} color={iconColor} style={{ marginBottom:6 }} />
+                  <Text style={{ fontFamily:FONTS.display, fontSize:30, color:COLORS.green }}>{value}</Text>
                   <Text style={{ fontSize:10, textTransform:'uppercase', letterSpacing:0.8, color:COLORS.muted, marginTop:4, textAlign:'center' }}>{label}</Text>
                 </View>
               ))}
             </View>
             <View style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:16 }}>
-              <Text style={{ fontSize:11, letterSpacing:1, textTransform:'uppercase', color:COLORS.gold, fontFamily:FONTS.bodySemiBold, marginBottom:12 }}>{t('summary_label')}</Text>
-              {rows.map(({ icon, label, value }) => (
-                <View key={label} style={{ flexDirection:'row', justifyContent:'space-between', paddingVertical:8, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-                  <Text style={{ fontSize:13, color:COLORS.text }}>{icon}  {label}</Text>
+              <Text style={{ fontSize:11, letterSpacing:1, textTransform:'uppercase', color:COLORS.green, fontFamily:FONTS.bodySemiBold, marginBottom:12 }}>{t('summary_label')}</Text>
+              {rows.map(({ icon, iconColor, label, value }) => (
+                <View key={label} style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingVertical:8, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
+                  <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
+                    <Ionicons name={icon} size={15} color={iconColor} />
+                    <Text style={{ fontSize:13, color:COLORS.text }}>{label}</Text>
+                  </View>
                   <Text style={{ fontSize:13, fontFamily:FONTS.bodySemiBold, color:COLORS.dark }}>{value}</Text>
                 </View>
               ))}
@@ -1007,21 +1084,21 @@ export function PaymentHistoryScreen({ navigation }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const statusColor = { completed:'#2e7d5e', pending:'#c9a84c', failed:'#e05555', refunded:'#888' };
-  const methodIcon  = { fawry:'🏧', vodafone_cash:'📱', instapay:'💸', amazon_pay:'🛒', paymob:'💳', cash_transfer:'💵' };
+  const statusColor = { completed:'#2e7d5e', pending:COLORS.green, failed:'#e05555', refunded:'#888' };
+  const methodIcon  = { fawry:'card-outline', vodafone_cash:'phone-portrait-outline', instapay:'flash-outline', amazon_pay:'bag-outline', paymob:'card-outline', cash_transfer:'cash-outline' };
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <View style={{ backgroundColor:'#1a1108', padding:18, paddingTop:54 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize:22, color:'rgba(232,201,122,0.6)' }}>←</Text>
+      <View style={{ backgroundColor:'#0D3827', padding:18, paddingTop:54 }}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff8ee', marginTop:10 }}>{t('payments_title')}</Text>
-        <Text style={{ fontSize:11, color:'rgba(232,201,122,0.45)', marginTop:2 }}>{t('payments_sub')}</Text>
+        <Text style={{ fontFamily:FONTS.display, fontSize:24, color:'#fff', marginTop:10 }}>{t('payments_title')}</Text>
+        <Text style={{ fontSize:11, color:'rgba(255,255,255,0.6)', marginTop:2 }}>{t('payments_sub')}</Text>
       </View>
       {loading
         ? <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}>
-            <ActivityIndicator size="large" color={COLORS.gold}/>
+            <ActivityIndicator size="large" color={COLORS.green}/>
           </View>
         : <FlatList
             data={payments}
@@ -1029,20 +1106,20 @@ export function PaymentHistoryScreen({ navigation }) {
             contentContainerStyle={{ padding:14 }}
             removeClippedSubviews
             renderItem={({ item }) => (
-              <View style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:14, marginBottom:10, borderLeftWidth:3, borderLeftColor: statusColor[item.status] || COLORS.gold }}>
+              <View style={{ backgroundColor:COLORS.surface, borderWidth:1, borderColor:COLORS.border, borderRadius:8, padding:14, marginBottom:10, borderLeftWidth:3, borderLeftColor: statusColor[item.status] || COLORS.green }}>
                 <View style={{ flexDirection:'row', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
                   <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
-                    <Text style={{ fontSize:22 }}>{methodIcon[item.method] || '💳'}</Text>
+                    <Ionicons name={methodIcon[item.method] || 'card-outline'} size={22} color={COLORS.muted} />
                     <View>
                       <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
                         <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark, textTransform:'capitalize' }}>{item.type}</Text>
-                        {item.offlineByAdmin && <View style={{ backgroundColor:'rgba(201,168,76,0.15)', paddingHorizontal:6, paddingVertical:1, borderRadius:4, borderWidth:1, borderColor:'rgba(201,168,76,0.4)' }}><Text style={{ fontSize:9, color:COLORS.gold, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>Offline</Text></View>}
+                        {item.offlineByAdmin && <View style={{ backgroundColor:'rgba(13,56,39,0.15)', paddingHorizontal:6, paddingVertical:1, borderRadius:4, borderWidth:1, borderColor:'rgba(13,56,39,0.4)' }}><Text style={{ fontSize:9, color:COLORS.green, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>Offline</Text></View>}
                       </View>
                       <Text style={{ fontSize:11, color:COLORS.muted }}>{(item.method||'').replace('_',' ')}</Text>
                     </View>
                   </View>
                   <View style={{ alignItems:'flex-end' }}>
-                    <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.gold }}>EGP {(item.amount||0).toLocaleString()}</Text>
+                    <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.green }}>EGP {(item.amount||0).toLocaleString()}</Text>
                     <View style={{ backgroundColor:`${statusColor[item.status]||'#888'}20`, paddingHorizontal:8, paddingVertical:2, borderRadius:10, marginTop:3 }}>
                       <Text style={{ fontSize:10, color: statusColor[item.status]||'#888', textTransform:'uppercase', letterSpacing:0.5 }}>{item.status}</Text>
                     </View>
@@ -1054,7 +1131,7 @@ export function PaymentHistoryScreen({ navigation }) {
             )}
             ListEmptyComponent={
               <View style={{ alignItems:'center', marginTop:80 }}>
-                <Text style={{ fontSize:40, marginBottom:12 }}>💳</Text>
+                <Ionicons name="card-outline" size={48} color={COLORS.muted} style={{ marginBottom:12 }} />
                 <Text style={{ fontSize:15, color:COLORS.dark, fontFamily:FONTS.display }}>{t('no_payments')}</Text>
                 <Text style={{ fontSize:12, color:COLORS.muted, marginTop:4 }}>{t('transactions_here')}</Text>
               </View>
@@ -1069,7 +1146,7 @@ export function PaymentHistoryScreen({ navigation }) {
 export function EditProfileScreen() {
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream, alignItems:'center', justifyContent:'center' }}>
-      <Text style={{ fontSize:32, marginBottom:12 }}>✏️</Text>
+      <Ionicons name="create-outline" size={36} color={COLORS.muted} style={{ marginBottom:12 }} />
       <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.dark }}>Edit Profile</Text>
       <Text style={{ fontSize:13, color:COLORS.muted, marginTop:6 }}>Profile editing coming soon</Text>
     </View>
@@ -1080,14 +1157,14 @@ const styles = StyleSheet.create({
   topBar:     { padding:16, paddingTop:54, backgroundColor:COLORS.surface, borderBottomWidth:1, borderBottomColor:COLORS.border, flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
   pageTitle:  { fontFamily:FONTS.display, fontSize:22, color:COLORS.dark },
   notifItem:  { flexDirection:'row', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border, alignItems:'flex-start' },
-  notifUnread:{ backgroundColor:'#fffcf5' },
+  notifUnread:{ backgroundColor:'#e8f4f1' },
   notifIcon:  { width:38, height:38, borderRadius:19, alignItems:'center', justifyContent:'center', flexShrink:0 },
   notifTitle: { fontSize:13, fontWeight:'600', color:COLORS.dark, marginBottom:2 },
   notifBody:  { fontSize:12, color:COLORS.muted, lineHeight:17 },
   notifTime:  { fontSize:10, color:COLORS.muted, marginTop:3 },
-  unreadDot:  { width:8, height:8, borderRadius:4, backgroundColor:COLORS.gold, marginTop:5 },
+  unreadDot:  { width:8, height:8, borderRadius:4, backgroundColor:COLORS.green, marginTop:5 },
   chatItem:   { flexDirection:'row', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border, alignItems:'center' },
-  chatAva:    { width:44, height:44, borderRadius:22, backgroundColor:COLORS.gold, alignItems:'center', justifyContent:'center', overflow:'hidden' },
+  chatAva:    { width:44, height:44, borderRadius:22, backgroundColor:COLORS.green, alignItems:'center', justifyContent:'center', overflow:'hidden' },
   chatName:   { fontFamily:FONTS.display, fontSize:16, color:COLORS.dark },
   chatLast:   { fontSize:12, color:COLORS.muted, marginTop:1 },
   chatTime:   { fontSize:10, color:COLORS.muted },

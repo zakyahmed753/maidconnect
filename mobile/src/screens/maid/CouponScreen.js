@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, Share, Clipboard, Alert
@@ -7,6 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { couponsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
+import BackChevron from '../../components/BackChevron';
 
 const APP_STORE_LINK = 'https://servix.world';
 
@@ -47,7 +48,7 @@ export default function CouponScreen({ navigation }) {
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: COLORS.cream, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color={COLORS.gold} />
+        <ActivityIndicator size="large" color={COLORS.green} />
       </View>
     );
   }
@@ -61,10 +62,10 @@ export default function CouponScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Referral & Coupons 🎁</Text>
+        <Text style={styles.headerTitle}>Referral & Coupons ðŸŽ</Text>
         <Text style={styles.headerSub}>Earn rewards by inviting other maids</Text>
       </View>
 
@@ -76,15 +77,15 @@ export default function CouponScreen({ navigation }) {
           <Text style={styles.code}>{code}</Text>
           <Text style={styles.codeDesc}>
             Share this code with other maids. They get{' '}
-            <Text style={{ fontWeight: '700', color: COLORS.gold }}>{discount}% off</Text>{' '}
+            <Text style={{ fontWeight: '700', color: COLORS.green }}>{discount}% off</Text>{' '}
             their first subscription — and you earn a referral credit!
           </Text>
           <View style={styles.codeActions}>
             <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
-              <Text style={styles.copyBtnTxt}>📋 Copy Code</Text>
+              <Text style={styles.copyBtnTxt}>ðŸ“‹ Copy Code</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-              <Text style={styles.shareBtnTxt}>📤 Share App</Text>
+              <Text style={styles.shareBtnTxt}>ðŸ“¤ Share App</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -106,7 +107,7 @@ export default function CouponScreen({ navigation }) {
         {credit > 0 && (
           <View style={[styles.infoBox, { backgroundColor: '#f0fff8', borderColor: '#a8dfc8', marginBottom: 14 }]}>
             <Text style={{ fontSize: 12, color: '#1a5c40', lineHeight: 19 }}>
-              🎁 <Text style={{ fontWeight: '700' }}>EGP {credit} credit</Text> will be automatically deducted from your next subscription payment. Unused credit does not carry over to the following month.
+              ðŸŽ <Text style={{ fontWeight: '700' }}>EGP {credit} credit</Text> will be automatically deducted from your next subscription payment. Unused credit does not carry over to the following month.
             </Text>
           </View>
         )}
@@ -115,9 +116,9 @@ export default function CouponScreen({ navigation }) {
         <View style={styles.howCard}>
           <Text style={styles.howTitle}>How it works</Text>
           {[
-            { icon: '1️⃣', text: 'Share your code with a maid friend' },
-            { icon: '2️⃣', text: `She enters your code and gets ${discount}% off her first subscription` },
-            { icon: '3️⃣', text: 'You earn a referral credit — admin will apply it to your next renewal' },
+            { icon: '1âƒ£', text: 'Share your code with a maid friend' },
+            { icon: '2âƒ£', text: `She enters your code and gets ${discount}% off her first subscription` },
+            { icon: '3âƒ£', text: 'You earn a referral credit — admin will apply it to your next renewal' },
           ].map(({ icon, text }) => (
             <View key={icon} style={styles.howRow}>
               <Text style={{ fontSize: 18 }}>{icon}</Text>
@@ -129,7 +130,7 @@ export default function CouponScreen({ navigation }) {
         {/* Info */}
         <View style={styles.infoBox}>
           <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-            💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Note:</Text>{' '}
+            ðŸ’¡ <Text style={{ fontWeight: '700', color: COLORS.dark }}>Note:</Text>{' '}
             Referral credits are reviewed and applied manually by admin. You'll receive a
             notification each time someone subscribes using your code.
           </Text>
@@ -141,23 +142,23 @@ export default function CouponScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header:       { backgroundColor: '#3d2203', padding: 20, paddingTop: 54 },
-  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff8ee', marginTop: 10 },
-  headerSub:    { fontSize: 11, color: 'rgba(232,201,122,0.45)', marginTop: 2 },
+  header:       { backgroundColor: '#0D3827', padding: 20, paddingTop: 54 },
+  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff', marginTop: 10 },
+  headerSub:    { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
 
-  codeCard:     { backgroundColor: '#fff', borderRadius: 14, padding: 20, marginBottom: 14, borderWidth: 1.5, borderColor: COLORS.gold, alignItems: 'center' },
+  codeCard:     { backgroundColor: '#fff', borderRadius: 14, padding: 20, marginBottom: 14, borderWidth: 1.5, borderColor: COLORS.green, alignItems: 'center' },
   codeLabel:    { fontSize: 10, letterSpacing: 1.5, color: COLORS.muted, fontWeight: '700', marginBottom: 10 },
   code:         { fontFamily: FONTS.display, fontSize: 34, color: COLORS.dark, letterSpacing: 4, marginBottom: 10 },
   codeDesc:     { fontSize: 12, color: COLORS.muted, textAlign: 'center', lineHeight: 18, marginBottom: 16 },
   codeActions:  { flexDirection: 'row', gap: 10 },
-  copyBtn:      { flex: 1, backgroundColor: '#f4ede0', paddingVertical: 11, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
+  copyBtn:      { flex: 1, backgroundColor: '#e8f4f1', paddingVertical: 11, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
   copyBtnTxt:   { fontSize: 13, fontWeight: '600', color: COLORS.dark },
-  shareBtn:     { flex: 1, backgroundColor: COLORS.gold, paddingVertical: 11, borderRadius: 8, alignItems: 'center' },
-  shareBtnTxt:  { fontSize: 13, fontWeight: '700', color: COLORS.dark },
+  shareBtn:     { flex: 1, backgroundColor: COLORS.green, paddingVertical: 11, borderRadius: 8, alignItems: 'center' },
+  shareBtnTxt:  { fontSize: 13, fontWeight: '700', color: '#fff' },
 
   statsRow:     { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: COLORS.border, marginBottom: 14, overflow: 'hidden' },
   statBox:      { flex: 1, padding: 16, alignItems: 'center' },
-  statNum:      { fontFamily: FONTS.display, fontSize: 28, color: COLORS.gold },
+  statNum:      { fontFamily: FONTS.display, fontSize: 28, color: COLORS.green },
   statLbl:      { fontSize: 11, color: COLORS.muted, marginTop: 2, textAlign: 'center' },
 
   howCard:      { backgroundColor: '#fff', borderRadius: 10, padding: 16, borderWidth: 1, borderColor: COLORS.border, marginBottom: 14 },
@@ -165,5 +166,5 @@ const styles = StyleSheet.create({
   howRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
   howTxt:       { fontSize: 13, color: COLORS.text, flex: 1, lineHeight: 19 },
 
-  infoBox:      { backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14 },
+  infoBox:      { backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 14 },
 });

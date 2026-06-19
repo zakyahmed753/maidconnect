@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
   StyleSheet, StatusBar, ActivityIndicator
@@ -32,8 +32,8 @@ export default function AreaSelectScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <Text style={{ fontSize: 32, marginBottom: 8 }}>📍</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
+        <Text style={{ fontSize: 32, marginBottom: 8 }}>ðŸ“</Text>
         <Text style={styles.heroT}>Where do you live?</Text>
         <Text style={styles.heroS}>We'll show you maids available in your area</Text>
       </LinearGradient>
@@ -76,7 +76,7 @@ export default function AreaSelectScreen({ navigation }) {
 
         <View style={styles.infoBox}>
           <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-            💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Don't see your area?</Text>{' '}
+            ðŸ’¡ <Text style={{ fontWeight: '700', color: COLORS.dark }}>Don't see your area?</Text>{' '}
             Select it anyway — we'll notify you as soon as we launch there.
           </Text>
         </View>
@@ -88,17 +88,17 @@ export default function AreaSelectScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   hero:          { padding: 22, paddingTop: 54, alignItems: 'center' },
-  heroT:         { fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginBottom: 5 },
-  heroS:         { fontSize: 12, color: 'rgba(232,201,122,0.55)', textAlign: 'center' },
+  heroT:         { fontFamily: FONTS.display, fontSize: 26, color: '#fff', marginBottom: 5 },
+  heroS:         { fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
   sectionLabel:  { fontSize: 10, letterSpacing: 1.3, textTransform: 'uppercase', color: COLORS.muted, fontWeight: '700', marginBottom: 10 },
   grid:          { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   areaCard:      { width: '47%', borderRadius: 10, padding: 14, alignItems: 'center', borderWidth: 1.5 },
-  areaActive:    { backgroundColor: COLORS.surface, borderColor: COLORS.gold },
-  areaSelected:  { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  areaInactive:  { backgroundColor: '#f8f5f0', borderColor: '#e5ddd0', borderStyle: 'dashed' },
-  areaIcon:      { fontSize: 16, color: COLORS.gold, marginBottom: 4 },
+  areaActive:    { backgroundColor: COLORS.surface, borderColor: COLORS.green },
+  areaSelected:  { backgroundColor: COLORS.green, borderColor: COLORS.green },
+  areaInactive:  { backgroundColor: '#f4f4f1', borderColor: COLORS.border, borderStyle: 'dashed' },
+  areaIcon:      { fontSize: 16, color: COLORS.green, marginBottom: 4 },
   areaName:      { fontFamily: FONTS.display, fontSize: 15, color: COLORS.dark, textAlign: 'center' },
   areaNameMuted: { fontFamily: FONTS.display, fontSize: 14, color: COLORS.muted, textAlign: 'center' },
   areaSoon:      { fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 4 },
-  infoBox:       { marginTop: 20, backgroundColor: '#fffcf5', borderWidth: 1, borderColor: '#f0e8d8', borderRadius: 8, padding: 14 },
+  infoBox:       { marginTop: 20, backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 14 },
 });

@@ -1,24 +1,26 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   StatusBar, ActivityIndicator, Modal, Pressable,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
 import { hwAPI, paymentsAPI, uploadAPI } from '../../services/api';
 import * as ImagePicker from 'expo-image-picker';
+import BackChevron from '../../components/BackChevron';
 
 const PRICE = 1000;
 
 const FEATURES = [
-  ['💬', 'Chat with any maid on the platform'],
-  ['📋', 'Full profile access & references'],
-  ['🤝', 'Complete hiring process in-app'],
-  ['⭐', 'Leave reviews after hiring'],
-  ['🔄', 'Free replacement if maid doesn\'t fit (within 3 days)'],
+  ['chatbubble-outline',        '#7c3aed', 'Chat with any maid on the platform'],
+  ['document-text-outline',     COLORS.green, 'Full profile access & references'],
+  ['checkmark-done-outline',    '#0891b2', 'Complete hiring process in-app'],
+  ['star-outline',              '#f59e0b', 'Leave reviews after hiring'],
+  ['refresh-outline',           '#2e7d5e', 'Free replacement if maid doesn\'t fit (within 3 days)'],
 ];
 
 export default function CustomerSubscriptionScreen({ route, navigation }) {
@@ -113,11 +115,11 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ alignSelf: 'flex-start', marginBottom: 10 }}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontSize: 36, marginBottom: 8 }}>💬</Text>
+        <Ionicons name="chatbubbles" size={36} color="#fff" style={{ marginBottom: 8 }} />
         <Text style={styles.heroTitle}>Unlock Chat Access</Text>
         <Text style={styles.heroSub}>Subscribe to start chatting with maids</Text>
       </LinearGradient>
@@ -127,7 +129,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         {/* Pending receipt banner */}
         {pendingPayment && (
           <View style={styles.pendingBanner}>
-            <Text style={styles.pendingTitle}>⏳ Receipt Under Review</Text>
+            <Text style={styles.pendingTitle}>Receipt Under Review</Text>
             <Text style={styles.pendingSub}>
               Your receipt has been submitted and is awaiting admin confirmation. You'll be notified once it's approved.
             </Text>
@@ -136,7 +138,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
               disabled={checkingStatus}
               style={[styles.checkBtn, checkingStatus && { opacity: 0.6 }]}>
               {checkingStatus
-                ? <ActivityIndicator color="#e8c97a" size="small" />
+                ? <ActivityIndicator color="#fff" size="small" />
                 : <Text style={styles.checkBtnTxt}>Check Confirmation Status</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setPendingPayment(null)} style={{ alignItems: 'center', paddingTop: 10 }}>
@@ -148,9 +150,9 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         {/* Features card */}
         <View style={styles.card}>
           <Text style={styles.cardLabel}>What You Get</Text>
-          {FEATURES.map(([icon, text]) => (
+          {FEATURES.map(([icon, iconColor, text]) => (
             <View key={text} style={styles.featureRow}>
-              <Text style={{ fontSize: 18 }}>{icon}</Text>
+              <Ionicons name={icon} size={18} color={iconColor} />
               <Text style={{ fontSize: 13, color: COLORS.text, flex: 1 }}>{text}</Text>
             </View>
           ))}
@@ -158,17 +160,17 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
 
         {/* Price card */}
         <View style={[styles.card, { alignItems: 'center', paddingVertical: 20 }]}>
-          <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Monthly Subscription</Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: COLORS.gold }}>EGP {PRICE.toLocaleString()}</Text>
-          <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>per month · cancel anytime</Text>
+          <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Subscription Plan</Text>
+          <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: COLORS.green }}>EGP {PRICE.toLocaleString()}</Text>
+          <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>cancel anytime</Text>
         </View>
 
         {/* Cash Transfer button */}
         <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
-          <Text style={{ fontSize: 24 }}>💵</Text>
+          <Ionicons name="cash-outline" size={24} color={COLORS.green} />
           <View style={{ flex: 1 }}>
             <Text style={styles.offlineTxt}>Pay via Cash Transfer</Text>
-            <Text style={styles.offlineSub}>InstaPay or Vodafone Cash · upload receipt</Text>
+            <Text style={styles.offlineSub}>InstaPay or Vodafone Cash Â· upload receipt</Text>
           </View>
           <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
         </TouchableOpacity>
@@ -213,17 +215,17 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
           <View style={styles.amountBox}>
             <Text style={styles.amountLabel}>Amount Due</Text>
             <Text style={styles.amountVal}>EGP {PRICE.toLocaleString()}</Text>
-            <Text style={styles.amountNote}>Monthly subscription · 1 month access</Text>
+            <Text style={styles.amountNote}>Monthly subscription Â· 1 month access</Text>
           </View>
 
           {/* Payment details */}
           <Text style={styles.detailsHeader}>Transfer To</Text>
           {[
-            { icon: '💸', label: 'Instapay',      value: '01022781113' },
-            { icon: '📱', label: 'Vodafone Cash', value: '01022781113' },
+            { icon: 'flash-outline',          label: 'Instapay',       value: '01022781113' },
+            { icon: 'phone-portrait-outline', label: 'Vodafone Cash',  value: '01022781113' },
           ].map(({ icon, label, value }) => (
             <View key={label} style={styles.detailRow}>
-              <Text style={{ fontSize: 20 }}>{icon}</Text>
+              <Ionicons name={icon} size={20} color={COLORS.green} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.detailLabel}>{label}</Text>
                 <Text style={styles.detailValue}>{value}</Text>
@@ -242,8 +244,8 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
               <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>✓ Receipt selected — tap to change</Text>
             ) : (
               <>
-                <Text style={{ fontSize: 24, marginBottom: 6 }}>📎</Text>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.gold }}>Tap to upload receipt</Text>
+                <Text style={{ fontSize: 24, marginBottom: 6 }}>ðŸ“Ž</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>Tap to upload receipt</Text>
                 <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>Screenshot of your transfer confirmation</Text>
               </>
             )}
@@ -251,7 +253,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
 
           {submitError && (
             <View style={styles.errorBox}>
-              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠️ {submitError}</Text>
+              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠ {submitError}</Text>
             </View>
           )}
 
@@ -260,7 +262,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
             onPress={submitOfflinePayment}
             disabled={!receiptUri || submitting}>
             {submitting
-              ? <ActivityIndicator color="#e8c97a" />
+              ? <ActivityIndicator color="#fff" />
               : <Text style={styles.submitTxt}>{submitError ? 'Try Again' : 'Submit Receipt'}</Text>}
           </TouchableOpacity>
 
@@ -275,20 +277,20 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   hero:        { padding: 22, paddingTop: 54, alignItems: 'center' },
-  heroTitle:   { fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginBottom: 5 },
-  heroSub:     { fontSize: 12, color: 'rgba(232,201,122,0.55)', textAlign: 'center' },
+  heroTitle:   { fontFamily: FONTS.display, fontSize: 26, color: '#fff', marginBottom: 5 },
+  heroSub:     { fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
 
-  pendingBanner: { backgroundColor: 'rgba(201,168,76,0.08)', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 16, marginBottom: 16 },
+  pendingBanner: { backgroundColor: 'rgba(13,56,39,0.08)', borderWidth: 1.5, borderColor: COLORS.green, borderRadius: 10, padding: 16, marginBottom: 16 },
   pendingTitle:  { fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark, marginBottom: 4 },
   pendingSub:    { fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 14 },
-  checkBtn:      { backgroundColor: COLORS.dark, padding: 12, borderRadius: 8, alignItems: 'center' },
-  checkBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a' },
+  checkBtn:      { backgroundColor: COLORS.green, padding: 12, borderRadius: 8, alignItems: 'center' },
+  checkBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#fff' },
 
   card:        { backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 10, padding: 16, marginBottom: 12 },
   cardLabel:   { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, fontFamily: FONTS.bodySemiBold, marginBottom: 12 },
   featureRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: COLORS.border },
 
-  offlineBtn:  { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 8, padding: 14, marginBottom: 10 },
+  offlineBtn:  { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.green, borderRadius: 8, padding: 14, marginBottom: 10 },
   offlineTxt:  { fontSize: 13, fontWeight: '600', color: COLORS.dark },
   offlineSub:  { fontSize: 11, color: COLORS.muted, marginTop: 1 },
 
@@ -297,17 +299,17 @@ const styles = StyleSheet.create({
   modalHandle:   { width: 40, height: 4, backgroundColor: COLORS.border, borderRadius: 2, alignSelf: 'center', marginBottom: 18 },
   modalTitle:    { fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, marginBottom: 6 },
   modalSub:      { fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 18 },
-  amountBox:     { backgroundColor: '#fef9ee', borderWidth: 1.5, borderColor: COLORS.gold, borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 18 },
+  amountBox:     { backgroundColor: '#e8f4f1', borderWidth: 1.5, borderColor: COLORS.green, borderRadius: 10, padding: 14, alignItems: 'center', marginBottom: 18 },
   amountLabel:   { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1, color: COLORS.muted, marginBottom: 4 },
-  amountVal:     { fontFamily: FONTS.display, fontSize: 28, color: COLORS.gold },
+  amountVal:     { fontFamily: FONTS.display, fontSize: 28, color: COLORS.green },
   amountNote:    { fontSize: 11, color: COLORS.muted, marginTop: 3 },
   detailsHeader: { fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.2, color: COLORS.muted, marginBottom: 8, fontWeight: '700' },
   detailRow:     { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.cream, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 12, marginBottom: 8 },
   nameRow:       { backgroundColor: COLORS.cream, borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 12, marginBottom: 4 },
   detailLabel:   { fontSize: 10, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 2 },
   detailValue:   { fontSize: 15, fontWeight: '700', color: COLORS.dark, letterSpacing: 0.5 },
-  receiptBtn:    { borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.gold, borderRadius: 8, padding: 18, alignItems: 'center', backgroundColor: '#fef9ee', marginBottom: 16 },
+  receiptBtn:    { borderWidth: 1.5, borderStyle: 'dashed', borderColor: COLORS.green, borderRadius: 8, padding: 18, alignItems: 'center', backgroundColor: '#e8f4f1', marginBottom: 16 },
   errorBox:      { backgroundColor: 'rgba(224,85,85,0.12)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 7, padding: 12, marginBottom: 12 },
-  submitBtn:     { backgroundColor: COLORS.dark, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 4 },
-  submitTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#e8c97a', letterSpacing: 0.3 },
+  submitBtn:     { backgroundColor: COLORS.green, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 4 },
+  submitTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#fff', letterSpacing: 0.3 },
 });

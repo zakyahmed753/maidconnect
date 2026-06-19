@@ -1,26 +1,30 @@
-import React from 'react';
+﻿import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONTS } from '../../utils/theme';
+import BackChevron from '../../components/BackChevron';
+import { useTranslation } from '../../utils/i18n';
 
 export default function PreviouslyHiredScreen({ route, navigation }) {
   const { pastHired = [] } = route.params || {};
+  const { t } = useTranslation();
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Previously Hired</Text>
-        <Text style={styles.headerSub}>{pastHired.length} maid{pastHired.length !== 1 ? 's' : ''}</Text>
+        <Text style={styles.headerTitle}>{t('old_helpers')}</Text>
+        <Text style={styles.headerSub}>{pastHired.length} {t('past_placements')}</Text>
       </View>
 
       {pastHired.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <Text style={{ fontSize: 48, marginBottom: 12 }}>📋</Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, textAlign: 'center' }}>No history yet</Text>
+          <Ionicons name="people-outline" size={48} color={COLORS.muted} style={{ marginBottom: 12 }} />
+          <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, textAlign: 'center' }}>{t('no_history_yet')}</Text>
           <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6 }}>
-            Maids you release will appear here.
+            {t('released_here_sub')}
           </Text>
         </View>
       ) : (
@@ -43,7 +47,7 @@ export default function PreviouslyHiredScreen({ route, navigation }) {
                   ) : null}
                 </View>
                 <Text style={styles.date}>
-                  Released{'\n'}{new Date(item.releasedAt || Date.now()).toLocaleDateString()}
+                  {t('released_on')}{'\n'}{new Date(item.releasedAt || Date.now()).toLocaleDateString()}
                 </Text>
               </View>
             );
@@ -55,12 +59,12 @@ export default function PreviouslyHiredScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  header:       { backgroundColor: '#3d2203', padding: 20, paddingTop: 54 },
-  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff8ee', marginTop: 10 },
-  headerSub:    { fontSize: 11, color: 'rgba(232,201,122,0.45)', marginTop: 2 },
-  card:         { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: '#f0e8d8', elevation: 1 },
-  avatar:       { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: COLORS.gold },
-  avatarFallback:{ backgroundColor: '#fef6e4', alignItems: 'center', justifyContent: 'center' },
+  header:       { backgroundColor: '#0D3827', padding: 20, paddingTop: 54 },
+  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff', marginTop: 10 },
+  headerSub:    { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  card:         { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: COLORS.border, elevation: 1 },
+  avatar:       { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: COLORS.green },
+  avatarFallback:{ backgroundColor: '#e8f4f1', alignItems: 'center', justifyContent: 'center' },
   name:         { fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark },
   sub:          { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   date:         { fontSize: 10, color: COLORS.muted, textAlign: 'right', lineHeight: 16 },

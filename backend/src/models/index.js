@@ -178,7 +178,9 @@ const supportTicketSchema = new mongoose.Schema({
   message:  { type: String, required: true },
   status:   { type: String, enum: ['open', 'in_progress', 'resolved', 'closed'], default: 'open' },
   priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
-  adminNotes: { type: String, default: '' },
+  adminNotes:  { type: String, default: '' },
+  adminReply:  { type: String, default: '' },
+  repliedAt:   { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
   StyleSheet, StatusBar, ActivityIndicator, Linking, AppState
@@ -8,6 +8,7 @@ import { paymentsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
+import BackChevron from '../../components/BackChevron';
 
 const PLANS = {
   monthly: { label: 'Monthly',  price: 441,  period: '/month' },
@@ -140,13 +141,13 @@ export default function PaymentScreen({ route, navigation }) {
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
       <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontSize: 28, marginBottom: 6 }}>💳</Text>
+        <Text style={{ fontSize: 28, marginBottom: 6 }}>ðŸ’³</Text>
         <Text style={styles.heroTitle}>Complete Payment</Text>
-        <Text style={styles.heroSub}>Secured by Paymob · 256-bit SSL</Text>
+        <Text style={styles.heroSub}>Secured by Paymob Â· 256-bit SSL</Text>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
@@ -170,7 +171,7 @@ export default function PaymentScreen({ route, navigation }) {
           </View>
           {couponCode && (
             <View style={styles.row}>
-              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🏷 Coupon: {couponCode}</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>ðŸ· Coupon: {couponCode}</Text>
               <View style={[styles.badge, { backgroundColor: 'rgba(46,125,94,0.1)' }]}>
                 <Text style={[styles.badgeTxt, { color: '#2e7d5e' }]}>Discount applied</Text>
               </View>
@@ -178,8 +179,8 @@ export default function PaymentScreen({ route, navigation }) {
           )}
           {referralCreditApplied > 0 && (
             <View style={styles.row}>
-              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🎁 Referral credit</Text>
-              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>−EGP {referralCreditApplied}</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>ðŸŽ Referral credit</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>âˆ’EGP {referralCreditApplied}</Text>
             </View>
           )}
           <View style={[styles.row, styles.totalRow]}>
@@ -193,37 +194,37 @@ export default function PaymentScreen({ route, navigation }) {
           <Text style={styles.cardLabel}>Payment Method</Text>
           <View style={styles.methodRow}>
             <View style={styles.methodIcon}>
-              <Text style={{ fontSize: 22 }}>💳</Text>
+              <Text style={{ fontSize: 22 }}>ðŸ’³</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.methodName}>Credit / Debit Card</Text>
-              <Text style={styles.methodDesc}>Visa · Mastercard · Meeza · Fawry</Text>
+              <Text style={styles.methodDesc}>Visa Â· Mastercard Â· Meeza Â· Fawry</Text>
             </View>
-            <Text style={{ color: COLORS.gold, fontSize: 18 }}>✓</Text>
+            <Text style={{ color: COLORS.green, fontSize: 18 }}>✓</Text>
           </View>
           <View style={styles.poweredRow}>
             <Text style={styles.poweredTxt}>Powered by</Text>
-            <Text style={[styles.poweredTxt, { color: COLORS.gold, fontWeight: '700' }]}> Paymob</Text>
+            <Text style={[styles.poweredTxt, { color: COLORS.green, fontWeight: '700' }]}> Paymob</Text>
           </View>
         </View>
 
         {/* Test mode notice */}
         <View style={styles.testBanner}>
-          <Text style={{ fontSize: 14 }}>🧪</Text>
+          <Text style={{ fontSize: 14 }}>ðŸ§ª</Text>
           <View style={{ flex: 1 }}>
             <Text style={styles.testTitle}>Sandbox / Test Mode</Text>
-            <Text style={styles.testDesc}>Use card 4987654321098769 · 05/21 · CVV 123 · OTP 123456</Text>
+            <Text style={styles.testDesc}>Use card 4987654321098769 Â· 05/21 Â· CVV 123 Â· OTP 123456</Text>
           </View>
         </View>
 
         <View style={styles.secureRow}>
-          <Text style={{ fontSize: 13 }}>🔒</Text>
-          <Text style={styles.secureTxt}>PCI DSS compliant · Payments processed by Paymob</Text>
+          <Text style={{ fontSize: 13 }}>ðŸ”’</Text>
+          <Text style={styles.secureTxt}>PCI DSS compliant Â· Payments processed by Paymob</Text>
         </View>
 
         {checking ? (
           <View style={styles.checkingBox}>
-            <ActivityIndicator color={COLORS.gold} style={{ marginRight: 10 }} />
+            <ActivityIndicator color={COLORS.green} style={{ marginRight: 10 }} />
             <Text style={styles.checkingTxt}>Verifying payment…</Text>
           </View>
         ) : (
@@ -249,8 +250,8 @@ export default function PaymentScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   hero:        { paddingHorizontal: 20, paddingTop: 54, paddingBottom: 22 },
-  heroTitle:   { fontFamily: FONTS.display, fontSize: 24, color: '#fff8ee', marginBottom: 4 },
-  heroSub:     { fontSize: 12, color: 'rgba(232,201,122,0.55)' },
+  heroTitle:   { fontFamily: FONTS.display, fontSize: 24, color: '#fff', marginBottom: 4 },
+  heroSub:     { fontSize: 12, color: 'rgba(255,255,255,0.7)' },
   card:        { backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 8, padding: 16, marginBottom: 14 },
   cardLabel:   { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, fontFamily: FONTS.bodySemiBold, marginBottom: 12 },
   row:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
@@ -259,9 +260,9 @@ const styles = StyleSheet.create({
   badgeTxt:    { fontSize: 10, color: '#2e7d32', fontWeight: '700' },
   totalRow:    { borderTopWidth: 1, borderTopColor: COLORS.border, marginTop: 8, paddingTop: 12 },
   totalLabel:  { fontSize: 14, fontWeight: '700', color: COLORS.dark },
-  totalAmount: { fontFamily: FONTS.display, fontSize: 22, color: COLORS.gold },
+  totalAmount: { fontFamily: FONTS.display, fontSize: 22, color: COLORS.green },
   methodRow:   { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  methodIcon:  { width: 42, height: 42, backgroundColor: '#f4ede0', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  methodIcon:  { width: 42, height: 42, backgroundColor: '#e8f4f1', borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   methodName:  { fontSize: 14, fontWeight: '600', color: COLORS.dark },
   methodDesc:  { fontSize: 11, color: COLORS.muted, marginTop: 2 },
   poweredRow:  { flexDirection: 'row', alignItems: 'center', marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: COLORS.border },
@@ -273,8 +274,8 @@ const styles = StyleSheet.create({
   secureTxt:   { fontSize: 11, color: COLORS.muted, flex: 1 },
   checkingBox: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 6, padding: 16, marginBottom: 10 },
   checkingTxt: { fontSize: 14, color: COLORS.muted, fontFamily: FONTS.bodySemiBold },
-  payBtn:      { backgroundColor: COLORS.gold, padding: 16, borderRadius: 6, alignItems: 'center', marginBottom: 10 },
-  payBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: COLORS.dark, letterSpacing: 0.5 },
+  payBtn:      { backgroundColor: COLORS.green, padding: 16, borderRadius: 6, alignItems: 'center', marginBottom: 10 },
+  payBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: '#fff', letterSpacing: 0.5 },
   cancelBtn:   { alignItems: 'center', padding: 12 },
   cancelTxt:   { fontSize: 13, color: COLORS.muted },
 });

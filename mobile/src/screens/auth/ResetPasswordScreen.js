@@ -1,10 +1,11 @@
-// src/screens/auth/ResetPasswordScreen.js
+﻿// src/screens/auth/ResetPasswordScreen.js
 import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { authAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
+import BackChevron from '../../components/BackChevron';
 
 export default function ResetPasswordScreen({ navigation, route }) {
   const { email: initialEmail = '' } = route.params || {};
@@ -43,9 +44,9 @@ export default function ResetPasswordScreen({ navigation, route }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content"/>
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
+          <BackChevron />
         </TouchableOpacity>
         <Text style={styles.heroTitle}>Reset Password</Text>
         <Text style={styles.heroSub}>Enter the 6-digit code from your email and your new password.</Text>
@@ -78,7 +79,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
             placeholder="Min. 6 characters" placeholderTextColor={COLORS.muted}
             secureTextEntry={!showPass}/>
           <TouchableOpacity onPress={() => setShowPass(s => !s)} style={styles.eyeBtn}>
-            <Text style={{ fontSize: 18 }}>{showPass ? '🙈' : '👁️'}</Text>
+            <Text style={{ fontSize: 18 }}>{showPass ? 'ðŸ™ˆ' : 'ðŸ‘'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -95,7 +96,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('ForgotPassword')}>
-          <Text style={styles.linkTxt}>Didn't get a code? <Text style={{ color: COLORS.gold }}>Resend</Text></Text>
+          <Text style={styles.linkTxt}>Didn't get a code? <Text style={{ color: COLORS.green }}>Resend</Text></Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -104,17 +105,17 @@ export default function ResetPasswordScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   hero:        { padding: 24, paddingTop: 54, paddingBottom: 28 },
-  heroTitle:   { fontFamily: FONTS.display, fontSize: 30, color: '#e8c97a', marginBottom: 8 },
-  heroSub:     { fontSize: 13, color: 'rgba(232,201,122,0.6)', lineHeight: 20 },
+  heroTitle:   { fontFamily: FONTS.display, fontSize: 30, color: '#fff', marginBottom: 8 },
+  heroSub:     { fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 20 },
   body:        { flex: 1, backgroundColor: COLORS.cream, padding: 22 },
   label:       { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 5, marginTop: 16, fontFamily: FONTS.bodySemiBold },
   input:       { borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 5, padding: 13, fontSize: 14, color: COLORS.text, backgroundColor: COLORS.surface },
   codeInput:   { fontSize: 22, fontWeight: '700', letterSpacing: 8, textAlign: 'center' },
   passRow:     { flexDirection: 'row', alignItems: 'center', gap: 8 },
   eyeBtn:      { padding: 13, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 5, backgroundColor: COLORS.surface },
-  btn:         { backgroundColor: COLORS.gold, padding: 15, borderRadius: 5, alignItems: 'center', marginTop: 24 },
+  btn:         { backgroundColor: COLORS.green, padding: 15, borderRadius: 5, alignItems: 'center', marginTop: 24 },
   btnDisabled: { opacity: 0.5 },
-  btnTxt:      { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark, letterSpacing: 0.5 },
+  btnTxt:      { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff', letterSpacing: 0.5 },
   link:        { alignItems: 'center', marginTop: 18, marginBottom: 30 },
   linkTxt:     { fontSize: 13, color: COLORS.muted },
 });

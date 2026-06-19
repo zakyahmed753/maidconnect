@@ -1,10 +1,11 @@
-// src/screens/auth/OTPVerificationScreen.js
+﻿// src/screens/auth/OTPVerificationScreen.js
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { authAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
+import BackChevron from '../../components/BackChevron';
 
 export default function OTPVerificationScreen({ navigation, route }) {
   const { email, onVerified } = route.params || {};
@@ -83,12 +84,12 @@ export default function OTPVerificationScreen({ navigation, route }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content"/>
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
+          <BackChevron />
         </TouchableOpacity>
         <Text style={styles.heroTitle}>Verify Email</Text>
-        <Text style={styles.heroSub}>We sent a 6-digit code to{'\n'}<Text style={{ color: '#e8c97a' }}>{email}</Text></Text>
+        <Text style={styles.heroSub}>We sent a 6-digit code to{'\n'}<Text style={{ color: '#fff' }}>{email}</Text></Text>
       </LinearGradient>
 
       <View style={styles.body}>
@@ -133,16 +134,16 @@ export default function OTPVerificationScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   hero:         { padding: 24, paddingTop: 54, paddingBottom: 28 },
-  heroTitle:    { fontFamily: FONTS.display, fontSize: 30, color: '#e8c97a', marginBottom: 8 },
-  heroSub:      { fontSize: 13, color: 'rgba(232,201,122,0.6)', lineHeight: 20 },
+  heroTitle:    { fontFamily: FONTS.display, fontSize: 30, color: '#fff', marginBottom: 8 },
+  heroSub:      { fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 20 },
   body:         { flex: 1, backgroundColor: COLORS.cream, padding: 28, alignItems: 'center' },
   otpRow:       { flexDirection: 'row', gap: 10, marginTop: 32, marginBottom: 32 },
   otpBox:       { width: 46, height: 56, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 8, fontSize: 22, fontWeight: '700', color: COLORS.dark, backgroundColor: COLORS.surface },
-  otpBoxFilled: { borderColor: COLORS.gold, backgroundColor: '#fffcf5' },
-  btn:          { backgroundColor: COLORS.gold, padding: 15, borderRadius: 5, alignItems: 'center', width: '100%' },
+  otpBoxFilled: { borderColor: COLORS.green, backgroundColor: '#e8f4f1' },
+  btn:          { backgroundColor: COLORS.green, padding: 15, borderRadius: 5, alignItems: 'center', width: '100%' },
   btnDisabled:  { opacity: 0.5 },
-  btnTxt:       { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark, letterSpacing: 0.5 },
+  btnTxt:       { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff', letterSpacing: 0.5 },
   resendBtn:    { marginTop: 20 },
   resendDisabled: { opacity: 0.4 },
-  resendTxt:    { fontSize: 13, color: COLORS.gold, fontFamily: FONTS.bodySemiBold },
+  resendTxt:    { fontSize: 13, color: COLORS.green, fontFamily: FONTS.bodySemiBold },
 });

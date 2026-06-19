@@ -41,9 +41,19 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
-app.use('/api/', limiter);
+// Trust Railway/Render proxy so rate-limit keys on real client IP, not the proxy IP
+app.set('trust proxy', 1);
+
+// Auth-only rate limit — protects against brute-force on login/register
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts, please try again later.' },
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // ── Routes ──
 app.use('/api/auth',     require('./routes/auth'));

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+﻿import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   ActivityIndicator, StatusBar, Modal, Pressable
@@ -47,48 +47,50 @@ To the maximum extent permitted by applicable law, Servix, its owners, employees
 9. USER ACCEPTANCE
 By clicking "Accept", the customer confirms that they understand and agree that Servix acts solely as a communication and marketplace platform and is not responsible for the acts, omissions, conduct, or performance of Workers.`;
 
-const TERMS_AR = `الشروط والأحكام – منصة Servix
+const TERMS_AR = `Ø§Ù„Ø´Ø±ÙˆØ· ÙˆØ§Ù„Ø£Ø­ÙƒØ§Ù… – Ù…Ù†ØµØ© Servix
 
-1. طبيعة المنصة
-تطبيق Servix هو منصة تقنية تهدف فقط إلى تسهيل التواصل بين العملاء ومقدمي الخدمات المستقلين، ولا يعتبر صاحب عمل أو مكتب توظيف أو جهة كفالة أو ممثلًا لأي عاملة أو مقدم خدمة.
+1. Ø·Ø¨ÙŠØ¹Ø© Ø§Ù„Ù…Ù†ØµØ©
+ØªØ·Ø¨ÙŠÙ‚ Servix Ù‡Ùˆ Ù…Ù†ØµØ© ØªÙ‚Ù†ÙŠØ© ØªÙ‡Ø¯Ù ÙÙ‚Ø· Ø¥Ù„Ù‰ ØªØ³Ù‡ÙŠÙ„ Ø§Ù„ØªÙˆØ§ØµÙ„ Ø¨ÙŠÙ† Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ ÙˆÙ…Ù‚Ø¯Ù…ÙŠ Ø§Ù„Ø®Ø¯Ù…Ø§Øª Ø§Ù„Ù…Ø³ØªÙ‚Ù„ÙŠÙ†ØŒ ÙˆÙ„Ø§ ÙŠØ¹ØªØ¨Ø± ØµØ§Ø­Ø¨ Ø¹Ù…Ù„ Ø£Ùˆ Ù…ÙƒØªØ¨ ØªÙˆØ¸ÙŠÙ Ø£Ùˆ Ø¬Ù‡Ø© ÙƒÙØ§Ù„Ø© Ø£Ùˆ Ù…Ù…Ø«Ù„Ù‹Ø§ Ù„Ø£ÙŠ Ø¹Ø§Ù…Ù„Ø© Ø£Ùˆ Ù…Ù‚Ø¯Ù… Ø®Ø¯Ù…Ø©.
 
-2. العلاقة بين الأطراف
-أي اتفاق أو تعاقد أو تشغيل أو دفع أو إقامة أو إشراف يتم بين العميل والعاملة يكون مسؤولية الطرفين فقط دون أي مسؤولية على Servix.
+2. Ø§Ù„Ø¹Ù„Ø§Ù‚Ø© Ø¨ÙŠÙ† Ø§Ù„Ø£Ø·Ø±Ø§Ù
+Ø£ÙŠ Ø§ØªÙØ§Ù‚ Ø£Ùˆ ØªØ¹Ø§Ù‚Ø¯ Ø£Ùˆ ØªØ´ØºÙŠÙ„ Ø£Ùˆ Ø¯ÙØ¹ Ø£Ùˆ Ø¥Ù‚Ø§Ù…Ø© Ø£Ùˆ Ø¥Ø´Ø±Ø§Ù ÙŠØªÙ… Ø¨ÙŠÙ† Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙˆØ§Ù„Ø¹Ø§Ù…Ù„Ø© ÙŠÙƒÙˆÙ† Ù…Ø³Ø¤ÙˆÙ„ÙŠØ© Ø§Ù„Ø·Ø±ÙÙŠÙ† ÙÙ‚Ø· Ø¯ÙˆÙ† Ø£ÙŠ Ù…Ø³Ø¤ÙˆÙ„ÙŠØ© Ø¹Ù„Ù‰ Servix.
 
-3. إخلاء المسؤولية
-لا يقوم Servix بالإشراف أو الإدارة أو المراقبة المستمرة للعاملات، وبالتالي لا يتحمل أي مسؤولية عن:
-• سلوك أو تصرفات أو أداء أي عاملة.
-• السرقة أو الاحتيال أو إساءة التصرف أو الإهمال أو الأضرار المادية أو الجسدية.
-• أي نزاعات أو خلافات أو مطالبات تنشأ بين العميل والعاملة.
-• أي خسائر مباشرة أو غير مباشرة تنتج عن استخدام المنصة.
+3. Ø¥Ø®Ù„Ø§Ø¡ Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„ÙŠØ©
+Ù„Ø§ ÙŠÙ‚ÙˆÙ… Servix Ø¨Ø§Ù„Ø¥Ø´Ø±Ø§Ù Ø£Ùˆ Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© Ø£Ùˆ Ø§Ù„Ù…Ø±Ø§Ù‚Ø¨Ø© Ø§Ù„Ù…Ø³ØªÙ…Ø±Ø© Ù„Ù„Ø¹Ø§Ù…Ù„Ø§ØªØŒ ÙˆØ¨Ø§Ù„ØªØ§Ù„ÙŠ Ù„Ø§ ÙŠØªØ­Ù…Ù„ Ø£ÙŠ Ù…Ø³Ø¤ÙˆÙ„ÙŠØ© Ø¹Ù†:
+• Ø³Ù„ÙˆÙƒ Ø£Ùˆ ØªØµØ±ÙØ§Øª Ø£Ùˆ Ø£Ø¯Ø§Ø¡ Ø£ÙŠ Ø¹Ø§Ù…Ù„Ø©.
+• Ø§Ù„Ø³Ø±Ù‚Ø© Ø£Ùˆ Ø§Ù„Ø§Ø­ØªÙŠØ§Ù„ Ø£Ùˆ Ø¥Ø³Ø§Ø¡Ø© Ø§Ù„ØªØµØ±Ù Ø£Ùˆ Ø§Ù„Ø¥Ù‡Ù…Ø§Ù„ Ø£Ùˆ Ø§Ù„Ø£Ø¶Ø±Ø§Ø± Ø§Ù„Ù…Ø§Ø¯ÙŠØ© Ø£Ùˆ Ø§Ù„Ø¬Ø³Ø¯ÙŠØ©.
+• Ø£ÙŠ Ù†Ø²Ø§Ø¹Ø§Øª Ø£Ùˆ Ø®Ù„Ø§ÙØ§Øª Ø£Ùˆ Ù…Ø·Ø§Ù„Ø¨Ø§Øª ØªÙ†Ø´Ø£ Ø¨ÙŠÙ† Ø§Ù„Ø¹Ù…ÙŠÙ„ ÙˆØ§Ù„Ø¹Ø§Ù…Ù„Ø©.
+• Ø£ÙŠ Ø®Ø³Ø§Ø¦Ø± Ù…Ø¨Ø§Ø´Ø±Ø© Ø£Ùˆ ØºÙŠØ± Ù…Ø¨Ø§Ø´Ø±Ø© ØªÙ†ØªØ¬ Ø¹Ù† Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„Ù…Ù†ØµØ©.
 
-4. مسؤولية العميل
-يقر العميل بأنه المسؤول الوحيد عن:
-• التحقق من هوية العاملة وصحة مستنداتها.
-• إجراء المقابلات والفحص المناسب قبل التعاقد.
-• متابعة العاملة والإشراف عليها أثناء تقديم الخدمة.
-• حماية الأطفال وكبار السن والمقتنيات الثمينة والممتلكات الخاصة.
+4. Ù…Ø³Ø¤ÙˆÙ„ÙŠØ© Ø§Ù„Ø¹Ù…ÙŠÙ„
+ÙŠÙ‚Ø± Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨Ø£Ù†Ù‡ Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„ Ø§Ù„ÙˆØ­ÙŠØ¯ Ø¹Ù†:
+• Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ù‡ÙˆÙŠØ© Ø§Ù„Ø¹Ø§Ù…Ù„Ø© ÙˆØµØ­Ø© Ù…Ø³ØªÙ†Ø¯Ø§ØªÙ‡Ø§.
+• Ø¥Ø¬Ø±Ø§Ø¡ Ø§Ù„Ù…Ù‚Ø§Ø¨Ù„Ø§Øª ÙˆØ§Ù„ÙØ­Øµ Ø§Ù„Ù…Ù†Ø§Ø³Ø¨ Ù‚Ø¨Ù„ Ø§Ù„ØªØ¹Ø§Ù‚Ø¯.
+• Ù…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ø¹Ø§Ù…Ù„Ø© ÙˆØ§Ù„Ø¥Ø´Ø±Ø§Ù Ø¹Ù„ÙŠÙ‡Ø§ Ø£Ø«Ù†Ø§Ø¡ ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ø®Ø¯Ù…Ø©.
+• Ø­Ù…Ø§ÙŠØ© Ø§Ù„Ø£Ø·ÙØ§Ù„ ÙˆÙƒØ¨Ø§Ø± Ø§Ù„Ø³Ù† ÙˆØ§Ù„Ù…Ù‚ØªÙ†ÙŠØ§Øª Ø§Ù„Ø«Ù…ÙŠÙ†Ø© ÙˆØ§Ù„Ù…Ù…ØªÙ„ÙƒØ§Øª Ø§Ù„Ø®Ø§ØµØ©.
 
-5. تنبيه أمني
-ينصح Servix العملاء بعدم ترك الأطفال أو الأشخاص المحتاجين للرعاية دون إشراف مناسب، والاحتفاظ بالمقتنيات الثمينة والأموال والمستندات المهمة في أماكن آمنة.
+5. ØªÙ†Ø¨ÙŠÙ‡ Ø£Ù…Ù†ÙŠ
+ÙŠÙ†ØµØ­ Servix Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ø¨Ø¹Ø¯Ù… ØªØ±Ùƒ Ø§Ù„Ø£Ø·ÙØ§Ù„ Ø£Ùˆ Ø§Ù„Ø£Ø´Ø®Ø§Øµ Ø§Ù„Ù…Ø­ØªØ§Ø¬ÙŠÙ† Ù„Ù„Ø±Ø¹Ø§ÙŠØ© Ø¯ÙˆÙ† Ø¥Ø´Ø±Ø§Ù Ù…Ù†Ø§Ø³Ø¨ØŒ ÙˆØ§Ù„Ø§Ø­ØªÙØ§Ø¸ Ø¨Ø§Ù„Ù…Ù‚ØªÙ†ÙŠØ§Øª Ø§Ù„Ø«Ù…ÙŠÙ†Ø© ÙˆØ§Ù„Ø£Ù…ÙˆØ§Ù„ ÙˆØ§Ù„Ù…Ø³ØªÙ†Ø¯Ø§Øª Ø§Ù„Ù…Ù‡Ù…Ø© ÙÙŠ Ø£Ù…Ø§ÙƒÙ† Ø¢Ù…Ù†Ø©.
 
-6. عدم تقديم ضمانات
-لا يقدم Servix أي ضمان أو تعهد يتعلق بأخلاق أو أمانة أو كفاءة أو خبرة أو سلوك أو ملاءمة أي عاملة.
+6. Ø¹Ø¯Ù… ØªÙ‚Ø¯ÙŠÙ… Ø¶Ù…Ø§Ù†Ø§Øª
+Ù„Ø§ ÙŠÙ‚Ø¯Ù… Servix Ø£ÙŠ Ø¶Ù…Ø§Ù† Ø£Ùˆ ØªØ¹Ù‡Ø¯ ÙŠØªØ¹Ù„Ù‚ Ø¨Ø£Ø®Ù„Ø§Ù‚ Ø£Ùˆ Ø£Ù…Ø§Ù†Ø© Ø£Ùˆ ÙƒÙØ§Ø¡Ø© Ø£Ùˆ Ø®Ø¨Ø±Ø© Ø£Ùˆ Ø³Ù„ÙˆÙƒ Ø£Ùˆ Ù…Ù„Ø§Ø¡Ù…Ø© Ø£ÙŠ Ø¹Ø§Ù…Ù„Ø©.
 
-7. تحمل المخاطر
-يوافق العميل على أنه يتحمل كامل المسؤولية والمخاطر الناتجة عن التعامل أو التعاقد أو التواصل مع أي عاملة من خلال المنصة.
+7. ØªØ­Ù…Ù„ Ø§Ù„Ù…Ø®Ø§Ø·Ø±
+ÙŠÙˆØ§ÙÙ‚ Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¹Ù„Ù‰ Ø£Ù†Ù‡ ÙŠØªØ­Ù…Ù„ ÙƒØ§Ù…Ù„ Ø§Ù„Ù…Ø³Ø¤ÙˆÙ„ÙŠØ© ÙˆØ§Ù„Ù…Ø®Ø§Ø·Ø± Ø§Ù„Ù†Ø§ØªØ¬Ø© Ø¹Ù† Ø§Ù„ØªØ¹Ø§Ù…Ù„ Ø£Ùˆ Ø§Ù„ØªØ¹Ø§Ù‚Ø¯ Ø£Ùˆ Ø§Ù„ØªÙˆØ§ØµÙ„ Ù…Ø¹ Ø£ÙŠ Ø¹Ø§Ù…Ù„Ø© Ù…Ù† Ø®Ù„Ø§Ù„ Ø§Ù„Ù…Ù†ØµØ©.
 
-8. الموافقة
-بالضغط على زر "موافق"، يقر العميل بأنه فهم ووافق على أن Servix مجرد منصة ربط وتواصل بين الأطراف ولا يتحمل مسؤولية أفعال أو تصرفات أو أداء العاملات.`;
+8. Ø§Ù„Ù…ÙˆØ§ÙÙ‚Ø©
+Ø¨Ø§Ù„Ø¶ØºØ· Ø¹Ù„Ù‰ Ø²Ø± "Ù…ÙˆØ§ÙÙ‚"ØŒ ÙŠÙ‚Ø± Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø¨Ø£Ù†Ù‡ ÙÙ‡Ù… ÙˆÙˆØ§ÙÙ‚ Ø¹Ù„Ù‰ Ø£Ù† Servix Ù…Ø¬Ø±Ø¯ Ù…Ù†ØµØ© Ø±Ø¨Ø· ÙˆØªÙˆØ§ØµÙ„ Ø¨ÙŠÙ† Ø§Ù„Ø£Ø·Ø±Ø§Ù ÙˆÙ„Ø§ ÙŠØªØ­Ù…Ù„ Ù…Ø³Ø¤ÙˆÙ„ÙŠØ© Ø£ÙØ¹Ø§Ù„ Ø£Ùˆ ØªØµØ±ÙØ§Øª Ø£Ùˆ Ø£Ø¯Ø§Ø¡ Ø§Ù„Ø¹Ø§Ù…Ù„Ø§Øª.`;
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { maidsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
+import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
 import io from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import BackChevron from '../../components/BackChevron';
 
 function maskPhone(phone) {
   if (!phone) return null;
@@ -132,7 +134,7 @@ export default function HireRequestScreen({ navigation }) {
       socket.on('new_hire_request', (req) => {
         if (!mounted) return;
         setRequests(prev => prev.some(r => r._id === req._id) ? prev : [req, ...prev]);
-        Toast.show({ type: 'info', text1: '👑 New Hire Request!', text2: `${req.housewife?.name} wants to hire you.` });
+        Toast.show({ type: 'info', text1: 'New Hire Request!', text2: `${req.housewife?.name} wants to hire you.` });
       });
     })();
     return () => { mounted = false; socketRef.current?.disconnect(); };
@@ -197,8 +199,8 @@ export default function HireRequestScreen({ navigation }) {
           <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:20, borderTopRightRadius:20, padding:24, paddingBottom:36 }}>
 
             <View style={{ alignItems:'center', marginBottom:18 }}>
-              <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'#fef6e4', borderWidth:2, borderColor:COLORS.gold, alignItems:'center', justifyContent:'center', marginBottom:10 }}>
-                <Text style={{ fontSize:30 }}>👤</Text>
+              <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'#e8f4f1', borderWidth:2, borderColor:COLORS.green, alignItems:'center', justifyContent:'center', marginBottom:10 }}>
+                <Ionicons name="person" size={30} color={COLORS.green} />
               </View>
               <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.dark }}>
                 {profileModal?.housewife?.name || 'Customer'}
@@ -214,13 +216,13 @@ export default function HireRequestScreen({ navigation }) {
 
             {/* Info rows */}
             {[
-              { label: t('area_info'), value: profileModal?.hwProfile?.residentialArea || profileModal?.hwProfile?.city || '—', icon: '📍' },
-              { label: t('phone_info'), value: maskPhone(profileModal?.housewife?.phone) || '—', icon: '📞' },
-              { label: t('country_info'), value: profileModal?.hwProfile?.country || 'Egypt', icon: '🌍' },
-              { label: t('request_date_info'), value: profileModal ? new Date(profileModal.createdAt).toLocaleDateString([], { day:'numeric', month:'long', year:'numeric' }) : '—', icon: '🗓' },
+              { label: t('area_info'), value: profileModal?.hwProfile?.residentialArea || profileModal?.hwProfile?.city || '—', icon: 'location-outline' },
+              { label: t('phone_info'), value: maskPhone(profileModal?.housewife?.phone) || '—', icon: 'call-outline' },
+              { label: t('country_info'), value: profileModal?.hwProfile?.country || 'Egypt', icon: 'globe-outline' },
+              { label: t('request_date_info'), value: profileModal ? new Date(profileModal.createdAt).toLocaleDateString([], { day:'numeric', month:'long', year:'numeric' }) : '—', icon: 'calendar-outline' },
             ].map(({ label, value, icon }) => (
               <View key={label} style={{ flexDirection:'row', alignItems:'center', gap:12, paddingVertical:12, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
-                <Text style={{ fontSize:18, width:26 }}>{icon}</Text>
+                <Ionicons name={icon} size={18} color={COLORS.muted} style={{ width:26 }} />
                 <Text style={{ fontSize:12, color:COLORS.muted, width:80 }}>{label}</Text>
                 <Text style={{ fontSize:14, color:COLORS.dark, fontWeight:'500', flex:1 }}>{value}</Text>
               </View>
@@ -255,7 +257,7 @@ export default function HireRequestScreen({ navigation }) {
             <View style={{ padding:20, paddingBottom:12, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
               <View style={{ width:36, height:4, backgroundColor:COLORS.border, borderRadius:2, alignSelf:'center', marginBottom:14 }}/>
               <Text style={{ fontFamily:FONTS.display, fontSize:22, color:COLORS.dark, textAlign: isAr ? 'right' : 'left' }}>
-                {isAr ? 'الشروط والأحكام' : 'Terms & Conditions'}
+                {isAr ? 'Ø§Ù„Ø´Ø±ÙˆØ· ÙˆØ§Ù„Ø£Ø­ÙƒØ§Ù…' : 'Terms & Conditions'}
               </Text>
             </View>
             <ScrollView style={{ paddingHorizontal:20 }} contentContainerStyle={{ paddingVertical:16 }}>
@@ -279,20 +281,20 @@ export default function HireRequestScreen({ navigation }) {
                 </View>
                 <Text style={{ fontSize:12.5, color: termsError ? '#e05555' : COLORS.text, flex:1, lineHeight:19, textAlign: isAr ? 'right' : 'left' }}>
                   {isAr
-                    ? 'أقر بأن Servix مجرد منصة تواصل وربط بين الأطراف ولا يتحمل أي مسؤولية عن تصرفات أو أداء أو الوضع القانوني لأي عاملة.'
+                    ? 'Ø£Ù‚Ø± Ø¨Ø£Ù† Servix Ù…Ø¬Ø±Ø¯ Ù…Ù†ØµØ© ØªÙˆØ§ØµÙ„ ÙˆØ±Ø¨Ø· Ø¨ÙŠÙ† Ø§Ù„Ø£Ø·Ø±Ø§Ù ÙˆÙ„Ø§ ÙŠØªØ­Ù…Ù„ Ø£ÙŠ Ù…Ø³Ø¤ÙˆÙ„ÙŠØ© Ø¹Ù† ØªØµØ±ÙØ§Øª Ø£Ùˆ Ø£Ø¯Ø§Ø¡ Ø£Ùˆ Ø§Ù„ÙˆØ¶Ø¹ Ø§Ù„Ù‚Ø§Ù†ÙˆÙ†ÙŠ Ù„Ø£ÙŠ Ø¹Ø§Ù…Ù„Ø©.'
                     : 'I understand that Servix is only a communication platform and is not responsible for the conduct, actions, performance, safety, or legal status of any worker.'}
                 </Text>
               </TouchableOpacity>
               {termsError && (
                 <Text style={{ fontSize:12, color:'#e05555', marginBottom:10, textAlign: isAr ? 'right' : 'left' }}>
-                  {isAr ? '⚠ يرجى قراءة الشروط والموافقة عليها أولاً' : '⚠ Please read the terms and check the box to continue'}
+                  {isAr ? '⚠ ÙŠØ±Ø¬Ù‰ Ù‚Ø±Ø§Ø¡Ø© Ø§Ù„Ø´Ø±ÙˆØ· ÙˆØ§Ù„Ù…ÙˆØ§ÙÙ‚Ø© Ø¹Ù„ÙŠÙ‡Ø§ Ø£ÙˆÙ„Ø§Ù‹' : '⚠ Please read the terms and check the box to continue'}
                 </Text>
               )}
               <TouchableOpacity
                 style={{ backgroundColor:'#2e7d5e', padding:14, borderRadius:8, alignItems:'center', marginBottom:8 }}
                 onPress={confirmAccept}>
                 <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#fff' }}>
-                  {isAr ? '✓ قبول الطلب' : '✓ Accept Hire Request'}
+                  {isAr ? '✓ Ù‚Ø¨ÙˆÙ„ Ø§Ù„Ø·Ù„Ø¨' : '✓ Accept Hire Request'}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setTermsModal(false)} style={{ alignItems:'center', padding:8 }}>
@@ -303,13 +305,13 @@ export default function HireRequestScreen({ navigation }) {
         </View>
       </Modal>
 
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 12 }}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
+          <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontSize: 10, color: 'rgba(232,201,122,0.5)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{t('incoming_label')}</Text>
-        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginTop: 2 }}>{t('hire_requests_title')}</Text>
-        <Text style={{ fontSize: 12, color: 'rgba(232,201,122,0.45)', marginTop: 4 }}>{t('review_before_deciding')}</Text>
+        <Text style={{ fontSize: 10, color: 'rgba(255,255,255,0.6)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{t('incoming_label')}</Text>
+        <Text style={{ fontFamily: FONTS.display, fontSize: 26, color: '#fff', marginTop: 2 }}>{t('hire_requests_title')}</Text>
+        <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>{t('review_before_deciding')}</Text>
       </LinearGradient>
 
       {loading ? (
@@ -318,7 +320,7 @@ export default function HireRequestScreen({ navigation }) {
         </View>
       ) : requests.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <Text style={{ fontSize: 48, marginBottom: 16 }}>📭</Text>
+          <Text style={{ fontSize: 48, marginBottom: 16 }}>ðŸ“­</Text>
           <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, textAlign: 'center' }}>{t('no_pending_requests')}</Text>
           <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
             {t('no_pending_sub')}
@@ -335,12 +337,12 @@ export default function HireRequestScreen({ navigation }) {
                 {/* Customer summary row */}
                 <View style={styles.cardHeader}>
                   <View style={styles.avatar}>
-                    <Text style={{ fontSize: 26 }}>👤</Text>
+                    <Ionicons name="person" size={26} color={COLORS.green} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.customerName}>{req.housewife?.name || 'Customer'}</Text>
                     <Text style={styles.customerSub}>
-                      {hw?.residentialArea ? `📍 ${hw.residentialArea}` : hw?.city ? `📍 ${hw.city}` : '📍 Cairo'}
+                      {hw?.residentialArea || hw?.city || 'Cairo'}
                     </Text>
                     <Text style={styles.time}>
                       {new Date(req.createdAt).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}
@@ -399,16 +401,16 @@ export default function HireRequestScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   header:         { paddingHorizontal: 20, paddingTop: 54, paddingBottom: 22 },
-  card:           { backgroundColor: '#fff', borderRadius: 12, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#f0e8d8', shadowColor: '#c9a84c', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
+  card:           { backgroundColor: '#fff', borderRadius: 12, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: COLORS.border, shadowColor: '#0D3827', shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
   cardHeader:     { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  avatar:         { width: 52, height: 52, borderRadius: 26, backgroundColor: '#fef6e4', borderWidth: 2, borderColor: COLORS.gold, alignItems: 'center', justifyContent: 'center' },
+  avatar:         { width: 52, height: 52, borderRadius: 26, backgroundColor: '#e8f4f1', borderWidth: 2, borderColor: COLORS.green, alignItems: 'center', justifyContent: 'center' },
   customerName:   { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
   customerSub:    { fontSize: 12, color: COLORS.muted, marginTop: 2 },
   time:           { fontSize: 10, color: COLORS.muted, marginTop: 3 },
-  badge:          { backgroundColor: 'rgba(201,168,76,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(201,168,76,0.3)' },
-  viewProfileBtn: { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'#fef9ee', borderWidth:1, borderColor:'rgba(201,168,76,0.3)', borderRadius:8, paddingHorizontal:14, paddingVertical:10, marginBottom:12 },
+  badge:          { backgroundColor: 'rgba(13,56,39,0.12)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(13,56,39,0.3)' },
+  viewProfileBtn: { flexDirection:'row', alignItems:'center', justifyContent:'space-between', backgroundColor:'#e8f4f1', borderWidth:1, borderColor:'rgba(13,56,39,0.3)', borderRadius:8, paddingHorizontal:14, paddingVertical:10, marginBottom:12 },
   viewProfileTxt: { fontSize: 13, color: COLORS.dark, fontWeight: '600' },
-  divider:        { height: 1, backgroundColor: '#f0e8d8', marginBottom: 12 },
+  divider:        { height: 1, backgroundColor: COLORS.border, marginBottom: 12 },
   btnReject:      { flex: 1, padding: 12, borderRadius: 8, borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
   btnRejectTxt:   { fontSize: 14, fontWeight: '600', color: '#e05555' },
   btnApprove:     { flex: 2, padding: 12, borderRadius: 8, backgroundColor: '#2e7d5e', alignItems: 'center' },

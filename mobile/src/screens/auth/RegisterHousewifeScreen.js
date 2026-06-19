@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, KeyboardAvoidingView, Platform, StatusBar
@@ -9,6 +9,7 @@ import useAuthStore from '../../store/authStore';
 import { hwAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import { useTranslation } from '../../utils/i18n';
+import BackChevron from '../../components/BackChevron';
 
 const CAIRO_AREAS = [
   { label: 'Maadi',          active: true  },
@@ -72,9 +73,9 @@ export default function RegisterHousewifeScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar barStyle="light-content"/>
-      <LinearGradient colors={['#1a1108', '#3d2203']} style={styles.hero}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 22, color: 'rgba(232,201,122,0.6)' }}>←</Text>
+      <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
         </TouchableOpacity>
         <Text style={styles.heroTitle}>{t('sign_up')}</Text>
         <Text style={styles.heroSub}>{t('customer_subtitle')}</Text>
@@ -129,7 +130,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
         {area !== '' && !CAIRO_AREAS.find(a => a.label === area)?.active && (
           <View style={styles.waitlistNote}>
             <Text style={{ fontSize: 12, color: '#b45309' }}>
-              ⏳ We're not in {area} yet — you'll be on the waitlist and notified on launch.
+              â³ We're not in {area} yet — you'll be on the waitlist and notified on launch.
             </Text>
           </View>
         )}
@@ -142,7 +143,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login', { role: 'housewife' })}>
-          <Text style={styles.linkTxt}>{t('have_account')} <Text style={{ color: COLORS.gold }}>{t('sign_in_link')}</Text></Text>
+          <Text style={styles.linkTxt}>{t('have_account')} <Text style={{ color: COLORS.green }}>{t('sign_in_link')}</Text></Text>
         </TouchableOpacity>
 
       </ScrollView>
@@ -152,26 +153,26 @@ export default function RegisterHousewifeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   hero:               { padding: 20, paddingTop: 54 },
-  heroTitle:          { fontFamily: FONTS.display, fontSize: 26, color: '#e8c97a', marginTop: 8 },
-  heroSub:            { fontSize: 12, color: 'rgba(232,201,122,0.5)', marginTop: 3 },
+  heroTitle:          { fontFamily: FONTS.display, fontSize: 26, color: '#fff', marginTop: 8 },
+  heroSub:            { fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 3 },
   body:               { flex: 1, backgroundColor: COLORS.cream, padding: 22 },
   label:              { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, marginBottom: 5, marginTop: 14, fontFamily: FONTS.bodySemiBold },
   input:              { borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 5, padding: 13, fontSize: 14, color: COLORS.text, backgroundColor: COLORS.surface },
 
   areaGrid:           { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   areaChip:           { paddingHorizontal: 13, paddingVertical: 9, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.surface, flexDirection: 'row', alignItems: 'center', gap: 5 },
-  areaChipSelected:   { borderColor: COLORS.gold, backgroundColor: COLORS.gold },
+  areaChipSelected:   { borderColor: COLORS.green, backgroundColor: COLORS.green },
   areaChipSoon:       { borderStyle: 'dashed', opacity: 0.65 },
   areaChipTxt:        { fontSize: 13, color: COLORS.text },
-  areaChipTxtSelected:{ color: COLORS.dark, fontWeight: '700' },
+  areaChipTxtSelected:{ color: '#fff', fontWeight: '700' },
   areaChipTxtSoon:    { color: COLORS.muted },
   areaSoonBadge:      { fontSize: 8, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5 },
 
   waitlistNote:       { marginTop: 8, backgroundColor: '#fffbeb', borderWidth: 1, borderColor: '#f59e0b', borderRadius: 6, padding: 10 },
 
-  btn:                { backgroundColor: COLORS.gold, padding: 15, borderRadius: 5, alignItems: 'center', marginTop: 24 },
+  btn:                { backgroundColor: COLORS.green, padding: 15, borderRadius: 5, alignItems: 'center', marginTop: 24 },
   btnDisabled:        { opacity: 0.5 },
-  btnTxt:             { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: COLORS.dark, letterSpacing: 0.5 },
+  btnTxt:             { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff', letterSpacing: 0.5 },
   link:               { alignItems: 'center', marginTop: 18, marginBottom: 30 },
   linkTxt:            { fontSize: 13, color: COLORS.muted },
 });

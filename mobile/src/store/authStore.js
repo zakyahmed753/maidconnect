@@ -70,6 +70,13 @@ const useAuthStore = create((set, get) => ({
 
   setProfile: (profile) => set({ profile }),
 
+  refreshProfile: async () => {
+    try {
+      const res = await authAPI.getMe();
+      set({ profile: res.data.profile, user: res.data.user });
+    } catch {}
+  },
+
   logout: async () => {
     await SecureStore.deleteItemAsync('maidconnect_token');
     set({ token: null, user: null, profile: null });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput,
   ScrollView, Image, ActivityIndicator, RefreshControl, StatusBar,
@@ -6,23 +6,58 @@ import {
 } from 'react-native';
 
 const { width: SW, height: SH } = Dimensions.get('window');
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { maidsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
+import NotifBell from '../../components/NotifBell';
+
+const SKILL_KEYS = {
+  Cooking: 'filter_cooking', Childcare: 'filter_childcare', Eldercare: 'filter_eldercare',
+  Cleaning: 'filter_cleaning', Laundry: 'filter_laundry', Ironing: 'filter_ironing',
+  Driving: 'filter_driving', 'Pet Care': 'filter_petcare',
+};
+
+const LANG_KEYS = { English: 'lang_en', Arabic: 'lang_ar', French: 'lang_fr', Hausa: 'lang_ha' };
+
+// Story-style quick filters (circular)
+const STORIES = [
+  { key: 'all',       icon: 'apps-outline',             lk: 'filter_all',       params: {} },
+  { key: 'available', icon: 'checkmark-circle-outline', lk: 'filter_available', params: { isAvailable: 'true' } },
+  { key: 'top_rated', icon: 'star-outline',             lk: 'filter_top_rated', params: { sort: 'rating' } },
+  { key: 'african',   icon: 'globe-outline',            lk: 'filter_african',   params: { origin: 'african' } },
+  { key: 'asian',     icon: 'globe-outline',            lk: 'filter_asian',     params: { origin: 'asian' } },
+];
+
+// Category pill filters
+const CATEGORIES = [
+  { key: 'cooking',   icon: 'restaurant-outline',  lk: 'filter_cooking',   params: { skills: 'Cooking' } },
+  { key: 'childcare', icon: 'people-outline',      lk: 'filter_childcare', params: { skills: 'Childcare' } },
+  { key: 'eldercare', icon: 'heart-outline',       lk: 'filter_eldercare', params: { skills: 'Eldercare' } },
+  { key: 'cleaning',  icon: 'sparkles-outline',    lk: 'filter_cleaning',  params: { skills: 'Cleaning' } },
+  { key: 'laundry',   icon: 'shirt-outline',       lk: 'filter_laundry',   params: { skills: 'Laundry' } },
+  { key: 'ironing',   icon: 'layers-outline',      lk: 'filter_ironing',   params: { skills: 'Ironing' } },
+  { key: 'driving',   icon: 'car-outline',         lk: 'filter_driving',   params: { skills: 'Driving' } },
+  { key: 'petcare',   icon: 'paw-outline',         lk: 'filter_petcare',   params: { skills: 'Pet Care' } },
+];
 
 const CHIPS = [
-  { key: 'all',       icon: '🌟', lk: 'filter_all',       params: {} },
-  { key: 'available', icon: '✅', lk: 'filter_available',  params: { isAvailable: 'true' } },
-  { key: 'top_rated', icon: '⭐', lk: 'filter_top_rated',  params: { sort: 'rating' } },
-  { key: 'african',   icon: '🌍', lk: 'filter_african',    params: { origin: 'african' } },
-  { key: 'asian',     icon: '🌏', lk: 'filter_asian',      params: { origin: 'asian' } },
-  { key: 'cooking',   icon: '🍳', lk: 'filter_cooking',    params: { skills: 'Cooking' } },
-  { key: 'childcare', icon: '👶', lk: 'filter_childcare',  params: { skills: 'Childcare' } },
-  { key: 'eldercare', icon: '🫶', lk: 'filter_eldercare',  params: { skills: 'Eldercare' } },
+  { key: 'all',       icon: 'apps-outline',             lk: 'filter_all',       params: {} },
+  { key: 'available', icon: 'checkmark-circle-outline', lk: 'filter_available', params: { isAvailable: 'true' } },
+  { key: 'top_rated', icon: 'star-outline',             lk: 'filter_top_rated', params: { sort: 'rating' } },
+  { key: 'african',   icon: 'globe-outline',            lk: 'filter_african',   params: { origin: 'african' } },
+  { key: 'asian',     icon: 'globe-outline',            lk: 'filter_asian',     params: { origin: 'asian' } },
+  { key: 'cooking',   icon: 'restaurant-outline',       lk: 'filter_cooking',   params: { skills: 'Cooking' } },
+  { key: 'childcare', icon: 'people-outline',           lk: 'filter_childcare', params: { skills: 'Childcare' } },
+  { key: 'eldercare', icon: 'heart-outline',            lk: 'filter_eldercare', params: { skills: 'Eldercare' } },
+  { key: 'cleaning',  icon: 'sparkles-outline',         lk: 'filter_cleaning',  params: { skills: 'Cleaning' } },
+  { key: 'laundry',   icon: 'shirt-outline',            lk: 'filter_laundry',   params: { skills: 'Laundry' } },
+  { key: 'ironing',   icon: 'layers-outline',           lk: 'filter_ironing',   params: { skills: 'Ironing' } },
+  { key: 'driving',   icon: 'car-outline',              lk: 'filter_driving',   params: { skills: 'Driving' } },
+  { key: 'petcare',   icon: 'paw-outline',              lk: 'filter_petcare',   params: { skills: 'Pet Care' } },
 ];
 
 const SORT_OPTS = [
@@ -55,10 +90,10 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
         onPress={() => validPhotos.length && onPhotoPress ? onPhotoPress(validPhotos, 0) : onPress()}
       >
         <View style={styles.photos}>
-          <View style={[styles.photoMain, { backgroundColor: maid.origin === 'african' ? '#2d1a0a' : '#1a0d2e' }]}>
+          <View style={[styles.photoMain, { backgroundColor: '#dfeee8' }]}>
             {maid.photos?.[0]?.url
               ? <Image source={{ uri: maid.photos[0].url }} style={styles.photoImg} />
-              : <Text style={styles.photoEmoji}>👩</Text>}
+              : <Ionicons name="person" size={40} color="rgba(255,255,255,0.7)" />}
             <View style={[styles.availBadge, !maid.isAvailable && { backgroundColor: COLORS.muted }]}>
               <Text style={styles.availTxt}>{maid.isAvailable ? t('available_badge') : t('unavailable_badge')}</Text>
             </View>
@@ -70,22 +105,22 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
           </View>
           <View style={styles.photosSide}>
             <TouchableOpacity
-              style={[styles.photoSm, { backgroundColor: maid.origin === 'african' ? '#2d1a0a99' : '#1a0d2e99' }]}
+              style={[styles.photoSm, { backgroundColor: '#c8e6df' }]}
               activeOpacity={0.85}
               onPress={() => validPhotos.length > 1 && onPhotoPress ? onPhotoPress(validPhotos, 1) : null}
             >
               {maid.photos?.[1]?.url
                 ? <Image source={{ uri: maid.photos[1].url }} style={{ width: '100%', height: '100%' }} />
-                : <Text style={{ fontSize: 18 }}>👩</Text>}
+                : <Ionicons name="person" size={20} color="rgba(255,255,255,0.6)" />}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.photoSm, { backgroundColor: maid.origin === 'african' ? '#2d1a0a66' : '#1a0d2e66' }]}
+              style={[styles.photoSm, { backgroundColor: '#b5d9d0' }]}
               activeOpacity={0.85}
               onPress={() => validPhotos.length > 2 && onPhotoPress ? onPhotoPress(validPhotos, 2) : null}
             >
               {maid.photos?.[2]?.url
                 ? <Image source={{ uri: maid.photos[2].url }} style={{ width: '100%', height: '100%' }} />
-                : <Text style={{ fontSize: 18 }}>📷</Text>}
+                : <Ionicons name="camera-outline" size={18} color="rgba(255,255,255,0.5)" />}
             </TouchableOpacity>
           </View>
         </View>
@@ -95,15 +130,15 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
         <View style={styles.infoTop}>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{maid.fullName}</Text>
-            <Text style={styles.origin}>{maid.nationality} · {maid.age} yrs</Text>
+            <Text style={styles.origin}>{maid.nationality} · {maid.age} {t('yrs')}</Text>
           </View>
-          <TouchableOpacity style={[styles.heartBtn, liked && styles.heartBtnLiked]} onPress={handleLike}>
-            <Text style={{ fontSize: 16 }}>{liked ? '❤️' : '🤍'}</Text>
+          <TouchableOpacity onPress={handleLike} style={{ padding: 4 }}>
+            <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={20} color={liked ? COLORS.green : COLORS.muted} />
           </TouchableOpacity>
         </View>
         <View style={styles.tagsRow}>
           {(maid.skills || []).slice(0, 3).map(s => (
-            <View key={s} style={styles.tag}><Text style={styles.tagTxt}>{s}</Text></View>
+            <View key={s} style={styles.tag}><Text style={styles.tagTxt}>{t(SKILL_KEYS[s] ?? s)}</Text></View>
           ))}
         </View>
         <View style={styles.statsRow}>
@@ -116,10 +151,16 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
             <Text style={styles.statL}>{t('salary_stat')}</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statN}>⭐{maid.rating?.toFixed(1) || '—'}</Text>
+            <View style={{ flexDirection:'row', alignItems:'center', gap:3 }}>
+              <Ionicons name="star" size={11} color="#f59e0b" />
+              <Text style={styles.statN}>{maid.rating?.toFixed(1) || '—'}</Text>
+            </View>
             <Text style={styles.statL}>{maid.reviewCount || 0} {t('reviews_short')}</Text>
           </View>
         </View>
+        <TouchableOpacity style={styles.bookBtn} onPress={onPress}>
+          <Text style={styles.bookBtnTxt}>{t('view_profile')}</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -226,38 +267,48 @@ export default function BrowseScreen({ navigation }) {
     <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
       <StatusBar barStyle="light-content" />
 
-      {/* Hero */}
-      <LinearGradient colors={['#3d2203', '#1a1108']} style={styles.hero}>
-        <Text style={styles.greet}>{t('good_morning')}</Text>
-        <Text style={styles.heroName}>{user?.name || t('welcome')} 👋</Text>
+      {/* Header */}
+      <View style={styles.hero}>
+        <View style={{ flexDirection:'row', alignItems:'flex-start', justifyContent:'space-between', marginBottom:2 }}>
+          <View>
+            <Text style={styles.greet}>{t('good_morning')}</Text>
+            <Text style={styles.heroName}>{user?.name || t('welcome')}</Text>
+          </View>
+          <NotifBell color="rgba(255,255,255,0.9)" style={{ marginTop:4 }} />
+        </View>
         <View style={styles.searchRow}>
           <TextInput
             style={styles.searchInput}
             value={search}
             onChangeText={onSearchChange}
             placeholder={t('search_placeholder')}
-            placeholderTextColor="rgba(232,201,122,0.38)"
+            placeholderTextColor="rgba(255,255,255,0.5)"
             returnKeyType="search"
           />
-          <TouchableOpacity style={styles.filterFab} onPress={openFilter}>
-            <Text style={{ fontSize: 16, color: '#e8c97a' }}>⚙</Text>
-            {activeCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeTxt}>{activeCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
 
-      {/* Quick chip filters */}
-      <View style={styles.chipsWrap}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-          {CHIPS.map(c => (
+      {/* Story-style quick filters */}
+      <View style={styles.storiesWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.stories}>
+          {STORIES.map(c => (
             <TouchableOpacity key={c.key} onPress={() => onChipPress(c.key)}
-              style={[styles.chip, chip === c.key && styles.chipActive]}>
-              <Text style={styles.chipIcon}>{c.icon}</Text>
-              <Text style={[styles.chipTxt, chip === c.key && styles.chipTxtActive]}>{t(c.lk)}</Text>
+              style={[styles.story, chip === c.key && styles.storyActive]}>
+              <Ionicons name={c.icon} size={20} color={chip === c.key ? COLORS.green : COLORS.muted} />
+              <Text style={[styles.storyTxt, chip === c.key && styles.storyTxtActive]}>{t(c.lk)}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Category pill filters */}
+      <View style={styles.catsWrap}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cats}>
+          {CATEGORIES.map(c => (
+            <TouchableOpacity key={c.key} onPress={() => onChipPress(c.key)}
+              style={[styles.cat, chip === c.key && styles.catActive]}>
+              <Ionicons name={c.icon} size={16} color={chip === c.key ? COLORS.green : COLORS.muted} />
+              <Text style={[styles.catTxt, chip === c.key && styles.catTxtActive]}>{t(c.lk)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -265,7 +316,7 @@ export default function BrowseScreen({ navigation }) {
 
       {/* Maid list */}
       {loading
-        ? <ActivityIndicator size="large" color={COLORS.gold} style={{ marginTop: 40 }} />
+        ? <ActivityIndicator size="large" color={COLORS.green} style={{ marginTop: 40 }} />
         : <FlatList
             data={maids}
             keyExtractor={item => item._id}
@@ -285,7 +336,7 @@ export default function BrowseScreen({ navigation }) {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={() => { setRefreshing(true); loadSavedIds(); resetFetch(chipRef.current, searchRef.current, advRef.current); }}
-                tintColor={COLORS.gold}
+                tintColor={COLORS.green}
               />
             }
             onEndReached={() => {
@@ -294,12 +345,15 @@ export default function BrowseScreen({ navigation }) {
             }}
             onEndReachedThreshold={0.5}
             ListEmptyComponent={
-              <View style={{ alignItems: 'center', marginTop: 60 }}>
-                <Text style={{ fontSize: 32 }}>🔍</Text>
-                <Text style={{ color: COLORS.muted, marginTop: 8, fontSize: 14 }}>{t('no_maids')}</Text>
+              <View style={{ alignItems:'center', padding:40, marginTop:20 }}>
+                <View style={{ width:110, height:110, borderRadius:55, backgroundColor:'#e8f4f1', alignItems:'center', justifyContent:'center', marginBottom:20, borderWidth:2, borderColor:'rgba(13,56,39,0.12)' }}>
+                  <Ionicons name="home-outline" size={52} color={COLORS.green} />
+                </View>
+                <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:8, textAlign:'center' }}>{t('no_maids')}</Text>
+                <Text style={{ fontSize:13, color:COLORS.muted, textAlign:'center', lineHeight:20, maxWidth:260 }}>We're growing every day — a perfect home helper for you will be available soon.</Text>
               </View>
             }
-            ListFooterComponent={hasMore ? <ActivityIndicator color={COLORS.gold} style={{ marginVertical: 20 }} /> : null}
+            ListFooterComponent={hasMore ? <ActivityIndicator color={COLORS.green} style={{ marginVertical: 20 }} /> : null}
           />
       }
 
@@ -432,34 +486,43 @@ export default function BrowseScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  // Hero
-  hero:        { paddingHorizontal: 18, paddingTop: 54, paddingBottom: 18 },
-  greet:       { fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(232,201,122,0.5)', marginBottom: 2 },
-  heroName:    { fontFamily: FONTS.display, fontSize: 26, color: '#fff8ee', marginBottom: 12 },
+  // Header
+  hero:        { paddingHorizontal: 18, paddingTop: 54, paddingBottom: 16, backgroundColor: '#0D3827' },
+  greet:       { fontSize: 22, fontFamily: FONTS.display, color: '#fff', marginBottom: 2 },
+  heroName:    { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12, fontFamily: FONTS.body },
   searchRow:   { flexDirection: 'row', gap: 10 },
-  searchInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(201,168,76,0.22)', borderRadius: 7, paddingHorizontal: 14, paddingVertical: 10, color: '#e8c97a', fontSize: 13 },
-  filterFab:   { width: 42, height: 42, backgroundColor: 'rgba(201,168,76,0.14)', borderWidth: 1.5, borderColor: 'rgba(201,168,76,0.28)', borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
+  searchInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 13, fontFamily: FONTS.body },
+  filterFab:   { width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   badge:       { position: 'absolute', top: -4, right: -4, backgroundColor: '#e05252', borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   badgeTxt:    { fontSize: 9, color: '#fff', fontWeight: '700' },
 
-  // Chips
-  chipsWrap:   { backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  chips:       { paddingHorizontal: 14, paddingVertical: 10, gap: 7 },
-  chip:        { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.cream },
-  chipActive:  { backgroundColor: COLORS.gold, borderColor: COLORS.gold },
-  chipIcon:    { fontSize: 12 },
-  chipTxt:     { fontSize: 12, fontFamily: FONTS.bodyMedium, color: COLORS.muted },
-  chipTxtActive: { color: '#fff' },
+  // Stories (circular quick filters)
+  storiesWrap: { backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  stories:     { paddingHorizontal: 14, paddingVertical: 12, gap: 12 },
+  story:       { width: 72, height: 72, borderRadius: 36, backgroundColor: '#dfeee8', alignItems: 'center', justifyContent: 'center' },
+  storyActive: { backgroundColor: COLORS.green },
+  storyIcon:   { fontSize: 22 },
+  storyTxt:    { fontSize: 10, color: COLORS.muted, marginTop: 2, textAlign: 'center', fontFamily: FONTS.bodyMedium },
+  storyTxtActive: { color: '#fff' },
+
+  // Category pill filters
+  catsWrap:    { backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  cats:        { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
+  cat:         { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 14, backgroundColor: COLORS.surface, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  catActive:   { backgroundColor: COLORS.green },
+  catIcon:     { fontSize: 16 },
+  catTxt:      { fontSize: 13, color: COLORS.dark, fontFamily: FONTS.bodyMedium },
+  catTxtActive:{ color: '#fff' },
 
   // Card
-  card:        { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: 10, marginBottom: 14, overflow: 'hidden', ...SHADOWS.card },
+  card:        { backgroundColor: COLORS.surface, borderRadius: 22, marginBottom: 14, overflow: 'hidden', ...SHADOWS.card },
   photos:      { flexDirection: 'row', height: 160 },
-  photoMain:   { flex: 2, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  photoMain:   { flex: 2, alignItems: 'center', justifyContent: 'center', position: 'relative', backgroundColor: '#dfeee8' },
   photoImg:    { width: '100%', height: '100%', resizeMode: 'cover' },
   photoEmoji:  { fontSize: 50 },
   photosSide:  { flex: 1, gap: 1 },
-  photoSm:     { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  availBadge:  { position: 'absolute', top: 8, left: 8, backgroundColor: COLORS.green, borderRadius: 2, paddingHorizontal: 6, paddingVertical: 2 },
+  photoSm:     { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#c8e6df' },
+  availBadge:  { position: 'absolute', top: 8, left: 8, backgroundColor: COLORS.green, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
   availTxt:    { fontSize: 8, color: '#fff', letterSpacing: 0.5, fontWeight: '700' },
   photoCountBadge: { position: 'absolute', bottom: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 },
   photoCountTxt:   { fontSize: 9, color: '#fff', fontWeight: '700' },
@@ -471,21 +534,23 @@ const styles = StyleSheet.create({
   pvClose:     { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
   pvDots:      { position: 'absolute', bottom: 60, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
   pvDot:       { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)' },
-  pvDotActive: { width: 20, height: 6, borderRadius: 3, backgroundColor: '#e8c97a' },
-  info:        { padding: 13 },
+  pvDotActive: { width: 20, height: 6, borderRadius: 3, backgroundColor: COLORS.green },
+  info:        { padding: 14 },
   infoTop:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
   name:        { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
   origin:      { fontSize: 11, color: COLORS.muted, marginTop: 1 },
   heartBtn:    { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.cream, alignItems: 'center', justifyContent: 'center' },
   heartBtnLiked: { backgroundColor: '#fff0f0', borderColor: '#f5a0a0' },
   tagsRow:     { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 10 },
-  tag:         { backgroundColor: '#f4ede0', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 2 },
-  tagTxt:      { fontSize: 10, color: COLORS.muted },
+  tag:         { backgroundColor: '#e8f4f1', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  tagTxt:      { fontSize: 10, color: COLORS.green },
   statsRow:    { flexDirection: 'row', borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 10 },
   stat:        { flex: 1, alignItems: 'center' },
   statBorder:  { borderLeftWidth: 1, borderRightWidth: 1, borderColor: COLORS.border },
   statN:       { fontFamily: FONTS.display, fontSize: 15, color: COLORS.dark },
   statL:       { fontSize: 9, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 1 },
+  bookBtn:     { backgroundColor: COLORS.green, borderRadius: 14, padding: 12, alignItems: 'center', marginTop: 12 },
+  bookBtnTxt:  { fontSize: 13, fontFamily: FONTS.bodySemiBold, color: '#fff' },
 
   // Filter modal
   overlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
@@ -497,12 +562,12 @@ const styles = StyleSheet.create({
   sheetBtns:   { flexDirection: 'row', gap: 10, padding: 16, paddingBottom: Platform.OS === 'ios' ? 30 : 16, borderTopWidth: 1, borderTopColor: COLORS.border },
   resetBtn:    { flex: 1, paddingVertical: 13, borderRadius: 8, borderWidth: 1.5, borderColor: COLORS.border, alignItems: 'center' },
   resetTxt:    { fontFamily: FONTS.bodyMedium, fontSize: 14, color: COLORS.muted },
-  applyBtn:    { flex: 2, paddingVertical: 13, borderRadius: 8, backgroundColor: COLORS.gold, alignItems: 'center' },
-  applyTxt:    { fontFamily: FONTS.bodyMedium, fontSize: 14, color: COLORS.dark, fontWeight: '700' },
+  applyBtn:    { flex: 2, paddingVertical: 13, borderRadius: 8, backgroundColor: COLORS.green, alignItems: 'center' },
+  applyTxt:    { fontFamily: FONTS.bodyMedium, fontSize: 14, color: '#fff', fontWeight: '700' },
   secLabel:    { fontFamily: FONTS.bodyMedium, fontSize: 11, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10, marginTop: 20 },
   optRow:      { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   optChip:     { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.cream },
-  optChipActive: { backgroundColor: COLORS.dark, borderColor: COLORS.dark },
+  optChipActive: { backgroundColor: COLORS.green, borderColor: COLORS.green },
   optChipTxt:  { fontSize: 13, color: COLORS.text },
   optChipTxtActive: { color: '#fff' },
   rangeRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
