@@ -386,9 +386,11 @@ exports.returnMaid = async (req, res) => {
 
     const expiresAt = new Date(Date.now() + THREE_DAYS_MS);
     await HouseWife.findOneAndUpdate({ user: req.user._id }, {
-      'freeVacancy.available':     true,
-      'freeVacancy.expiresAt':     expiresAt,
-      'freeVacancy.penaltyAmount': penaltyAmount,
+      $set: {
+        'freeVacancy.available':     true,
+        'freeVacancy.expiresAt':     expiresAt,
+        'freeVacancy.penaltyAmount': penaltyAmount,
+      },
       $pull:    { hiredMaids: { maid: maidProfileId } },
       $addToSet:{ blockedMaids: maidProfileId },
       $push:    { pastHiredMaids: { maid: maidProfileId, releasedAt: new Date() } },
