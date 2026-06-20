@@ -105,7 +105,7 @@ const T = {
     tab_browse: 'Browse', tab_saved: 'Saved', tab_chats: 'Chats', tab_alerts: 'Alerts', tab_me: 'Me', tab_home: 'Home',
 
     // Filters
-    filter_all: 'All', filter_available: 'Available', filter_top_rated: 'Top Rated',
+    filter_all: 'All Helpers', filter_available: 'Available', filter_top_rated: 'Top Rated',
     filter_african: 'African', filter_asian: 'Asian', filter_cooking: 'Cooking',
     filter_childcare: 'Childcare', filter_eldercare: 'Eldercare',
     filter_cleaning: 'Cleaning', filter_laundry: 'Laundry', filter_ironing: 'Ironing',
@@ -464,7 +464,7 @@ const T = {
     tab_browse: 'تصفح', tab_saved: 'مختاراتي', tab_chats: 'رسايلي', tab_alerts: 'إشعارات', tab_me: 'أنا', tab_home: 'الرئيسية',
 
     // Filters
-    filter_all: 'الكل', filter_available: 'متاحة دلوقتي', filter_top_rated: 'الأعلى تقييماً',
+    filter_all: 'كل العمالة', filter_available: 'متاحة دلوقتي', filter_top_rated: 'الأعلى تقييماً',
     filter_african: 'أفريقية', filter_asian: 'آسيوية', filter_cooking: 'طبخ',
     filter_childcare: 'رعاية أطفال', filter_eldercare: 'رعاية مسنين',
     filter_cleaning: 'تنظيف', filter_laundry: 'غسيل', filter_ironing: 'مكوة',
@@ -820,7 +820,7 @@ const T = {
     tab_browse: 'Parcourir', tab_saved: 'Sauvegardés', tab_chats: 'Messages', tab_alerts: 'Alertes', tab_me: 'Moi', tab_home: 'Accueil',
 
     // Filters
-    filter_all: 'Tous', filter_available: 'Disponible', filter_top_rated: 'Mieux notés',
+    filter_all: 'Toutes les aides', filter_available: 'Disponible', filter_top_rated: 'Mieux notés',
     filter_african: 'Africaine', filter_asian: 'Asiatique', filter_cooking: 'Cuisine',
     filter_childcare: 'Garde enfants', filter_eldercare: 'Soins seniors',
     filter_cleaning: 'Ménage', filter_laundry: 'Lessive', filter_ironing: 'Repassage',
@@ -1170,7 +1170,7 @@ const T = {
     tab_browse: 'Bincike', tab_saved: 'Ajiye', tab_chats: 'Saƙonni', tab_alerts: 'Sanarwa', tab_me: 'Ni', tab_home: 'Gida',
 
     // Filters
-    filter_all: 'Duka', filter_available: 'Akwai', filter_top_rated: 'Mafi kyau',
+    filter_all: 'Dukan Masu Taimako', filter_available: 'Akwai', filter_top_rated: 'Mafi kyau',
     filter_african: 'Afirka', filter_asian: 'Asiya', filter_cooking: 'Girki',
     filter_childcare: 'Kula yara', filter_eldercare: 'Kula tsofaffi',
     filter_cleaning: 'Tsaftace', filter_laundry: 'Wanka kaya', filter_ironing: 'Jefe',
