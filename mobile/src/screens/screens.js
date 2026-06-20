@@ -5,7 +5,7 @@ import useLangStore from '../store/langStore';
 import useNotifStore from '../store/notifStore';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl, Image } from 'react-native';
 import { LANGUAGES, useTranslation } from '../utils/i18n';
-import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI } from '../services/api';
+import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI, hwAPI } from '../services/api';
 import NotifBell from '../components/NotifBell';
 import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
@@ -345,8 +345,14 @@ export function SavedScreen({ navigation }) {
   useFocusEffect(
     React.useCallback(() => {
       setLoading(true);
-      maidsAPI.getSaved()
-        .then(r => setMaids(r.data.maids || []))
+      Promise.all([maidsAPI.getSaved(), hwAPI.getProfile()])
+        .then(([savedRes, profileRes]) => {
+          const all = savedRes.data.maids || [];
+          const hiredIds = new Set(
+            (profileRes.data?.profile?.hiredMaids || []).map(h => h.maid?._id || h.maid)
+          );
+          setMaids(all.filter(m => !hiredIds.has(m._id)));
+        })
         .catch(() => {})
         .finally(() => setLoading(false));
     }, [])

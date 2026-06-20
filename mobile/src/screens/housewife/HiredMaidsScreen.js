@@ -27,6 +27,7 @@ export default function HiredMaidsScreen({ navigation }) {
   const [pastHired, setPastHired]     = useState([]);
   const [loading, setLoading]         = useState(true);
   const [returning, setReturning]     = useState(null);
+  const [policyModal, setPolicyModal] = useState(false);
 
   // Mandatory review before release
   const [reviewModal, setReviewModal]     = useState(false);
@@ -171,6 +172,54 @@ export default function HiredMaidsScreen({ navigation }) {
         </KeyboardAvoidingView>
       </Modal>
 
+      {/* Replacement Policy Modal */}
+      <Modal visible={policyModal} transparent animationType="slide" onRequestClose={() => setPolicyModal(false)}>
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} activeOpacity={1} onPress={() => setPolicyModal(false)} />
+          <View style={{ backgroundColor: COLORS.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22, paddingBottom: 36 }}>
+            <View style={{ width: 40, height: 4, backgroundColor: COLORS.border, borderRadius: 2, alignSelf: 'center', marginBottom: 18 }} />
+
+            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, marginBottom: 6 }}>{t('rp_title')}</Text>
+            <Text style={{ fontSize: 13, color: COLORS.muted, lineHeight: 20, marginBottom: 18 }}>{t('rp_short')}</Text>
+
+            {/* Fee table */}
+            <View style={{ borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border, marginBottom: 20 }}>
+              {/* Header */}
+              <View style={{ flexDirection: 'row', backgroundColor: COLORS.green, padding: 10 }}>
+                <Text style={{ flex: 2, fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.5 }}>{t('rp_period_col').toUpperCase()}</Text>
+                <Text style={{ flex: 1.5, fontSize: 11, fontWeight: '700', color: '#fff', textAlign: 'right', letterSpacing: 0.5 }}>{t('rp_fee_col').toUpperCase()}</Text>
+              </View>
+              {[
+                { period: t('rp_row0'), fee: t('rp_row0_fee'), free: true },
+                { period: t('rp_row1'), fee: t('rp_row1_fee'), free: false },
+                { period: t('rp_row2'), fee: t('rp_row2_fee'), free: false },
+                { period: t('rp_row3'), fee: t('rp_row3_fee'), free: false },
+              ].map((row, i) => (
+                <View key={i} style={{ flexDirection: 'row', padding: 10, backgroundColor: i % 2 === 0 ? '#f8fffe' : '#fff', borderTopWidth: 1, borderTopColor: COLORS.border }}>
+                  <Text style={{ flex: 2, fontSize: 13, color: COLORS.dark }}>{row.period}</Text>
+                  <Text style={{ flex: 1.5, fontSize: 13, textAlign: 'right', color: row.free ? '#2e7d5e' : COLORS.dark, fontWeight: row.free ? '700' : '500' }}>{row.fee}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Good to know */}
+            <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.dark, marginBottom: 10 }}>{t('rp_good_to_know')}</Text>
+            {[t('rp_note1'), t('rp_note2'), t('rp_note3')].map((note, i) => (
+              <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+                <Text style={{ color: COLORS.green, fontSize: 16, lineHeight: 20 }}>•</Text>
+                <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19, flex: 1 }}>{note}</Text>
+              </View>
+            ))}
+
+            <TouchableOpacity
+              style={{ backgroundColor: COLORS.green, padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 12 }}
+              onPress={() => setPolicyModal(false)}>
+              <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>{t('ok')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
           <BackChevron />
@@ -248,20 +297,13 @@ export default function HiredMaidsScreen({ navigation }) {
           })}
 
           {hired.length > 0 && (
-            <View style={styles.infoBox}>
-              <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 20 }}>
-                <Text style={{ fontWeight: '700', color: COLORS.dark }}>How replacement fees work{'\n'}</Text>
-                {'\n'}
-                <Text>If you encounter any issues with your maid and need to replace her, a fee applies based on how long you have been working together:{'\n'}</Text>
-                {'\n'}
-                <Text style={{ color: '#2e7d5e', fontWeight: '700' }}>  ✓  0 – 3 days</Text><Text>   →  Free (trial period — no commitment){'\n'}</Text>
-                <Text style={{ fontWeight: '600' }}>  •  4 – 7 days</Text><Text>   →  EGP 500 replacement fee{'\n'}</Text>
-                <Text style={{ fontWeight: '600' }}>  •  8 – 30 days</Text><Text>  →  EGP 700 replacement fee{'\n'}</Text>
-                <Text style={{ fontWeight: '600' }}>  •  After 30 days</Text><Text> →  EGP 1,000 replacement fee{'\n'}</Text>
-                {'\n'}
-                <Text style={{ color: COLORS.dark }}>The fee is charged when you hire your next maid, not when you release. After releasing, you have 3 days to choose a replacement.</Text>
-              </Text>
-            </View>
+            <TouchableOpacity style={styles.policyRow} onPress={() => setPolicyModal(true)} activeOpacity={0.75}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.policyRowTitle}>{t('rp_title')}</Text>
+                <Text style={styles.policyRowSub}>{t('rp_short')}</Text>
+              </View>
+              <Ionicons name="information-circle-outline" size={24} color={COLORS.green} />
+            </TouchableOpacity>
           )}
 
           {/* Previously Hired link */}
@@ -301,6 +343,8 @@ const styles = StyleSheet.create({
   penaltyTxt:   { fontSize: 11, fontWeight: '600' },
   btnRelease:   { marginTop: 12, padding: 13, borderRadius: 8, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
   btnReleaseTxt:{ fontSize: 14, fontWeight: '700', color: '#e05555' },
-  infoBox:      { backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: COLORS.border, borderRadius: 8, padding: 14, marginTop: 4, marginBottom: 12 },
+  policyRow:      { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: 'rgba(13,56,39,0.12)', borderRadius: 10, padding: 14, marginTop: 4, marginBottom: 12 },
+  policyRowTitle: { fontSize: 13, fontWeight: '700', color: COLORS.dark, marginBottom: 2 },
+  policyRowSub:   { fontSize: 11, color: COLORS.muted, lineHeight: 16 },
   prevHiredBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 10, padding: 14, marginBottom: 20, borderWidth: 1, borderColor: COLORS.border },
 });
