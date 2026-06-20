@@ -27,7 +27,7 @@
         "backgroundColor": "#1a1108"
       },
       "package": "world.servix.app",
-      "versionCode": 14,
+      "versionCode": 15,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "notification": {
