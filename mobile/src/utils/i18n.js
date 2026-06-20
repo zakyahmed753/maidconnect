@@ -72,7 +72,7 @@ const T = {
 
     // MaidDetail
     open_chat: 'Message', opening: 'Opening…',
-    hire_this_maid: 'I Want This One', already_hired: 'Already Hired ✅',
+    hire_this_maid: "I'm Interested", already_hired: 'Already Hired ✅',
     hire_success: 'Maid hired successfully!', hire_failed: 'Failed to hire',
     about: 'About', details: 'Details', languages_spoken: 'Languages',
     reviews_section: 'Reviews', no_reviews_yet: 'No reviews yet. Be the first!',
@@ -431,7 +431,7 @@ const T = {
 
     // MaidDetail
     open_chat: 'رسالة', opening: 'بنفتح…',
-    hire_this_maid: 'أريد هذه المساعدة', already_hired: 'عاملتك ✅',
+    hire_this_maid: 'أنا مهتمة', already_hired: 'عاملتك ✅',
     hire_success: 'مبروك! التوظيف تم بنجاح 🎉', hire_failed: 'التوظيف مش تمام — جربي تاني',
     about: 'عنها', details: 'تفاصيل أكتر', languages_spoken: 'اللغات اللي بتتكلمها',
     reviews_section: 'التقييمات', no_reviews_yet: 'مفيش تقييمات لسه — كوني الأولى!',
@@ -787,7 +787,7 @@ const T = {
 
     // MaidDetail
     open_chat: 'Message', opening: 'Ouverture…',
-    hire_this_maid: 'Je veux celle-ci', already_hired: 'Déjà embauchée ✅',
+    hire_this_maid: 'Je suis intéressée', already_hired: 'Déjà embauchée ✅',
     hire_success: 'Employée embauchée avec succès!', hire_failed: "Échec de l'embauche",
     about: 'À propos', details: 'Détails', languages_spoken: 'Langues',
     reviews_section: 'Avis', no_reviews_yet: 'Pas encore d\'avis. Soyez le premier!',
@@ -1137,7 +1137,7 @@ const T = {
 
     // MaidDetail
     open_chat: 'Sako', opening: 'Ana buɗewa…',
-    hire_this_maid: 'Ina son wannan', already_hired: 'An ɗauka ✅',
+    hire_this_maid: "Ina sha'awar wannan", already_hired: 'An ɗauka ✅',
     hire_success: 'An ɗauki ma\'aikata!', hire_failed: 'Ɗaukar ya kasa',
     about: 'Game da', details: 'Bayani', languages_spoken: 'Harsunan da ake magana',
     reviews_section: 'Bita', no_reviews_yet: 'Babu bita tukuna. Ku zama na farko!',
