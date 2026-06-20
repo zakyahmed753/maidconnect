@@ -23,41 +23,41 @@ const SKILL_KEYS = {
 
 const LANG_KEYS = { English: 'lang_en', Arabic: 'lang_ar', French: 'lang_fr', Hausa: 'lang_ha' };
 
-// Story-style quick filters (circular)
+// Story-style quick filters — all show every helper (no filtering during launch)
 const STORIES = [
   { key: 'all',       icon: 'apps-outline',             lk: 'filter_all',       params: {} },
-  { key: 'available', icon: 'checkmark-circle-outline', lk: 'filter_available', params: { isAvailable: 'true' } },
-  { key: 'top_rated', icon: 'star-outline',             lk: 'filter_top_rated', params: { sort: 'rating' } },
-  { key: 'african',   icon: 'globe-outline',            lk: 'filter_african',   params: { origin: 'african' } },
-  { key: 'asian',     icon: 'globe-outline',            lk: 'filter_asian',     params: { origin: 'asian' } },
+  { key: 'available', icon: 'checkmark-circle-outline', lk: 'filter_available', params: {} },
+  { key: 'top_rated', icon: 'star-outline',             lk: 'filter_top_rated', params: {} },
+  { key: 'african',   icon: 'globe-outline',            lk: 'filter_african',   params: {} },
+  { key: 'asian',     icon: 'globe-outline',            lk: 'filter_asian',     params: {} },
 ];
 
-// Category pill filters
+// Category pill filters — all show every helper (no filtering during launch)
 const CATEGORIES = [
-  { key: 'cooking',   icon: 'restaurant-outline',  lk: 'filter_cooking',   params: { skills: 'Cooking' } },
-  { key: 'childcare', icon: 'people-outline',      lk: 'filter_childcare', params: { skills: 'Childcare' } },
-  { key: 'eldercare', icon: 'heart-outline',       lk: 'filter_eldercare', params: { skills: 'Eldercare' } },
-  { key: 'cleaning',  icon: 'sparkles-outline',    lk: 'filter_cleaning',  params: { skills: 'Cleaning' } },
-  { key: 'laundry',   icon: 'shirt-outline',       lk: 'filter_laundry',   params: { skills: 'Laundry' } },
-  { key: 'ironing',   icon: 'layers-outline',      lk: 'filter_ironing',   params: { skills: 'Ironing' } },
-  { key: 'driving',   icon: 'car-outline',         lk: 'filter_driving',   params: { skills: 'Driving' } },
-  { key: 'petcare',   icon: 'paw-outline',         lk: 'filter_petcare',   params: { skills: 'Pet Care' } },
+  { key: 'cooking',   icon: 'restaurant-outline',  lk: 'filter_cooking',   params: {} },
+  { key: 'childcare', icon: 'people-outline',      lk: 'filter_childcare', params: {} },
+  { key: 'eldercare', icon: 'heart-outline',       lk: 'filter_eldercare', params: {} },
+  { key: 'cleaning',  icon: 'sparkles-outline',    lk: 'filter_cleaning',  params: {} },
+  { key: 'laundry',   icon: 'shirt-outline',       lk: 'filter_laundry',   params: {} },
+  { key: 'ironing',   icon: 'layers-outline',      lk: 'filter_ironing',   params: {} },
+  { key: 'driving',   icon: 'car-outline',         lk: 'filter_driving',   params: {} },
+  { key: 'petcare',   icon: 'paw-outline',         lk: 'filter_petcare',   params: {} },
 ];
 
 const CHIPS = [
   { key: 'all',       icon: 'apps-outline',             lk: 'filter_all',       params: {} },
-  { key: 'available', icon: 'checkmark-circle-outline', lk: 'filter_available', params: { isAvailable: 'true' } },
-  { key: 'top_rated', icon: 'star-outline',             lk: 'filter_top_rated', params: { sort: 'rating' } },
-  { key: 'african',   icon: 'globe-outline',            lk: 'filter_african',   params: { origin: 'african' } },
-  { key: 'asian',     icon: 'globe-outline',            lk: 'filter_asian',     params: { origin: 'asian' } },
-  { key: 'cooking',   icon: 'restaurant-outline',       lk: 'filter_cooking',   params: { skills: 'Cooking' } },
-  { key: 'childcare', icon: 'people-outline',           lk: 'filter_childcare', params: { skills: 'Childcare' } },
-  { key: 'eldercare', icon: 'heart-outline',            lk: 'filter_eldercare', params: { skills: 'Eldercare' } },
-  { key: 'cleaning',  icon: 'sparkles-outline',         lk: 'filter_cleaning',  params: { skills: 'Cleaning' } },
-  { key: 'laundry',   icon: 'shirt-outline',            lk: 'filter_laundry',   params: { skills: 'Laundry' } },
-  { key: 'ironing',   icon: 'layers-outline',           lk: 'filter_ironing',   params: { skills: 'Ironing' } },
-  { key: 'driving',   icon: 'car-outline',              lk: 'filter_driving',   params: { skills: 'Driving' } },
-  { key: 'petcare',   icon: 'paw-outline',              lk: 'filter_petcare',   params: { skills: 'Pet Care' } },
+  { key: 'available', icon: 'checkmark-circle-outline', lk: 'filter_available', params: {} },
+  { key: 'top_rated', icon: 'star-outline',             lk: 'filter_top_rated', params: {} },
+  { key: 'african',   icon: 'globe-outline',            lk: 'filter_african',   params: {} },
+  { key: 'asian',     icon: 'globe-outline',            lk: 'filter_asian',     params: {} },
+  { key: 'cooking',   icon: 'restaurant-outline',       lk: 'filter_cooking',   params: {} },
+  { key: 'childcare', icon: 'people-outline',           lk: 'filter_childcare', params: {} },
+  { key: 'eldercare', icon: 'heart-outline',            lk: 'filter_eldercare', params: {} },
+  { key: 'cleaning',  icon: 'sparkles-outline',         lk: 'filter_cleaning',  params: {} },
+  { key: 'laundry',   icon: 'shirt-outline',            lk: 'filter_laundry',   params: {} },
+  { key: 'ironing',   icon: 'layers-outline',           lk: 'filter_ironing',   params: {} },
+  { key: 'driving',   icon: 'car-outline',              lk: 'filter_driving',   params: {} },
+  { key: 'petcare',   icon: 'paw-outline',              lk: 'filter_petcare',   params: {} },
 ];
 
 const SORT_OPTS = [
