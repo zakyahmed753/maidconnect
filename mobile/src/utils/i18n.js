@@ -525,7 +525,7 @@ const T = {
     notif_approved_title: 'البروفايل اتوافق عليه ✅',
     notif_rejected_title: 'البروفايل اترفض ❌',
     notif_sub_title: 'الاشتراك اتفعّل! 💵',
-    notif_released_hw_title: 'المساعدة بُعدت ↩',
+    notif_released_hw_title: 'تم إنهاء خدمة العاملة ↩',
     notif_released_maid_title: 'اتحررتي — متاحة تاني 🆓',
     request_sent_awaiting: '⏳ الطلب اتبعت — في انتظار الرد',
     review_after_hire_note: 'متاح بس بعد التوظيف',

@@ -348,10 +348,12 @@ export function SavedScreen({ navigation }) {
       Promise.all([maidsAPI.getSaved(), hwAPI.getProfile()])
         .then(([savedRes, profileRes]) => {
           const all = savedRes.data.maids || [];
-          const hiredIds = new Set(
-            (profileRes.data?.profile?.hiredMaids || []).map(h => h.maid?._id || h.maid)
+          const prof = profileRes.data?.profile || {};
+          const excludedIds = new Set(
+            [...(prof.hiredMaids || []), ...(prof.pastHiredMaids || [])]
+              .map(h => h.maid?._id || h.maid)
           );
-          setMaids(all.filter(m => !hiredIds.has(m._id)));
+          setMaids(all.filter(m => !excludedIds.has(m._id)));
         })
         .catch(() => {})
         .finally(() => setLoading(false));
