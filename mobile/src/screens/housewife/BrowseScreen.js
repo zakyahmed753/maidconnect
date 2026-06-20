@@ -360,7 +360,7 @@ export default function BrowseScreen({ navigation }) {
                   <Ionicons name="home-outline" size={52} color={COLORS.green} />
                 </View>
                 <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:8, textAlign:'center' }}>{t('no_maids')}</Text>
-                <Text style={{ fontSize:13, color:COLORS.muted, textAlign:'center', lineHeight:20, maxWidth:260 }}>We're growing every day — a perfect home helper for you will be available soon.</Text>
+                <Text style={{ fontSize:13, color:COLORS.muted, textAlign:'center', lineHeight:20, maxWidth:260 }}>{t('no_maids_sub')}</Text>
               </View>
             }
             ListFooterComponent={hasMore ? <ActivityIndicator color={COLORS.green} style={{ marginVertical: 20 }} /> : null}

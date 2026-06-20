@@ -33,6 +33,7 @@ const T = {
     search_placeholder: 'Search name, nationality, skill…',
     browse_maids: 'Browse Maids',
     no_maids: 'Your helper is not here yet',
+    no_maids_sub: "We're growing every day — a perfect home helper for you will be available soon.",
     load_failed: 'Failed to load maids',
     save_failed: 'Failed to save',
 
@@ -391,6 +392,7 @@ const T = {
     search_placeholder: 'دوّر بالاسم أو الجنسية أو المهارة…',
     browse_maids: 'استعرض المساعدات',
     no_maids: 'مفيش نتايج — جرب تصفية تانية',
+    no_maids_sub: 'بنكبر كل يوم — عاملتك المثالية هتكون متاحة قريباً',
     load_failed: 'في مشكلة في التحميل — جرب تاني',
     save_failed: 'الحفظ مش تمام',
 
@@ -746,6 +748,7 @@ const T = {
     search_placeholder: 'Rechercher nom, nationalité, compétence…',
     browse_maids: 'Parcourir les employées',
     no_maids: 'Aucune employée trouvée',
+    no_maids_sub: "Nous grandissons chaque jour — une aide ménagère parfaite sera bientôt disponible.",
     load_failed: 'Échec du chargement',
     save_failed: 'Échec de la sauvegarde',
 
@@ -1094,7 +1097,8 @@ const T = {
     welcome: 'Barka da zuwa',
     search_placeholder: 'Nemi suna, ƙasa, ko iyawa…',
     browse_maids: 'Duba ma\'aikata',
-    no_maids: 'Ba a sami ma\'aikata ba',
+    no_maids: "Ba a sami ma'aikata ba",
+    no_maids_sub: "Muna girma kowace rana — cikakkiyar ma'aikatarku za ta kasance a nan soon.",
     load_failed: 'Lodi ya kasa',
     save_failed: 'Ajiye ya kasa',
 
