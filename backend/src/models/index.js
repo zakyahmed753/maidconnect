@@ -146,6 +146,15 @@ const notificationSchema = new mongoose.Schema({
 });
 notificationSchema.index({ user: 1, isRead: 1 });
 
+// Push real-time bell update whenever a notification is created
+notificationSchema.post('save', function (doc) {
+  try {
+    const { getIO } = require('../utils/socketHandler');
+    const io = getIO();
+    if (io) io.to(`user_${doc.user}`).emit('new_notification');
+  } catch {}
+});
+
 // ── Hire Request ──
 const hireRequestSchema = new mongoose.Schema({
   housewife:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

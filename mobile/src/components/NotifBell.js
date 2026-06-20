@@ -1,24 +1,58 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 import { notificationsAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
+import useNotifStore from '../store/notifStore';
 import { COLORS } from '../utils/theme';
+
+const BASE_URL = (Constants.expoConfig?.extra?.API_URL || 'https://api.servix.world/api')
+  .replace('/api', '');
 
 export default function NotifBell({ color, style }) {
   const navigation = useNavigation();
   const { user } = useAuthStore();
-  const [unread, setUnread] = useState(0);
+  const unread   = useNotifStore(s => s.unreadCount);
+  const setCount = useNotifStore(s => s.setCount);
+  const socketRef = useRef(null);
+
+  const refresh = () =>
+    notificationsAPI.getAll()
+      .then(r => setCount((r.data.notifications || []).filter(n => !n.isRead).length))
+      .catch(() => {});
 
   useEffect(() => {
-    const load = () => notificationsAPI.getAll()
-      .then(r => setUnread((r.data.notifications || []).filter(n => !n.isRead).length))
-      .catch(() => {});
-    load();
-    const iv = setInterval(load, 30000);
-    return () => clearInterval(iv);
-  }, []);
+    if (!user?._id) return;
+
+    refresh();
+    const poll = setInterval(refresh, 30000);
+
+    // Real-time: connect once and listen for new_notification events
+    let socket;
+    (async () => {
+      try {
+        const io = require('socket.io-client').default;
+        const token = await SecureStore.getItemAsync('maidconnect_token');
+        if (!token) return;
+        socket = io(BASE_URL, {
+          auth: { token },
+          transports: ['polling', 'websocket'],
+          reconnection: true,
+        });
+        socketRef.current = socket;
+        socket.on('new_notification', refresh);
+      } catch {}
+    })();
+
+    return () => {
+      clearInterval(poll);
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
+  }, [user?._id]);
 
   const iconColor = color || COLORS.green;
 
