@@ -85,7 +85,6 @@ export function SplashScreen({ navigation }) {
           <View style={styles.logoCircle}>
             <Ionicons name="home" size={36} color="#fff" />
           </View>
-          <Text style={styles.appName}>Servix</Text>
           <Text style={styles.tagline}>FIND TRUSTED HOME HELPERS</Text>
         </View>
 
