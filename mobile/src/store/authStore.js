@@ -14,15 +14,27 @@ const useAuthStore = create((set, get) => ({
   init: async () => {
     set({ loading: true });
     try {
-      const [token, areasRes] = await Promise.all([
-        SecureStore.getItemAsync('maidconnect_token'),
-        configAPI.getAreas().catch(() => ({ data: { activeAreas: [], allAreas: [] } })),
-      ]);
-      set({ activeAreas: areasRes.data.activeAreas, allAreas: areasRes.data.allAreas });
+      const token = await SecureStore.getItemAsync('maidconnect_token');
+
       if (token) {
-        const res = await authAPI.getMe();
-        set({ token, user: res.data.user, profile: res.data.profile, loading: false });
+        // Run user fetch and areas fetch in parallel — saves 1-3s vs sequential
+        const [res, areasRes] = await Promise.all([
+          authAPI.getMe(),
+          configAPI.getAreas().catch(() => ({ data: { activeAreas: [], allAreas: [] } })),
+        ]);
+        set({
+          token,
+          user: res.data.user,
+          profile: res.data.profile,
+          activeAreas: areasRes.data.activeAreas,
+          allAreas: areasRes.data.allAreas,
+          loading: false,
+        });
       } else {
+        // No session — load areas in background, don't block startup
+        configAPI.getAreas()
+          .then(r => set({ activeAreas: r.data.activeAreas, allAreas: r.data.allAreas }))
+          .catch(() => {});
         set({ loading: false });
       }
     } catch {

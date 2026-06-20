@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 import * as Font from 'expo-font';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
@@ -19,9 +19,7 @@ import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
 import useAuthStore from './src/store/authStore';
 import useLangStore from './src/store/langStore';
 import { authAPI } from './src/services/api';
-import { COLORS } from './src/utils/theme';
 
-// Show notifications while app is foregrounded
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -49,7 +47,7 @@ async function registerForPushNotifications() {
         name: 'default',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#C9A84C',
+        lightColor: '#5dd6a8',
       });
     }
     return token;
@@ -57,14 +55,13 @@ async function registerForPushNotifications() {
 }
 
 export default function App() {
-  const [fontsLoaded, setFontsLoaded] = React.useState(false);
+  const [appReady, setAppReady] = React.useState(false);
   const init = useAuthStore(s => s.init);
   const loading = useAuthStore(s => s.loading);
   const user = useAuthStore(s => s.user);
   const initLang = useLangStore(s => s.init);
   const notifResponseListener = useRef();
 
-  // Re-register push token whenever user logs in (covers first login, re-login, token refresh)
   useEffect(() => {
     if (!user?._id) return;
     (async () => {
@@ -76,23 +73,30 @@ export default function App() {
   }, [user?._id]);
 
   useEffect(() => {
-    async function load() {
-      await Promise.all([
-        initLang(),
+    async function prepare() {
+      try {
+        // Critical path only — lang + auth. Fonts load in background.
+        await Promise.all([initLang(), init()]);
+
+        // Kick off font loading without awaiting it — app renders with system
+        // fonts instantly, then switches to custom fonts when ready.
         Font.loadAsync({
           CormorantGaramond_600SemiBold,
           CormorantGaramond_700Bold,
           CormorantGaramond_700Bold_Italic,
           Jost_400Regular,
-          Jost_500Medium, Jost_600SemiBold,
-        }),
-        init(),
-      ]);
-      setFontsLoaded(true);
+          Jost_500Medium,
+          Jost_600SemiBold,
+        }).catch(() => {});
+      } catch (e) {
+        console.warn('App init error:', e);
+      } finally {
+        setAppReady(true);
+      }
     }
-    load();
 
-    // Navigate when user taps a notification
+    prepare();
+
     notifResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       const data = response.notification.request.content.data;
       if (!navigationRef.isReady()) return;
@@ -112,16 +116,21 @@ export default function App() {
     };
   }, []);
 
-  if (!fontsLoaded || loading) {
+  // Show branded green screen while auth initialises — never a black void.
+  if (!appReady) {
     return (
-      <View style={{ flex:1, backgroundColor:COLORS.dark, alignItems:'center', justifyContent:'center' }}>
-        <ActivityIndicator size="large" color={COLORS.gold} />
+      <View style={{ flex: 1, backgroundColor: '#0D3827', alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(93,214,168,0.15)', borderWidth: 1, borderColor: 'rgba(93,214,168,0.3)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+          <Text style={{ fontSize: 36 }}>🏠</Text>
+        </View>
+        <Text style={{ fontFamily: 'System', fontSize: 28, color: '#fff', fontWeight: '700', letterSpacing: 0.5 }}>Servix</Text>
+        <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6, letterSpacing: 2, textTransform: 'uppercase' }}>Loading…</Text>
       </View>
     );
   }
 
   return (
-    <GestureHandlerRootView style={{ flex:1 }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AppNavigator />
         <Toast />

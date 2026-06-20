@@ -7,7 +7,7 @@
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
     "splash": {
-      "backgroundColor": "#1a1108"
+      "backgroundColor": "#0D3827"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -25,10 +25,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#1a1108"
+        "backgroundColor": "#0D3827"
       },
       "package": "world.servix.app",
-      "versionCode": 17,
+      "versionCode": 18,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "notification": {

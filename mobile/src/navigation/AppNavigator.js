@@ -6,14 +6,6 @@ import { NavigationContainer, createNavigationContainerRef } from '@react-naviga
 import * as Notifications from 'expo-notifications';
 import { authAPI, notificationsAPI } from '../services/api';
 
-// Show notifications + play sound even when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge:  true,
-  }),
-});
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text } from 'react-native';
