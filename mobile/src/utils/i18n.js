@@ -464,7 +464,7 @@ const T = {
     tab_browse: 'تصفح', tab_saved: 'مختاراتي', tab_chats: 'رسايلي', tab_alerts: 'إشعارات', tab_me: 'أنا', tab_home: 'الرئيسية',
 
     // Filters
-    filter_all: 'كل العمالة', filter_available: 'متاحة دلوقتي', filter_top_rated: 'الأعلى تقييماً',
+    filter_all: 'كل المساعدين', filter_available: 'متاحة دلوقتي', filter_top_rated: 'الأعلى تقييماً',
     filter_african: 'أفريقية', filter_asian: 'آسيوية', filter_cooking: 'طبخ',
     filter_childcare: 'رعاية أطفال', filter_eldercare: 'رعاية مسنين',
     filter_cleaning: 'تنظيف', filter_laundry: 'غسيل', filter_ironing: 'مكوة',
