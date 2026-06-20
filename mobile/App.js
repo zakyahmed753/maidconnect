@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import * as Font from 'expo-font';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
@@ -125,8 +125,10 @@ export default function App() {
     };
   }, []);
 
-  // Return null while native splash is still showing — no custom screen needed
-  if (!appReady) return null;
+  // In production: native splash stays on top until hideAsync() — this view is never seen.
+  // In Expo Go: native splash isn't controlled by us, so show a plain cream background
+  // to avoid a black flash while init runs.
+  if (!appReady) return <View style={{ flex: 1, backgroundColor: '#f9f5f0' }} />;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
