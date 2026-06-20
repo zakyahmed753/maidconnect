@@ -2,7 +2,7 @@
   "expo": {
     "name": "Servix",
     "slug": "maidconnect",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "world.servix.mobile",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "icon": "./assets/icon.png",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to log in to Servix quickly and securely.",
@@ -28,7 +28,7 @@
         "backgroundColor": "#0D3827"
       },
       "package": "world.servix.app",
-      "versionCode": 18,
+      "versionCode": 19,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "notification": {
