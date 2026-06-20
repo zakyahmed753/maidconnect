@@ -47,11 +47,11 @@ export function NotificationsScreen({ navigation }) {
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <StatusBar barStyle="dark-content"/>
+      <StatusBar barStyle="light-content"/>
       <View style={styles.topBar}>
         <Text style={styles.pageTitle}>{t('notifications_title')}</Text>
         <TouchableOpacity onPress={() => notificationsAPI.markAll().then(() => { setNotifs(n=>n.map(x=>({...x,isRead:true}))); reset(); })}>
-          <Text style={{ fontSize:12, color:COLORS.green, fontFamily:FONTS.bodySemiBold }}>{t('mark_all_read')}</Text>
+          <Text style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontFamily:FONTS.bodySemiBold }}>{t('mark_all_read')}</Text>
         </TouchableOpacity>
       </View>
       <FlatList data={notifs} keyExtractor={i=>i._id}
@@ -1209,8 +1209,8 @@ export function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  topBar:     { padding:16, paddingTop:54, backgroundColor:COLORS.surface, borderBottomWidth:1, borderBottomColor:COLORS.border, flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
-  pageTitle:  { fontFamily:FONTS.display, fontSize:22, color:COLORS.dark },
+  topBar:     { padding:16, paddingTop:54, backgroundColor:'#0D3827', flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
+  pageTitle:  { fontFamily:FONTS.display, fontSize:22, color:'#fff' },
   notifItem:  { flexDirection:'row', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border, alignItems:'flex-start' },
   notifUnread:{ backgroundColor:'#e8f4f1' },
   notifIcon:  { width:38, height:38, borderRadius:19, alignItems:'center', justifyContent:'center', flexShrink:0 },
