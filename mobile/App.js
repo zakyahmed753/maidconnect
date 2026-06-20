@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import * as Font from 'expo-font';
 import * as Notifications from 'expo-notifications';
+import * as SplashScreen from 'expo-splash-screen';
 import Constants from 'expo-constants';
 import {
   CormorantGaramond_600SemiBold,
@@ -19,6 +20,9 @@ import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
 import useAuthStore from './src/store/authStore';
 import useLangStore from './src/store/langStore';
 import { authAPI } from './src/services/api';
+
+// Keep the real native splash screen visible until we explicitly hide it
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -57,7 +61,6 @@ async function registerForPushNotifications() {
 export default function App() {
   const [appReady, setAppReady] = React.useState(false);
   const init = useAuthStore(s => s.init);
-  const loading = useAuthStore(s => s.loading);
   const user = useAuthStore(s => s.user);
   const initLang = useLangStore(s => s.init);
   const notifResponseListener = useRef();
@@ -75,11 +78,15 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Critical path only — lang + auth. Fonts load in background.
-        await Promise.all([initLang(), init()]);
+        // Safety net: if network is dead or server is slow, never freeze past 5s.
+        // init() keeps running in background after timeout — Zustand will update
+        // the store and re-render naturally once the call resolves.
+        await Promise.race([
+          Promise.all([initLang(), init()]),
+          new Promise(resolve => setTimeout(resolve, 5000)),
+        ]);
 
-        // Kick off font loading without awaiting it — app renders with system
-        // fonts instantly, then switches to custom fonts when ready.
+        // Fonts load in background — zero startup cost
         Font.loadAsync({
           CormorantGaramond_600SemiBold,
           CormorantGaramond_700Bold,
@@ -92,6 +99,8 @@ export default function App() {
         console.warn('App init error:', e);
       } finally {
         setAppReady(true);
+        // Dismiss the real native splash screen (your logo design)
+        SplashScreen.hideAsync().catch(() => {});
       }
     }
 
@@ -116,18 +125,8 @@ export default function App() {
     };
   }, []);
 
-  // Show branded green screen while auth initialises — never a black void.
-  if (!appReady) {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#0D3827', alignItems: 'center', justifyContent: 'center' }}>
-        <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(93,214,168,0.15)', borderWidth: 1, borderColor: 'rgba(93,214,168,0.3)', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
-          <Text style={{ fontSize: 36 }}>🏠</Text>
-        </View>
-        <Text style={{ fontFamily: 'System', fontSize: 28, color: '#fff', fontWeight: '700', letterSpacing: 0.5 }}>Servix</Text>
-        <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6, letterSpacing: 2, textTransform: 'uppercase' }}>Loading…</Text>
-      </View>
-    );
-  }
+  // Return null while native splash is still showing — no custom screen needed
+  if (!appReady) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
