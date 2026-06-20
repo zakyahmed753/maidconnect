@@ -15,6 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "world.servix.mobile",
+      "buildNumber": "2",
       "icon": "./assets/icon.png",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to log in to Servix quickly and securely.",
@@ -27,7 +28,7 @@
         "backgroundColor": "#1a1108"
       },
       "package": "world.servix.app",
-      "versionCode": 15,
+      "versionCode": 16,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "notification": {
