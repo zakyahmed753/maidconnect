@@ -374,30 +374,74 @@ export function SavedScreen({ navigation }) {
             contentContainerStyle={{ padding:14, gap:12 }}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={{ backgroundColor:COLORS.surface, borderRadius:14, borderWidth:1, borderColor:COLORS.border, overflow:'hidden', elevation:2, shadowColor:'#000', shadowOpacity:0.06, shadowRadius:6 }}
+                style={{ backgroundColor:COLORS.surface, borderRadius:14, borderWidth:1, borderColor:COLORS.border, overflow:'hidden', elevation:2, shadowColor:'#0D3827', shadowOpacity:0.08, shadowRadius:6 }}
                 onPress={() => navigation.navigate('Browse', { screen:'MaidDetail', params:{ maid:item } })}
-                activeOpacity={0.88}
+                activeOpacity={0.9}
               >
-                {/* Photo banner */}
-                <View style={{ height:140, backgroundColor: item.origin==='african'?'#1e3a2f':'#1a1a2e', alignItems:'center', justifyContent:'center' }}>
-                  {item.photos?.[0]?.url
-                    ? <Image source={{ uri: item.photos[0].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
-                    : <Ionicons name="person" size={52} color="rgba(255,255,255,0.35)" />}
-                  <View style={{ position:'absolute', top:8, right:8, backgroundColor:'rgba(13,56,39,0.85)', borderRadius:14, paddingHorizontal:8, paddingVertical:3 }}>
-                    <Ionicons name="bookmark" size={14} color="#fff" />
+                {/* Photos — main + 2 side (same layout as BrowseScreen) */}
+                <View style={{ flexDirection:'row', height:180 }}>
+                  <View style={{ flex:2, backgroundColor:'#dfeee8' }}>
+                    {item.photos?.[0]?.url
+                      ? <Image source={{ uri: item.photos[0].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
+                      : <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}><Ionicons name="person" size={40} color="rgba(255,255,255,0.7)" /></View>}
+                    {item.isAvailable
+                      ? <View style={{ position:'absolute', top:8, left:8, flexDirection:'row', alignItems:'center', gap:4, backgroundColor:'rgba(13,56,39,0.85)', borderRadius:10, paddingHorizontal:7, paddingVertical:3 }}>
+                          <View style={{ width:6, height:6, borderRadius:3, backgroundColor:'#5dd6a8' }}/>
+                          <Text style={{ fontSize:9, color:'#fff', fontWeight:'700' }}>{t('available_badge')}</Text>
+                        </View>
+                      : null}
+                  </View>
+                  <View style={{ flex:1, flexDirection:'column' }}>
+                    <View style={{ flex:1, backgroundColor:'#c8e6df' }}>
+                      {item.photos?.[1]?.url
+                        ? <Image source={{ uri: item.photos[1].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
+                        : <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}><Ionicons name="person" size={20} color="rgba(255,255,255,0.6)" /></View>}
+                    </View>
+                    <View style={{ flex:1, backgroundColor:'#b5d9d0', borderTopWidth:1, borderTopColor:'#fff' }}>
+                      {item.photos?.[2]?.url
+                        ? <Image source={{ uri: item.photos[2].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
+                        : <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}><Ionicons name="camera-outline" size={18} color="rgba(255,255,255,0.5)" /></View>}
+                    </View>
                   </View>
                 </View>
-                {/* Info row */}
+                {/* Info */}
                 <View style={{ padding:12 }}>
-                  <Text style={styles.savedName}>{item.fullName}</Text>
-                  <Text style={styles.savedSub}>{item.nationality} Â· {item.age}yrs Â· EGP {(item.expectedSalary||0).toLocaleString()}/mo</Text>
-                  <View style={{ flexDirection:'row', gap:5, marginTop:6, flexWrap:'wrap' }}>
+                  <View style={{ flexDirection:'row', alignItems:'flex-start', marginBottom:6 }}>
+                    <View style={{ flex:1 }}>
+                      <Text style={styles.savedName}>{item.fullName}</Text>
+                      <Text style={styles.savedSub}>{item.nationality} · {item.age} {t('yrs')}</Text>
+                    </View>
+                    <Ionicons name="bookmark" size={18} color={COLORS.green} style={{ marginTop:2 }} />
+                  </View>
+                  <View style={{ flexDirection:'row', gap:5, flexWrap:'wrap', marginBottom:10 }}>
                     {(item.skills||[]).slice(0,3).map(s=>(
                       <View key={s} style={{ backgroundColor:'#e8f4f1', paddingHorizontal:7, paddingVertical:3, borderRadius:4 }}>
                         <Text style={{ fontSize:10, color:COLORS.green }}>{s}</Text>
                       </View>
                     ))}
                   </View>
+                  <View style={{ flexDirection:'row', borderTopWidth:1, borderTopColor:COLORS.border, paddingTop:8, marginBottom:10 }}>
+                    <View style={{ flex:1, alignItems:'center' }}>
+                      <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>{item.experienceYears} {t('yrs')}</Text>
+                      <Text style={{ fontSize:10, color:COLORS.muted, marginTop:1 }}>{t('exp_stat')}</Text>
+                    </View>
+                    <View style={{ flex:1, alignItems:'center', borderLeftWidth:1, borderRightWidth:1, borderColor:COLORS.border }}>
+                      <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>EGP {(item.expectedSalary||0).toLocaleString()}</Text>
+                      <Text style={{ fontSize:10, color:COLORS.muted, marginTop:1 }}>{t('salary_stat')}</Text>
+                    </View>
+                    <View style={{ flex:1, alignItems:'center' }}>
+                      <View style={{ flexDirection:'row', alignItems:'center', gap:3 }}>
+                        <Ionicons name="star" size={11} color="#f59e0b" />
+                        <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>{item.rating?.toFixed(1) || '—'}</Text>
+                      </View>
+                      <Text style={{ fontSize:10, color:COLORS.muted, marginTop:1 }}>{item.reviewCount||0} {t('reviews_short')}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={{ backgroundColor:COLORS.green, borderRadius:8, padding:11, alignItems:'center' }}
+                    onPress={() => navigation.navigate('Browse', { screen:'MaidDetail', params:{ maid:item } })}>
+                    <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:13, color:'#fff' }}>{t('view_profile')}</Text>
+                  </TouchableOpacity>
                 </View>
               </TouchableOpacity>
             )}
