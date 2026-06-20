@@ -116,7 +116,7 @@ const T = {
     filter_reset: 'Reset', filter_apply: 'Apply Filters', filter_any: 'Any',
 
     // Login
-    welcome_back: 'Welcome Back', role_customer: '🏠 Customer', role_maid: '👩 Maid',
+    welcome_back: 'Welcome Back', role_customer: '🏠 Customer', role_maid: '👩 Helper',
 
     // Register
     select_nationality_err: 'Select nationality', bio_required: 'Bio is required',
@@ -460,7 +460,7 @@ const T = {
     filter_reset: 'مسح الكل', filter_apply: 'طبقي الفلتر', filter_any: 'الكل',
 
     // Login
-    welcome_back: 'يا أهلاً بيك!', role_customer: '🏠 عميل/عميلة', role_maid: '👩 عاملة',
+    welcome_back: 'يا أهلاً بيك!', role_customer: '🏠 عميل/عميلة', role_maid: '👩 مساعدة',
 
     // Register
     select_nationality_err: 'اختاري جنسيتك', bio_required: 'التعريف بنفسك مطلوب',
@@ -801,7 +801,7 @@ const T = {
     filter_reset: 'Réinitialiser', filter_apply: 'Appliquer', filter_any: 'Tout',
 
     // Login
-    welcome_back: 'Bon retour', role_customer: '🏠 Cliente', role_maid: '👩 Employée',
+    welcome_back: 'Bon retour', role_customer: '🏠 Cliente', role_maid: '👩 Auxiliaire',
 
     // Register
     select_nationality_err: 'Sélectionnez la nationalité', bio_required: 'La biographie est requise',
@@ -1136,7 +1136,7 @@ const T = {
     filter_reset: 'Sifili', filter_apply: 'Amfani', filter_any: 'Kowane',
 
     // Login
-    welcome_back: 'Barka da komawa', role_customer: '🏠 Abokin ciniki', role_maid: "👩 Ma'aikaci",
+    welcome_back: 'Barka da komawa', role_customer: '🏠 Abokin ciniki', role_maid: "👩 Mai Taimako",
 
     // Register
     select_nationality_err: 'Zaɓi ƙasa', bio_required: 'Bayanin game da kai ya zama dole',
