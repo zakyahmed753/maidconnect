@@ -7,7 +7,6 @@
   j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
   })(window,document,'script','dataLayer','GTM-KMJ5N3PQ');</script>
-  <!-- End Google Tag Manager -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RDZPBBWER"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -19,61 +18,70 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Privacy Policy — Servix</title>
   <meta name="description" content="Servix Privacy Policy — how we collect, use, and protect your information."/>
+  <link rel="icon" type="image/svg+xml" href="assets/logo-square.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --gold:#c9a84c;--gold-l:#e8c97a;--gold-pale:rgba(201,168,76,0.12);
-      --dark:#0f0c09;--dark2:#1a1108;--dark3:#3d2203;
-      --cream:#fdf6ec;--muted:#9a8060;--green:#2e7d5e;
-      --border:rgba(201,168,76,0.15);--r:12px;
+      --green:#0D3827;--green2:#2e7d5e;--green3:#1a5c3a;
+      --mint:#5dd6a8;--mint-pale:rgba(93,214,168,0.10);--mint-border:rgba(93,214,168,0.25);
+      --cream:#f9f5f0;--surface:#fff;--text:#1a1108;--muted:#7a6955;
+      --border:rgba(13,56,39,0.1);--r:12px;
     }
     html{scroll-behavior:smooth}
-    body{font-family:'Jost',sans-serif;background:var(--dark);color:#f0ece4;overflow-x:hidden;line-height:1.7}
+    body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;line-height:1.7}
 
     /* NAV */
-    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;background:rgba(15,12,9,0.92);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 48px;background:rgba(13,56,39,0.97);backdrop-filter:blur(18px);border-bottom:1px solid rgba(93,214,168,0.15)}
     .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .logo-text{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold-l);font-weight:700;letter-spacing:.02em}
-    @media(max-width:640px){nav{padding:14px 20px}}
+    .logo img{height:36px;width:36px;border-radius:9px;object-fit:contain}
+    .logo-text{font-family:'Cormorant Garamond',serif;font-size:22px;color:#fff;font-weight:700;letter-spacing:.02em}
+    .nav-home{font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;font-family:'Cairo','Jost',sans-serif;transition:color .2s}
+    .nav-home:hover{color:var(--mint)}
+    @media(max-width:640px){nav{padding:12px 18px}}
 
     /* PAGE */
-    .page{max-width:780px;margin:0 auto;padding:120px 24px 80px}
+    .page{max-width:780px;margin:0 auto;padding:110px 24px 80px}
 
-    .page-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:12px}
-    .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,54px);font-weight:700;color:#f0ece4;line-height:1.15;margin-bottom:8px}
-    .page-date{font-size:13px;color:var(--muted);margin-bottom:48px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+    .page-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green2);font-weight:700;margin-bottom:12px}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,54px);font-weight:700;color:var(--text);line-height:1.1;margin-bottom:8px}
+    .page-date{font-size:13px;color:var(--muted);margin-bottom:44px;padding-bottom:28px;border-bottom:1px solid var(--border)}
 
-    .intro{font-size:15px;color:rgba(240,236,228,0.8);margin-bottom:40px;line-height:1.8}
+    .intro{font-size:15px;color:var(--muted);margin-bottom:40px;line-height:1.85;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px 28px}
 
     /* Sections */
-    .section{margin-bottom:40px}
-    .section-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--gold-l);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-    .section-sub{font-size:14px;font-weight:600;color:rgba(240,236,228,0.9);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.06em}
-    p{font-size:14.5px;color:rgba(240,236,228,0.75);margin-bottom:12px;line-height:1.8}
+    .section{margin-bottom:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px 28px 20px}
+    .section-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .section-title::before{content:'';display:inline-block;width:4px;height:20px;background:var(--mint);border-radius:2px;flex-shrink:0}
+    .section-sub{font-size:12px;font-weight:700;color:var(--green2);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.08em}
+    p{font-size:14.5px;color:var(--muted);margin-bottom:12px;line-height:1.8}
     ul{padding-left:20px;margin-bottom:12px}
-    ul li{font-size:14.5px;color:rgba(240,236,228,0.75);margin-bottom:6px;line-height:1.7}
+    ul li{font-size:14.5px;color:var(--muted);margin-bottom:6px;line-height:1.7}
+    ul li::marker{color:var(--mint)}
 
     /* Contact box */
-    .contact-box{background:rgba(201,168,76,0.06);border:1px solid var(--border);border-radius:var(--r);padding:24px 28px;margin-top:8px}
-    .contact-box p{margin:0;font-size:14px}
-    .contact-box a{color:var(--gold);text-decoration:none}
-    .contact-box a:hover{color:var(--gold-l)}
+    .contact-box{background:var(--mint-pale);border:1px solid var(--mint-border);border-radius:var(--r);padding:22px 26px;margin-top:10px}
+    .contact-box p{margin:0 0 6px;font-size:14px;color:var(--text)}
+    .contact-box p:last-child{margin-bottom:0}
+    .contact-box a{color:var(--green2);text-decoration:none;font-weight:600}
+    .contact-box a:hover{color:var(--mint)}
 
     /* Footer */
-    footer{text-align:center;padding:32px 24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
-    footer a{color:var(--gold);text-decoration:none}
+    footer{text-align:center;padding:32px 24px;border-top:1px solid var(--border);background:var(--green);color:rgba(255,255,255,0.4);font-size:12px;font-family:'Cairo','Jost',sans-serif}
+    footer a{color:var(--mint);text-decoration:none}
+    footer a:hover{color:#fff}
   </style>
 </head>
 <body>
-<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMJ5N3PQ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <nav>
   <a class="logo" href="/">
+    <img src="assets/logo-square.svg" alt="Servix"/>
     <span class="logo-text">Servix</span>
   </a>
+  <a class="nav-home" href="/">← Back to Home</a>
 </nav>
 
 <div class="page">
@@ -81,7 +89,10 @@
   <h1 class="page-title">Privacy Policy</h1>
   <div class="page-date">Last Updated: June 2026</div>
 
-  <p class="intro">Welcome to Servix ("Servix", "we", "our", or "us"). Servix is a platform that enables users to connect with domestic service providers and homeowners seeking domestic services. We respect your privacy and are committed to protecting your personal information.<br><br>By using the Servix mobile application, website, or services, you agree to the collection and use of information in accordance with this Privacy Policy.</p>
+  <div class="intro">
+    Welcome to Servix ("Servix", "we", "our", or "us"). Servix is a platform that enables users to connect with domestic helpers and homeowners seeking domestic services. We respect your privacy and are committed to protecting your personal information.<br><br>
+    By using the Servix mobile application, website, or services, you agree to the collection and use of information in accordance with this Privacy Policy.
+  </div>
 
   <div class="section">
     <div class="section-title">1. Information We Collect</div>
@@ -99,7 +110,6 @@
       <li>Payment-related information (if applicable)</li>
       <li>Any information voluntarily submitted through the platform</li>
     </ul>
-
     <div class="section-sub">1.2 Information Collected Automatically</div>
     <p>When using Servix, we may automatically collect:</p>
     <ul>
@@ -112,11 +122,10 @@
       <li>Crash reports</li>
       <li>Log data</li>
     </ul>
-
     <div class="section-sub">1.3 Location Information</div>
     <p>If you grant permission, Servix may collect location information to:</p>
     <ul>
-      <li>Display relevant service providers</li>
+      <li>Display relevant helpers in your area</li>
       <li>Improve search results</li>
       <li>Facilitate communication between users</li>
     </ul>
@@ -152,13 +161,10 @@
   <div class="section">
     <div class="section-title">4. Sharing of Information</div>
     <p>We may share information with:</p>
-
     <div class="section-sub">Service Providers</div>
     <p>Third-party providers assisting with hosting, analytics, notifications, payment processing, and customer support.</p>
-
     <div class="section-sub">Legal Authorities</div>
     <p>When required by applicable laws, court orders, government requests, or protection of legal rights.</p>
-
     <div class="section-sub">Business Transfers</div>
     <p>In the event of a merger, acquisition, sale of assets, or corporate restructuring.</p>
   </div>
@@ -210,7 +216,7 @@
     <div class="section-title">12. Contact Us</div>
     <p>For privacy-related inquiries, please contact:</p>
     <div class="contact-box">
-      <p><strong style="color:#f0ece4">Servix Support</strong></p>
+      <p><strong>Servix Support</strong></p>
       <p>Email: <a href="mailto:support@servix.world">support@servix.world</a></p>
       <p>Website: <a href="https://servix.world">servix.world</a></p>
     </div>
@@ -218,7 +224,7 @@
 </div>
 
 <footer>
-  <p>&copy; 2026 Servix. All rights reserved. &nbsp;·&nbsp; <a href="/">Home</a></p>
+  <p>&copy; 2026 Servix. All rights reserved. &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="mailto:support@servix.world">support@servix.world</a></p>
 </footer>
 </body>
 </html>

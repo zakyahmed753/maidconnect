@@ -218,6 +218,17 @@
       </a>
     </div>
 
+    <!-- Countdown -->
+    <div style="margin-bottom:40px">
+      <p style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px" id="countLabel">Full Launch in</p>
+      <div class="countdown">
+        <div class="count-box"><span class="count-num" id="cd-days">--</span><span class="count-lbl" data-i18n="count.days">Days</span></div>
+        <div class="count-box"><span class="count-num" id="cd-hours">--</span><span class="count-lbl" data-i18n="count.hours">Hours</span></div>
+        <div class="count-box"><span class="count-num" id="cd-mins">--</span><span class="count-lbl" data-i18n="count.mins">Minutes</span></div>
+        <div class="count-box"><span class="count-num" id="cd-secs">--</span><span class="count-lbl" data-i18n="count.secs">Seconds</span></div>
+      </div>
+    </div>
+
     <div class="hero-btns">
       <a class="btn-primary" href="register.html" data-i18n="hero.btn.apply">👩 Apply as a Helper</a>
       <a class="btn-ghost" href="#how" data-i18n="hero.btn.how">How it works ↓</a>
@@ -457,6 +468,12 @@ const T = {
     'footer.reg':   'Helper Registration',
     'footer.privacy':'Privacy Policy',
     'footer.support':'Support',
+    'count.label':  'Full Launch in',
+    'count.days':   'Days',
+    'count.hours':  'Hours',
+    'count.mins':   'Minutes',
+    'count.secs':   'Seconds',
+    'count.live':   'We are Live!',
   },
   ar: {
     'nav.pill':     'متاح الآن في القاهرة',
@@ -518,6 +535,12 @@ const T = {
     'footer.reg':   'تسجيل المساعدات المنزليات',
     'footer.privacy':'سياسة الخصوصية',
     'footer.support':'الدعم',
+    'count.label':  'الإطلاق الكامل خلال',
+    'count.days':   'يوم',
+    'count.hours':  'ساعة',
+    'count.mins':   'دقيقة',
+    'count.secs':   'ثانية',
+    'count.live':   'نحن الآن مباشرون!',
   }
 };
 
@@ -541,6 +564,32 @@ function setLang(lang){
 }
 
 function toggleLang(){ setLang(currentLang === 'en' ? 'ar' : 'en'); }
+
+// ── Countdown to July 1, 2026 ──
+(function(){
+  const target = new Date('2026-07-01T00:00:00+03:00').getTime();
+  function pad(n){ return String(Math.max(0,n)).padStart(2,'0'); }
+  function tick(){
+    const now = Date.now();
+    const diff = target - now;
+    if(diff <= 0){
+      document.getElementById('countLabel').textContent = t('count.live');
+      ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => document.getElementById(id).textContent='00');
+      return;
+    }
+    const d = Math.floor(diff/86400000);
+    const h = Math.floor((diff%86400000)/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    document.getElementById('cd-days').textContent  = pad(d);
+    document.getElementById('cd-hours').textContent = pad(h);
+    document.getElementById('cd-mins').textContent  = pad(m);
+    document.getElementById('cd-secs').textContent  = pad(s);
+    document.getElementById('countLabel').textContent = t('count.label');
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
 </script>
 </body>
 </html>
