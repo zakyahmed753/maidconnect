@@ -94,9 +94,16 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
             {maid.photos?.[0]?.url
               ? <Image source={{ uri: maid.photos[0].url }} style={styles.photoImg} />
               : <Ionicons name="person" size={40} color="rgba(255,255,255,0.7)" />}
-            <View style={[styles.availBadge, !maid.isAvailable && { backgroundColor: COLORS.muted }]}>
-              <Text style={styles.availTxt}>{maid.isAvailable ? t('available_badge') : t('unavailable_badge')}</Text>
-            </View>
+            {maid.isAvailable ? (
+              <View style={styles.availBadge}>
+                <View style={styles.availDot}/>
+                <Text style={styles.availTxt}>{t('available_badge')}</Text>
+              </View>
+            ) : (
+              <View style={[styles.availBadge, styles.unavailBadge]}>
+                <Text style={[styles.availTxt, styles.unavailTxt]}>{t('unavailable_badge')}</Text>
+              </View>
+            )}
             {validPhotos.length > 1 && (
               <View style={styles.photoCountBadge}>
                 <Text style={styles.photoCountTxt}>1/{validPhotos.length} ▶</Text>
@@ -143,7 +150,7 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
         </View>
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Text style={styles.statN}>{maid.experienceYears}yr</Text>
+            <Text style={styles.statN}>{maid.experienceYears} {t('yrs')}</Text>
             <Text style={styles.statL}>{t('exp_stat')}</Text>
           </View>
           <View style={[styles.stat, styles.statBorder]}>
@@ -271,8 +278,11 @@ export default function BrowseScreen({ navigation }) {
       <View style={styles.hero}>
         <View style={{ flexDirection:'row', alignItems:'flex-start', justifyContent:'space-between', marginBottom:2 }}>
           <View>
-            <Text style={styles.greet}>{t('good_morning')}</Text>
-            <Text style={styles.heroName}>{user?.name || t('welcome')}</Text>
+            <Text style={styles.greet}>Hi, <Text style={{ color:'#5dd6a8' }}>{(user?.name || '').split(' ')[0] || 'there'}</Text></Text>
+            <View style={styles.activePill}>
+              <View style={styles.activeDot}/>
+              <Text style={styles.activePillTxt}>Active</Text>
+            </View>
           </View>
           <NotifBell color="rgba(255,255,255,0.9)" style={{ marginTop:4 }} />
         </View>
@@ -487,9 +497,11 @@ export default function BrowseScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   // Header
-  hero:        { paddingHorizontal: 18, paddingTop: 54, paddingBottom: 16, backgroundColor: '#0D3827' },
-  greet:       { fontSize: 22, fontFamily: FONTS.display, color: '#fff', marginBottom: 2 },
-  heroName:    { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginBottom: 12, fontFamily: FONTS.body },
+  hero:         { paddingHorizontal: 18, paddingTop: 54, paddingBottom: 16, backgroundColor: '#0D3827' },
+  greet:        { fontSize: 22, fontFamily: FONTS.display, color: '#fff', marginBottom: 8 },
+  activePill:   { flexDirection: 'row', alignItems: 'center', gap: 5, alignSelf: 'flex-start', backgroundColor: 'rgba(93,214,168,0.15)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: 'rgba(93,214,168,0.4)', marginBottom: 12 },
+  activeDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: '#5dd6a8' },
+  activePillTxt:{ fontSize: 11, color: '#5dd6a8', fontWeight: '700', letterSpacing: 0.8 },
   searchRow:   { flexDirection: 'row', gap: 10 },
   searchInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 12, color: '#fff', fontSize: 13, fontFamily: FONTS.body },
   filterFab:   { width: 44, height: 44, backgroundColor: 'rgba(255,255,255,0.15)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)', borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
@@ -522,8 +534,11 @@ const styles = StyleSheet.create({
   photoEmoji:  { fontSize: 50 },
   photosSide:  { flex: 1, gap: 1 },
   photoSm:     { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#c8e6df' },
-  availBadge:  { position: 'absolute', top: 8, left: 8, backgroundColor: COLORS.green, borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 },
-  availTxt:    { fontSize: 8, color: '#fff', letterSpacing: 0.5, fontWeight: '700' },
+  availBadge:   { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(13,56,39,0.85)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(93,214,168,0.45)' },
+  availDot:     { width: 6, height: 6, borderRadius: 3, backgroundColor: '#5dd6a8' },
+  availTxt:     { fontSize: 10, color: '#5dd6a8', fontWeight: '700', letterSpacing: 0.5 },
+  unavailBadge: { backgroundColor: 'rgba(80,80,80,0.75)', borderColor: 'rgba(180,180,180,0.3)' },
+  unavailTxt:   { color: 'rgba(255,255,255,0.65)' },
   photoCountBadge: { position: 'absolute', bottom: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 },
   photoCountTxt:   { fontSize: 9, color: '#fff', fontWeight: '700' },
 

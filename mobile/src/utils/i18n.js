@@ -70,8 +70,8 @@ const T = {
     lang_en: 'English', lang_ar: 'Arabic', lang_fr: 'French', lang_ha: 'Hausa',
 
     // MaidDetail
-    open_chat: 'Chat Now', opening: 'Opening…',
-    hire_this_maid: 'Select This One', already_hired: 'Already Hired ✅',
+    open_chat: 'Message', opening: 'Opening…',
+    hire_this_maid: 'I Want This One', already_hired: 'Already Hired ✅',
     hire_success: 'Maid hired successfully!', hire_failed: 'Failed to hire',
     about: 'About', details: 'Details', languages_spoken: 'Languages',
     reviews_section: 'Reviews', no_reviews_yet: 'No reviews yet. Be the first!',
@@ -144,7 +144,7 @@ const T = {
     failed_load_msgs: 'Failed to load messages', failed_send_msg: 'Failed to send',
 
     // MaidCard
-    available_badge: '● Available', unavailable_badge: 'Unavailable',
+    available_badge: 'Available', unavailable_badge: 'Unavailable',
     exp_stat: 'Exp', salary_stat: 'Salary', reviews_short: 'rev',
 
     // MaidDetail
@@ -156,8 +156,8 @@ const T = {
     details_experience: 'Experience', details_salary: 'Expected Salary',
     details_age: 'Age', details_origin: 'Origin',
     no_bio: 'No bio provided.',
-    no_reviews_label: 'No reviews yet', no_reviews_sub: 'Be the first to leave a review after hiring',
-    saved_label: 'Saved', save_label: 'Save', yrs: 'yrs',
+    no_reviews_label: 'No reviews yet', no_reviews_sub: 'Hire this helper and be the first to share your experience',
+    saved_label: 'Saved', save_label: 'Save', yrs: 'years',
     notif_new_hire_title: 'New Hire Request! 🔔',
     notif_support_reply_title: '💬 Support Reply',
     notif_hire_declined_title: 'Hire Request Declined',
@@ -414,8 +414,8 @@ const T = {
     lang_en: 'الإنجليزية', lang_ar: 'العربية', lang_fr: 'الفرنسية', lang_ha: 'الهوسا',
 
     // MaidDetail
-    open_chat: 'ابدأ محادثة', opening: 'بنفتح…',
-    hire_this_maid: 'وظّف المساعدة دي', already_hired: 'اتوظفت ✅',
+    open_chat: 'رسالة', opening: 'بنفتح…',
+    hire_this_maid: 'أريد هذه المساعدة', already_hired: 'اتوظفت ✅',
     hire_success: 'مبروك! التوظيف تم بنجاح 🎉', hire_failed: 'التوظيف مش تمام — جربي تاني',
     about: 'عنها', details: 'تفاصيل أكتر', languages_spoken: 'اللغات اللي بتتكلمها',
     reviews_section: 'التقييمات', no_reviews_yet: 'مفيش تقييمات لسه — كوني الأولى!',
@@ -488,7 +488,7 @@ const T = {
     failed_load_msgs: 'الرسائل مش اتحملت — جربي تاني', failed_send_msg: 'مش اتبعتت — جربي تاني',
 
     // MaidCard
-    available_badge: '● متاحة دلوقتي', unavailable_badge: 'مش متاحة',
+    available_badge: 'متاحة دلوقتي', unavailable_badge: 'مش متاحة',
     exp_stat: 'خبرة', salary_stat: 'الراتب', reviews_short: 'تقييم',
 
     // MaidDetail
@@ -755,8 +755,8 @@ const T = {
     lang_en: 'Anglais', lang_ar: 'Arabe', lang_fr: 'Français', lang_ha: 'Haoussa',
 
     // MaidDetail
-    open_chat: 'Ouvrir le chat', opening: 'Ouverture…',
-    hire_this_maid: 'Embaucher cette employée', already_hired: 'Déjà embauchée ✅',
+    open_chat: 'Message', opening: 'Ouverture…',
+    hire_this_maid: 'Je veux celle-ci', already_hired: 'Déjà embauchée ✅',
     hire_success: 'Employée embauchée avec succès!', hire_failed: "Échec de l'embauche",
     about: 'À propos', details: 'Détails', languages_spoken: 'Langues',
     reviews_section: 'Avis', no_reviews_yet: 'Pas encore d\'avis. Soyez le premier!',
@@ -829,7 +829,7 @@ const T = {
     failed_load_msgs: 'Échec du chargement', failed_send_msg: "Échec de l'envoi",
 
     // MaidCard
-    available_badge: '● Disponible', unavailable_badge: 'Indisponible',
+    available_badge: 'Disponible', unavailable_badge: 'Indisponible',
     exp_stat: 'Exp', salary_stat: 'Salaire', reviews_short: 'avis',
 
     // MaidDetail
@@ -842,7 +842,7 @@ const T = {
     details_age: 'Âge', details_origin: 'Origine',
     no_bio: 'Aucune biographie fournie.',
     no_reviews_label: "Pas encore d'avis",
-    no_reviews_sub: "Soyez le premier à laisser un avis après l'embauche",
+    no_reviews_sub: "Engagez cet(te) auxiliaire et soyez le premier à partager votre expérience",
     saved_label: 'Sauvegardé', save_label: 'Sauvegarder', yrs: 'ans',
     notif_new_hire_title: '🔔 Nouvelle demande !',
     notif_support_reply_title: '💬 Réponse du support',
@@ -1090,8 +1090,8 @@ const T = {
     lang_en: 'Turanci', lang_ar: 'Larabci', lang_fr: 'Faransanci', lang_ha: 'Hausa',
 
     // MaidDetail
-    open_chat: 'Buɗe tattaunawa', opening: 'Ana buɗewa…',
-    hire_this_maid: 'Ɗauki wannan ma\'aikata', already_hired: 'An ɗauka ✅',
+    open_chat: 'Sako', opening: 'Ana buɗewa…',
+    hire_this_maid: 'Ina son wannan', already_hired: 'An ɗauka ✅',
     hire_success: 'An ɗauki ma\'aikata!', hire_failed: 'Ɗaukar ya kasa',
     about: 'Game da', details: 'Bayani', languages_spoken: 'Harsunan da ake magana',
     reviews_section: 'Bita', no_reviews_yet: 'Babu bita tukuna. Ku zama na farko!',
@@ -1164,7 +1164,7 @@ const T = {
     failed_load_msgs: 'Lodi ya kasa', failed_send_msg: 'Aika ya kasa',
 
     // MaidCard
-    available_badge: '● Akwai', unavailable_badge: 'Ba a nan',
+    available_badge: 'Akwai', unavailable_badge: 'Ba a nan',
     exp_stat: 'Ƙwarewa', salary_stat: 'Albashi', reviews_short: 'bita',
 
     // MaidDetail
@@ -1177,7 +1177,7 @@ const T = {
     details_age: 'Shekaru', details_origin: 'Asali',
     no_bio: 'Babu bayani.',
     no_reviews_label: 'Babu bita tukuna',
-    no_reviews_sub: "Ku zama na farko bayan ɗaukar ma'aikaci",
+    no_reviews_sub: "Ɗauki wannan mai taimako kuma ku zama na farko raba ƙwarewarku",
     saved_label: 'An ajiye', save_label: 'Ajiye', yrs: 'shekara',
     notif_new_hire_title: '🔔 Sabon buƙatar haya!',
     notif_support_reply_title: '💬 Amsar Tallafi',

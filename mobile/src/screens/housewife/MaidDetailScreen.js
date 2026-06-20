@@ -505,7 +505,7 @@ export default function MaidDetailScreen({ route, navigation }) {
           <View style={{ position:'absolute', top:0, left:0, right:0, zIndex:10, flexDirection:'row', justifyContent:'space-between', alignItems:'center', paddingTop:54, paddingHorizontal:20, paddingBottom:12 }}>
             <TouchableOpacity onPress={() => setGalleryVisible(false)}
               style={{ backgroundColor:'rgba(0,0,0,0.6)', borderRadius:20, width:38, height:38, alignItems:'center', justifyContent:'center' }}>
-              <Text style={{ color:'#fff', fontSize:20 }}>âœ•</Text>
+              <Text style={{ color:'#fff', fontSize:20 }}>✕</Text>
             </TouchableOpacity>
             <View style={{ backgroundColor:'rgba(0,0,0,0.6)', borderRadius:14, paddingHorizontal:12, paddingVertical:5 }}>
               <Text style={{ color:'#fff', fontSize:13, fontWeight:'600' }}>{galleryIndex + 1} / {photos.length}</Text>
@@ -570,7 +570,12 @@ export default function MaidDetailScreen({ route, navigation }) {
             {photos[0]?.url
               ? <Image source={{ uri: photos[0].url }} style={{ width:'100%', height:'100%' }}/>
               : <Ionicons name="person" size={60} color="rgba(255,255,255,0.7)" />}
-            {maid.isAvailable && <View style={styles.availBadge}><Text style={styles.availTxt}>{t('available_badge')}</Text></View>}
+            {maid.isAvailable && (
+              <View style={styles.availBadge}>
+                <View style={styles.availDot}/>
+                <Text style={styles.availTxt}>{t('available_badge')}</Text>
+              </View>
+            )}
             {photos.length > 1 && (
               <View style={{ position:'absolute', bottom:8, right:8, backgroundColor:'rgba(0,0,0,0.55)', borderRadius:10, paddingHorizontal:8, paddingVertical:3 }}>
                 <Text style={{ color:'#fff', fontSize:10, fontWeight:'600' }}>{photos.length} photos</Text>
@@ -595,8 +600,12 @@ export default function MaidDetailScreen({ route, navigation }) {
         <View style={styles.body}>
           <Text style={styles.name}>{maid.fullName}</Text>
           <View style={styles.originRow}>
-            <Ionicons name="location-outline" size={16} color={COLORS.muted} />
-            <Text style={styles.originTxt}>{maid.nationality} Â· {maid.age} yrs Â· {maid.rating?.toFixed(1)||'—'} ({maid.reviewCount||0} reviews)</Text>
+            {[1,2,3,4,5].map(i => (
+              <Ionicons key={i} name={i <= Math.round(maid.rating || 0) ? 'star' : 'star-outline'} size={14} color="#f59e0b" />
+            ))}
+            <Text style={[styles.originTxt, { marginLeft: 5 }]}>
+              {maid.rating ? maid.rating.toFixed(1) : '—'} ({maid.reviewCount || 0} {t('reviews_short')})
+            </Text>
           </View>
 
           <Text style={styles.secTitle}>{t('about')}</Text>
@@ -778,8 +787,9 @@ const styles = StyleSheet.create({
   galMain:     { flex:2, alignItems:'center', justifyContent:'center', position:'relative' },
   galSide:     { flex:1, flexDirection:'column' },
   galSm:       { flex:1, alignItems:'center', justifyContent:'center' },
-  availBadge:  { position:'absolute', top:8, left:8, backgroundColor:COLORS.green, borderRadius:2, paddingHorizontal:6, paddingVertical:2 },
-  availTxt:    { fontSize:8, color:'#fff', fontWeight:'700' },
+  availBadge:  { position:'absolute', top:10, left:10, flexDirection:'row', alignItems:'center', gap:5, backgroundColor:'rgba(13,56,39,0.85)', borderRadius:20, paddingHorizontal:10, paddingVertical:5, borderWidth:1, borderColor:'rgba(93,214,168,0.45)' },
+  availDot:    { width:6, height:6, borderRadius:3, backgroundColor:'#5dd6a8' },
+  availTxt:    { fontSize:10, color:'#5dd6a8', fontWeight:'700', letterSpacing:0.5 },
   body:        { padding:18 },
   name:        { fontFamily:FONTS.display, fontSize:28, color:COLORS.dark, marginBottom:4 },
   originRow:   { flexDirection:'row', alignItems:'center', gap:8, marginBottom:16, flexWrap:'wrap' },
