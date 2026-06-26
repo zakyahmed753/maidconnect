@@ -1,5 +1,10 @@
 {
   "cli": { "version": ">= 5.9.0" },
+  "submit": {
+    "production": {
+      "ios": { "ascAppId": "6782191284" }
+    }
+  },
   "build": {
     "preview": { "android": { "buildType": "apk" }, "ios": { "simulator": false } },
     "production": { "android": { "buildType": "app-bundle" }, "ios": {} },
