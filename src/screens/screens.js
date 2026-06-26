@@ -3,7 +3,12 @@ import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
 import useNotifStore from '../store/notifStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl, Image } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl, Image, LayoutAnimation, UIManager } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { LANGUAGES, useTranslation } from '../utils/i18n';
 import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI, hwAPI } from '../services/api';
 import NotifBell from '../components/NotifBell';
@@ -47,11 +52,11 @@ export function NotificationsScreen({ navigation }) {
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
-      <StatusBar barStyle="dark-content"/>
+      <StatusBar barStyle="light-content"/>
       <View style={styles.topBar}>
         <Text style={styles.pageTitle}>{t('notifications_title')}</Text>
         <TouchableOpacity onPress={() => notificationsAPI.markAll().then(() => { setNotifs(n=>n.map(x=>({...x,isRead:true}))); reset(); })}>
-          <Text style={{ fontSize:12, color:COLORS.green, fontFamily:FONTS.bodySemiBold }}>{t('mark_all_read')}</Text>
+          <Text style={{ fontSize:12, color:'rgba(255,255,255,0.85)', fontFamily:FONTS.bodySemiBold }}>{t('mark_all_read')}</Text>
         </TouchableOpacity>
       </View>
       <FlatList data={notifs} keyExtractor={i=>i._id}
@@ -336,137 +341,6 @@ export function ChatsListScreen({ navigation }) {
   );
 }
 
-// ─── SavedMaidCard (matches BrowseScreen MaidCard layout) ───
-const SAVED_SKILL_KEYS = {
-  Cooking: 'filter_cooking', Childcare: 'filter_childcare', Eldercare: 'filter_eldercare',
-  Cleaning: 'filter_cleaning', Laundry: 'filter_laundry', Ironing: 'filter_ironing',
-  Driving: 'filter_driving', 'Pet Care': 'filter_petcare',
-};
-
-const SavedMaidCard = ({ maid, onPress, onUnsave }) => {
-  const { t } = useTranslation();
-  const [liked, setLiked] = useState(true);
-
-  const handleLike = async () => {
-    setLiked(false);
-    try {
-      await maidsAPI.toggleLike(maid._id);
-      if (onUnsave) onUnsave(maid._id);
-    } catch {
-      setLiked(true);
-      Toast.show({ type: 'error', text1: 'Failed to unsave' });
-    }
-  };
-
-  const validPhotos = (maid.photos || []).filter(p => p?.url);
-
-  return (
-    <TouchableOpacity style={scStyles.card} onPress={onPress} activeOpacity={0.9}>
-      <View style={scStyles.photos}>
-        <View style={[scStyles.photoMain, { backgroundColor: '#dfeee8' }]}>
-          {maid.photos?.[0]?.url
-            ? <Image source={{ uri: maid.photos[0].url }} style={scStyles.photoImg} />
-            : <Ionicons name="person" size={40} color="rgba(255,255,255,0.7)" />}
-          {maid.isAvailable ? (
-            <View style={scStyles.availBadge}>
-              <View style={scStyles.availDot}/>
-              <Text style={scStyles.availTxt}>{t('available_badge')}</Text>
-            </View>
-          ) : (
-            <View style={[scStyles.availBadge, scStyles.unavailBadge]}>
-              <Text style={[scStyles.availTxt, scStyles.unavailTxt]}>{t('unavailable_badge')}</Text>
-            </View>
-          )}
-          {validPhotos.length > 1 && (
-            <View style={scStyles.photoCountBadge}>
-              <Text style={scStyles.photoCountTxt}>1/{validPhotos.length} ▶</Text>
-            </View>
-          )}
-        </View>
-        <View style={scStyles.photosSide}>
-          <View style={[scStyles.photoSm, { backgroundColor: '#c8e6df' }]}>
-            {maid.photos?.[1]?.url
-              ? <Image source={{ uri: maid.photos[1].url }} style={{ width: '100%', height: '100%' }} />
-              : <Ionicons name="person" size={20} color="rgba(255,255,255,0.6)" />}
-          </View>
-          <View style={[scStyles.photoSm, { backgroundColor: '#b5d9d0' }]}>
-            {maid.photos?.[2]?.url
-              ? <Image source={{ uri: maid.photos[2].url }} style={{ width: '100%', height: '100%' }} />
-              : <Ionicons name="camera-outline" size={18} color="rgba(255,255,255,0.5)" />}
-          </View>
-        </View>
-      </View>
-
-      <View style={scStyles.info}>
-        <View style={scStyles.infoTop}>
-          <View style={{ flex: 1 }}>
-            <Text style={scStyles.name}>{maid.fullName}</Text>
-            <Text style={scStyles.origin}>{maid.nationality} · {maid.age} {t('yrs')}</Text>
-          </View>
-          <TouchableOpacity onPress={handleLike} style={{ padding: 4 }}>
-            <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={20} color={liked ? COLORS.green : COLORS.muted} />
-          </TouchableOpacity>
-        </View>
-        <View style={scStyles.tagsRow}>
-          {(maid.skills || []).slice(0, 3).map(s => (
-            <View key={s} style={scStyles.tag}><Text style={scStyles.tagTxt}>{t(SAVED_SKILL_KEYS[s] ?? s)}</Text></View>
-          ))}
-        </View>
-        <View style={scStyles.statsRow}>
-          <View style={scStyles.stat}>
-            <Text style={scStyles.statN}>{maid.experienceYears} {t('yrs')}</Text>
-            <Text style={scStyles.statL}>{t('exp_stat')}</Text>
-          </View>
-          <View style={[scStyles.stat, scStyles.statBorder]}>
-            <Text style={scStyles.statN}>EGP {(maid.expectedSalary || 0).toLocaleString()}</Text>
-            <Text style={scStyles.statL}>{t('salary_stat')}</Text>
-          </View>
-          <View style={scStyles.stat}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-              <Ionicons name="star" size={11} color="#f59e0b" />
-              <Text style={scStyles.statN}>{maid.rating?.toFixed(1) || '—'}</Text>
-            </View>
-            <Text style={scStyles.statL}>{maid.reviewCount || 0} {t('reviews_short')}</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={scStyles.bookBtn} onPress={onPress}>
-          <Text style={scStyles.bookBtnTxt}>{t('view_profile')}</Text>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-};
-
-const scStyles = StyleSheet.create({
-  card:            { backgroundColor: COLORS.surface, borderRadius: 22, marginBottom: 14, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6 },
-  photos:          { flexDirection: 'row', height: 160 },
-  photoMain:       { flex: 2, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  photoImg:        { width: '100%', height: '100%', resizeMode: 'cover' },
-  photosSide:      { flex: 1, gap: 1 },
-  photoSm:         { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  availBadge:      { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(13,56,39,0.85)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(93,214,168,0.45)' },
-  availDot:        { width: 6, height: 6, borderRadius: 3, backgroundColor: '#5dd6a8' },
-  availTxt:        { fontSize: 10, color: '#5dd6a8', fontWeight: '700', letterSpacing: 0.5 },
-  unavailBadge:    { backgroundColor: 'rgba(80,80,80,0.75)', borderColor: 'rgba(180,180,180,0.3)' },
-  unavailTxt:      { color: 'rgba(255,255,255,0.65)' },
-  photoCountBadge: { position: 'absolute', bottom: 6, right: 6, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10, paddingHorizontal: 7, paddingVertical: 2 },
-  photoCountTxt:   { fontSize: 9, color: '#fff', fontWeight: '700' },
-  info:            { padding: 14 },
-  infoTop:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 },
-  name:            { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
-  origin:          { fontSize: 11, color: COLORS.muted, marginTop: 1 },
-  tagsRow:         { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 10 },
-  tag:             { backgroundColor: '#e8f4f1', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
-  tagTxt:          { fontSize: 10, color: COLORS.green },
-  statsRow:        { flexDirection: 'row', borderTopWidth: 1, borderTopColor: COLORS.border, paddingTop: 10 },
-  stat:            { flex: 1, alignItems: 'center' },
-  statBorder:      { borderLeftWidth: 1, borderRightWidth: 1, borderColor: COLORS.border },
-  statN:           { fontFamily: FONTS.display, fontSize: 15, color: COLORS.dark },
-  statL:           { fontSize: 9, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 1 },
-  bookBtn:         { backgroundColor: COLORS.green, borderRadius: 14, padding: 12, alignItems: 'center', marginTop: 12 },
-  bookBtnTxt:      { fontSize: 13, fontFamily: FONTS.bodySemiBold, color: '#fff' },
-});
-
 // ─── SavedScreen ───
 export function SavedScreen({ navigation }) {
   const { t } = useTranslation();
@@ -502,13 +376,79 @@ export function SavedScreen({ navigation }) {
             <View style={{ width:24, height:24, borderRadius:12, borderWidth:2, borderColor:COLORS.green, borderTopColor:'transparent' }}/>
           </View>
         : <FlatList data={maids} keyExtractor={i=>i._id}
-            contentContainerStyle={{ padding:14 }}
+            contentContainerStyle={{ padding:14, gap:12 }}
             renderItem={({ item }) => (
-              <SavedMaidCard
-                maid={item}
-                onPress={() => navigation.navigate('Browse', { screen: 'MaidDetail', params: { maid: item } })}
-                onUnsave={(id) => setMaids(prev => prev.filter(m => m._id !== id))}
-              />
+              <TouchableOpacity
+                style={{ backgroundColor:COLORS.surface, borderRadius:14, borderWidth:1, borderColor:COLORS.border, overflow:'hidden', elevation:2, shadowColor:'#0D3827', shadowOpacity:0.08, shadowRadius:6 }}
+                onPress={() => navigation.navigate('Browse', { screen:'MaidDetail', params:{ maid:item } })}
+                activeOpacity={0.9}
+              >
+                {/* Photos — main + 2 side (same layout as BrowseScreen) */}
+                <View style={{ flexDirection:'row', height:180 }}>
+                  <View style={{ flex:2, backgroundColor:'#dfeee8' }}>
+                    {item.photos?.[0]?.url
+                      ? <Image source={{ uri: item.photos[0].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
+                      : <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}><Ionicons name="person" size={40} color="rgba(255,255,255,0.7)" /></View>}
+                    {item.isAvailable
+                      ? <View style={{ position:'absolute', top:8, left:8, flexDirection:'row', alignItems:'center', gap:4, backgroundColor:'rgba(13,56,39,0.85)', borderRadius:10, paddingHorizontal:7, paddingVertical:3 }}>
+                          <View style={{ width:6, height:6, borderRadius:3, backgroundColor:'#5dd6a8' }}/>
+                          <Text style={{ fontSize:9, color:'#fff', fontWeight:'700' }}>{t('available_badge')}</Text>
+                        </View>
+                      : null}
+                  </View>
+                  <View style={{ flex:1, flexDirection:'column' }}>
+                    <View style={{ flex:1, backgroundColor:'#c8e6df' }}>
+                      {item.photos?.[1]?.url
+                        ? <Image source={{ uri: item.photos[1].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
+                        : <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}><Ionicons name="person" size={20} color="rgba(255,255,255,0.6)" /></View>}
+                    </View>
+                    <View style={{ flex:1, backgroundColor:'#b5d9d0', borderTopWidth:1, borderTopColor:'#fff' }}>
+                      {item.photos?.[2]?.url
+                        ? <Image source={{ uri: item.photos[2].url }} style={{ width:'100%', height:'100%' }} resizeMode="cover" />
+                        : <View style={{ flex:1, alignItems:'center', justifyContent:'center' }}><Ionicons name="camera-outline" size={18} color="rgba(255,255,255,0.5)" /></View>}
+                    </View>
+                  </View>
+                </View>
+                {/* Info */}
+                <View style={{ padding:12 }}>
+                  <View style={{ flexDirection:'row', alignItems:'flex-start', marginBottom:6 }}>
+                    <View style={{ flex:1 }}>
+                      <Text style={styles.savedName}>{item.fullName}</Text>
+                      <Text style={styles.savedSub}>{item.nationality} · {item.age} {t('yrs')}</Text>
+                    </View>
+                    <Ionicons name="bookmark" size={18} color={COLORS.green} style={{ marginTop:2 }} />
+                  </View>
+                  <View style={{ flexDirection:'row', gap:5, flexWrap:'wrap', marginBottom:10 }}>
+                    {(item.skills||[]).slice(0,3).map(s=>(
+                      <View key={s} style={{ backgroundColor:'#e8f4f1', paddingHorizontal:7, paddingVertical:3, borderRadius:4 }}>
+                        <Text style={{ fontSize:10, color:COLORS.green }}>{s}</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <View style={{ flexDirection:'row', borderTopWidth:1, borderTopColor:COLORS.border, paddingTop:8, marginBottom:10 }}>
+                    <View style={{ flex:1, alignItems:'center' }}>
+                      <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>{item.experienceYears} {t('yrs')}</Text>
+                      <Text style={{ fontSize:10, color:COLORS.muted, marginTop:1 }}>{t('exp_stat')}</Text>
+                    </View>
+                    <View style={{ flex:1, alignItems:'center', borderLeftWidth:1, borderRightWidth:1, borderColor:COLORS.border }}>
+                      <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>EGP {(item.expectedSalary||0).toLocaleString()}</Text>
+                      <Text style={{ fontSize:10, color:COLORS.muted, marginTop:1 }}>{t('salary_stat')}</Text>
+                    </View>
+                    <View style={{ flex:1, alignItems:'center' }}>
+                      <View style={{ flexDirection:'row', alignItems:'center', gap:3 }}>
+                        <Ionicons name="star" size={11} color="#f59e0b" />
+                        <Text style={{ fontSize:13, fontWeight:'700', color:COLORS.dark }}>{item.rating?.toFixed(1) || '—'}</Text>
+                      </View>
+                      <Text style={{ fontSize:10, color:COLORS.muted, marginTop:1 }}>{item.reviewCount||0} {t('reviews_short')}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={{ backgroundColor:COLORS.green, borderRadius:8, padding:11, alignItems:'center' }}
+                    onPress={() => navigation.navigate('Browse', { screen:'MaidDetail', params:{ maid:item } })}>
+                    <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:13, color:'#fff' }}>{t('view_profile')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
             )}
             ListEmptyComponent={<Text style={{ textAlign:'center', color:COLORS.muted, marginTop:60, fontSize:14 }}>{t('no_saved_maids')}</Text>}
           />
@@ -696,6 +636,22 @@ export function MaidDashScreen({ navigation }) {
   const [pendingRequests, setPendingRequests] = useState(0);
   const [myReviews, setMyReviews] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [maidHiwOpen, setMaidHiwOpen]           = useState(false);
+  const [maidHiwDismissed, setMaidHiwDismissed] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const dismissed = await SecureStore.getItemAsync('maid_hiw_dismissed');
+        if (dismissed === '1') { setMaidHiwDismissed(true); return; }
+        const seen = await SecureStore.getItemAsync('maid_hiw_seen');
+        if (!seen) {
+          setMaidHiwOpen(true);
+          await SecureStore.setItemAsync('maid_hiw_seen', '1');
+        }
+      } catch {}
+    })();
+  }, []);
 
   const loadData = React.useCallback(async () => {
     try {
@@ -755,6 +711,53 @@ export function MaidDashScreen({ navigation }) {
             </View>
           ))}
         </View>
+        {/* How it Works banner — maid */}
+        {!maidHiwDismissed && (
+          <View style={{ marginHorizontal:14, marginBottom:8, backgroundColor:'#f0faf5', borderRadius:10, borderWidth:1, borderColor:'rgba(13,56,39,0.1)', overflow:'hidden' }}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setMaidHiwOpen(o => !o);
+              }}
+              style={{ flexDirection:'row', alignItems:'center', gap:6, paddingHorizontal:12, paddingVertical:9 }}
+            >
+              <Ionicons name="information-circle-outline" size={17} color={COLORS.green} />
+              <Text style={{ fontSize:13, fontFamily:FONTS.bodyMedium, color:COLORS.dark }}>{t('maid_hiw_title')}</Text>
+              <Ionicons name={maidHiwOpen ? 'chevron-up' : 'chevron-down'} size={15} color={COLORS.muted} style={{ marginLeft:'auto' }} />
+            </TouchableOpacity>
+
+            {maidHiwOpen && (
+              <View style={{ paddingHorizontal:12, paddingBottom:10, borderTopWidth:1, borderTopColor:'rgba(13,56,39,0.08)' }}>
+                {[
+                  { icon:'people-outline',         key:'maid_hiw_step1' },
+                  { icon:'notifications-outline',   key:'maid_hiw_step2' },
+                  { icon:'checkmark-circle-outline',key:'maid_hiw_step3' },
+                  { icon:'briefcase-outline',       key:'maid_hiw_step4' },
+                ].map((s, i) => (
+                  <View key={s.key} style={{ flexDirection:'row', alignItems:'center', marginTop:10 }}>
+                    <View style={{ width:22, height:22, borderRadius:11, backgroundColor:COLORS.green, alignItems:'center', justifyContent:'center' }}>
+                      <Text style={{ fontSize:11, color:'#fff', fontWeight:'700' }}>{i + 1}</Text>
+                    </View>
+                    <Ionicons name={s.icon} size={18} color={COLORS.green} style={{ marginHorizontal:8 }} />
+                    <Text style={{ flex:1, fontSize:12, color:COLORS.text, lineHeight:17 }}>{t(s.key)}</Text>
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={{ marginTop:14, paddingVertical:8, alignItems:'center', backgroundColor:'rgba(13,56,39,0.06)', borderRadius:8 }}
+                  onPress={() => {
+                    SecureStore.setItemAsync('maid_hiw_dismissed', '1').catch(() => {});
+                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                    setMaidHiwDismissed(true);
+                  }}
+                >
+                  <Text style={{ fontSize:12, color:COLORS.green, fontFamily:FONTS.bodyMedium }}>{t('maid_hiw_dismiss')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Pending hire requests banner */}
         {pendingRequests > 0 && (
           <TouchableOpacity onPress={() => navigation.navigate('HireRequest')}
@@ -1274,8 +1277,8 @@ export function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  topBar:     { padding:16, paddingTop:54, backgroundColor:COLORS.surface, borderBottomWidth:1, borderBottomColor:COLORS.border, flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
-  pageTitle:  { fontFamily:FONTS.display, fontSize:22, color:COLORS.dark },
+  topBar:     { padding:16, paddingTop:54, backgroundColor:'#0D3827', flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
+  pageTitle:  { fontFamily:FONTS.display, fontSize:22, color:'#fff' },
   notifItem:  { flexDirection:'row', gap:12, padding:14, borderBottomWidth:1, borderBottomColor:COLORS.border, alignItems:'flex-start' },
   notifUnread:{ backgroundColor:'#e8f4f1' },
   notifIcon:  { width:38, height:38, borderRadius:19, alignItems:'center', justifyContent:'center', flexShrink:0 },

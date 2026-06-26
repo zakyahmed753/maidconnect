@@ -108,32 +108,20 @@ export const notificationsAPI = {
   markAll:  ()   => api.put('/notifications/read-all'),
 };
 
-async function getAuthHeaders() {
-  try {
-    const SecureStore = require('expo-secure-store');
-    const token = await SecureStore.getItemAsync('maidconnect_token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  } catch {
-    return {};
-  }
-}
-
 export const uploadAPI = {
   image: async (uri) => {
     const form = new FormData();
     form.append('photo', { uri, name: 'photo.jpg', type: 'image/jpeg' });
-    const authHeaders = await getAuthHeaders();
     return api.post('/upload/image', form, {
-      headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
   voice: async (uri, duration) => {
     const form = new FormData();
     form.append('voice', { uri, name: 'voice.m4a', type: 'audio/m4a' });
     form.append('duration', String(duration));
-    const authHeaders = await getAuthHeaders();
     return api.post('/upload/voice', form, {
-      headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
   }
 };

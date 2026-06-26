@@ -170,7 +170,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
           <Ionicons name="cash-outline" size={24} color={COLORS.green} />
           <View style={{ flex: 1 }}>
             <Text style={styles.offlineTxt}>Pay via Cash Transfer</Text>
-            <Text style={styles.offlineSub}>InstaPay or Vodafone Cash · upload receipt</Text>
+            <Text style={styles.offlineSub}>InstaPay or Vodafone Cash Â· upload receipt</Text>
           </View>
           <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
         </TouchableOpacity>
@@ -215,7 +215,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
           <View style={styles.amountBox}>
             <Text style={styles.amountLabel}>Amount Due</Text>
             <Text style={styles.amountVal}>EGP {PRICE.toLocaleString()}</Text>
-            <Text style={styles.amountNote}>Monthly subscription · 1 month access</Text>
+            <Text style={styles.amountNote}>Monthly subscription Â· 1 month access</Text>
           </View>
 
           {/* Payment details */}
@@ -244,7 +244,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
               <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>✓ Receipt selected — tap to change</Text>
             ) : (
               <>
-                <Text style={{ fontSize: 24, marginBottom: 6 }}>🔎</Text>
+                <Text style={{ fontSize: 24, marginBottom: 6 }}>ðŸ“Ž</Text>
                 <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>Tap to upload receipt</Text>
                 <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>Screenshot of your transfer confirmation</Text>
               </>

@@ -65,7 +65,7 @@ export default function CouponScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
           <BackChevron />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Referral & Coupons 🎁</Text>
+        <Text style={styles.headerTitle}>Referral & Coupons ðŸŽ</Text>
         <Text style={styles.headerSub}>Earn rewards by inviting other maids</Text>
       </View>
 
@@ -82,10 +82,10 @@ export default function CouponScreen({ navigation }) {
           </Text>
           <View style={styles.codeActions}>
             <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
-              <Text style={styles.copyBtnTxt}>📋 Copy Code</Text>
+              <Text style={styles.copyBtnTxt}>ðŸ“‹ Copy Code</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-              <Text style={styles.shareBtnTxt}>📤 Share App</Text>
+              <Text style={styles.shareBtnTxt}>ðŸ“¤ Share App</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -107,7 +107,7 @@ export default function CouponScreen({ navigation }) {
         {credit > 0 && (
           <View style={[styles.infoBox, { backgroundColor: '#f0fff8', borderColor: '#a8dfc8', marginBottom: 14 }]}>
             <Text style={{ fontSize: 12, color: '#1a5c40', lineHeight: 19 }}>
-              🎁 <Text style={{ fontWeight: '700' }}>EGP {credit} credit</Text> will be automatically deducted from your next subscription payment. Unused credit does not carry over to the following month.
+              ðŸŽ <Text style={{ fontWeight: '700' }}>EGP {credit} credit</Text> will be automatically deducted from your next subscription payment. Unused credit does not carry over to the following month.
             </Text>
           </View>
         )}
@@ -130,7 +130,7 @@ export default function CouponScreen({ navigation }) {
         {/* Info */}
         <View style={styles.infoBox}>
           <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-            💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Note:</Text>{' '}
+            ðŸ’¡ <Text style={{ fontWeight: '700', color: COLORS.dark }}>Note:</Text>{' '}
             Referral credits are reviewed and applied manually by admin. You'll receive a
             notification each time someone subscribes using your code.
           </Text>

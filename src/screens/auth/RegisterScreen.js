@@ -44,7 +44,7 @@ export default function RegisterScreen({ navigation }) {
 
   const getOrigin = (nat) => {
     if (nat === 'Egypt') return 'egyptian';
-    const african = ['Ethiopia','Kenya','Uganda','Tanzania','Sudan','South Sudan','Ghana','Nigeria','Cameroon','Côte d\'Ivoire','Senegal','Somalia','Rwanda','Burundi','Madagascar','Congo','Mozambique','Zimbabwe','Zambia','Malawi','Togo','Sierra Leone','Eritrea','Guinea','Morocco'];
+    const african = ['Ethiopia','Kenya','Uganda','Tanzania','Sudan','South Sudan','Ghana','Nigeria','Cameroon','CÃ´te d\'Ivoire','Senegal','Somalia','Rwanda','Burundi','Madagascar','Congo','Mozambique','Zimbabwe','Zambia','Malawi','Togo','Sierra Leone','Eritrea','Guinea','Morocco'];
     if (african.includes(nat)) return 'african';
     const asian = ['Philippines','Indonesia','Malaysia','Sri Lanka','India','Bangladesh','Nepal','Vietnam','Myanmar'];
     if (asian.includes(nat)) return 'asian';

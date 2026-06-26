@@ -211,7 +211,7 @@ export default function SubscriptionScreen({ navigation }) {
                   </Text>
                   <Text style={styles.planPrice}>EGP {couponResult.finalAmount.toLocaleString()}</Text>
                   <Text style={{ fontSize: 10, color: '#2e7d5e', fontWeight: '700', marginTop: 1 }}>
-                    −{couponResult.discountValue}% off
+                    âˆ’{couponResult.discountValue}% off
                   </Text>
                 </>
               ) : (
@@ -311,7 +311,7 @@ export default function SubscriptionScreen({ navigation }) {
           <View style={styles.amountBox}>
             <Text style={styles.amountLabel}>{t('amount_due')}</Text>
             <Text style={styles.amountVal}>EGP {displayPrice.toLocaleString()}</Text>
-            <Text style={styles.amountNote}>Monthly plan · {nationality || 'Standard'} pricing</Text>
+            <Text style={styles.amountNote}>Monthly plan Â· {nationality || 'Standard'} pricing</Text>
           </View>
 
           {/* Payment details */}
@@ -342,7 +342,7 @@ export default function SubscriptionScreen({ navigation }) {
               </View>
             ) : (
               <>
-                <Text style={{ fontSize: 24, marginBottom: 6 }}>🔎</Text>
+                <Text style={{ fontSize: 24, marginBottom: 6 }}>ðŸ“Ž</Text>
                 <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>{t('tap_upload_receipt')}</Text>
                 <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t('receipt_screenshot_note')}</Text>
               </>
