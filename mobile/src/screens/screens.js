@@ -3,7 +3,12 @@ import React, { useEffect, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import useLangStore from '../store/langStore';
 import useNotifStore from '../store/notifStore';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl, Image } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, StatusBar, Modal, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, RefreshControl, Image, LayoutAnimation, UIManager } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 import { LANGUAGES, useTranslation } from '../utils/i18n';
 import { notificationsAPI, paymentsAPI, maidsAPI, chatsAPI, supportAPI, authAPI, hwAPI } from '../services/api';
 import NotifBell from '../components/NotifBell';
@@ -631,6 +636,22 @@ export function MaidDashScreen({ navigation }) {
   const [pendingRequests, setPendingRequests] = useState(0);
   const [myReviews, setMyReviews] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [maidHiwOpen, setMaidHiwOpen]           = useState(false);
+  const [maidHiwDismissed, setMaidHiwDismissed] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const dismissed = await SecureStore.getItemAsync('maid_hiw_dismissed');
+        if (dismissed === '1') { setMaidHiwDismissed(true); return; }
+        const seen = await SecureStore.getItemAsync('maid_hiw_seen');
+        if (!seen) {
+          setMaidHiwOpen(true);
+          await SecureStore.setItemAsync('maid_hiw_seen', '1');
+        }
+      } catch {}
+    })();
+  }, []);
 
   const loadData = React.useCallback(async () => {
     try {
@@ -690,6 +711,53 @@ export function MaidDashScreen({ navigation }) {
             </View>
           ))}
         </View>
+        {/* How it Works banner — maid */}
+        {!maidHiwDismissed && (
+          <View style={{ marginHorizontal:14, marginBottom:8, backgroundColor:'#f0faf5', borderRadius:10, borderWidth:1, borderColor:'rgba(13,56,39,0.1)', overflow:'hidden' }}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                setMaidHiwOpen(o => !o);
+              }}
+              style={{ flexDirection:'row', alignItems:'center', gap:6, paddingHorizontal:12, paddingVertical:9 }}
+            >
+              <Ionicons name="information-circle-outline" size={17} color={COLORS.green} />
+              <Text style={{ fontSize:13, fontFamily:FONTS.bodyMedium, color:COLORS.dark }}>{t('maid_hiw_title')}</Text>
+              <Ionicons name={maidHiwOpen ? 'chevron-up' : 'chevron-down'} size={15} color={COLORS.muted} style={{ marginLeft:'auto' }} />
+            </TouchableOpacity>
+
+            {maidHiwOpen && (
+              <View style={{ paddingHorizontal:12, paddingBottom:10, borderTopWidth:1, borderTopColor:'rgba(13,56,39,0.08)' }}>
+                {[
+                  { icon:'people-outline',         key:'maid_hiw_step1' },
+                  { icon:'notifications-outline',   key:'maid_hiw_step2' },
+                  { icon:'checkmark-circle-outline',key:'maid_hiw_step3' },
+                  { icon:'briefcase-outline',       key:'maid_hiw_step4' },
+                ].map((s, i) => (
+                  <View key={s.key} style={{ flexDirection:'row', alignItems:'center', marginTop:10 }}>
+                    <View style={{ width:22, height:22, borderRadius:11, backgroundColor:COLORS.green, alignItems:'center', justifyContent:'center' }}>
+                      <Text style={{ fontSize:11, color:'#fff', fontWeight:'700' }}>{i + 1}</Text>
+                    </View>
+                    <Ionicons name={s.icon} size={18} color={COLORS.green} style={{ marginHorizontal:8 }} />
+                    <Text style={{ flex:1, fontSize:12, color:COLORS.text, lineHeight:17 }}>{t(s.key)}</Text>
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={{ marginTop:14, paddingVertical:8, alignItems:'center', backgroundColor:'rgba(13,56,39,0.06)', borderRadius:8 }}
+                  onPress={() => {
+                    SecureStore.setItemAsync('maid_hiw_dismissed', '1').catch(() => {});
+                    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                    setMaidHiwDismissed(true);
+                  }}
+                >
+                  <Text style={{ fontSize:12, color:COLORS.green, fontFamily:FONTS.bodyMedium }}>{t('maid_hiw_dismiss')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Pending hire requests banner */}
         {pendingRequests > 0 && (
           <TouchableOpacity onPress={() => navigation.navigate('HireRequest')}

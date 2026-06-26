@@ -1,18 +1,19 @@
-﻿// src/screens/auth/SelfieVerificationScreen.js
+// src/screens/auth/SelfieVerificationScreen.js
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ActivityIndicator, StatusBar, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { maidsAPI, uploadAPI } from '../../services/api';
-// Toast is kept for camera permission errors
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
 import BackChevron from '../../components/BackChevron';
+import { useTranslation } from '../../utils/i18n';
 
 export default function SelfieVerificationScreen({ route, navigation }) {
   const { isEgyptian, idNumber, idPhotoUri, passportNumber, passportPhotoUri, isResubmit } = route.params || {};
   const completeAuth = useAuthStore(s => s.completeAuth);
+  const { t } = useTranslation();
   const resolvedIdNumber = idNumber || passportNumber;
   const resolvedIdPhotoUri = idPhotoUri || passportPhotoUri;
   const needsPassportPhoto = !isEgyptian && !resolvedIdPhotoUri;
@@ -24,7 +25,7 @@ export default function SelfieVerificationScreen({ route, navigation }) {
   const takeSelfie = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      return Toast.show({ type: 'error', text1: 'Camera permission required' });
+      return Toast.show({ type: 'error', text1: t('camera_permission') });
     }
     const res = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -56,14 +57,13 @@ export default function SelfieVerificationScreen({ route, navigation }) {
   };
 
   const handleSubmit = async () => {
-    if (!selfieUri) return setSubmitError('Take or upload a selfie first');
+    if (!selfieUri) return setSubmitError(t('selfie_required'));
     if (needsPassportPhoto && !resubmitPassportUri) {
-      return setSubmitError('Upload your passport photo first');
+      return setSubmitError(t('selfie_passport_required'));
     }
     setLoading(true);
     setSubmitError(null);
     try {
-      // Upload ID photo (passport only — not needed for Egyptians)
       let passportPhotoUrl = null, passportPhotoPublicId = null;
       const passportUri = resolvedIdPhotoUri || resubmitPassportUri;
       if (!isEgyptian && passportUri) {
@@ -72,12 +72,10 @@ export default function SelfieVerificationScreen({ route, navigation }) {
         passportPhotoPublicId = pRes.data.publicId;
       }
 
-      // Upload selfie
       const sRes = await uploadAPI.image(selfieUri);
       const selfieUrl = sRes.data.url;
       const selfiePublicId = sRes.data.publicId;
 
-      // Submit verification to backend
       await maidsAPI.submitVerification({
         ...(isEgyptian
           ? { nationalId: resolvedIdNumber }
@@ -105,29 +103,26 @@ export default function SelfieVerificationScreen({ route, navigation }) {
             <BackChevron />
           </TouchableOpacity>
         )}
-        <Text style={styles.heroTitle}>Selfie Verification</Text>
-        <Text style={styles.heroSub}>Step 2 of 2 — Identity Confirmation</Text>
+        <Text style={styles.heroTitle}>{t('selfie_title')}</Text>
+        <Text style={styles.heroSub}>{t('selfie_step')}</Text>
       </LinearGradient>
 
       <ScrollView style={{ flex: 1, backgroundColor: COLORS.cream, padding: 20 }}>
         {/* Instructions */}
         <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>ðŸ“¸ Take a Clear Selfie</Text>
-          {['Face the camera directly in good lighting',
-            'Remove glasses or hats',
-            'Plain background preferred',
-            'This will be matched against your passport photo'].map(tip => (
-            <Text key={tip} style={styles.infoItem}>• {tip}</Text>
+          <Text style={styles.infoTitle}>{t('selfie_tip_title')}</Text>
+          {[t('selfie_tip1'), t('selfie_tip2'), t('selfie_tip3'), t('selfie_tip4')].map((tip, i) => (
+            <Text key={i} style={styles.infoItem}>• {tip}</Text>
           ))}
         </View>
 
         {/* Passport re-upload — only for non-Egyptian resubmission */}
         {needsPassportPhoto && (
           <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>ðŸªª Re-upload Passport Photo</Text>
-            <Text style={styles.infoItem}>Your previous passport photo upload failed. Please upload it again.</Text>
+            <Text style={styles.infoTitle}>{t('selfie_reupload_title')}</Text>
+            <Text style={styles.infoItem}>{t('selfie_reupload_body')}</Text>
             <TouchableOpacity style={[styles.galleryBtn, { marginTop: 10, marginBottom: 0 }]} onPress={pickPassportPhoto}>
-              <Text style={styles.galleryBtnTxt}>{resubmitPassportUri ? 'âœ… Passport photo selected — tap to change' : 'ðŸ“Ž  Upload Passport Photo'}</Text>
+              <Text style={styles.galleryBtnTxt}>{resubmitPassportUri ? t('selfie_passport_selected') : t('selfie_upload_passport')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -137,27 +132,27 @@ export default function SelfieVerificationScreen({ route, navigation }) {
           <View style={styles.selfiePreview}>
             <Image source={{ uri: selfieUri }} style={styles.selfieImg}/>
             <TouchableOpacity style={styles.retakeBtn} onPress={takeSelfie}>
-              <Text style={styles.retakeTxt}>Retake</Text>
+              <Text style={styles.retakeTxt}>{t('selfie_retake')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.selfieEmpty}>
-            <Text style={{ fontSize: 48, marginBottom: 10 }}>ðŸ¤³</Text>
-            <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center' }}>No selfie yet</Text>
+            <Text style={{ fontSize: 48, marginBottom: 10 }}>🤳</Text>
+            <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center' }}>{t('selfie_no_selfie')}</Text>
           </View>
         )}
 
         {/* Buttons */}
         <TouchableOpacity style={styles.cameraBtn} onPress={takeSelfie}>
-          <Text style={styles.cameraBtnTxt}>ðŸ“·  Open Camera</Text>
+          <Text style={styles.cameraBtnTxt}>{t('selfie_open_camera')}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.galleryBtn} onPress={pickSelfie}>
-          <Text style={styles.galleryBtnTxt}>ðŸ–¼  Choose from Gallery</Text>
+          <Text style={styles.galleryBtnTxt}>{t('selfie_gallery')}</Text>
         </TouchableOpacity>
 
         {submitError && (
           <View style={{ backgroundColor: 'rgba(224,85,85,0.1)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 8, padding: 12, marginBottom: 12 }}>
-            <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 18 }}>⚠ {submitError}</Text>
+            <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 18 }}>⚠ {submitError}</Text>
           </View>
         )}
 
@@ -167,12 +162,10 @@ export default function SelfieVerificationScreen({ route, navigation }) {
           disabled={!selfieUri || loading}>
           {loading
             ? <ActivityIndicator color={COLORS.dark}/>
-            : <Text style={styles.submitBtnTxt}>{submitError ? 'Try Again →' : 'Submit for Verification →'}</Text>}
+            : <Text style={styles.submitBtnTxt}>{submitError ? t('selfie_try_again') : t('selfie_submit')}</Text>}
         </TouchableOpacity>
 
-        <Text style={styles.disclaimer}>
-          Your documents are encrypted and only reviewed by Servix staff for identity verification purposes.
-        </Text>
+        <Text style={styles.disclaimer}>{t('selfie_disclaimer')}</Text>
       </ScrollView>
     </View>
   );

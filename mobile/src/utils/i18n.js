@@ -32,6 +32,18 @@ const T = {
     welcome: 'Welcome',
     search_placeholder: 'Search name, nationality, skill…',
     browse_maids: 'Browse Maids',
+    how_it_works: 'How to get your helper',
+    hiw_step1: 'Browse helpers and find the right match for your home',
+    hiw_step2: 'Chat with the helper to answer your questions before hiring',
+    hiw_step3: "Tap \"I'm Interested\" to send a hire request",
+    hiw_step4: 'Once your request is accepted, your helper will appear in "My Helper" under Me section',
+    hiw_dismiss: "Got it — don't show again",
+    maid_hiw_title: 'How the platform works',
+    maid_hiw_step1: 'Customers browse your profile and can chat with you directly through the app',
+    maid_hiw_step2: "When a customer is interested, you'll receive a hire request notification",
+    maid_hiw_step3: 'Review the request and accept or decline — you are in full control',
+    maid_hiw_step4: 'Once you accept, you are linked to the customer and appear as their helper',
+    maid_hiw_dismiss: "Got it — don't show again",
     no_maids: 'Your helper is not here yet',
     no_maids_sub: "We're growing every day — a perfect home helper for you will be available soon.",
     load_failed: 'Failed to load maids',
@@ -47,6 +59,29 @@ const T = {
     monthly_plan: 'Monthly Plan', annual_plan: 'Annual Plan',
     most_popular: '⭐ Most Popular', proceed_payment: 'Proceed to Payment →',
     skip_dev: 'Skip for now (Dev only)',
+
+    // Selfie Verification
+    selfie_title: 'Selfie Verification',
+    selfie_step: 'Step 2 of 2 — Identity Confirmation',
+    selfie_tip_title: 'Take a Clear Selfie',
+    selfie_tip1: 'Face the camera directly in good lighting',
+    selfie_tip2: 'Remove glasses or hats',
+    selfie_tip3: 'Plain background preferred',
+    selfie_tip4: 'This will be matched against your passport photo',
+    selfie_reupload_title: 'Re-upload Passport Photo',
+    selfie_reupload_body: 'Your previous passport photo upload failed. Please upload it again.',
+    selfie_passport_selected: '✅ Passport photo selected — tap to change',
+    selfie_upload_passport: '📎 Upload Passport Photo',
+    selfie_no_selfie: 'No selfie yet',
+    selfie_retake: 'Retake',
+    selfie_open_camera: '📷  Open Camera',
+    selfie_gallery: '🖼  Choose from Gallery',
+    selfie_required: 'Take or upload a selfie first',
+    selfie_passport_required: 'Upload your passport photo first',
+    selfie_try_again: 'Try Again →',
+    selfie_submit: 'Submit for Verification →',
+    selfie_disclaimer: 'Your documents are encrypted and only reviewed by Servix staff for identity verification purposes.',
+    camera_permission: 'Camera permission required',
 
     // Pending
     under_review: 'Under Review',
@@ -118,6 +153,7 @@ const T = {
 
     // Login
     welcome_back: 'Welcome Back', role_customer: '🏠 Customer', role_maid: '👩 Helper',
+    splash_hw_title: 'I need a Helper',
 
     // Register
     select_nationality_err: 'Select nationality', bio_required: 'Bio is required',
@@ -182,8 +218,8 @@ const T = {
     // HiredMaids
     hired_maid_title: 'My Helper', hired_maid_sub: 'Manage your current placement',
     no_hired_maid: 'No helper yet',
-    no_hired_sub: 'Browse available maids and send a hire request to get started.',
-    browse_maids_btn: '🔍 Browse Maids',
+    no_hired_sub: 'Browse available helpers and send a hire request to get started.',
+    browse_maids_btn: '🔍 Check Available Helpers',
     hired_on: 'Hired on', skills_label_info: 'Skills', release_vacancy: 'I need another helper',
     rate_required_release: 'A review is required before releasing the vacancy. Your feedback helps other families.',
     share_exp_release: 'Share your experience (optional but appreciated)…',
@@ -391,10 +427,45 @@ const T = {
     welcome: 'يا أهلاً',
     search_placeholder: 'دوّر بالاسم أو الجنسية أو المهارة…',
     browse_maids: 'استعرض المساعدات',
+    how_it_works: 'إزاي تجيبي عاملتك',
+    hiw_step1: 'تصفح/تصفحي العاملات وابحث/ابحثي عن الشخص المناسب لبيتك',
+    hiw_step2: 'اتكلم/اتكلمي مع العاملة عشان ترد/تردي على أسئلتك قبل التوظيف',
+    hiw_step3: 'اضغط/اضغطي "أنا مهتم/مهتمة" عشان ترسل/ترسلي طلب توظيف',
+    hiw_step4: 'لما طلبك يتقبل، هتظهر عاملتك في "عاملتك" في قسم "أنا"',
+    hiw_dismiss: 'فهمت - لا تعرضه مره اخره',
+    maid_hiw_title: 'إزاي بتشتغل المنصة',
+    maid_hiw_step1: 'العملاء بيتصفحوا بروفايلك وممكن يتكلموا معاكي على الشات مباشرة',
+    maid_hiw_step2: 'لما عميل يكون مهتم، هتوصلك إشعار بطلب توظيف',
+    maid_hiw_step3: 'راجعي الطلب وقبليه أو ارفضيه — الاختيار في إيدك',
+    maid_hiw_step4: 'لما توافقي، هتبقي مرتبطة بالعميل وهتظهري كعاملته',
+    maid_hiw_dismiss: 'فهمت - لا تعرضه مره اخره',
     no_maids: 'مفيش نتايج — جرب تصفية تانية',
     no_maids_sub: 'بنكبر كل يوم — عاملتك المثالية هتكون متاحة قريباً',
     load_failed: 'في مشكلة في التحميل — جرب تاني',
     save_failed: 'الحفظ مش تمام',
+
+    // Selfie Verification
+    selfie_title: 'التحقق بالسيلفي',
+    selfie_step: 'الخطوة 2 من 2 — تأكيد الهوية',
+    selfie_tip_title: '📸 التقطي صورة واضحة',
+    selfie_tip1: 'اتجهي للكاميرا مباشرةً في إضاءة كويسة',
+    selfie_tip2: 'اشيلي النضارة أو الطاقية',
+    selfie_tip3: 'خلفية بسيطة أحسن',
+    selfie_tip4: 'الصورة دي هتتقارن بصورة جوازك',
+    selfie_reupload_title: '🪪 إعادة رفع صورة الجواز',
+    selfie_reupload_body: 'صورة الجواز اللي رفعتيها قبل كده فشلت. من فضلك ارفعيها تاني.',
+    selfie_passport_selected: '✅ صورة الجواز اتاختارت — اضغطي للتغيير',
+    selfie_upload_passport: '📎 ارفعي صورة الجواز',
+    selfie_no_selfie: 'مفيش سيلفي لسه',
+    selfie_retake: 'التقطي تاني',
+    selfie_open_camera: '📷  افتحي الكاميرا',
+    selfie_gallery: '🖼  اختاري من المعرض',
+    selfie_required: 'التقطي أو ارفعي سيلفي الأول',
+    selfie_passport_required: 'ارفعي صورة الجواز الأول',
+    selfie_try_again: 'جربي تاني ←',
+    selfie_submit: 'ابعتي للتحقق ←',
+    selfie_disclaimer: 'مستنداتك مشفرة ومش بيشوفها غير فريق Servix بس لأغراض التحقق من الهوية.',
+    camera_permission: 'محتاجة إذن الكاميرا',
 
     // Saved
     saved_maids: 'اللي عجبوني',
@@ -426,7 +497,7 @@ const T = {
     sign_in_hw: 'دخول كعميل',
 
     // Settings / Language
-    language: 'اللغة', change_language: 'غيّر اللغة',
+    language: 'اللغة', change_language: 'غيّر/غيّري اللغة',
     lang_en: 'الإنجليزية', lang_ar: 'العربية', lang_fr: 'الفرنسية', lang_ha: 'الهوسا',
 
     // MaidDetail
@@ -455,13 +526,13 @@ const T = {
     subscribe_btn: 'اشترك — 1,000 جنيه/شهر',
 
     // Saved
-    saved_title: 'مختاراتي', no_saved_maids: 'لسه ما حفظتش حد — تصفح واختار!',
+    saved_title: 'اللي عجبوني', no_saved_maids: 'لسه ما حفظتش حد — تصفح واختار!',
 
     // Maid dash
     views: 'مشاهدات', likes: 'حبين', chats_stat: 'محادثات',
 
     // Tab labels
-    tab_browse: 'تصفح', tab_saved: 'مختاراتي', tab_chats: 'رسايلي', tab_alerts: 'إشعارات', tab_me: 'أنا', tab_home: 'الرئيسية',
+    tab_browse: 'تصفح', tab_saved: 'اللي عجبوني', tab_chats: 'رسايلي', tab_alerts: 'إشعارات', tab_me: 'أنا', tab_home: 'الرئيسية',
 
     // Filters
     filter_all: 'كل المساعدين', filter_available: 'متاحة دلوقتي', filter_top_rated: 'الأعلى تقييماً',
@@ -477,6 +548,7 @@ const T = {
 
     // Login
     welcome_back: 'يا أهلاً بيك!', role_customer: '🏠 عميل/عميلة', role_maid: '👩 مساعدة',
+    splash_hw_title: 'خدمة العلاء',
 
     // Register
     select_nationality_err: 'اختاري جنسيتك', bio_required: 'التعريف بنفسك مطلوب',
@@ -542,8 +614,8 @@ const T = {
     // HiredMaids
     hired_maid_title: 'مساعدتي', hired_maid_sub: 'كل تفاصيل مساعدتك في مكان واحد',
     no_hired_maid: 'لسه معندكش مساعدة',
-    no_hired_sub: 'تصفح المساعدات المتاحة وابعت طلب توظيف — الأمر سهل!',
-    browse_maids_btn: '🔍 تصفح المساعدات',
+    no_hired_sub: 'شوف المساعدين المتاحين وابعت طلب توظيف — الأمر سهل!',
+    browse_maids_btn: '🔍 شوف المساعدين المتاحين',
     hired_on: 'تاريخ التوظيف', skills_label_info: 'مهاراتها', release_vacancy: '↩ تغيير العامله',
     rate_required_release: 'قيّمي تجربتك قبل الإنهاء — رأيك بيساعد الأسر التانية.',
     share_exp_release: 'شاركينا تجربتك (اختياري بس بنقدّر رأيك جداً)…',
@@ -747,10 +819,39 @@ const T = {
     welcome: 'Bienvenue',
     search_placeholder: 'Rechercher nom, nationalité, compétence…',
     browse_maids: 'Parcourir les employées',
+    maid_hiw_title: 'Comment fonctionne la plateforme',
+    maid_hiw_step1: 'Les clients parcourent votre profil et peuvent vous contacter directement via le chat',
+    maid_hiw_step2: 'Quand un client est intéressé, vous recevrez une notification de demande d\'embauche',
+    maid_hiw_step3: 'Examinez la demande et acceptez ou refusez — vous avez le contrôle',
+    maid_hiw_step4: 'Une fois acceptée, vous êtes liée au client et apparaissez comme son aide',
+    maid_hiw_dismiss: "Compris — ne plus afficher",
     no_maids: 'Aucune employée trouvée',
     no_maids_sub: "Nous grandissons chaque jour — une aide ménagère parfaite sera bientôt disponible.",
     load_failed: 'Échec du chargement',
     save_failed: 'Échec de la sauvegarde',
+
+    // Selfie Verification
+    selfie_title: 'Vérification par selfie',
+    selfie_step: 'Étape 2 sur 2 — Confirmation d\'identité',
+    selfie_tip_title: '📸 Prenez un selfie clair',
+    selfie_tip1: 'Faites face à la caméra dans un bon éclairage',
+    selfie_tip2: 'Retirez lunettes ou chapeau',
+    selfie_tip3: 'Fond uni de préférence',
+    selfie_tip4: 'Cette photo sera comparée à votre photo de passeport',
+    selfie_reupload_title: '🪪 Re-télécharger la photo de passeport',
+    selfie_reupload_body: 'Votre téléchargement précédent a échoué. Veuillez le refaire.',
+    selfie_passport_selected: '✅ Photo de passeport sélectionnée — appuyez pour changer',
+    selfie_upload_passport: '📎 Télécharger la photo de passeport',
+    selfie_no_selfie: 'Pas encore de selfie',
+    selfie_retake: 'Reprendre',
+    selfie_open_camera: '📷  Ouvrir la caméra',
+    selfie_gallery: '🖼  Choisir dans la galerie',
+    selfie_required: 'Prenez ou téléchargez un selfie d\'abord',
+    selfie_passport_required: 'Téléchargez d\'abord la photo de passeport',
+    selfie_try_again: 'Réessayer →',
+    selfie_submit: 'Soumettre pour vérification →',
+    selfie_disclaimer: 'Vos documents sont chiffrés et uniquement examinés par l\'équipe Servix à des fins de vérification d\'identité.',
+    camera_permission: 'Permission de caméra requise',
 
     // Saved
     saved_maids: 'Profils sauvegardés',
@@ -833,6 +934,7 @@ const T = {
 
     // Login
     welcome_back: 'Bon retour', role_customer: '🏠 Cliente', role_maid: '👩 Auxiliaire',
+    splash_hw_title: "J'ai besoin d'une aide",
 
     // Register
     select_nationality_err: 'Sélectionnez la nationalité', bio_required: 'La biographie est requise',
@@ -892,8 +994,8 @@ const T = {
     // HiredMaids
     hired_maid_title: 'Mon employée', hired_maid_sub: 'Gérez votre aide ménagère actuelle',
     no_hired_maid: 'Pas encore de employée',
-    no_hired_sub: 'Parcourez les employées disponibles et envoyez une demande.',
-    browse_maids_btn: '🔍 Parcourir les employées',
+    no_hired_sub: 'Parcourez les aides disponibles et envoyez une demande.',
+    browse_maids_btn: '🔍 Voir les aides disponibles',
     hired_on: 'Embauchée le', skills_label_info: 'Compétences', release_vacancy: 'Je veux une autre employée',
     rate_required_release: 'Un avis est requis avant de libérer le poste.',
     share_exp_release: 'Partagez votre expérience (optionnel)…',
@@ -1097,10 +1199,39 @@ const T = {
     welcome: 'Barka da zuwa',
     search_placeholder: 'Nemi suna, ƙasa, ko iyawa…',
     browse_maids: 'Duba ma\'aikata',
+    maid_hiw_title: 'Yadda dandali yake aiki',
+    maid_hiw_step1: 'Abokan ciniki suna duba bayanin ku kuma suna iya yin hira da ku kai tsaye',
+    maid_hiw_step2: 'Idan abokin ciniki yana da sha\'awa, za ku karbi sanarwar buƙatar aiki',
+    maid_hiw_step3: 'Duba buƙatar kuma karba ko ki — ku ne ke da ikon yanke shawara',
+    maid_hiw_step4: 'Da zarar kun yarda, ana haɗa ku da abokin ciniki kuma ku bayyana a matsayin mataimakiyarsu',
+    maid_hiw_dismiss: "Na fahimta — kar a nuna kuma",
     no_maids: "Ba a sami ma'aikata ba",
     no_maids_sub: "Muna girma kowace rana — cikakkiyar ma'aikatarku za ta kasance a nan soon.",
     load_failed: 'Lodi ya kasa',
     save_failed: 'Ajiye ya kasa',
+
+    // Selfie Verification
+    selfie_title: 'Tabbatarwa ta Selfie',
+    selfie_step: 'Matakin 2 na 2 — Tabbatar da asali',
+    selfie_tip_title: '📸 Ɗauki hoton fuska mai kyau',
+    selfie_tip1: 'Dube kyamara kai tsaye a haske mai kyau',
+    selfie_tip2: 'Cire gilashin ido ko hula',
+    selfie_tip3: 'Fili na baya mafi dacewa',
+    selfie_tip4: 'Wannan hoto zai kwatanta da hoton fasfo ɗinku',
+    selfie_reupload_title: '🪪 Sake loda hoton fasfo',
+    selfie_reupload_body: 'Loda hoton fasfo ɗinku na baya ya kasa. Da fatan sake loda shi.',
+    selfie_passport_selected: '✅ An zaɓi hoton fasfo — taɓa don canza',
+    selfie_upload_passport: '📎 Loda Hoton Fasfo',
+    selfie_no_selfie: 'Ba a ɗauki selfie tukuna',
+    selfie_retake: 'Sake ɗauka',
+    selfie_open_camera: '📷  Buɗe kyamara',
+    selfie_gallery: '🖼  Zaɓa daga gallery',
+    selfie_required: 'Ɗauki ko loda selfie da farko',
+    selfie_passport_required: 'Loda hoton fasfo da farko',
+    selfie_try_again: 'Sake gwadawa →',
+    selfie_submit: 'Aika don tabbatarwa →',
+    selfie_disclaimer: 'An ɓoye takardun ku kuma ƙungiyar Servix kawai ke duba su don dalilan tabbatar da asali.',
+    camera_permission: 'Ana buƙatar izinin kyamara',
 
     // Saved
     saved_maids: 'Ma\'aikata da aka adana',
@@ -1183,6 +1314,7 @@ const T = {
 
     // Login
     welcome_back: 'Barka da komawa', role_customer: '🏠 Abokin ciniki', role_maid: "👩 Mai Taimako",
+    splash_hw_title: "Ina buƙatar mataimaki",
 
     // Register
     select_nationality_err: 'Zaɓi ƙasa', bio_required: 'Bayanin game da kai ya zama dole',
@@ -1242,8 +1374,8 @@ const T = {
     // HiredMaids
     hired_maid_title: "Ma'aikatar da aka ɗauka", hired_maid_sub: "Gudanar da ma'aikatarku ta yanzu",
     no_hired_maid: "Babu ma'aikatar da aka ɗauka tukuna",
-    no_hired_sub: "Duba ma'aikata masu akwai kuma aika buƙatar ɗauka.",
-    browse_maids_btn: "🔍 Duba Ma'aikata",
+    no_hired_sub: "Duba mataimaka masu akwai kuma aika buƙatar ɗauka.",
+    browse_maids_btn: "🔍 Duba Mataimaka Masu Akwai",
     hired_on: "An ɗauka a", skills_label_info: 'Iyawa', release_vacancy: "Ina son wata ma'aikaciya",
     rate_required_release: 'Ana buƙatar bita kafin sakin wurin aiki.',
     share_exp_release: 'Raba ƙwarewarku (zaɓi amma ana godiya)…',

@@ -2,11 +2,16 @@
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput,
   ScrollView, Image, ActivityIndicator, RefreshControl, StatusBar,
-  Modal, Pressable, KeyboardAvoidingView, Platform, Dimensions,
+  Modal, Pressable, KeyboardAvoidingView, Platform, Dimensions, LayoutAnimation, UIManager,
 } from 'react-native';
 
 const { width: SW, height: SH } = Dimensions.get('window');
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 import { useFocusEffect } from '@react-navigation/native';
+import * as SecureStore from 'expo-secure-store';
 import { maidsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -189,6 +194,8 @@ export default function BrowseScreen({ navigation }) {
   const [filterVisible, setFilterVisible] = useState(false);
   const [hasMore, setHasMore]             = useState(true);
   const [photoViewer, setPhotoViewer]     = useState({ visible: false, photos: [], index: 0 });
+  const [hiwOpen, setHiwOpen]             = useState(false);
+  const [hiwDismissed, setHiwDismissed]   = useState(false);
 
   const pageRef     = useRef(1);
   const hasMoreRef  = useRef(true);
@@ -244,6 +251,20 @@ export default function BrowseScreen({ navigation }) {
 
   useEffect(() => { resetFetch(chip, searchRef.current, advFilters); }, [chip, advFilters]);
   useFocusEffect(React.useCallback(() => { loadSavedIds(); }, [loadSavedIds]));
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const dismissed = await SecureStore.getItemAsync('hiw_dismissed');
+        if (dismissed === '1') { setHiwDismissed(true); return; }
+        const seen = await SecureStore.getItemAsync('hiw_seen');
+        if (!seen) {
+          setHiwOpen(true);
+          await SecureStore.setItemAsync('hiw_seen', '1');
+        }
+      } catch {}
+    })();
+  }, []);
 
   const onSearchChange = (text) => {
     setSearch(text);
@@ -323,6 +344,53 @@ export default function BrowseScreen({ navigation }) {
           ))}
         </ScrollView>
       </View>
+
+      {/* How it Works banner */}
+      {!hiwDismissed && (
+        <View style={styles.hiwWrap}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+              setHiwOpen(o => !o);
+            }}
+            style={styles.hiwRow}
+          >
+            <Ionicons name="information-circle-outline" size={17} color={COLORS.green} />
+            <Text style={styles.hiwTitle}>{t('how_it_works')}</Text>
+            <Ionicons name={hiwOpen ? 'chevron-up' : 'chevron-down'} size={15} color={COLORS.muted} style={{ marginLeft: 'auto' }} />
+          </TouchableOpacity>
+
+          {hiwOpen && (
+            <View style={styles.hiwBody}>
+              {[
+                { icon: 'search-outline',        key: 'hiw_step1' },
+                { icon: 'chatbubble-outline',     key: 'hiw_step2' },
+                { icon: 'checkmark-circle-outline', key: 'hiw_step3' },
+                { icon: 'home-outline',           key: 'hiw_step4' },
+              ].map((s, i) => (
+                <View key={s.key} style={styles.hiwStep}>
+                  <View style={styles.hiwStepNum}>
+                    <Text style={styles.hiwStepNumTxt}>{i + 1}</Text>
+                  </View>
+                  <Ionicons name={s.icon} size={18} color={COLORS.green} style={{ marginHorizontal: 8 }} />
+                  <Text style={styles.hiwStepTxt}>{t(s.key)}</Text>
+                </View>
+              ))}
+              <TouchableOpacity
+                style={styles.hiwDismissBtn}
+                onPress={() => {
+                  SecureStore.setItemAsync('hiw_dismissed', '1').catch(() => {});
+                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                  setHiwDismissed(true);
+                }}
+              >
+                <Text style={styles.hiwDismissTxt}>{t('hiw_dismiss')}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Maid list */}
       {loading
@@ -566,6 +634,18 @@ const styles = StyleSheet.create({
   statL:       { fontSize: 9, color: COLORS.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 1 },
   bookBtn:     { backgroundColor: COLORS.green, borderRadius: 14, padding: 12, alignItems: 'center', marginTop: 12 },
   bookBtnTxt:  { fontSize: 13, fontFamily: FONTS.bodySemiBold, color: '#fff' },
+
+  // How it Works banner
+  hiwWrap:        { marginHorizontal: 14, marginBottom: 6, backgroundColor: '#f0faf5', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(13,56,39,0.1)', overflow: 'hidden' },
+  hiwRow:         { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 9 },
+  hiwTitle:       { fontSize: 13, fontFamily: FONTS.bodyMedium, color: COLORS.dark },
+  hiwBody:        { paddingHorizontal: 12, paddingBottom: 10, borderTopWidth: 1, borderTopColor: 'rgba(13,56,39,0.08)' },
+  hiwStep:        { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
+  hiwStepNum:     { width: 22, height: 22, borderRadius: 11, backgroundColor: COLORS.green, alignItems: 'center', justifyContent: 'center' },
+  hiwStepNumTxt:  { fontSize: 11, color: '#fff', fontWeight: '700' },
+  hiwStepTxt:     { flex: 1, fontSize: 12, color: COLORS.text, lineHeight: 17 },
+  hiwDismissBtn:  { marginTop: 14, paddingVertical: 8, alignItems: 'center', backgroundColor: 'rgba(13,56,39,0.06)', borderRadius: 8 },
+  hiwDismissTxt:  { fontSize: 12, color: COLORS.green, fontFamily: FONTS.bodyMedium },
 
   // Filter modal
   overlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },

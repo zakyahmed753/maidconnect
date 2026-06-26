@@ -101,7 +101,7 @@ export function SplashScreen({ navigation }) {
               <Ionicons name="home" size={28} color={COLORS.green} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>I need a Helper</Text>
+              <Text style={styles.cardTitle}>{t('splash_hw_title')}</Text>
               <Text style={styles.cardSub}>Find trusted, vetted domestic staff for your home</Text>
             </View>
           </View>
