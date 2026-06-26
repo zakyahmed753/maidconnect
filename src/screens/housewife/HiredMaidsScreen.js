@@ -1,0 +1,350 @@
+﻿import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { hwAPI, paymentsAPI, maidsAPI } from '../../services/api';
+import { COLORS, FONTS } from '../../utils/theme';
+import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
+import { useTranslation } from '../../utils/i18n';
+import BackChevron from '../../components/BackChevron';
+
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
+const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
+
+// Returns what the customer will pay when hiring their NEXT maid (not to release this one).
+function getReplacementFee(hiredAt) {
+  const ms = Date.now() - new Date(hiredAt || 0).getTime();
+  if (ms <= THREE_DAYS_MS) return { amount: 0,    isFree: true  };
+  if (ms <= WEEK_MS)       return { amount: 500,  isFree: false };
+  if (ms <= MONTH_MS)      return { amount: 700,  isFree: false };
+  return                          { amount: 1000, isFree: false };
+}
+
+export default function HiredMaidsScreen({ navigation }) {
+  const { t } = useTranslation();
+  const [hired, setHired]             = useState([]);
+  const [pastHired, setPastHired]     = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [returning, setReturning]     = useState(null);
+  const [policyModal, setPolicyModal] = useState(false);
+
+  // Mandatory review before release
+  const [reviewModal, setReviewModal]     = useState(false);
+  const [reviewMaid, setReviewMaid]       = useState(null); // { maidId, maidName, hiredAt, maid._id }
+  const [reviewStar, setReviewStar]       = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setLoading(true);
+      hwAPI.getProfile()
+        .then(r => {
+          setHired(r.data?.profile?.hiredMaids || []);
+          setPastHired(r.data?.profile?.pastHiredMaids || []);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, [])
+  );
+
+  const handleRelease = (maidId, maidName, hiredAt, maidProfileId) => {
+    // Step 1: force review first
+    setReviewMaid({ maidId, maidName, hiredAt, maidProfileId });
+    setReviewStar(0);
+    setReviewComment('');
+    setReviewModal(true);
+  };
+
+  const submitReviewAndRelease = async () => {
+    if (reviewStar === 0) {
+      Toast.show({ type: 'error', text1: t('please_rate_before_release') });
+      return;
+    }
+    setReviewLoading(true);
+    try {
+      // Submit review
+      await maidsAPI.submitReview(reviewMaid.maidProfileId, {
+        rating: reviewStar,
+        comment: reviewComment.trim(),
+      });
+      setReviewModal(false);
+      // Step 2: proceed with release
+      proceedRelease(reviewMaid.maidId, reviewMaid.maidName, reviewMaid.hiredAt);
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.response?.data?.message || t('review_submit_failed') });
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const proceedRelease = (maidId, maidName, hiredAt) => {
+    const fee = getReplacementFee(hiredAt);
+
+    // Dialog body is specific to each scenario
+    const dialogBody = fee.isFree
+      ? `${t('release_confirm_grace_body_1', { name: maidName })}\n\n${t('release_confirm_grace_body_2')}`
+      : `${t('release_confirm_fee_body_1', { name: maidName })}\n\n${t('release_confirm_fee_body_2_prefix')} EGP ${fee.amount} ${t('release_confirm_fee_body_2_suffix')}`;
+
+    Alert.alert(t('release_dialog_title'), dialogBody, [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('release_btn'),
+        style: 'destructive',
+        onPress: async () => {
+          setReturning(maidId);
+          try {
+            const res = await paymentsAPI.returnMaid({ maidProfileId: maidId });
+            setHired(prev => prev.filter(h => (h.maid?._id || h.maid) !== maidId));
+            const penalty = res.data?.penaltyAmount || 0;
+            // Toast is also scenario-specific
+            Toast.show({
+              type: penalty > 0 ? 'info' : 'success',
+              text1: t('vacancy_released'),
+              text2: penalty > 0
+                ? `${t('release_toast_fee_prefix')} EGP ${penalty} ${t('release_toast_fee_suffix')}`
+                : t('release_toast_free'),
+            });
+          } catch (err) {
+            Toast.show({ type: 'error', text1: err.response?.data?.message || t('release_failed') });
+          } finally {
+            setReturning(null);
+          }
+        },
+      },
+    ]);
+  };
+
+  const getPenaltyBadge = (hiredAt) => {
+    const fee = getReplacementFee(hiredAt);
+    if (fee.isFree)        return { text: t('next_hire_free'),    color: '#2e7d5e', bg: 'rgba(46,125,94,0.1)' };
+    if (fee.amount === 500) return { text: t('next_hire_fee_500'), color: '#b45309', bg: '#fffbeb' };
+    if (fee.amount === 700) return { text: t('next_hire_fee_700'), color: '#b45309', bg: '#fffbeb' };
+    return                        { text: t('next_hire_fee_1000'), color: '#b91c1c', bg: '#fef2f2' };
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: COLORS.cream }}>
+
+      {/* Mandatory Review Modal */}
+      <Modal visible={reviewModal} transparent animationType="slide" onRequestClose={() => {}}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex:1 }}>
+        <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.6)', justifyContent:'flex-end' }}>
+          <View style={{ backgroundColor:COLORS.surface, borderTopLeftRadius:16, borderTopRightRadius:16, padding:22 }}>
+            <Text style={{ fontFamily:FONTS.display, fontSize:20, color:COLORS.dark, marginBottom:4 }}>
+              {t('rate_label')} {reviewMaid?.maidName}
+            </Text>
+            <Text style={{ fontSize:13, color:COLORS.muted, marginBottom:16, lineHeight:19 }}>
+              {t('rate_required_release')}
+            </Text>
+
+            {/* Stars */}
+            <View style={{ flexDirection:'row', gap:8, marginBottom:16, justifyContent:'center' }}>
+              {[1,2,3,4,5].map(s => (
+                <TouchableOpacity key={s} onPress={() => setReviewStar(s)}>
+                  <Ionicons name={s <= reviewStar ? 'star' : 'star-outline'} size={34} color={s <= reviewStar ? '#f59e0b' : COLORS.muted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              style={{ borderWidth:1.5, borderColor:COLORS.border, borderRadius:8, padding:12, fontSize:14, color:COLORS.text, backgroundColor:COLORS.cream, minHeight:80, textAlignVertical:'top', marginBottom:16 }}
+              placeholder={t('share_exp_release')}
+              placeholderTextColor={COLORS.muted}
+              value={reviewComment}
+              onChangeText={setReviewComment}
+              multiline
+            />
+
+            <TouchableOpacity
+              style={{ backgroundColor: reviewStar > 0 ? '#e05555' : COLORS.border, padding:14, borderRadius:8, alignItems:'center', marginBottom:10, opacity: reviewLoading ? 0.6 : 1 }}
+              onPress={submitReviewAndRelease}
+              disabled={reviewLoading}>
+              {reviewLoading
+                ? <ActivityIndicator color="#fff"/>
+                : <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color: reviewStar > 0 ? '#fff' : COLORS.muted }}>
+                    {t('submit_review_release')}
+                  </Text>}
+            </TouchableOpacity>
+          </View>
+        </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Replacement Policy Modal */}
+      <Modal visible={policyModal} transparent animationType="slide" onRequestClose={() => setPolicyModal(false)}>
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} activeOpacity={1} onPress={() => setPolicyModal(false)} />
+          <View style={{ backgroundColor: COLORS.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22, paddingBottom: 36 }}>
+            <View style={{ width: 40, height: 4, backgroundColor: COLORS.border, borderRadius: 2, alignSelf: 'center', marginBottom: 18 }} />
+
+            <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, marginBottom: 6 }}>{t('rp_title')}</Text>
+            <Text style={{ fontSize: 13, color: COLORS.muted, lineHeight: 20, marginBottom: 18 }}>{t('rp_short')}</Text>
+
+            {/* Fee table */}
+            <View style={{ borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border, marginBottom: 20 }}>
+              {/* Header */}
+              <View style={{ flexDirection: 'row', backgroundColor: COLORS.green, padding: 10 }}>
+                <Text style={{ flex: 2, fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.5 }}>{t('rp_period_col').toUpperCase()}</Text>
+                <Text style={{ flex: 1.5, fontSize: 11, fontWeight: '700', color: '#fff', textAlign: 'right', letterSpacing: 0.5 }}>{t('rp_fee_col').toUpperCase()}</Text>
+              </View>
+              {[
+                { period: t('rp_row0'), fee: t('rp_row0_fee'), free: true },
+                { period: t('rp_row1'), fee: t('rp_row1_fee'), free: false },
+                { period: t('rp_row2'), fee: t('rp_row2_fee'), free: false },
+                { period: t('rp_row3'), fee: t('rp_row3_fee'), free: false },
+              ].map((row, i) => (
+                <View key={i} style={{ flexDirection: 'row', padding: 10, backgroundColor: i % 2 === 0 ? '#f8fffe' : '#fff', borderTopWidth: 1, borderTopColor: COLORS.border }}>
+                  <Text style={{ flex: 2, fontSize: 13, color: COLORS.dark }}>{row.period}</Text>
+                  <Text style={{ flex: 1.5, fontSize: 13, textAlign: 'right', color: row.free ? '#2e7d5e' : COLORS.dark, fontWeight: row.free ? '700' : '500' }}>{row.fee}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Good to know */}
+            <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.dark, marginBottom: 10 }}>{t('rp_good_to_know')}</Text>
+            {[t('rp_note1'), t('rp_note2'), t('rp_note3')].map((note, i) => (
+              <View key={i} style={{ flexDirection: 'row', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+                <Text style={{ color: COLORS.green, fontSize: 16, lineHeight: 20 }}>•</Text>
+                <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19, flex: 1 }}>{note}</Text>
+              </View>
+            ))}
+
+            <TouchableOpacity
+              style={{ backgroundColor: COLORS.green, padding: 14, borderRadius: 8, alignItems: 'center', marginTop: 12 }}
+              onPress={() => setPolicyModal(false)}>
+              <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>{t('ok')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
+          <BackChevron />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t('hired_maid_title')}</Text>
+        <Text style={styles.headerSub}>{t('hired_maid_sub')}</Text>
+      </View>
+
+      {loading ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.green} />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+          {hired.length === 0 && pastHired.length === 0 ? (
+            <View style={{ alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+              <Ionicons name="home-outline" size={52} color={COLORS.muted} style={{ marginBottom: 16 }} />
+              <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, textAlign: 'center' }}>{t('no_hired_maid')}</Text>
+              <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>{t('no_hired_sub')}</Text>
+              <TouchableOpacity style={{ backgroundColor: COLORS.green, paddingHorizontal: 28, paddingVertical: 13, borderRadius: 6, marginTop: 24 }} onPress={() => navigation.navigate('Browse')}>
+                <Text style={{ fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff' }}>{t('browse_maids_btn')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+          {hired.map((item, idx) => {
+            const maid      = item.maid || {};
+            const maidId    = maid._id || item.maid;
+            const maidName  = maid.fullName || 'Maid';
+            const isRet     = returning === maidId;
+            const badge     = getPenaltyBadge(item.hiredAt);
+
+            return (
+              <View key={String(maidId) + idx} style={styles.card}>
+                <View style={styles.cardTop}>
+                  <View style={styles.avatar}>
+                    <Ionicons name="person" size={30} color="rgba(255,255,255,0.8)" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.maidName}>{maidName}</Text>
+                    <Text style={styles.maidSub}>{maid.nationality || ''}{maid.age ? ` Â· ${maid.age} yrs` : ''}</Text>
+                    {maid.expectedSalary ? (
+                      <Text style={styles.maidSalary}>EGP {maid.expectedSalary.toLocaleString()}/mo</Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.hiredBadge}>
+                    <Text style={{ fontSize: 9, color: '#2e7d5e', fontWeight: '700', letterSpacing: 0.8 }}>PLACED ✓</Text>
+                  </View>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>{t('hired_on')}</Text>
+                  <Text style={styles.infoVal}>{new Date(item.hiredAt || Date.now()).toLocaleDateString()}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>{t('skills_label_info')}</Text>
+                  <Text style={styles.infoVal}>{(maid.skills || []).slice(0, 3).join(', ') || '—'}</Text>
+                </View>
+
+                {/* Penalty badge */}
+                <View style={[styles.penaltyBadge, { backgroundColor: badge.bg }]}>
+                  <Text style={[styles.penaltyTxt, { color: badge.color }]}>{badge.text}</Text>
+                </View>
+
+                {/* Release button — always visible */}
+                <TouchableOpacity
+                  style={[styles.btnRelease, isRet && { opacity: 0.5 }]}
+                  onPress={() => handleRelease(maidId, maidName, item.hiredAt, maid._id)}
+                  disabled={isRet}>
+                  {isRet
+                    ? <ActivityIndicator size="small" color="#e05555" />
+                    : <Text style={styles.btnReleaseTxt}>{t('release_vacancy')}</Text>}
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+
+          {hired.length > 0 && (
+            <TouchableOpacity style={styles.policyRow} onPress={() => setPolicyModal(true)} activeOpacity={0.75}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.policyRowTitle}>{t('rp_title')}</Text>
+                <Text style={styles.policyRowSub}>{t('rp_short')}</Text>
+              </View>
+              <Ionicons name="information-circle-outline" size={24} color={COLORS.green} />
+            </TouchableOpacity>
+          )}
+
+          {/* Previously Hired link */}
+          <TouchableOpacity
+            style={styles.prevHiredBtn}
+            onPress={() => navigation.navigate('PreviouslyHired', { pastHired })}>
+            <Ionicons name="time-outline" size={20} color={COLORS.muted} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.dark }}>{t('old_helpers')}</Text>
+              <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 1 }}>
+                {pastHired.length > 0 ? `${pastHired.length} ${t('past_placements')}` : t('no_history_yet')}
+              </Text>
+            </View>
+            <Text style={{ color: COLORS.muted, fontSize: 18 }}>›</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  header:       { backgroundColor: '#0D3827', padding: 20, paddingTop: 54 },
+  headerTitle:  { fontFamily: FONTS.display, fontSize: 24, color: '#fff', marginTop: 10 },
+  headerSub:    { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  card:         { backgroundColor: '#fff', borderRadius: 12, padding: 16, marginBottom: 14, borderWidth: 1, borderColor: COLORS.border, elevation: 2, shadowColor: '#0D3827', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 2 } },
+  cardTop:      { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  avatar:       { width: 56, height: 56, borderRadius: 28, backgroundColor: '#e8f4f1', borderWidth: 2, borderColor: COLORS.green, alignItems: 'center', justifyContent: 'center' },
+  maidName:     { fontFamily: FONTS.display, fontSize: 18, color: COLORS.dark },
+  maidSub:      { fontSize: 11, color: COLORS.muted, marginTop: 2 },
+  maidSalary:   { fontSize: 12, color: COLORS.green, fontWeight: '600', marginTop: 2 },
+  hiredBadge:   { backgroundColor: 'rgba(46,125,94,0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(46,125,94,0.25)' },
+  infoRow:      { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: 1, borderTopColor: COLORS.border },
+  infoLabel:    { fontSize: 11, color: COLORS.muted },
+  infoVal:      { fontSize: 11, color: COLORS.dark, fontWeight: '500', flex: 1, textAlign: 'right' },
+  penaltyBadge: { borderRadius: 6, paddingHorizontal: 10, paddingVertical: 7, marginTop: 10, marginBottom: 2 },
+  penaltyTxt:   { fontSize: 11, fontWeight: '600' },
+  btnRelease:   { marginTop: 12, padding: 13, borderRadius: 8, backgroundColor: '#fff0f0', borderWidth: 1.5, borderColor: '#e05555', alignItems: 'center' },
+  btnReleaseTxt:{ fontSize: 14, fontWeight: '700', color: '#e05555' },
+  policyRow:      { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#e8f4f1', borderWidth: 1, borderColor: 'rgba(13,56,39,0.12)', borderRadius: 10, padding: 14, marginTop: 4, marginBottom: 12 },
+  policyRowTitle: { fontSize: 13, fontWeight: '700', color: COLORS.dark, marginBottom: 2 },
+  policyRowSub:   { fontSize: 11, color: COLORS.muted, lineHeight: 16 },
+  prevHiredBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 10, padding: 14, marginBottom: 20, borderWidth: 1, borderColor: COLORS.border },
+});
