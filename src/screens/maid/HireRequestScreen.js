@@ -373,7 +373,7 @@ export default function HireRequestScreen({ navigation }) {
         </View>
       ) : requests.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <Text style={{ fontSize: 48, marginBottom: 16 }}>ðŸ“­</Text>
+          <Text style={{ fontSize: 48, marginBottom: 16 }}>🔭</Text>
           <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, textAlign: 'center' }}>{t('no_pending_requests')}</Text>
           <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
             {t('no_pending_sub')}

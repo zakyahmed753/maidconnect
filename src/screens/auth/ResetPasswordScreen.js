@@ -79,7 +79,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
             placeholder="Min. 6 characters" placeholderTextColor={COLORS.muted}
             secureTextEntry={!showPass}/>
           <TouchableOpacity onPress={() => setShowPass(s => !s)} style={styles.eyeBtn}>
-            <Text style={{ fontSize: 18 }}>{showPass ? 'ðŸ™ˆ' : 'ðŸ‘'}</Text>
+            <Text style={{ fontSize: 18 }}>{showPass ? '🙈' : '👁'}</Text>
           </TouchableOpacity>
         </View>
 

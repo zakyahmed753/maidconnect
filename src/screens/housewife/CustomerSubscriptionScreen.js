@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
   StatusBar, ActivityIndicator, Modal, Pressable,
@@ -12,20 +12,22 @@ import useAuthStore from '../../store/authStore';
 import { hwAPI, paymentsAPI, uploadAPI } from '../../services/api';
 import * as ImagePicker from 'expo-image-picker';
 import BackChevron from '../../components/BackChevron';
+import { useTranslation } from '../../utils/i18n';
 
 const PRICE = 1000;
-
-const FEATURES = [
-  ['chatbubble-outline',        '#7c3aed', 'Chat with any maid on the platform'],
-  ['document-text-outline',     COLORS.green, 'Full profile access & references'],
-  ['checkmark-done-outline',    '#0891b2', 'Complete hiring process in-app'],
-  ['star-outline',              '#f59e0b', 'Leave reviews after hiring'],
-  ['refresh-outline',           '#2e7d5e', 'Free replacement if maid doesn\'t fit (within 3 days)'],
-];
 
 export default function CustomerSubscriptionScreen({ route, navigation }) {
   const { maidUserId, maidProfileId, maidName } = route.params || {};
   const completeAuth = useAuthStore(s => s.completeAuth);
+  const { t } = useTranslation();
+
+  const FEATURES = [
+    ['chatbubble-outline',        '#7c3aed', t('feat_chat_any')],
+    ['document-text-outline',     COLORS.green, t('feat_profile_refs')],
+    ['checkmark-done-outline',    '#0891b2', t('feat_hire_inapp')],
+    ['star-outline',              '#f59e0b', t('feat_leave_reviews')],
+    ['refresh-outline',           '#2e7d5e', t('feat_free_replace')],
+  ];
 
   const [offlineModal,   setOfflineModal]   = useState(false);
   const [receiptUri,     setReceiptUri]     = useState(null);
@@ -65,12 +67,12 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         }
       } else if (res.data?.status === 'failed') {
         setPendingPayment(null);
-        Toast.show({ type: 'info', text1: 'Receipt Rejected', text2: 'Please transfer again and upload a new receipt.' });
+        Toast.show({ type: 'info', text1: t('receipt_rejected'), text2: t('receipt_rejected_sub') });
       } else {
-        Toast.show({ type: 'info', text1: 'Still Pending', text2: "Admin hasn't confirmed yet. Check back soon." });
+        Toast.show({ type: 'info', text1: t('still_pending'), text2: t('receipt_still_pending_sub') });
       }
     } catch {
-      Toast.show({ type: 'error', text1: 'Could not check status' });
+      Toast.show({ type: 'error', text1: t('could_not_check') });
     } finally {
       setCheckingStatus(false);
     }
@@ -103,7 +105,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         goTo:      'Browse',
       });
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to submit receipt. Check connection and try again.';
+      const msg = err.response?.data?.message || err.message || t('save_failed');
       setSubmitError(msg);
     } finally {
       setSubmitting(false);
@@ -120,8 +122,8 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
           <BackChevron />
         </TouchableOpacity>
         <Ionicons name="chatbubbles" size={36} color="#fff" style={{ marginBottom: 8 }} />
-        <Text style={styles.heroTitle}>Unlock Chat Access</Text>
-        <Text style={styles.heroSub}>Subscribe to start chatting with maids</Text>
+        <Text style={styles.heroTitle}>{t('unlock_chat_access')}</Text>
+        <Text style={styles.heroSub}>{t('cust_sub_hero_sub')}</Text>
       </LinearGradient>
 
       <ScrollView style={{ backgroundColor: COLORS.cream }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
@@ -129,29 +131,27 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         {/* Pending receipt banner */}
         {pendingPayment && (
           <View style={styles.pendingBanner}>
-            <Text style={styles.pendingTitle}>Receipt Under Review</Text>
-            <Text style={styles.pendingSub}>
-              Your receipt has been submitted and is awaiting admin confirmation. You'll be notified once it's approved.
-            </Text>
+            <Text style={styles.pendingTitle}>{t('receipt_under_review')}</Text>
+            <Text style={styles.pendingSub}>{t('cust_sub_receipt_body')}</Text>
             <TouchableOpacity
               onPress={handleCheckPendingStatus}
               disabled={checkingStatus}
               style={[styles.checkBtn, checkingStatus && { opacity: 0.6 }]}>
               {checkingStatus
                 ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.checkBtnTxt}>Check Confirmation Status</Text>}
+                : <Text style={styles.checkBtnTxt}>{t('check_confirmation_status')}</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setPendingPayment(null)} style={{ alignItems: 'center', paddingTop: 10 }}>
-              <Text style={{ fontSize: 11, color: COLORS.muted }}>Submit a new receipt instead</Text>
+              <Text style={{ fontSize: 11, color: COLORS.muted }}>{t('submit_new_receipt')}</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Features card */}
         <View style={styles.card}>
-          <Text style={styles.cardLabel}>What You Get</Text>
+          <Text style={styles.cardLabel}>{t('what_you_get')}</Text>
           {FEATURES.map(([icon, iconColor, text]) => (
-            <View key={text} style={styles.featureRow}>
+            <View key={icon} style={styles.featureRow}>
               <Ionicons name={icon} size={18} color={iconColor} />
               <Text style={{ fontSize: 13, color: COLORS.text, flex: 1 }}>{text}</Text>
             </View>
@@ -160,17 +160,17 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
 
         {/* Price card */}
         <View style={[styles.card, { alignItems: 'center', paddingVertical: 20 }]}>
-          <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Subscription Plan</Text>
+          <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>{t('monthly_plan_name')}</Text>
           <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: COLORS.green }}>EGP {PRICE.toLocaleString()}</Text>
-          <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>cancel anytime</Text>
+          <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>{t('cancel_anytime')}</Text>
         </View>
 
         {/* Cash Transfer button */}
         <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
           <Ionicons name="cash-outline" size={24} color={COLORS.green} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.offlineTxt}>Pay via Cash Transfer</Text>
-            <Text style={styles.offlineSub}>InstaPay or Vodafone Cash Â· upload receipt</Text>
+            <Text style={styles.offlineTxt}>{t('pay_cash')}</Text>
+            <Text style={styles.offlineSub}>{t('instapay_voda_hint')}</Text>
           </View>
           <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
         </TouchableOpacity>
@@ -189,14 +189,14 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
                 navigation.goBack();
               }
             } catch {
-              Toast.show({ type: 'info', text1: 'Subscription not active yet' });
+              Toast.show({ type: 'info', text1: t('sub_not_active') });
             }
           }}>
-          <Text style={{ fontSize: 12, color: COLORS.muted }}>Already paid? Tap to check</Text>
+          <Text style={{ fontSize: 12, color: COLORS.muted }}>{t('already_paid_check')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={{ alignItems: 'center', padding: 12 }} onPress={() => navigation.goBack()}>
-          <Text style={{ fontSize: 13, color: COLORS.muted }}>Maybe later</Text>
+          <Text style={{ fontSize: 13, color: COLORS.muted }}>{t('maybe_later')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -206,20 +206,18 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         <ScrollView style={styles.modalSheet} contentContainerStyle={{ paddingBottom: 36 }} bounces={false}>
           <View style={styles.modalHandle} />
 
-          <Text style={styles.modalTitle}>Cash Transfer</Text>
-          <Text style={styles.modalSub}>
-            Transfer EGP {PRICE.toLocaleString()} to the number below, then upload a screenshot of your receipt.
-          </Text>
+          <Text style={styles.modalTitle}>{t('cash_transfer_title')}</Text>
+          <Text style={styles.modalSub}>{t('cash_transfer_modal_sub')}</Text>
 
           {/* Amount box */}
           <View style={styles.amountBox}>
-            <Text style={styles.amountLabel}>Amount Due</Text>
+            <Text style={styles.amountLabel}>{t('amount_due')}</Text>
             <Text style={styles.amountVal}>EGP {PRICE.toLocaleString()}</Text>
-            <Text style={styles.amountNote}>Monthly subscription Â· 1 month access</Text>
+            <Text style={styles.amountNote}>{t('monthly_access_note')}</Text>
           </View>
 
           {/* Payment details */}
-          <Text style={styles.detailsHeader}>Transfer To</Text>
+          <Text style={styles.detailsHeader}>{t('transfer_to')}</Text>
           {[
             { icon: 'flash-outline',          label: 'Instapay',       value: '01022781113' },
             { icon: 'phone-portrait-outline', label: 'Vodafone Cash',  value: '01022781113' },
@@ -233,27 +231,27 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
             </View>
           ))}
           <View style={styles.nameRow}>
-            <Text style={styles.detailLabel}>Account Name</Text>
+            <Text style={styles.detailLabel}>{t('account_name')}</Text>
             <Text style={styles.detailValue}>Ahmed Ibrahim Zaky Ahmed Ismail</Text>
           </View>
 
           {/* Receipt upload */}
-          <Text style={[styles.detailsHeader, { marginTop: 18 }]}>Upload Receipt</Text>
+          <Text style={[styles.detailsHeader, { marginTop: 18 }]}>{t('upload_receipt')}</Text>
           <TouchableOpacity style={styles.receiptBtn} onPress={pickReceipt}>
             {receiptUri ? (
-              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>✓ Receipt selected — tap to change</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>{t('receipt_selected')}</Text>
             ) : (
               <>
-                <Text style={{ fontSize: 24, marginBottom: 6 }}>ðŸ“Ž</Text>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>Tap to upload receipt</Text>
-                <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>Screenshot of your transfer confirmation</Text>
+                <Text style={{ fontSize: 24, marginBottom: 6 }}>📎</Text>
+                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>{t('tap_upload_receipt')}</Text>
+                <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t('receipt_screenshot_note')}</Text>
               </>
             )}
           </TouchableOpacity>
 
           {submitError && (
             <View style={styles.errorBox}>
-              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠ {submitError}</Text>
+              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠ {submitError}</Text>
             </View>
           )}
 
@@ -263,11 +261,11 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
             disabled={!receiptUri || submitting}>
             {submitting
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.submitTxt}>{submitError ? 'Try Again' : 'Submit Receipt'}</Text>}
+              : <Text style={styles.submitTxt}>{submitError ? t('retry') : t('cust_submit_receipt')}</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 12 }} onPress={closeModal}>
-            <Text style={{ fontSize: 13, color: COLORS.muted }}>Cancel</Text>
+            <Text style={{ fontSize: 13, color: COLORS.muted }}>{t('cancel')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Modal>

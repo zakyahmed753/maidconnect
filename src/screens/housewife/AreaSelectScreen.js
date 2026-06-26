@@ -33,7 +33,7 @@ export default function AreaSelectScreen({ navigation }) {
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
-        <Text style={{ fontSize: 32, marginBottom: 8 }}>ðŸ“</Text>
+        <Text style={{ fontSize: 32, marginBottom: 8 }}>📍</Text>
         <Text style={styles.heroT}>Where do you live?</Text>
         <Text style={styles.heroS}>We'll show you maids available in your area</Text>
       </LinearGradient>
@@ -76,7 +76,7 @@ export default function AreaSelectScreen({ navigation }) {
 
         <View style={styles.infoBox}>
           <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-            ðŸ’¡ <Text style={{ fontWeight: '700', color: COLORS.dark }}>Don't see your area?</Text>{' '}
+            💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Don't see your area?</Text>{' '}
             Select it anyway — we'll notify you as soon as we launch there.
           </Text>
         </View>

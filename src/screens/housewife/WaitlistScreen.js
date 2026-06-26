@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -17,7 +17,6 @@ export default function WaitlistScreen({ navigation }) {
   };
 
   const handleChangeArea = () => {
-    // Clear area and let them re-pick — handled by AppNavigator
     const { hwAPI } = require('../../services/api');
     hwAPI.updateProfile({ residentialArea: null }).then(() => {
       useAuthStore.getState().completeAuth();
@@ -27,7 +26,7 @@ export default function WaitlistScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
-        <Text style={{ fontSize: 52, marginBottom: 12 }}>ðŸ—“</Text>
+        <Text style={{ fontSize: 52, marginBottom: 12 }}>📅</Text>
         <Text style={styles.heroT}>You're on the list!</Text>
         <Text style={styles.heroS}>Servix is launching in {area} soon</Text>
       </LinearGradient>
@@ -37,9 +36,9 @@ export default function WaitlistScreen({ navigation }) {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>What happens next?</Text>
           {[
-            { icon: 'âœ‰', text: `We'll send you a notification the moment we go live in ${area}` },
-            { icon: 'ðŸ†', text: 'As a waitlist member you\'ll get early access before public launch' },
-            { icon: 'ðŸŽ', text: 'Waitlist members receive a special launch discount' },
+            { icon: '✉️', text: `We'll send you a notification the moment we go live in ${area}` },
+            { icon: '🏆', text: 'As a waitlist member you\'ll get early access before public launch' },
+            { icon: '🎁', text: 'Waitlist members receive a special launch discount' },
           ].map(({ icon, text }) => (
             <View key={icon} style={styles.step}>
               <Text style={{ fontSize: 22 }}>{icon}</Text>
@@ -49,11 +48,11 @@ export default function WaitlistScreen({ navigation }) {
         </View>
 
         <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Text style={styles.shareTxt}>ðŸ“¤ Share with friends in {area}</Text>
+          <Text style={styles.shareTxt}>📤 Share with friends in {area}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.changeBtn} onPress={handleChangeArea}>
-          <Text style={styles.changeTxt}>â† I'm in a different area</Text>
+          <Text style={styles.changeTxt}>← I'm in a different area</Text>
         </TouchableOpacity>
 
       </View>

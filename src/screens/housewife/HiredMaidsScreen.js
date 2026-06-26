@@ -259,7 +259,7 @@ export default function HiredMaidsScreen({ navigation }) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.maidName}>{maidName}</Text>
-                    <Text style={styles.maidSub}>{maid.nationality || ''}{maid.age ? ` Â· ${maid.age} yrs` : ''}</Text>
+                    <Text style={styles.maidSub}>{maid.nationality || ''}{maid.age ? ` · ${maid.age} yrs` : ''}</Text>
                     {maid.expectedSalary ? (
                       <Text style={styles.maidSalary}>EGP {maid.expectedSalary.toLocaleString()}/mo</Text>
                     ) : null}

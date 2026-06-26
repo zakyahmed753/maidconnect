@@ -356,7 +356,7 @@ const T = {
 
     // MaidDetail extra
     review_submitted: 'Review submitted!', review_submit_failed: 'Failed to submit review',
-    hire_req_sent: '✅ Request Sent!', hire_req_sent_sub: 'Waiting for the maid to approve.',
+    hire_req_sent: '✅ Request Sent!', hire_req_sent_sub: 'Waiting for the helper to approve.',
     chat_open_failed: 'Failed to open chat', please_rate_star: 'Please select a star rating',
     rate_label: 'Rate', login_success_toast: 'Welcome back! 👋',
 
@@ -394,6 +394,26 @@ const T = {
     rp_note1: 'The replacement fee is charged only when you hire your replacement helper, not when you release your current helper.',
     rp_note2: 'After ending the current helper\'s service, you have 30 days to choose a replacement under this policy.',
     rp_note3: 'This policy helps us maintain service quality while giving you flexibility if the match isn\'t suitable.',
+
+    // CustomerSubscription
+    unlock_chat_access: 'Unlock Chat Access',
+    cust_sub_hero_sub: 'Subscribe to start chatting with helpers',
+    what_you_get: 'What You Get',
+    cancel_anytime: 'cancel anytime',
+    instapay_voda_hint: 'InstaPay or Vodafone Cash · upload receipt',
+    maybe_later: 'Maybe later',
+    monthly_access_note: 'Monthly subscription · 1 month access',
+    receipt_selected: '✓ Receipt selected — tap to change',
+    sub_not_active: 'Subscription not active yet',
+    cust_sub_receipt_body: "Your receipt has been submitted and is awaiting admin confirmation. You'll be notified once it's approved.",
+    cash_transfer_modal_sub: 'Transfer EGP 1,000 to the number below, then upload a screenshot of your receipt.',
+    cust_submit_receipt: 'Submit Receipt',
+    receipt_still_pending_sub: "Admin hasn't confirmed yet. Check back soon.",
+    feat_chat_any: 'Chat with any helper on the platform',
+    feat_profile_refs: 'Full profile access & references',
+    feat_hire_inapp: 'Complete hiring process in-app',
+    feat_leave_reviews: 'Leave reviews after hiring',
+    feat_free_replace: "Free replacement if helper doesn't fit (within 3 days)",
   },
 
   ar: {
@@ -786,6 +806,26 @@ const T = {
     rp_note1: 'يتم تحصيل رسوم الاستبدال عند التعاقد مع العاملة الجديدة فقط، وليس عند إنهاء العاملة الحالية.',
     rp_note2: 'بعد إنهاء خدمة العاملة الحالية، لديك 30 يومًا لاختيار عاملة بديلة ضمن هذه السياسة.',
     rp_note3: 'تهدف هذه السياسة إلى توفير مرونة أكبر مع الحفاظ على جودة الخدمة.',
+
+    // CustomerSubscription
+    unlock_chat_access: 'افتح إمكانية التواصل',
+    cust_sub_hero_sub: 'اشترك/اشتركي للتكلم مع المساعدين',
+    what_you_get: 'إيه اللي هتاخده/هتاخدي',
+    cancel_anytime: 'إلغاء في أي وقت',
+    instapay_voda_hint: 'إنستاباي أو فودافون كاش · ارفع الإيصال',
+    maybe_later: 'ممكن بعدين',
+    monthly_access_note: 'اشتراك شهري · شهر واحد',
+    receipt_selected: '✓ الإيصال اتاختار — اضغط للتغيير',
+    sub_not_active: 'الاشتراك مش شغال لسه',
+    cust_sub_receipt_body: "الإيصال بتاعك اتبعت وفي انتظار تأكيد الإدارة. هتاخد/هتاخدي إشعار لما يتوافق عليه.",
+    cash_transfer_modal_sub: 'حوّل/حوّلي 1,000 جنيه للرقم اللي في الأسفل، وبعدين ارفع/ارفعي صورة الإيصال.',
+    cust_submit_receipt: 'ارفع/ارفعي الإيصال',
+    receipt_still_pending_sub: 'الإدارة لسه مأكدتش. ارجع/ارجعي بعدين.',
+    feat_chat_any: 'اتكلم/اتكلمي مع أي مساعد/ة على المنصة',
+    feat_profile_refs: 'وصول كامل للملف الشخصي والمراجع',
+    feat_hire_inapp: 'أكمل/أكملي عملية التوظيف من داخل التطبيق',
+    feat_leave_reviews: 'اترك/اتركي تقييمات بعد التوظيف',
+    feat_free_replace: 'استبدال مجاني لو المساعد/ة مش مناسب/ة (خلال 3 أيام)',
   },
 
   fr: {
@@ -1166,6 +1206,26 @@ const T = {
     rp_note1: 'Les frais de remplacement ne sont facturés que lorsque vous embauchez votre employée de remplacement, pas quand vous libérez la précédente.',
     rp_note2: 'Après la fin de service, vous avez 30 jours pour choisir une remplaçante.',
     rp_note3: 'Cette politique nous aide à maintenir la qualité du service tout en vous offrant de la flexibilité.',
+
+    // CustomerSubscription
+    unlock_chat_access: "Débloquer l'accès au chat",
+    cust_sub_hero_sub: 'Abonnez-vous pour discuter avec les aides',
+    what_you_get: 'Ce que vous obtenez',
+    cancel_anytime: 'Annuler à tout moment',
+    instapay_voda_hint: 'InstaPay ou Vodafone Cash · télécharger le reçu',
+    maybe_later: 'Peut-être plus tard',
+    monthly_access_note: "Abonnement mensuel · 1 mois d'accès",
+    receipt_selected: '✓ Reçu sélectionné — appuyer pour changer',
+    sub_not_active: 'Abonnement pas encore actif',
+    cust_sub_receipt_body: "Votre reçu a été soumis et est en attente de confirmation. Vous serez notifié une fois approuvé.",
+    cash_transfer_modal_sub: 'Transférez 1 000 EGP au numéro ci-dessous, puis téléchargez une capture de votre reçu.',
+    cust_submit_receipt: 'Soumettre le reçu',
+    receipt_still_pending_sub: "L'admin n'a pas encore confirmé. Revenez bientôt.",
+    feat_chat_any: "Discutez avec n'importe quelle aide sur la plateforme",
+    feat_profile_refs: 'Accès complet au profil et aux références',
+    feat_hire_inapp: "Processus de recrutement complet dans l'application",
+    feat_leave_reviews: "Laissez des avis après l'embauche",
+    feat_free_replace: "Remplacement gratuit si l'aide ne convient pas (sous 3 jours)",
   },
 
   ha: {
@@ -1546,6 +1606,26 @@ const T = {
     rp_note1: "Ana biyan kuɗin maye gurbi ne kawai lokacin da kuka ɗauki ma'aikatarku ta maye, ba lokacin da kuka sake ta ba.",
     rp_note2: "Bayan kammala ayyukan ma'aikatarku ta yanzu, kuna da kwana 30 don zaɓar maye gurbi.",
     rp_note3: 'Wannan manufa tana taimaka wajen kiyaye ingancin sabis tare da ba ku sassauci.',
+
+    // CustomerSubscription
+    unlock_chat_access: 'Buɗe Damar Tattaunawa',
+    cust_sub_hero_sub: 'Yi rajista don yin hira da masu taimako',
+    what_you_get: 'Abin da za ku samu',
+    cancel_anytime: 'Soke a kowane lokaci',
+    instapay_voda_hint: 'InstaPay ko Vodafone Cash · loda rasit',
+    maybe_later: 'Watakila daga baya',
+    monthly_access_note: 'Rajista ta wata · 1 wata na damar shiga',
+    receipt_selected: '✓ An zaɓi rasit — taɓa don canza',
+    sub_not_active: 'Biyan kuɗi ba ya aiki tukuna',
+    cust_sub_receipt_body: 'An aika rasitin ku kuma yana jiran tabbatarwar admin. Za ku sami sanarwa da zarar an amince.',
+    cash_transfer_modal_sub: 'Canja EGP 1,000 zuwa lambar da ke ƙasa, sannan loda hoton allon rasitin ku.',
+    cust_submit_receipt: 'Aika Rasit',
+    receipt_still_pending_sub: 'Admin bai tabbatar ba tukuna. Dawo daga baya.',
+    feat_chat_any: 'Yi hira da kowane mai taimako a kan dandali',
+    feat_profile_refs: 'Cikakken damar bayanin martaba da manyan hujjoji',
+    feat_hire_inapp: 'Cika tsarin hayar a cikin app',
+    feat_leave_reviews: 'Bar bitoci bayan hayar',
+    feat_free_replace: 'Maye gurbi kyauta idan mai taimako bai dace ba (a cikin kwanaki 3)',
   },
 };
 

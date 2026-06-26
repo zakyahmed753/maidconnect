@@ -93,7 +93,7 @@ export default function PendingApprovalScreen({ navigation }) {
                   s.active && { backgroundColor: '#4db595' },
                   !s.done && !s.active && { backgroundColor: 'rgba(255,255,255,0.1)' }
                 ]}>
-                  <Text style={{ fontSize: 10, color: '#fff' }}>{s.done ? '✓' : s.active ? 'â—' : String(i+1)}</Text>
+                  <Text style={{ fontSize: 10, color: '#fff' }}>{s.done ? '✓' : s.active ? '⏳' : String(i+1)}</Text>
                 </View>
                 <Text style={[styles.stepLabel, (s.done || s.active) && { color: '#fff' }]}>{s.label}</Text>
               </View>

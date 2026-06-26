@@ -145,9 +145,9 @@ export default function PaymentScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:12 }}>
           <BackChevron />
         </TouchableOpacity>
-        <Text style={{ fontSize: 28, marginBottom: 6 }}>ðŸ’³</Text>
+        <Text style={{ fontSize: 28, marginBottom: 6 }}>💳</Text>
         <Text style={styles.heroTitle}>Complete Payment</Text>
-        <Text style={styles.heroSub}>Secured by Paymob Â· 256-bit SSL</Text>
+        <Text style={styles.heroSub}>Secured by Paymob · 256-bit SSL</Text>
       </LinearGradient>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 48 }}>
@@ -171,7 +171,7 @@ export default function PaymentScreen({ route, navigation }) {
           </View>
           {couponCode && (
             <View style={styles.row}>
-              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>ðŸ· Coupon: {couponCode}</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🏷 Coupon: {couponCode}</Text>
               <View style={[styles.badge, { backgroundColor: 'rgba(46,125,94,0.1)' }]}>
                 <Text style={[styles.badgeTxt, { color: '#2e7d5e' }]}>Discount applied</Text>
               </View>
@@ -179,7 +179,7 @@ export default function PaymentScreen({ route, navigation }) {
           )}
           {referralCreditApplied > 0 && (
             <View style={styles.row}>
-              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>ðŸŽ Referral credit</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🎁 Referral credit</Text>
               <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>âˆ’EGP {referralCreditApplied}</Text>
             </View>
           )}
@@ -194,11 +194,11 @@ export default function PaymentScreen({ route, navigation }) {
           <Text style={styles.cardLabel}>Payment Method</Text>
           <View style={styles.methodRow}>
             <View style={styles.methodIcon}>
-              <Text style={{ fontSize: 22 }}>ðŸ’³</Text>
+              <Text style={{ fontSize: 22 }}>💳</Text>
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.methodName}>Credit / Debit Card</Text>
-              <Text style={styles.methodDesc}>Visa Â· Mastercard Â· Meeza Â· Fawry</Text>
+              <Text style={styles.methodDesc}>Visa · Mastercard · Meeza · Fawry</Text>
             </View>
             <Text style={{ color: COLORS.green, fontSize: 18 }}>✓</Text>
           </View>
@@ -210,16 +210,16 @@ export default function PaymentScreen({ route, navigation }) {
 
         {/* Test mode notice */}
         <View style={styles.testBanner}>
-          <Text style={{ fontSize: 14 }}>ðŸ§ª</Text>
+          <Text style={{ fontSize: 14 }}>🧪</Text>
           <View style={{ flex: 1 }}>
             <Text style={styles.testTitle}>Sandbox / Test Mode</Text>
-            <Text style={styles.testDesc}>Use card 4987654321098769 Â· 05/21 Â· CVV 123 Â· OTP 123456</Text>
+            <Text style={styles.testDesc}>Use card 4987654321098769 · 05/21 · CVV 123 · OTP 123456</Text>
           </View>
         </View>
 
         <View style={styles.secureRow}>
-          <Text style={{ fontSize: 13 }}>ðŸ”’</Text>
-          <Text style={styles.secureTxt}>PCI DSS compliant Â· Payments processed by Paymob</Text>
+          <Text style={{ fontSize: 13 }}>🔒</Text>
+          <Text style={styles.secureTxt}>PCI DSS compliant · Payments processed by Paymob</Text>
         </View>
 
         {checking ? (
