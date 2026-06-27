@@ -579,7 +579,7 @@ export function HWProfileScreen({ navigation }) {
                     <Ionicons name={icon} size={19} color={iconColor} />
                   </View>
                   <Text style={{ fontSize:14, fontWeight:'500', color: color==='red' ? '#e05555' : COLORS.text, flex:1 }}>{title}</Text>
-                  <Text style={{ color:COLORS.muted, fontSize:20 }}>{lang === 'ar' ? '‹' : '›'}</Text>
+                  <Text style={{ color:COLORS.muted, fontSize:20 }}>{lang === 'ar' && Platform.OS !== 'ios' ? '‹' : '›'}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -790,7 +790,7 @@ export function MaidDashScreen({ navigation }) {
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:bg, alignItems:'center', justifyContent:'center' }}><Ionicons name={icon} size={16} color={iconColor} /></View>
                 <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
-                <Text style={{ color:COLORS.muted }}>{lang === 'ar' ? '‹' : '›'}</Text>
+                <Text style={{ color:COLORS.muted }}>{lang === 'ar' && Platform.OS !== 'ios' ? '‹' : '›'}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -812,7 +812,7 @@ export function MaidDashScreen({ navigation }) {
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:bg, alignItems:'center', justifyContent:'center' }}><Ionicons name={icon} size={16} color={iconColor} /></View>
                 <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
-                <Text style={{ color:COLORS.muted }}>{lang === 'ar' ? '‹' : '›'}</Text>
+                <Text style={{ color:COLORS.muted }}>{lang === 'ar' && Platform.OS !== 'ios' ? '‹' : '›'}</Text>
               </TouchableOpacity>
             ))}
           </View>
