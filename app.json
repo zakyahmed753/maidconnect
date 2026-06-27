@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "world.servix.mobile",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "icon": "./assets/icon.png",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to log in to Servix quickly and securely.",
@@ -30,7 +30,7 @@
         "backgroundColor": "#0D3827"
       },
       "package": "world.servix.app",
-      "versionCode": 23,
+      "versionCode": 24,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "notification": {
@@ -55,6 +55,7 @@
     },
     "plugins": [
       "./plugins/withAdiRegistration",
+      ["expo-splash-screen", { "backgroundColor": "#0D3827", "image": "./assets/icon.png", "resizeMode": "contain" }],
       "expo-font",
       "expo-secure-store",
       "expo-asset",

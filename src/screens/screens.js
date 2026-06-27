@@ -287,9 +287,7 @@ export function ChatsListScreen({ navigation }) {
       navigation.navigate('Browse', { screen: 'CustomerSubscription', params: {} });
       return;
     }
-    const partnerName = user?.role === 'maid'
-      ? (item.housewife?.name || item.housewife?.fullName)
-      : (item.maidProfile?.fullName || item.maid?.name);
+    const partnerName = other?.fullName || other?.name;
     navigation.navigate('Chat', { chatId: item._id, maidName: partnerName });
   };
 

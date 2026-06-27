@@ -30,7 +30,7 @@ const T = {
     // Browse
     good_morning: 'Welcome back,',
     welcome: 'Welcome',
-    search_placeholder: 'Search name, nationality, skill…',
+    search_placeholder: 'Search nationality, skill…',
     browse_maids: 'Browse Maids',
     how_it_works: 'How to get your helper',
     hiw_step1: 'Browse helpers and find the right match for your home',
@@ -445,9 +445,9 @@ const T = {
     // Browse
     good_morning: 'أهلاً بيك',
     welcome: 'يا أهلاً',
-    search_placeholder: 'دوّر بالاسم أو الجنسية أو المهارة…',
+    search_placeholder: 'دوّر بالجنسية أو المهارة…',
     browse_maids: 'استعرض المساعدات',
-    how_it_works: 'إزاي تجيبي عاملتك',
+    how_it_works: 'إزاي تجيب/تجيبي عاملتك',
     hiw_step1: 'تصفح/تصفحي العاملات وابحث/ابحثي عن الشخص المناسب لبيتك',
     hiw_step2: 'اتكلم/اتكلمي مع العاملة عشان ترد/تردي على أسئلتك قبل التوظيف',
     hiw_step3: 'اضغط/اضغطي "أنا مهتم/مهتمة" عشان ترسل/ترسلي طلب توظيف',
@@ -523,16 +523,16 @@ const T = {
     // MaidDetail
     open_chat: 'رسالة', opening: 'بنفتح…',
     hire_this_maid: 'أنا مهتم/ة', already_hired: 'عاملتك ✅',
-    hire_success: 'مبروك! التوظيف تم بنجاح 🎉', hire_failed: 'التوظيف مش تمام — جربي تاني',
+    hire_success: 'مبروك! التوظيف تم بنجاح 🎉', hire_failed: 'التوظيف مش تمام — جرب تاني',
     about: 'عنها', details: 'تفاصيل أكتر', languages_spoken: 'اللغات اللي بتتكلمها',
-    reviews_section: 'التقييمات', no_reviews_yet: 'مفيش تقييمات لسه — كوني الأولى!',
+    reviews_section: 'التقييمات', no_reviews_yet: 'مفيش تقييمات لسه — كن أول من يقيّم!',
     write_review: '✍️ قيّم تجربتك', submit_review: 'ابعت التقييم',
     profile_title: 'الملف الشخصي',
 
     // HW Profile menu
     menu_saved: 'اللي أعجبوني', menu_messages: 'رسايلي',
     menu_payments: 'مدفوعاتي', menu_notifications: 'إشعاراتي',
-    menu_support: 'محتاجة مساعدة؟', menu_sign_out: 'خروج',
+    menu_support: 'تحتاج مساعدة؟', menu_sign_out: 'خروج',
     menu_activity: 'نشاطي', menu_settings: 'الإعدادات', menu_account: 'حسابي',
     edit_btn: '✏️ تعديل', edit_profile: 'عدّل ملفك',
 
@@ -560,11 +560,11 @@ const T = {
     filter_childcare: 'رعاية أطفال', filter_eldercare: 'رعاية مسنين',
     filter_cleaning: 'تنظيف', filter_laundry: 'غسيل', filter_ironing: 'مكوة',
     filter_driving: 'قيادة', filter_petcare: 'رعاية حيوانات',
-    filter_title: 'فلتري النتايج', filter_salary: 'نطاق الراتب (جنيه)',
+    filter_title: 'فلتر النتايج', filter_salary: 'نطاق الراتب (جنيه)',
     filter_min: 'أقل', filter_max: 'أكتر', filter_age: 'نطاق السن',
-    filter_exp: 'أقل خبرة', filter_sort: 'رتبي حسب',
+    filter_exp: 'أقل خبرة', filter_sort: 'رتّب حسب',
     filter_newest: 'الأحدث', filter_top_rated_sort: 'الأعلى تقييماً', filter_highest_salary: 'أعلى راتب',
-    filter_reset: 'مسح الكل', filter_apply: 'طبقي الفلتر', filter_any: 'الكل',
+    filter_reset: 'مسح الكل', filter_apply: 'طبّق الفلتر', filter_any: 'الكل',
 
     // Login
     welcome_back: 'يا أهلاً بيك!', role_customer: '🏠 عميل/عميلة', role_maid: '👩 مساعدة',
@@ -593,7 +593,7 @@ const T = {
     // Chat
     chat_online: '● أونلاين', voice_note: '🎙 رسالة صوتية',
     type_message: 'اكتب رسالتك…',
-    failed_load_msgs: 'الرسائل مش اتحملت — جربي تاني', failed_send_msg: 'مش اتبعتت — جربي تاني',
+    failed_load_msgs: 'الرسائل مش اتحملت — جرب تاني', failed_send_msg: 'مش اتبعتت — جرب تاني',
 
     // MaidCard
     available_badge: 'متاحة دلوقتي', unavailable_badge: 'مش متاحة',
@@ -602,14 +602,14 @@ const T = {
     // MaidDetail
     terms_title: 'الشروط والأحكام',
     terms_body_short: 'Servix منصة وسيطة بس — بنربطك بالمساعدات ومش مسؤولين عن أي تصرفات من أي طرف.',
-    terms_read_full: '📄 اقري الشروط كاملة (PDF)',
+    terms_read_full: '📄 اقرأ الشروط كاملة (PDF)',
     terms_agree_label: 'قرأت الشروط والأحكام وموافق عليها',
     confirm_hire_btn: 'يلا نوظفها!',
     details_experience: 'سنوات الخبرة', details_salary: 'الراتب المتوقع',
     details_age: 'السن', details_origin: 'الجنسية',
     no_bio: 'مفيش تعريف لسه.',
     no_reviews_label: 'مفيش تقييمات لسه',
-    no_reviews_sub: 'وظفي المساعدة وقيّمي تجربتك — رأيك مهم للأسر التانية!',
+    no_reviews_sub: 'وظّف المساعدة وقيّم تجربتك — رأيك مهم للأسر التانية!',
     saved_label: 'عجبتني', save_label: 'احفظها', yrs: 'سنة',
     notif_new_hire_title: 'طلب توظيف جديد! 🔔',
     notif_support_reply_title: '💬 رد فريق الدعم',
@@ -621,7 +621,7 @@ const T = {
     notif_released_maid_title: 'اتحررتي — متاحة تاني 🆓',
     request_sent_awaiting: '⏳ الطلب اتبعت — في انتظار الرد',
     review_after_hire_note: 'متاح بس بعد التوظيف',
-    share_exp_optional: 'شاركينا تجربتك (اختياري)…',
+    share_exp_optional: 'شاركنا تجربتك (اختياري)…',
     no_comment_left: 'مفيش تعليق',
     please_agree_terms: 'وافق على الشروط الأول',
     view_profile: 'شوف البروفايل',
@@ -637,8 +637,8 @@ const T = {
     no_hired_sub: 'شوف المساعدين المتاحين وابعت طلب توظيف — الأمر سهل!',
     browse_maids_btn: '🔍 شوف المساعدين المتاحين',
     hired_on: 'تاريخ التوظيف', skills_label_info: 'مهاراتها', release_vacancy: '↩ تغيير العامله',
-    rate_required_release: 'قيّمي تجربتك قبل الإنهاء — رأيك بيساعد الأسر التانية.',
-    share_exp_release: 'شاركينا تجربتك (اختياري بس بنقدّر رأيك جداً)…',
+    rate_required_release: 'قيّم تجربتك قبل الإنهاء — رأيك بيساعد الأسر التانية.',
+    share_exp_release: 'شاركنا تجربتك (اختياري بس بنقدّر رأيك جداً)…',
     submit_review_release: 'ابعت التقييم وأنهي العقد',
     please_rate_before_release: 'اختار تقييم بالنجوم الأول',
 
@@ -701,7 +701,7 @@ const T = {
     priority_label: 'الأولوية', priority_low: 'منخفضة', priority_medium: 'متوسطة', priority_high: 'عالية',
     subject_label: 'موضوع المشكلة', message_label2: 'رسالتك',
     subject_ph: 'وصف مختصر لمشكلتك',
-    message_ph: 'اشرحي مشكلتك بالتفصيل وهنساعدك…',
+    message_ph: 'اشرح مشكلتك بالتفصيل وهنساعدك…',
     submitting: 'بنبعت…', submit_ticket: 'ابعت مشكلتك', no_tickets: 'مفيش مشاكل مبعوتة لسه',
     subject_msg_required: 'الموضوع والرسالة مطلوبين',
     ticket_submitted: 'المشكلة اتبعتت!', ticket_submitted_sub: 'هنتواصل معاك قريباً',
@@ -712,13 +712,13 @@ const T = {
     offline_pending_body: 'الإيصال بتاعك وصلنا وبنراجعه دلوقتي.\nهنفعّل اشتراكك في أقل من 24 ساعة.',
     amount_confirmed_label: 'المبلغ المؤكد', amount_submitted_label: 'المبلغ المبعوت',
     confirmed_badge: '✓ مؤكد', pending_admin_badge: '⏳ في انتظار التأكيد',
-    go_to_app: 'يلا نكمل →', check_status_btn2: '🔄 تحققي من الحالة',
+    go_to_app: 'يلا نكمل →', check_status_btn2: '🔄 تحقق من الحالة',
     payment_confirmed_online: 'الدفع اتأكد! 🎉', amount_paid_label: 'المبلغ اللي اتدفع',
-    verifying_payment: 'بنتحقق من الدفع…', go_home: 'روحي الرئيسية →',
+    verifying_payment: 'بنتحقق من الدفع…', go_home: 'روح الرئيسية →',
     still_pending: 'لسه بيتراجع', could_not_check: 'مش قدرنا نتحقق دلوقتي',
     payment_of_egp: 'دفعتك بمبلغ ',
     payment_was_successful: ' اتعملت بنجاح!\nاشتراكك شغال دلوقتي.',
-    offline_notification_note: 'هتاخدي إشعار لما الإدارة تأكد — ممكن تقفلي الشاشة وترجعي بعدين.',
+    offline_notification_note: 'هتاخد إشعار لما الإدارة تأكد — ممكن تقفل الشاشة وترجع بعدين.',
 
     // Chats list
     no_msgs_yet: 'مفيش رسايل لسه',
@@ -753,7 +753,7 @@ const T = {
     arrange_offline: 'رتبي الدفع مع الإدارة', per_month: '/شهر',
     receipt_under_review: '⏳ الإيصال بيتراجع',
     receipt_review_body: 'الإيصال وصلنا وبنراجعه — هتاخدي إشعار فور التأكيد.',
-    check_confirmation_status: '🔄 تحققي من حالة التأكيد',
+    check_confirmation_status: '🔄 تحقق من حالة التأكيد',
     submit_new_receipt: 'ابعتي إيصال جديد',
     cash_transfer_title: '💵 الدفع بالتحويل النقدي',
     cash_transfer_sub: 'حوّلي رسوم الاشتراك لأحد الحسابات دي، وبعدين ارفعي الإيصال.',
@@ -770,9 +770,9 @@ const T = {
     discount_applied_suffix: '% خصم اتطبق!', apply_label: 'طبقي',
 
     // MaidDetail extra
-    review_submitted: 'تقييمك اتبعت! شكراً 🌟', review_submit_failed: 'التقييم مش اتبعت — جربي تاني',
+    review_submitted: 'تقييمك اتبعت! شكراً 🌟', review_submit_failed: 'التقييم مش اتبعت — جرب تاني',
     hire_req_sent: '✅ الطلب اتبعت!', hire_req_sent_sub: 'بنستنى رد المساعدة.',
-    chat_open_failed: 'المحادثة مش اتفتحت', please_rate_star: 'اختاري تقييم بالنجوم',
+    chat_open_failed: 'المحادثة مش اتفتحت', please_rate_star: 'اختار تقييم بالنجوم',
     rate_label: 'تقييمك', login_success_toast: 'أهلاً بيك! 👋',
 
     // HiredMaids extra

@@ -189,6 +189,10 @@ export default function HireRequestScreen({ navigation }) {
         setRequests(prev => prev.some(r => r._id === req._id) ? prev : [req, ...prev]);
         Toast.show({ type: 'info', text1: 'New Hire Request!', text2: `${req.housewife?.name} wants to hire you.` });
       });
+      socket.on('hire_request_cancelled', ({ requestId }) => {
+        if (!mounted) return;
+        setRequests(prev => prev.filter(r => r._id !== requestId));
+      });
     })();
     return () => { mounted = false; socketRef.current?.disconnect(); };
   }, []);

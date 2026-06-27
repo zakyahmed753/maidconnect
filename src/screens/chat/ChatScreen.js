@@ -203,7 +203,7 @@ export default function ChatScreen({ route, navigation }) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => user?.role === 'maid' ? navigation.navigate('MaidChatsList') : navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'#e8f4f1', alignItems:'center', justifyContent:'center' }}>
+        <TouchableOpacity onPress={() => navigation.navigate(user?.role === 'maid' ? 'MaidChatsList' : 'HWChatsList')} style={{ width:38, height:38, borderRadius:19, backgroundColor:'#e8f4f1', alignItems:'center', justifyContent:'center' }}>
           <BackChevron color={COLORS.green} />
         </TouchableOpacity>
         <View style={styles.chatAva}><Text style={{ fontSize: 16, color: '#fff', fontWeight: 'bold' }}>{(maidName || 'M').replace(/[^a-zA-Z؀-ۿ]/g, '').charAt(0).toUpperCase() || 'M'}</Text></View>
@@ -231,7 +231,7 @@ export default function ChatScreen({ route, navigation }) {
             scrollEventThrottle={100}
           />}
 
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, isAr && Platform.OS === 'ios' && { flexDirection: 'row-reverse' }]}>
         <TextInput
           style={[styles.textInput, isAr && { textAlign: 'right' }]}
           value={text}
