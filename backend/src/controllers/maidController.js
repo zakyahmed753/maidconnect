@@ -601,6 +601,33 @@ exports.respondHireRequest = async (req, res) => {
       const ioApprove = req.app.get('io');
       if (ioApprove) ioApprove.to(`user_${hwUser._id}`).emit('hire_request_response', { action: 'approve', maidName });
 
+      // Cancel every other pending hire request from this customer so no second maid can approve
+      try {
+        const otherPending = await HireRequest.find({
+          housewife: hwUser._id,
+          status: 'pending',
+          _id: { $ne: request._id },
+        }).populate({ path: 'maid', select: 'user' });
+
+        if (otherPending.length > 0) {
+          await HireRequest.updateMany(
+            { housewife: hwUser._id, status: 'pending', _id: { $ne: request._id } },
+            { $set: { status: 'rejected', respondedAt: new Date() } }
+          );
+          if (ioApprove) {
+            for (const other of otherPending) {
+              if (other.maid?.user) {
+                ioApprove.to(`user_${other.maid.user}`).emit('hire_request_cancelled', {
+                  requestId: String(other._id),
+                });
+              }
+            }
+          }
+        }
+      } catch (cancelErr) {
+        console.error('[respondHireRequest] cancel-others failed:', cancelErr.message);
+      }
+
       res.json({ success: true, action: 'approved' });
 
     } else {
