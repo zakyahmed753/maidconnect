@@ -38,7 +38,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSubmit = async () => {
-    if (!form.name || !form.email || !form.password || !form.phone) {
+    if (!form.name || !form.email || !form.password) {
       return Toast.show({ type: 'error', text1: t('fill_required') });
     }
     if (!area) {
@@ -46,7 +46,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
     }
     const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
     const normalizedPhone = form.phone.trim().replace(/\s|-/g, '');
-    if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
+    if (normalizedPhone && !EGYPTIAN_PHONE.test(normalizedPhone)) {
       return Toast.show({ type: 'error', text1: t('phone_invalid_hw') });
     }
     setLoading(true);
@@ -67,7 +67,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
     [t('full_name') + ' *', 'name',     'default',       false],
     [t('email') + ' *',     'email',    'email-address', false],
     [t('password') + ' *',  'password', 'default',       true ],
-    [t('phone') + ' *',     'phone',    'phone-pad',     false],
+    [t('phone'),             'phone',    'phone-pad',     false],
   ];
 
   return (
