@@ -24,14 +24,18 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: conflictMsg });
     }
 
-    if (!phone || !phone.trim()) {
-      return res.status(400).json({ success: false, message: 'Phone number is required' });
-    }
-    const normalizedPhone = phone.trim().replace(/\s|-|\+/g, '');
-
-    const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
-    if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
-      return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
+    // Phone is optional — validate and deduplicate only when provided
+    let normalizedPhone;
+    if (phone && phone.trim()) {
+      normalizedPhone = phone.trim().replace(/\s|-|\+/g, '');
+      const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
+      if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
+        return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
+      }
+      const phoneExists = await User.findOne({ phone: normalizedPhone });
+      if (phoneExists) {
+        return res.status(400).json({ success: false, message: 'This phone number is already registered' });
+      }
     }
 
     // Website flow: verify the pre-registration token issued after OTP verification
@@ -46,18 +50,14 @@ exports.register = async (req, res) => {
       }
     }
 
-    const phoneExists = await User.findOne({ phone: normalizedPhone });
-    if (phoneExists) {
-      return res.status(400).json({ success: false, message: 'This phone number is already registered' });
-    }
-
     // Website flow: email already verified via preRegToken — no OTP needed
     const emailVerified = !!preRegToken;
     const otp      = emailVerified ? null : genCode();
     const otpExpiry = emailVerified ? null : new Date(Date.now() + 10 * 60 * 1000);
 
     const user = await User.create({
-      name, email, password, phone: normalizedPhone, role,
+      name, email, password, role,
+      ...(normalizedPhone && { phone: normalizedPhone }),
       emailVerified, otpCode: otp, otpExpiry,
     });
 
