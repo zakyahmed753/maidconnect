@@ -3,7 +3,7 @@ const router = express.Router();
 const mc = require('../controllers/maidController');
 const { protect, maidOnly } = require('../middleware/auth');
 
-router.get('/',                        protect, mc.getAllMaids);
+router.get('/',                        mc.getAllMaids);
 router.get('/saved/list',              protect, mc.getSavedMaids);
 router.get('/me',                      protect, maidOnly, mc.getMyProfile);
 router.get('/hire-requests',           protect, maidOnly, mc.getHireRequests);
@@ -11,7 +11,7 @@ router.put('/hire-requests/:id/respond', protect, maidOnly, mc.respondHireReques
 router.get('/ref-link',                mc.getRefLink);
 router.post('/me/referral',            protect, maidOnly, mc.applyReferral);
 router.post('/me/reapply',             protect, maidOnly, mc.reapply);
-router.get('/:id',                     protect, mc.getMaid);
+router.get('/:id',                     mc.getMaid);
 router.post('/',                       protect, maidOnly, mc.createProfile);
 router.put('/me',                      protect, maidOnly, mc.updateProfile);
 router.post('/me/photos',              protect, maidOnly, mc.addPhoto);
