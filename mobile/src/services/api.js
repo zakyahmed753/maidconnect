@@ -80,6 +80,7 @@ export const paymentsAPI = {
   returnMaid:                  (data) => api.post('/payments/return-maid', data),
   getHistory:                  ()     => api.get('/payments/history'),
   checkStatus:                 (id)   => api.get(`/payments/${id}/status`),
+  verifyAppleIAP:              (data) => api.post('/payments/iap/apple', data),
 };
 
 export const configAPI = {
