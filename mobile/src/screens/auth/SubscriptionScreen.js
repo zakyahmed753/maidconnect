@@ -13,9 +13,17 @@ import { useTranslation } from '../../utils/i18n';
 import { maidsAPI, couponsAPI, uploadAPI, paymentsAPI } from '../../services/api';
 import * as ImagePicker from 'expo-image-picker';
 import BackChevron from '../../components/BackChevron';
+import Constants from 'expo-constants';
 
-// IAP imports — iOS only; on Android these are no-ops guarded by Platform checks
-import {
+const MAID_MONTHLY_SKU = 'world.servix.maid.monthly';
+
+// react-native-iap uses NitroModules which crash in Expo Go.
+// Only require it on real iOS builds (EAS / TestFlight / App Store).
+const IS_EXPO_GO = Constants.appOwnership === 'expo';
+const USE_IAP = Platform.OS === 'ios' && !IS_EXPO_GO;
+
+const iap = USE_IAP ? require('react-native-iap') : {};
+const {
   initConnection,
   endConnection,
   getSubscriptions,
@@ -24,9 +32,7 @@ import {
   finishTransaction,
   purchaseUpdatedListener,
   purchaseErrorListener,
-} from 'react-native-iap';
-
-const MAID_MONTHLY_SKU = 'world.servix.maid.monthly';
+} = iap;
 
 function getMaidPrice(nationality = '') {
   const n = nationality.toLowerCase();
@@ -87,7 +93,7 @@ export default function SubscriptionScreen({ navigation }) {
 
   // ── iOS IAP connection + product fetch + purchase listeners ───────────────
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
+    if (!USE_IAP) return;
 
     let mounted = true;
 
