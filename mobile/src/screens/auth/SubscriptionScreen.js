@@ -287,8 +287,8 @@ export default function SubscriptionScreen({ navigation }) {
 
       <ScrollView style={{ backgroundColor: COLORS.cream }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
 
-        {/* Pending receipt banner — Android only (iOS uses IAP) */}
-        {Platform.OS !== 'ios' && pendingPayment && (
+        {/* Pending receipt banner — Android + Expo Go iOS (real iOS uses IAP) */}
+        {!USE_IAP && pendingPayment && (
           <View style={{ backgroundColor: 'rgba(13,56,39,0.08)', borderWidth: 1.5, borderColor: COLORS.green, borderRadius: 10, padding: 16, marginBottom: 16 }}>
             <Text style={{ fontFamily: FONTS.display, fontSize: 17, color: COLORS.dark, marginBottom: 4 }}>{t('receipt_under_review')}</Text>
             <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 14 }}>
@@ -315,8 +315,8 @@ export default function SubscriptionScreen({ navigation }) {
               <Text style={styles.planName}>{t('monthly_plan_name')}</Text>
               <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t('standard_pricing')}</Text>
             </View>
-            {/* Price shown on Android; on iOS Apple's price appears in the IAP button */}
-            {Platform.OS !== 'ios' && (
+            {/* Price shown on Android + Expo Go iOS; real iOS price comes from Apple */}
+            {!USE_IAP && (
               <View style={{ alignItems: 'flex-end' }}>
                 {couponResult ? (
                   <>
@@ -342,8 +342,8 @@ export default function SubscriptionScreen({ navigation }) {
           ))}
         </View>
 
-        {/* ── iOS — Apple In-App Purchase ─────────────────────────────────── */}
-        {Platform.OS === 'ios' && (
+        {/* ── iOS real build — Apple In-App Purchase ──────────────────────── */}
+        {USE_IAP && (
           <View style={styles.iapSection}>
             {iapLoading ? (
               <ActivityIndicator color={COLORS.green} style={{ marginVertical: 20 }} />
@@ -405,8 +405,20 @@ export default function SubscriptionScreen({ navigation }) {
           </View>
         )}
 
-        {/* ── Android — coupon + cash transfer (unchanged) ─────────────────── */}
-        {Platform.OS !== 'ios' && (
+        {/* ── Android + Expo Go iOS — coupon + cash transfer ───────────────── */}
+        {!USE_IAP && (
+          <>
+            {IS_EXPO_GO && Platform.OS === 'ios' && (
+              <View style={{ backgroundColor: '#fff8e1', borderWidth: 1, borderColor: '#f0c040', borderRadius: 8, padding: 10, marginBottom: 10, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 18 }}>🧪</Text>
+                <Text style={{ fontSize: 11, color: '#7a5c00', flex: 1, lineHeight: 16 }}>
+                  Expo Go — using offline payment for testing.{'\n'}Real app uses Apple In-App Purchase.
+                </Text>
+              </View>
+            )}
+          </>
+        )}
+        {!USE_IAP && (
           <>
             <View style={styles.couponCard}>
               <Text style={styles.couponLabel}>{t('have_coupon')}</Text>
@@ -473,8 +485,8 @@ export default function SubscriptionScreen({ navigation }) {
 
       </ScrollView>
 
-      {/* Offline Payment Modal — Android only */}
-      {Platform.OS !== 'ios' && (
+      {/* Offline Payment Modal — Android + Expo Go iOS */}
+      {!USE_IAP && (
         <Modal visible={offlineModal} transparent animationType="slide" statusBarTranslucent>
           <Pressable style={styles.modalOverlay} onPress={() => { setOfflineModal(false); setReceiptUri(null); setSubmitError(null); }} />
           <ScrollView style={styles.modalSheet} contentContainerStyle={{ paddingBottom: 36 }} bounces={false}>
