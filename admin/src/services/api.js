@@ -48,6 +48,7 @@ export const adminAPI = {
   getLeadSources:       ()             => api.get('/admin/lead-sources'),
   createLeadSource:     (data)         => api.post('/admin/lead-sources', data),
   deleteLeadSource:     (id)           => api.delete(`/admin/lead-sources/${id}`),
+  hardDeleteMaid:       (id)           => api.delete(`/admin/maids/${id}/hard-delete`),
 };
 
 export const configAPI = {

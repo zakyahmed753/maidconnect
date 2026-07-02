@@ -97,6 +97,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
   const [offlineNote,  setOfflineNote]  = useState('');
   const [offlineLoading, setOfflineLoading] = useState(false);
   const [releasing,    setReleasing]    = useState(false);
+  const [hardDeleting, setHardDeleting] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody,    setEmailBody]    = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -204,6 +205,23 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to release maid');
     } finally { setReleasing(false); }
+  };
+
+  const handleHardDelete = async () => {
+    const name = maid.fullName || 'this maid';
+    if (!window.confirm(`⚠️ PERMANENT DELETE\n\nThis will completely erase "${name}" — their profile, user account, chats, payments, reviews, and all linked data.\n\nThis CANNOT be undone. The maid can register again from scratch.\n\nType OK to continue.`)) return;
+    if (!window.confirm(`Last chance — permanently delete "${name}" and all their data forever?`)) return;
+    setHardDeleting(true);
+    try {
+      await adminAPI.hardDeleteMaid(maid._id);
+      toast.success(`"${name}" permanently deleted`);
+      onClose();
+      onUpdate(maid._id, null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Hard delete failed');
+    } finally {
+      setHardDeleting(false);
+    }
   };
 
   const handleSendEmail = async () => {
@@ -690,6 +708,24 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                       {maid.user?.deletedAt ? '↩ Restore Account' : '🗑 Delete Account (Soft)'}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {/* Hard Delete — admin-only, danger zone */}
+              {!isAgent && (
+                <div style={{ background: '#140a0a', border: '1.5px solid rgba(255,107,107,0.35)', borderRadius: 8, padding: 18, gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <span style={{ fontSize: 16 }}>☠️</span>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: G.red }}>Permanent Delete</div>
+                    <span style={{ fontSize: 9, background: 'rgba(255,107,107,0.12)', color: G.red, border: '1px solid rgba(255,107,107,0.35)', borderRadius: 3, padding: '2px 7px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>DANGER ZONE</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: '#cc5555', marginBottom: 14, lineHeight: 1.6 }}>
+                    Permanently erases the maid profile, user account, all chats, messages, payments, reviews, hire requests, and coupons. Cannot be undone. The maid can register again from scratch with the same email.
+                  </div>
+                  <button onClick={handleHardDelete} disabled={hardDeleting}
+                    style={{ width: '100%', padding: '11px', background: hardDeleting ? 'rgba(255,107,107,0.06)' : 'rgba(255,107,107,0.12)', border: '1.5px solid rgba(255,107,107,0.45)', borderRadius: 5, color: G.red, fontSize: 13, fontWeight: 700, cursor: hardDeleting ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: hardDeleting ? 0.6 : 1 }}>
+                    {hardDeleting ? '⏳ Deleting…' : '☠️ Permanently Delete Maid'}
+                  </button>
                 </div>
               )}
 

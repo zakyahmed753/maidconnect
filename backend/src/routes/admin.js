@@ -307,6 +307,7 @@ router.get('/lead-sources',             protect, adminOnly, ac.getLeadSources);
 router.post('/lead-sources',            protect, adminOnly, ac.createLeadSource);
 router.delete('/lead-sources/:id',      protect, adminOnly, ac.deleteLeadSource);
 router.post('/payments/:paymentId/confirm-customer', protect, adminOnly, ac.confirmCustomerOfflinePayment);
+router.delete('/maids/:id/hard-delete',             protect, adminOnly, ac.hardDeleteMaid);
 
 
 module.exports = router;

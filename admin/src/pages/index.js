@@ -34,8 +34,13 @@ export function Maids() {
   });
 
   const handleUpdate = (maidId, patch) => {
-    setMaids(prev => prev.map(m => m._id === maidId ? { ...m, ...patch } : m));
-    setSelected(prev => prev?._id === maidId ? { ...prev, ...patch } : prev);
+    if (patch === null) {
+      setMaids(prev => prev.filter(m => m._id !== maidId));
+      setSelected(prev => prev?._id === maidId ? null : prev);
+    } else {
+      setMaids(prev => prev.map(m => m._id === maidId ? { ...m, ...patch } : m));
+      setSelected(prev => prev?._id === maidId ? { ...prev, ...patch } : prev);
+    }
   };
 
   const statusColors = { pending:'#f0a050', approved:'#5dd6a8', rejected:'#ff6b6b', suspended:'#888' };

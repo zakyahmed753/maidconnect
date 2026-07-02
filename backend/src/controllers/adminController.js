@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const Maid = require('../models/Maid');
-const { HouseWife, Payment, Notification, Chat } = require('../models/index');
+const { HouseWife, Payment, Notification, Chat, Message, Review, HireRequest, Coupon } = require('../models/index');
 const { sendPush } = require('../utils/push');
 const { sendProfileApprovedEmail, sendProfileRejectedEmail } = require('../utils/email');
 
@@ -400,6 +400,52 @@ exports.restoreUser = async (req, res) => {
       body: 'Your account has been reactivated by the admin. You can now log in again.',
     });
     res.json({ success: true, user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── Hard Delete Maid (full cascade) ──
+exports.hardDeleteMaid = async (req, res) => {
+  try {
+    const maid = await Maid.findById(req.params.id);
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+
+    const userId = maid.user;
+
+    // Delete chat messages for all chats involving this maid, then delete the chats
+    const maidChats = await Chat.find({ maid: maid._id }).select('_id');
+    const chatIds = maidChats.map(c => c._id);
+    if (chatIds.length) {
+      await Message.deleteMany({ chat: { $in: chatIds } });
+      await Chat.deleteMany({ _id: { $in: chatIds } });
+    }
+
+    // Delete payments, notifications, reviews, hire requests, coupons
+    await Payment.deleteMany({ maid: maid._id });
+    await Notification.deleteMany({ user: userId });
+    await Review.deleteMany({ maid: maid._id });
+    await HireRequest.deleteMany({ maid: maid._id });
+    await Coupon.deleteMany({ maidRef: maid._id });
+
+    // Remove maid references from all HouseWife documents
+    await HouseWife.updateMany(
+      {},
+      {
+        $pull: {
+          savedMaids:      maid._id,
+          blockedMaids:    maid._id,
+          hiredMaids:      maid._id,
+          pastHiredMaids:  maid._id,
+        },
+      }
+    );
+
+    // Delete the Maid profile and User account
+    await Maid.findByIdAndDelete(maid._id);
+    await require('../models/User').findByIdAndDelete(userId);
+
+    res.json({ success: true, message: 'Maid and all associated data permanently deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
