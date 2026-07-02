@@ -119,9 +119,7 @@ export default function App() {
     });
 
     return () => {
-      if (notifResponseListener.current) {
-        Notifications.removeNotificationSubscription(notifResponseListener.current);
-      }
+      notifResponseListener.current?.remove();
     };
   }, []);
 
