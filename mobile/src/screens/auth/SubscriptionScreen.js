@@ -18,8 +18,8 @@ import Constants from 'expo-constants';
 const MAID_MONTHLY_SKU = 'world.servix.maid.monthly';
 
 // react-native-iap uses NitroModules which crash in Expo Go.
-// Only require it on real iOS builds (EAS / TestFlight / App Store).
-const IS_EXPO_GO = Constants.appOwnership === 'expo';
+// executionEnvironment is the reliable way to detect Expo Go in SDK 48+.
+const IS_EXPO_GO = Constants.executionEnvironment === 'storeClient';
 const USE_IAP = Platform.OS === 'ios' && !IS_EXPO_GO;
 
 const iap = USE_IAP ? require('react-native-iap') : {};

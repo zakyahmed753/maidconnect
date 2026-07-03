@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "world.servix.mobile",
-      "buildNumber": "12",
+      "buildNumber": "13",
       "icon": "./assets/icon.png",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to log in to Servix quickly and securely.",
