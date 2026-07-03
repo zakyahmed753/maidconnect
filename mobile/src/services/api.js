@@ -81,6 +81,7 @@ export const paymentsAPI = {
   getHistory:                  ()     => api.get('/payments/history'),
   checkStatus:                 (id)   => api.get(`/payments/${id}/status`),
   verifyAppleIAP:              (data) => api.post('/payments/iap/apple', data),
+  verifyAppleCustomerIAP:      (data) => api.post('/payments/iap/apple/customer', data),
 };
 
 export const configAPI = {

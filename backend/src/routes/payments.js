@@ -8,6 +8,7 @@ router.post('/paymob/callback',   pc.paymobCallback);
 router.post('/return-maid',       protect, pc.returnMaid);
 router.get('/history',            protect, pc.getHistory);
 router.get('/:id/status',         protect, pc.checkStatus);
-router.post('/iap/apple',         protect, pc.verifyAppleIAP);
+router.post('/iap/apple',          protect, pc.verifyAppleIAP);
+router.post('/iap/apple/customer', protect, pc.verifyAppleCustomerIAP);
 
 module.exports = router;

@@ -519,6 +519,84 @@ exports.verifyAppleIAP = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────
+// APPLE IAP — CUSTOMER SUBSCRIPTION
+// POST /api/payments/iap/apple/customer
+// ─────────────────────────────────────────────
+exports.verifyAppleCustomerIAP = async (req, res) => {
+  try {
+    const { receiptData, productId } = req.body;
+    if (!receiptData) return res.status(400).json({ success: false, message: 'receiptData required' });
+
+    const sharedSecret = process.env.APPLE_IAP_SHARED_SECRET;
+    const payload = { 'receipt-data': receiptData, password: sharedSecret, 'exclude-old-transactions': true };
+
+    const verifyUrl = async (url) => {
+      const r = await axios.post(url, payload, { timeout: 15000 });
+      return r.data;
+    };
+
+    let appleRes = await verifyUrl('https://buy.itunes.apple.com/verifyReceipt');
+    if (appleRes.status === 21007) {
+      appleRes = await verifyUrl('https://sandbox.itunes.apple.com/verifyReceipt');
+    }
+
+    if (appleRes.status !== 0) {
+      return res.status(400).json({ success: false, message: `Apple receipt invalid (status ${appleRes.status})` });
+    }
+
+    const latestInfo = appleRes.latest_receipt_info;
+    if (!latestInfo || !latestInfo.length) {
+      return res.status(400).json({ success: false, message: 'No subscription info in receipt' });
+    }
+
+    const sorted = [...latestInfo].sort((a, b) => Number(b.expires_date_ms) - Number(a.expires_date_ms));
+    const latest  = sorted[0];
+    const endDate = new Date(Number(latest.expires_date_ms));
+    const now     = new Date();
+
+    if (endDate < now) {
+      return res.status(400).json({ success: false, message: 'Subscription has already expired' });
+    }
+
+    const transactionId = latest.transaction_id || latest.original_transaction_id;
+
+    const existing = await Payment.findOne({ gatewayRef: transactionId, method: 'apple_iap' });
+    if (!existing) {
+      await Payment.create({
+        user:             req.user._id,
+        type:             'customer_subscription',
+        method:           'apple_iap',
+        amount:           0,
+        currency:         'USD',
+        status:           'completed',
+        subscriptionPlan: 'monthly',
+        gatewayRef:       transactionId,
+        gatewayResponse:  { productId, expiresMs: latest.expires_date_ms, appleStatus: appleRes.status },
+        paidAt:           now,
+      });
+    }
+
+    await HouseWife.findOneAndUpdate({ user: req.user._id }, {
+      'subscription.status':    'active',
+      'subscription.startDate': now,
+      'subscription.endDate':   endDate,
+    });
+
+    await Notification.create({
+      user:  req.user._id,
+      type:  'subscription',
+      title: '🎉 Subscription Activated!',
+      body:  'You can now chat with maids and start hiring.',
+    });
+
+    res.json({ success: true, endDate });
+  } catch (err) {
+    console.error('Apple customer IAP verify error:', err.response?.data || err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Payment history ──
 exports.getHistory = async (req, res) => {
   try {
