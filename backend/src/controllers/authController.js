@@ -189,11 +189,21 @@ exports.getMe = async (req, res) => {
       profile = await HouseWife.findOne({ user: user._id });
     }
 
-    // Auto-expire maid subscription if past end date
-    if (profile && user.role === 'maid' && profile.subscription?.status === 'active' && profile.subscription?.endDate) {
-      if (new Date(profile.subscription.endDate) < new Date()) {
-        await Maid.findByIdAndUpdate(profile._id, { 'subscription.status': 'expired' });
-        profile.subscription.status = 'expired';
+    // FREE PERIOD until Oct 1 2026: subscription checks disabled
+    // // Auto-expire maid subscription if past end date
+    // if (profile && user.role === 'maid' && profile.subscription?.status === 'active' && profile.subscription?.endDate) {
+    //   if (new Date(profile.subscription.endDate) < new Date()) {
+    //     await Maid.findByIdAndUpdate(profile._id, { 'subscription.status': 'expired' });
+    //     profile.subscription.status = 'expired';
+    //   }
+    // }
+    const FREE_UNTIL = new Date('2026-10-01');
+    if (profile && Date.now() < FREE_UNTIL.getTime()) {
+      if (profile.subscription) {
+        profile.subscription.status = 'active';
+        profile.subscription.endDate = FREE_UNTIL;
+      } else {
+        profile.subscription = { status: 'active', endDate: FREE_UNTIL };
       }
     }
 

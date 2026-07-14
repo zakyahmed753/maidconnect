@@ -160,8 +160,9 @@ exports.getAllMaids = async (req, res) => {
     const filter = {
       approvalStatus: 'approved',
       isHired: false,
-      'subscription.status': 'active',
-      'subscription.endDate': { $gt: new Date() },
+      // FREE PERIOD until Oct 1 2026: subscription filter disabled
+      // 'subscription.status': 'active',
+      // 'subscription.endDate': { $gt: new Date() },
     };
 
     // Exclude maids blocked/hired; also filter by customer's residential area

@@ -8,19 +8,19 @@ exports.getOrCreateChat = async (req, res) => {
   try {
     const { maidUserId, maidProfileId } = req.body;
 
-    // Gate: housewife must have active subscription
-    if (req.user.role === 'housewife') {
-      const { HouseWife } = require('../models/index');
-      const hw = await HouseWife.findOne({ user: req.user._id });
-      const sub = hw?.subscription;
-      if (!sub || sub.status !== 'active' || !sub.endDate || new Date(sub.endDate) < new Date()) {
-        // Expire if past end date
-        if (sub && sub.status === 'active' && sub.endDate && new Date(sub.endDate) < new Date()) {
-          await HouseWife.findOneAndUpdate({ user: req.user._id }, { 'subscription.status': 'expired' });
-        }
-        return res.status(403).json({ success: false, message: 'subscription_required', code: 'SUBSCRIPTION_REQUIRED' });
-      }
-    }
+    // FREE PERIOD until Oct 1 2026: customer subscription gate disabled
+    // if (req.user.role === 'housewife') {
+    //   const { HouseWife } = require('../models/index');
+    //   const hw = await HouseWife.findOne({ user: req.user._id });
+    //   const sub = hw?.subscription;
+    //   if (!sub || sub.status !== 'active' || !sub.endDate || new Date(sub.endDate) < new Date()) {
+    //     // Expire if past end date
+    //     if (sub && sub.status === 'active' && sub.endDate && new Date(sub.endDate) < new Date()) {
+    //       await HouseWife.findOneAndUpdate({ user: req.user._id }, { 'subscription.status': 'expired' });
+    //     }
+    //     return res.status(403).json({ success: false, message: 'subscription_required', code: 'SUBSCRIPTION_REQUIRED' });
+    //   }
+    // }
 
     let chat = await Chat.findOne({
       housewife: req.user._id,
