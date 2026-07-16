@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Delete Account — Servix</title>
+  <link rel="icon" type="image/svg+xml" href="assets/logo-square.svg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--green:#0D3827;--mint:#5dd6a8;--gold:#C9A84C;--cream:#f9f5f0;--text:#1a1108;--muted:#7a6955;--border:rgba(13,56,39,0.1);--red:#dc2626;--red-pale:rgba(220,38,38,0.08)}
+    body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+    nav{background:var(--green);padding:16px 32px;display:flex;align-items:center;gap:10px}
+    nav img{height:34px;width:34px;border-radius:8px}
+    nav span{font-family:'Jost',sans-serif;font-size:20px;color:#fff;font-weight:700;letter-spacing:.01em}
+    main{flex:1;max-width:680px;margin:60px auto;padding:0 24px 60px}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:var(--red-pale);border:1px solid rgba(220,38,38,0.25);border-radius:20px;padding:6px 16px;font-size:12px;color:var(--red);font-weight:700;margin-bottom:24px}
+    h1{font-size:32px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.2}
+    .sub{font-size:15px;color:var(--muted);margin-bottom:40px;line-height:1.7}
+    .card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px}
+    .card-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+    .card-num{width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .card-num.red{background:var(--red)}
+    .card-body{font-size:14px;color:var(--muted);line-height:1.75}
+    .card-body strong{color:var(--text)}
+    .step-list{list-style:none;padding:0;margin-top:10px}
+    .step-list li{padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--muted);display:flex;align-items:flex-start;gap:10px}
+    .step-list li:last-child{border-bottom:none}
+    .step-list li::before{content:'→';color:var(--green);font-weight:700;flex-shrink:0;margin-top:1px}
+    .warn-box{background:var(--red-pale);border:1px solid rgba(220,38,38,0.2);border-radius:12px;padding:18px 20px;margin-top:16px;font-size:13px;color:#991b1b;line-height:1.65}
+    .warn-box strong{display:block;margin-bottom:4px;font-size:14px}
+    .email-btn{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;padding:13px 24px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;margin-top:16px;transition:background .2s}
+    .email-btn:hover{background:#1a5c3a}
+    .divider{border:none;border-top:1px solid var(--border);margin:36px 0}
+    .data-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+    .data-table th{text-align:left;padding:10px 12px;background:var(--cream);color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border)}
+    .data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+    .data-table tr:last-child td{border-bottom:none}
+    .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+    .tag.del{background:var(--red-pale);color:var(--red)}
+    .tag.keep{background:rgba(13,56,39,0.08);color:var(--green)}
+    footer{padding:24px 32px;border-top:1px solid var(--border);text-align:center;font-size:12px;color:var(--muted)}
+    footer a{color:var(--green);text-decoration:none}
+    @media(max-width:600px){main{margin:32px auto};h1{font-size:24px}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <img src="assets/logo-square.svg" alt="Servix"/>
+  <span>Servix</span>
+</nav>
+
+<main>
+  <div class="badge">⚠ Account Deletion</div>
+  <h1>Delete Your Servix Account</h1>
+  <p class="sub">You can permanently delete your Servix account and all associated data at any time. This action is irreversible — please read below before proceeding.</p>
+
+  <!-- Option 1: In-App -->
+  <div class="card">
+    <div class="card-title">
+      <span class="card-num">1</span>
+      Delete directly from the app
+    </div>
+    <div class="card-body">
+      The fastest way to delete your account is from within the Servix app:
+      <ul class="step-list">
+        <li>Open the Servix app and log in</li>
+        <li>Go to <strong>Me</strong> tab (bottom navigation)</li>
+        <li>Tap <strong>Settings</strong></li>
+        <li>Scroll down and tap <strong>Delete Account</strong></li>
+        <li>Confirm the deletion when prompted</li>
+      </ul>
+      Your account and all data will be permanently deleted immediately.
+    </div>
+  </div>
+
+  <!-- Option 2: Email -->
+  <div class="card">
+    <div class="card-title">
+      <span class="card-num">2</span>
+      Request deletion by email
+    </div>
+    <div class="card-body">
+      If you no longer have access to the app, send us an email from the address registered to your account and we will delete it within <strong>7 business days</strong>.
+      <br/>
+      <a class="email-btn" href="mailto:support@servix.world?subject=Account%20Deletion%20Request&body=Please%20delete%20my%20Servix%20account.%20My%20registered%20email%20is%3A%20">
+        ✉ Email support@servix.world
+      </a>
+      <div class="warn-box">
+        <strong>⚠ What to include in your email:</strong>
+        Your full name and the email address registered to your Servix account. We may ask for identity verification before processing the request.
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- What gets deleted -->
+  <div class="card">
+    <div class="card-title">
+      <span class="card-num red">!</span>
+      What happens when you delete your account
+    </div>
+    <div class="card-body">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Action</th>
+            <th>Timeframe</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Profile (name, photo, bio)</td>
+            <td><span class="tag del">Deleted</span></td>
+            <td>Immediately</td>
+          </tr>
+          <tr>
+            <td>Chat messages</td>
+            <td><span class="tag del">Deleted</span></td>
+            <td>Immediately</td>
+          </tr>
+          <tr>
+            <td>Hire requests &amp; history</td>
+            <td><span class="tag del">Deleted</span></td>
+            <td>Immediately</td>
+          </tr>
+          <tr>
+            <td>Login credentials</td>
+            <td><span class="tag del">Deleted</span></td>
+            <td>Immediately</td>
+          </tr>
+          <tr>
+            <td>Uploaded documents (ID)</td>
+            <td><span class="tag del">Deleted</span></td>
+            <td>Within 30 days</td>
+          </tr>
+          <tr>
+            <td>Anonymised transaction logs</td>
+            <td><span class="tag keep">Retained</span></td>
+            <td>Up to 1 year (legal)</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="warn-box" style="margin-top:16px">
+        <strong>This action cannot be undone.</strong>
+        Once deleted, your account, profile, and all data cannot be recovered. If you sign up again, you will start as a new user.
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <a href="/">← Back to Servix</a> &nbsp;·&nbsp; <a href="mailto:support@servix.world">support@servix.world</a> &nbsp;·&nbsp; <a href="/privacy-policy.html">Privacy Policy</a>
+</footer>
+
+</body>
+</html>
