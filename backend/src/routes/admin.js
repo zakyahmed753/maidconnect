@@ -356,8 +356,8 @@ router.get('/fix/patch-demo-accounts', async (req, res) => {
   if (maidUser) {
     await Maid.findOneAndUpdate(
       { user: maidUser._id },
-      { approvalStatus: 'approved', subscription: expiredSub },
-      { new: true }
+      { user: maidUser._id, fullName: 'Demo Maid', approvalStatus: 'approved', subscription: expiredSub },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
     );
     results.push({ email: 'demo.maid@servix.world', patched: true });
   } else {
