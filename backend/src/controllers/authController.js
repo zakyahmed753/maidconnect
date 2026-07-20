@@ -198,7 +198,8 @@ exports.getMe = async (req, res) => {
     //   }
     // }
     const FREE_UNTIL = new Date('2026-10-01');
-    if (profile && Date.now() < FREE_UNTIL.getTime()) {
+    const DEMO_EMAILS = ['demo.maid@servix.world', 'demo.customer@servix.world'];
+    if (profile && Date.now() < FREE_UNTIL.getTime() && !DEMO_EMAILS.includes(user.email)) {
       if (profile.subscription) {
         profile.subscription.status = 'active';
         profile.subscription.endDate = FREE_UNTIL;
