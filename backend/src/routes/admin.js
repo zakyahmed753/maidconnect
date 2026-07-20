@@ -338,6 +338,51 @@ router.get('/fix/create-demo-accounts', async (req, res) => {
   res.json({ ok: true, results, password: DEMO_PASSWORD });
 });
 
+// Fix existing demo accounts — set emailVerified, expired subscription, maid approved
+// Usage: GET /api/admin/fix/patch-demo-accounts?secret=servix2026
+router.get('/fix/patch-demo-accounts', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const User = require('../models/User');
+  const Maid = require('../models/Maid');
+  const { HouseWife } = require('../models/index');
+  const expiredSub = { status: 'expired', endDate: new Date('2025-01-01'), plan: 'monthly' };
+  const results = [];
+
+  const maidUser = await User.findOneAndUpdate(
+    { email: 'demo.maid@servix.world' },
+    { emailVerified: true },
+    { new: true }
+  );
+  if (maidUser) {
+    await Maid.findOneAndUpdate(
+      { user: maidUser._id },
+      { approvalStatus: 'approved', subscription: expiredSub },
+      { new: true }
+    );
+    results.push({ email: 'demo.maid@servix.world', patched: true });
+  } else {
+    results.push({ email: 'demo.maid@servix.world', patched: false, note: 'user not found' });
+  }
+
+  const custUser = await User.findOneAndUpdate(
+    { email: 'demo.customer@servix.world' },
+    { emailVerified: true },
+    { new: true }
+  );
+  if (custUser) {
+    await HouseWife.findOneAndUpdate(
+      { user: custUser._id },
+      { subscription: expiredSub },
+      { new: true }
+    );
+    results.push({ email: 'demo.customer@servix.world', patched: true });
+  } else {
+    results.push({ email: 'demo.customer@servix.world', patched: false, note: 'user not found' });
+  }
+
+  res.json({ ok: true, results });
+});
+
 // Reset all payment records (one-time use — fresh launch)
 // Usage: GET /api/admin/fix/reset-payments?secret=servix2026
 router.get('/fix/reset-payments', async (req, res) => {
