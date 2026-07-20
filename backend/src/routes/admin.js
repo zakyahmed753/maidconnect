@@ -348,9 +348,12 @@ router.get('/fix/patch-demo-accounts', async (req, res) => {
   const expiredSub = { status: 'expired', endDate: new Date('2025-01-01'), plan: 'monthly' };
   const results = [];
 
+  const bcrypt = require('bcryptjs');
+  const hashed = await bcrypt.hash('Demo@2026', 10);
+
   const maidUser = await User.findOneAndUpdate(
     { email: 'demo.maid@servix.world' },
-    { emailVerified: true },
+    { emailVerified: true, password: hashed },
     { new: true }
   );
   if (maidUser) {
@@ -366,7 +369,7 @@ router.get('/fix/patch-demo-accounts', async (req, res) => {
 
   const custUser = await User.findOneAndUpdate(
     { email: 'demo.customer@servix.world' },
-    { emailVerified: true },
+    { emailVerified: true, password: hashed },
     { new: true }
   );
   if (custUser) {
