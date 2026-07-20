@@ -286,6 +286,15 @@ router.get('/fix/seed-lead-sources', async (req, res) => {
   res.json({ ok: true, seeded: results });
 });
 
+// Reset all payment records (one-time use — fresh launch)
+// Usage: GET /api/admin/fix/reset-payments?secret=servix2026
+router.get('/fix/reset-payments', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const { Payment } = require('../models/index');
+  const result = await Payment.deleteMany({});
+  res.json({ ok: true, deleted: result.deletedCount });
+});
+
 // Admin-only routes
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
