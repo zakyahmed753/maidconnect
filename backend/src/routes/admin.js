@@ -286,6 +286,58 @@ router.get('/fix/seed-lead-sources', async (req, res) => {
   res.json({ ok: true, seeded: results });
 });
 
+// Create Apple review demo accounts (pre-verified, expired subscription, no OTP needed)
+// Usage: GET /api/admin/fix/create-demo-accounts?secret=servix2026
+router.get('/fix/create-demo-accounts', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  const User = require('../models/User');
+  const Maid = require('../models/Maid');
+  const { HouseWife } = require('../models/index');
+  const bcrypt = require('bcryptjs');
+  const results = [];
+
+  const DEMO_PASSWORD = 'Demo@2026';
+  const hashed = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const expiredSub = { status: 'expired', endDate: new Date('2025-01-01'), plan: 'monthly' };
+
+  // Demo maid account
+  const maidEmail = 'demo.maid@servix.world';
+  let maidUser = await User.findOne({ email: maidEmail });
+  if (!maidUser) {
+    maidUser = await User.create({
+      name: 'Demo Maid', email: maidEmail, password: hashed,
+      role: 'maid', emailVerified: true,
+    });
+    await Maid.create({
+      user: maidUser._id, fullName: 'Demo Maid',
+      approvalStatus: 'approved',
+      subscription: expiredSub,
+    });
+    results.push({ email: maidEmail, created: true });
+  } else {
+    results.push({ email: maidEmail, created: false, note: 'already exists' });
+  }
+
+  // Demo customer account
+  const custEmail = 'demo.customer@servix.world';
+  let custUser = await User.findOne({ email: custEmail });
+  if (!custUser) {
+    custUser = await User.create({
+      name: 'Demo Customer', email: custEmail, password: hashed,
+      role: 'housewife', emailVerified: true,
+    });
+    await HouseWife.create({
+      user: custUser._id, fullName: 'Demo Customer',
+      subscription: expiredSub,
+    });
+    results.push({ email: custEmail, created: true });
+  } else {
+    results.push({ email: custEmail, created: false, note: 'already exists' });
+  }
+
+  res.json({ ok: true, results, password: DEMO_PASSWORD });
+});
+
 // Reset all payment records (one-time use — fresh launch)
 // Usage: GET /api/admin/fix/reset-payments?secret=servix2026
 router.get('/fix/reset-payments', async (req, res) => {
