@@ -11,7 +11,6 @@ const ALL_AREAS = [
 ];
 const DEFAULT_ACTIVE = ['Maadi', 'Zamalek', 'New Cairo', 'Heliopolis', 'Sheikh Zayed', '6th of October'];
 
-// GET /api/config/areas — public
 router.get('/areas', async (req, res) => {
   try {
     let cfg = await Config.findOne({ key: 'activeAreas' });
@@ -22,7 +21,6 @@ router.get('/areas', async (req, res) => {
   }
 });
 
-// PUT /api/config/areas — admin only
 router.put('/areas', protect, adminOnly, async (req, res) => {
   try {
     const { activeAreas } = req.body;
@@ -38,7 +36,6 @@ router.put('/areas', protect, adminOnly, async (req, res) => {
   }
 });
 
-// GET /api/config/terms — public
 router.get('/terms', async (req, res) => {
   try {
     const cfg = await Config.findOne({ key: 'termsUrl' });
@@ -48,7 +45,6 @@ router.get('/terms', async (req, res) => {
   }
 });
 
-// PUT /api/config/terms — admin only
 router.put('/terms', protect, adminOnly, async (req, res) => {
   try {
     const { termsUrl } = req.body;
@@ -64,7 +60,34 @@ router.put('/terms', protect, adminOnly, async (req, res) => {
   }
 });
 
-// GET /api/config/lead-sources — public (for register form dropdown)
+router.get('/version', async (req, res) => {
+  try {
+    const cfg = await Config.findOne({ key: 'appVersion' });
+    const value = cfg?.value || { ios: '1.3.6', android: '1.3.6' };
+    res.json({ success: true, ios: value.ios, android: value.android });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+});
+
+router.put('/version', protect, adminOnly, async (req, res) => {
+  try {
+    const { ios, android } = req.body;
+    if (!ios && !android) return res.status(400).json({ success: false, message: 'ios or android version required' });
+    const existing = await Config.findOne({ key: 'appVersion' });
+    const current = existing?.value || { ios: '1.3.6', android: '1.3.6' };
+    const value = { ios: ios || current.ios, android: android || current.android };
+    const cfg = await Config.findOneAndUpdate(
+      { key: 'appVersion' },
+      { value, updatedAt: Date.now() },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, ios: cfg.value.ios, android: cfg.value.android });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 router.get('/lead-sources', async (req, res) => {
   try {
     const LeadSource = require('../models/LeadSource');
