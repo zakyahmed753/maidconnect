@@ -597,6 +597,95 @@ exports.verifyAppleCustomerIAP = async (req, res) => {
   }
 };
 
+// ─────────────────────────────────────────────
+// ACTIVATE FREE PERIOD (idempotent)
+// POST /api/payments/activate-free-period
+// ─────────────────────────────────────────────
+exports.activateFreePeriod = async (req, res) => {
+  try {
+    const user = req.user;
+    const now  = new Date();
+
+    if (user.role === 'maid') {
+      const maid = await Maid.findOne({ user: user._id });
+      if (!maid) return res.status(404).json({ success: false, message: 'Maid profile not found' });
+
+      const FREE_END = new Date('2026-09-01T00:00:00.000Z');
+
+      // Don't overwrite a real paid subscription that goes beyond the free period
+      const currentEnd = maid.subscription?.endDate ? new Date(maid.subscription.endDate) : null;
+      const hasPaidSub = currentEnd && currentEnd > FREE_END &&
+                         maid.subscription?.status === 'active' &&
+                         ['monthly', 'apple_iap'].includes(maid.subscription?.plan);
+      if (!hasPaidSub) {
+        await Maid.findOneAndUpdate({ user: user._id }, {
+          'subscription.plan':      'free_period',
+          'subscription.status':    'active',
+          'subscription.startDate': now,
+          'subscription.endDate':   FREE_END,
+        });
+      }
+
+      // Idempotent — one record per user
+      const existing = await Payment.findOne({ user: user._id, method: 'free_period' });
+      if (!existing) {
+        await Payment.create({
+          user:             user._id,
+          type:             'subscription',
+          method:           'free_period',
+          amount:           0,
+          currency:         'EGP',
+          status:           'completed',
+          subscriptionPlan: 'free_period',
+          maidProfile:      maid._id,
+          gatewayResponse:  { endDate: FREE_END.toISOString(), label: 'Free launch period until September 1, 2026' },
+          paidAt:           now,
+        });
+      }
+
+      return res.json({ success: true, endDate: FREE_END, role: 'maid' });
+
+    } else if (user.role === 'housewife') {
+      const FREE_END = new Date('2026-10-01T00:00:00.000Z');
+
+      const hw = await HouseWife.findOne({ user: user._id });
+      const currentEnd = hw?.subscription?.endDate ? new Date(hw.subscription.endDate) : null;
+      const hasPaidSub = currentEnd && currentEnd > FREE_END &&
+                         hw?.subscription?.status === 'active';
+      if (!hasPaidSub) {
+        await HouseWife.findOneAndUpdate({ user: user._id }, {
+          'subscription.status':    'active',
+          'subscription.startDate': now,
+          'subscription.endDate':   FREE_END,
+        });
+      }
+
+      const existing = await Payment.findOne({ user: user._id, method: 'free_period' });
+      if (!existing) {
+        await Payment.create({
+          user:             user._id,
+          type:             'customer_subscription',
+          method:           'free_period',
+          amount:           0,
+          currency:         'EGP',
+          status:           'completed',
+          subscriptionPlan: 'free_period',
+          gatewayResponse:  { endDate: FREE_END.toISOString(), label: 'Free launch period until October 1, 2026' },
+          paidAt:           now,
+        });
+      }
+
+      return res.json({ success: true, endDate: FREE_END, role: 'housewife' });
+
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid role for free period' });
+    }
+  } catch (err) {
+    console.error('activateFreePeriod error:', err.message);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Payment history ──
 exports.getHistory = async (req, res) => {
   try {

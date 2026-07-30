@@ -286,115 +286,6 @@ router.get('/fix/seed-lead-sources', async (req, res) => {
   res.json({ ok: true, seeded: results });
 });
 
-// Create Apple review demo accounts (pre-verified, expired subscription, no OTP needed)
-// Usage: GET /api/admin/fix/create-demo-accounts?secret=servix2026
-router.get('/fix/create-demo-accounts', async (req, res) => {
-  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
-  const User = require('../models/User');
-  const Maid = require('../models/Maid');
-  const { HouseWife } = require('../models/index');
-  const bcrypt = require('bcryptjs');
-  const results = [];
-
-  const DEMO_PASSWORD = 'Demo@2026';
-  const hashed = await bcrypt.hash(DEMO_PASSWORD, 10);
-  const expiredSub = { status: 'expired', endDate: new Date('2025-01-01'), plan: 'monthly' };
-
-  // Demo maid account
-  const maidEmail = 'demo.maid@servix.world';
-  let maidUser = await User.findOne({ email: maidEmail });
-  if (!maidUser) {
-    maidUser = await User.create({
-      name: 'Demo Maid', email: maidEmail, password: hashed,
-      role: 'maid', emailVerified: true,
-    });
-    await Maid.create({
-      user: maidUser._id, fullName: 'Demo Maid',
-      approvalStatus: 'approved',
-      subscription: expiredSub,
-    });
-    results.push({ email: maidEmail, created: true });
-  } else {
-    results.push({ email: maidEmail, created: false, note: 'already exists' });
-  }
-
-  // Demo customer account
-  const custEmail = 'demo.customer@servix.world';
-  let custUser = await User.findOne({ email: custEmail });
-  if (!custUser) {
-    custUser = await User.create({
-      name: 'Demo Customer', email: custEmail, password: hashed,
-      role: 'housewife', emailVerified: true,
-    });
-    await HouseWife.create({
-      user: custUser._id, fullName: 'Demo Customer',
-      subscription: expiredSub,
-    });
-    results.push({ email: custEmail, created: true });
-  } else {
-    results.push({ email: custEmail, created: false, note: 'already exists' });
-  }
-
-  res.json({ ok: true, results, password: DEMO_PASSWORD });
-});
-
-// Fix existing demo accounts — set emailVerified, expired subscription, maid approved
-// Usage: GET /api/admin/fix/patch-demo-accounts?secret=servix2026
-router.get('/fix/patch-demo-accounts', async (req, res) => {
-  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
-  const User = require('../models/User');
-  const Maid = require('../models/Maid');
-  const { HouseWife } = require('../models/index');
-  const expiredSub = { status: 'expired', endDate: new Date('2025-01-01'), plan: 'monthly' };
-  const results = [];
-
-  const bcrypt = require('bcryptjs');
-  const hashed = await bcrypt.hash('Demo@2026', 10);
-
-  const maidUser = await User.findOneAndUpdate(
-    { email: 'demo.maid@servix.world' },
-    { emailVerified: true, password: hashed },
-    { new: true }
-  );
-  if (maidUser) {
-    await Maid.findOneAndUpdate(
-      { user: maidUser._id },
-      { user: maidUser._id, fullName: 'Demo Maid', approvalStatus: 'approved', subscription: expiredSub },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    );
-    results.push({ email: 'demo.maid@servix.world', patched: true });
-  } else {
-    results.push({ email: 'demo.maid@servix.world', patched: false, note: 'user not found' });
-  }
-
-  const custUser = await User.findOneAndUpdate(
-    { email: 'demo.customer@servix.world' },
-    { emailVerified: true, password: hashed },
-    { new: true }
-  );
-  if (custUser) {
-    await HouseWife.findOneAndUpdate(
-      { user: custUser._id },
-      { subscription: expiredSub },
-      { new: true }
-    );
-    results.push({ email: 'demo.customer@servix.world', patched: true });
-  } else {
-    results.push({ email: 'demo.customer@servix.world', patched: false, note: 'user not found' });
-  }
-
-  res.json({ ok: true, results });
-});
-
-// Reset all payment records (one-time use — fresh launch)
-// Usage: GET /api/admin/fix/reset-payments?secret=servix2026
-router.get('/fix/reset-payments', async (req, res) => {
-  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
-  const { Payment } = require('../models/index');
-  const result = await Payment.deleteMany({});
-  res.json({ ok: true, deleted: result.deletedCount });
-});
-
 // Admin-only routes
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
@@ -417,6 +308,20 @@ router.post('/lead-sources',            protect, adminOnly, ac.createLeadSource)
 router.delete('/lead-sources/:id',      protect, adminOnly, ac.deleteLeadSource);
 router.post('/payments/:paymentId/confirm-customer', protect, adminOnly, ac.confirmCustomerOfflinePayment);
 router.delete('/maids/:id/hard-delete',             protect, adminOnly, ac.hardDeleteMaid);
+router.delete('/housewives/:hwId/hard-delete',      protect, adminOnly, ac.hardDeleteHouseWife);
 
+// Reset all payment records (wipe test data) — secret-protected, no auth required
+// Usage: DELETE /api/admin/fix/reset-payments?secret=servix2026
+// Returns: { ok, deleted } — deleted = number of payment documents removed
+router.delete('/fix/reset-payments', async (req, res) => {
+  if (req.query.secret !== 'servix2026') return res.status(403).json({ ok: false });
+  try {
+    const { Payment } = require('../models/index');
+    const result = await Payment.deleteMany({});
+    res.json({ ok: true, deleted: result.deletedCount });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 module.exports = router;

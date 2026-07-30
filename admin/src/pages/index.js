@@ -155,6 +155,15 @@ export function HouseWives() {
     } catch { toast.error('Failed'); }
   };
 
+  const handleHardDelete = async (hw) => {
+    if (!window.confirm(`⚠️ PERMANENTLY DELETE "${hw.fullName}"?\n\nThis will delete:\n• Their account and profile\n• All their chats and messages\n• All their payments\n• All their notifications\n\nThis CANNOT be undone.`)) return;
+    try {
+      await adminAPI.hardDeleteHouseWife(hw._id);
+      toast.success(`${hw.fullName} permanently deleted`);
+      setHws(prev => prev.filter(h => h._id !== hw._id));
+    } catch { toast.error('Failed to delete'); }
+  };
+
   const handleOfflineSub = async (hw) => {
     if (!window.confirm(`Record EGP ${offlineAmt || 1000} cash payment and activate subscription for ${hw.fullName}?`)) return;
     setPaying(hw._id);
@@ -223,6 +232,10 @@ export function HouseWives() {
                   <button onClick={() => handleDelete(hw.user?._id, !!hw.user?.deletedAt)}
                     style={{ padding:'5px 10px', background: hw.user?.deletedAt ? 'rgba(93,214,168,0.08)' : 'rgba(80,80,80,0.12)', border:`1px solid ${hw.user?.deletedAt ? 'rgba(93,214,168,0.3)' : 'rgba(80,80,80,0.3)'}`, borderRadius:4, color: hw.user?.deletedAt ? '#5dd6a8' : '#888', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif" }}>
                     {hw.user?.deletedAt ? '↩ Restore' : '🗑 Delete'}
+                  </button>
+                  <button onClick={() => handleHardDelete(hw)}
+                    style={{ padding:'5px 10px', background:'rgba(180,30,30,0.15)', border:'1px solid rgba(180,30,30,0.4)', borderRadius:4, color:'#ff4444', fontSize:10, cursor:'pointer', fontFamily:"'Jost',sans-serif", fontWeight:700 }}>
+                    ☠ Perm Delete
                   </button>
                 </div>
               </div>
@@ -320,16 +333,28 @@ export function Payments() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
         {['', 'completed', 'pending', 'failed'].map(s => (
           <button key={s} onClick={() => setFilter(s)}
             style={{ padding: '7px 14px', borderRadius: 5, border: `1px solid ${filter === s ? '#c9a84c' : '#2a2a2a'}`, background: filter === s ? 'rgba(201,168,76,0.12)' : '#161616', color: filter === s ? '#e8c97a' : '#555', fontSize: 11, cursor: 'pointer', fontFamily: "'Jost',sans-serif", textTransform: 'capitalize' }}>
             {s || 'All'}
           </button>
         ))}
-        <div style={{ marginLeft: 'auto', fontFamily: "'DM Mono',monospace", fontSize: 10, color: '#555', alignSelf: 'center' }}>
+        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: '#555', alignSelf: 'center' }}>
           Total EGP: {payments.filter(p => p.status === 'completed').reduce((a, p) => a + p.amount, 0).toLocaleString()}
         </div>
+        <button
+          onClick={async () => {
+            if (!window.confirm('⚠️ DELETE ALL PAYMENT RECORDS?\n\nThis will reset total revenue to EGP 0.\nThis cannot be undone.')) return;
+            try {
+              const r = await adminAPI.resetPayments();
+              toast.success(`Deleted ${r.data.deleted} payment records — revenue reset to 0`);
+              setPayments([]);
+            } catch { toast.error('Failed to reset payments'); }
+          }}
+          style={{ marginLeft: 'auto', padding: '7px 14px', borderRadius: 5, border: '1px solid rgba(180,30,30,0.4)', background: 'rgba(180,30,30,0.12)', color: '#ff4444', fontSize: 11, cursor: 'pointer', fontFamily: "'Jost',sans-serif", fontWeight: 700 }}>
+          ☠ Reset All Payments
+        </button>
       </div>
 
       {loading && <div style={{ color: '#555', textAlign: 'center', padding: 40 }}>Loading…</div>}

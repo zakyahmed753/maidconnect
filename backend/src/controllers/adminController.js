@@ -659,6 +659,48 @@ exports.confirmCustomerOfflinePayment = async (req, res) => {
   }
 };
 
+// ── Hard Delete HouseWife (full cascade) ──
+exports.hardDeleteHouseWife = async (req, res) => {
+  try {
+    const hw = await HouseWife.findById(req.params.hwId);
+    if (!hw) return res.status(404).json({ success: false, message: 'Customer not found' });
+
+    const userId = hw.user;
+
+    // Delete chat messages for all chats where this customer participated, then delete the chats
+    const hwChats = await Chat.find({ housewife: userId }).select('_id');
+    const chatIds = hwChats.map(c => c._id);
+    if (chatIds.length) {
+      await Message.deleteMany({ chat: { $in: chatIds } });
+      await Chat.deleteMany({ _id: { $in: chatIds } });
+    }
+
+    // Delete payments, notifications, hire requests
+    await Payment.deleteMany({ user: userId });
+    await Notification.deleteMany({ user: userId });
+    await HireRequest.deleteMany({ housewife: userId });
+
+    // Remove customer references from maid hired lists
+    await require('../models/Maid').updateMany(
+      {},
+      {
+        $pull: {
+          hiredMaids:     { maid: hw._id },
+          pastHiredMaids: { maid: hw._id },
+        },
+      }
+    );
+
+    // Delete the HouseWife profile and User account
+    await HouseWife.findByIdAndDelete(hw._id);
+    await User.findByIdAndDelete(userId);
+
+    res.json({ success: true, message: 'Customer and all associated data permanently deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Send Broadcast Notification ──
 exports.broadcastNotification = async (req, res) => {
   try {

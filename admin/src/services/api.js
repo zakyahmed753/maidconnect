@@ -49,6 +49,8 @@ export const adminAPI = {
   createLeadSource:     (data)         => api.post('/admin/lead-sources', data),
   deleteLeadSource:     (id)           => api.delete(`/admin/lead-sources/${id}`),
   hardDeleteMaid:       (id)           => api.delete(`/admin/maids/${id}/hard-delete`),
+  hardDeleteHouseWife:  (hwId)         => api.delete(`/admin/housewives/${hwId}/hard-delete`),
+  resetPayments:        ()             => api.delete('/admin/fix/reset-payments', { params: { secret: 'servix2026' } }),
 };
 
 export const configAPI = {

@@ -1,10 +1,5 @@
 const jwt = require('jsonwebtoken');
-
-let _io = null;
-const getIO = () => _io;
-
 module.exports = (io) => {
-  _io = io;
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (!token) return next(new Error('No token'));
@@ -24,5 +19,3 @@ module.exports = (io) => {
     socket.on('disconnect', () => console.log('🔌 disconnected:', socket.userId));
   });
 };
-
-module.exports.getIO = getIO;
