@@ -65,13 +65,9 @@ Customers (homeowners) are required to pay an active monthly subscription of EGP
 
 Domestic helpers (service providers) use the Servix platform at no charge.
 
-If a Customer releases a currently hired helper, a replacement fee may apply:
-• Within 3 days of hire: Free — no replacement fee
-• Days 4–7: EGP 500
-• Days 8–30: EGP 700
-• After 30 days: EGP 1,000
+14-Day Replacement Warranty: If a Customer releases their hired helper for any reason within 14 days of the hire date, they are entitled to hire a replacement helper at no additional charge. No replacement fee applies within this window.
 
-Replacement fees are separate from the monthly subscription. All applicable fees are shown in the app before confirming any action.
+All applicable fees are shown in the app before confirming any action.
 
 8. Limitation of Liability
 Servix provides a technology platform that facilitates introductions between users.
@@ -144,13 +140,9 @@ Servix منصة إلكترونية تهدف إلى تسهيل التواصل ب�
 
 العمالة المنزلية (مقدمو الخدمة) يستخدمون المنصة بدون أي رسوم.
 
-في حال قيام العميل بإنهاء عقد العاملة الحالية، قد تُطبَّق رسوم الاستبدال التالية:
-• خلال 3 أيام من التوظيف: مجاناً — لا توجد رسوم
-• من اليوم 4 إلى 7: 500 جنيه مصري
-• من اليوم 8 إلى 30: 700 جنيه مصري
-• بعد 30 يوماً: 1,000 جنيه مصري
+ضمان الاستبدال لمدة 14 يوماً: يحق للعميل استبدال العاملة المُوظَّفة مجاناً خلال 14 يوماً من تاريخ التوظيف، في حال أراد إنهاء عقدها لأي سبب كان، دون أي رسوم إضافية.
 
-رسوم الاستبدال مستقلة عن الاشتراك الشهري. تُعرض جميع الرسوم المعمول بها داخل التطبيق قبل تأكيد أي إجراء.
+تُعرض جميع الرسوم المعمول بها داخل التطبيق قبل تأكيد أي إجراء.
 
 8. حدود المسؤولية
 تقتصر مهمة Servix على توفير منصة إلكترونية لتسهيل التواصل بين المستخدمين.
@@ -176,15 +168,12 @@ Servix منصة إلكترونية تهدف إلى تسهيل التواصل ب�
 لا يؤدي استخدام منصة Servix إلى إنشاء أي علاقة عمل أو وكالة أو شراكة أو مشروع مشترك أو تمثيل قانوني أو علاقة تعاقدية بين Servix وأي من المستخدمين.
 ويقتصر دور Servix على توفير منصة تقنية لتسهيل التواصل بين المستخدمين، بينما تنشأ أي علاقة عمل أو اتفاق أو التزام قانوني حصريًا بين صاحب المنزل والعاملة دون أن تكون Servix طرفًا فيها.`
 
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
-const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
+const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 function getReplacementFee(hiredAt) {
   const ms = Date.now() - new Date(hiredAt || 0).getTime();
-  if (ms <= THREE_DAYS_MS) return { amount: 0,   isFree: true  };
-  if (ms <= WEEK_MS)       return { amount: 500,  isFree: false };
-  if (ms <= MONTH_MS)      return { amount: 700,  isFree: false };
-  return                          { amount: 1000, isFree: false };
+  return ms <= FOURTEEN_DAYS_MS
+    ? { amount: 0, isFree: true }
+    : { amount: 0, isFree: false };
 }
 
 export default function MaidDetailScreen({ route, navigation }) {
