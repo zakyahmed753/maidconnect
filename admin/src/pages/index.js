@@ -89,6 +89,8 @@ export function Maids() {
               <span style={{ fontSize:9, padding:'3px 8px', borderRadius:3, fontWeight:700, background:'rgba(201,168,76,0.1)', color:'#c9a84c', border:'1px solid rgba(201,168,76,0.25)' }}>
                 sub: {maid.subscription?.status || 'none'}
               </span>
+              {maid.isHired && <span style={{ fontSize:9, padding:'3px 8px', borderRadius:3, fontWeight:700, background:'rgba(201,168,76,0.15)', color:'#e8c97a', border:'1px solid rgba(201,168,76,0.4)' }}>💼 Hired</span>}
+              {!maid.isHired && maid.isAvailable === false && <span style={{ fontSize:9, padding:'3px 8px', borderRadius:3, fontWeight:700, background:'rgba(255,107,107,0.12)', color:'#ff6b6b', border:'1px solid rgba(255,107,107,0.3)' }}>Unavailable</span>}
               {maid.user?.isSuspended && <span style={{ fontSize:9, color:'#ff6b6b' }}>🔴</span>}
             </div>
             <div style={{ fontSize:11, color:'#444', marginLeft:8 }}>→</div>
