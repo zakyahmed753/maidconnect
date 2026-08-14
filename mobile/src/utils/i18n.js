@@ -128,7 +128,7 @@ const T = {
     chats_title: 'Messages', no_chats: 'No chats yet',
     subscribe_chat_title: 'Subscribe to Access Messages',
     subscribe_chat_body: 'Chat with maids and manage your hiring process with a monthly subscription.',
-    subscribe_btn: 'Subscribe — EGP 1,000/mo',
+    subscribe_btn: 'Subscribe — EGP 2,000/mo',
 
     // Saved
     saved_title: 'Saved Helpers', no_saved_maids: 'No saved helpers yet',
@@ -412,7 +412,7 @@ const T = {
     receipt_selected: '✓ Receipt selected — tap to change',
     sub_not_active: 'Subscription not active yet',
     cust_sub_receipt_body: "Your receipt has been submitted and is awaiting admin confirmation. You'll be notified once it's approved.",
-    cash_transfer_modal_sub: 'Transfer EGP 1,000 to the number below, then upload a screenshot of your receipt.',
+    cash_transfer_modal_sub: 'Transfer EGP 2,000 to the number below, then upload a screenshot of your receipt.',
     cust_submit_receipt: 'Submit Receipt',
     receipt_still_pending_sub: "Admin hasn't confirmed yet. Check back soon.",
     feat_chat_any: 'Chat with any helper on the platform',
@@ -549,7 +549,7 @@ const T = {
     chats_title: 'رسايلي', no_chats: 'لسه مفيش محادثات',
     subscribe_chat_title: 'اشترك عشان تتكلم مع المساعدات',
     subscribe_chat_body: 'بالاشتراك الشهري تقدر تتكلم مع أي مساعدة وتوظفها بسهولة.',
-    subscribe_btn: 'اشترك — 1,000 جنيه/شهر',
+    subscribe_btn: 'اشترك — 2,000 جنيه/شهر',
 
     // Saved
     saved_title: 'اللي أعجبوني', no_saved_maids: 'لسه ما حفظتش حد — تصفح واختار!',
@@ -831,7 +831,7 @@ const T = {
     receipt_selected: '✓ الإيصال اتاختار — اضغط للتغيير',
     sub_not_active: 'الاشتراك مش شغال لسه',
     cust_sub_receipt_body: "الإيصال بتاعك اتبعت وفي انتظار تأكيد الإدارة. هتاخد/هتاخدي إشعار لما يتوافق عليه.",
-    cash_transfer_modal_sub: 'حوّل/حوّلي 1,000 جنيه للرقم اللي في الأسفل، وبعدين ارفع/ارفعي صورة الإيصال.',
+    cash_transfer_modal_sub: 'حوّل/حوّلي 2,000 جنيه للرقم اللي في الأسفل، وبعدين ارفع/ارفعي صورة الإيصال.',
     cust_submit_receipt: 'ارفع/ارفعي الإيصال',
     receipt_still_pending_sub: 'الإدارة لسه مأكدتش. ارجع/ارجعي بعدين.',
     feat_chat_any: 'اتكلم/اتكلمي مع أي مساعد/ة على المنصة',
@@ -962,7 +962,7 @@ const T = {
     chats_title: 'Messages', no_chats: 'Aucune conversation',
     subscribe_chat_title: "S'abonner pour accéder aux messages",
     subscribe_chat_body: 'Discutez avec les employées et gérez votre processus d\'embauche.',
-    subscribe_btn: "S'abonner — 1 000 EGP/mois",
+    subscribe_btn: "S'abonner — 2 000 EGP/mois",
 
     // Saved
     saved_title: 'Aides sauvegardées', no_saved_maids: 'Aucune aide sauvegardée',
@@ -1238,7 +1238,7 @@ const T = {
     receipt_selected: '✓ Reçu sélectionné — appuyer pour changer',
     sub_not_active: 'Abonnement pas encore actif',
     cust_sub_receipt_body: "Votre reçu a été soumis et est en attente de confirmation. Vous serez notifié une fois approuvé.",
-    cash_transfer_modal_sub: 'Transférez 1 000 EGP au numéro ci-dessous, puis téléchargez une capture de votre reçu.',
+    cash_transfer_modal_sub: 'Transférez 2 000 EGP au numéro ci-dessous, puis téléchargez une capture de votre reçu.',
     cust_submit_receipt: 'Soumettre le reçu',
     receipt_still_pending_sub: "L'admin n'a pas encore confirmé. Revenez bientôt.",
     feat_chat_any: "Discutez avec n'importe quelle aide sur la plateforme",
@@ -1369,7 +1369,7 @@ const T = {
     chats_title: 'Saƙonni', no_chats: 'Babu tattaunawa tukuna',
     subscribe_chat_title: 'Yi rajista don samun damar saƙonni',
     subscribe_chat_body: 'Yi hira da ma\'aikata kuma sarrafa tsarin ɗaukar ma\'aikata.',
-    subscribe_btn: 'Yi rajista — EGP 1,000/wata',
+    subscribe_btn: 'Yi rajista — EGP 2,000/wata',
 
     // Saved
     saved_title: "Mataimaka da aka adana", no_saved_maids: "Babu mataimaka da aka adana tukuna",
@@ -1645,7 +1645,7 @@ const T = {
     receipt_selected: '✓ An zaɓi rasit — taɓa don canza',
     sub_not_active: 'Biyan kuɗi ba ya aiki tukuna',
     cust_sub_receipt_body: 'An aika rasitin ku kuma yana jiran tabbatarwar admin. Za ku sami sanarwa da zarar an amince.',
-    cash_transfer_modal_sub: 'Canja EGP 1,000 zuwa lambar da ke ƙasa, sannan loda hoton allon rasitin ku.',
+    cash_transfer_modal_sub: 'Canja EGP 2,000 zuwa lambar da ke ƙasa, sannan loda hoton allon rasitin ku.',
     cust_submit_receipt: 'Aika Rasit',
     receipt_still_pending_sub: 'Admin bai tabbatar ba tukuna. Dawo daga baya.',
     feat_chat_any: 'Yi hira da kowane mai taimako a kan dandali',
