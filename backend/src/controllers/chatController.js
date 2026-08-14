@@ -44,16 +44,6 @@ exports.getOrCreateChat = async (req, res) => {
         maid: maidUserId,
         maidProfile: maidProfileId
       });
-      await Maid.findByIdAndUpdate(maidProfileId, { $inc: { 'stats.chats': 1 } });
-
-      // Notify maid
-      await Notification.create({
-        user: maidUserId,
-        type: 'chat',
-        title: 'New chat request!',
-        body: 'A house wife wants to chat with you.',
-        data: { chatId: chat._id }
-      });
     }
 
     res.json({ success: true, chat });
@@ -73,15 +63,15 @@ exports.getMyChats = async (req, res) => {
     if (req.user.role === 'housewife') {
       query = { housewife: req.user._id };
     } else {
-      // Maid: if currently hired, only show chat with the customer who hired them
+      // Maid: only show chats where the customer has sent at least one message
       const maidProfile = await Maid.findOne({ user: req.user._id });
       if (maidProfile?.isHired) {
         const hw = await HouseWife.findOne({ 'hiredMaids.maid': maidProfile._id });
         query = hw
-          ? { maid: req.user._id, housewife: hw.user }
-          : { maid: req.user._id };
+          ? { maid: req.user._id, housewife: hw.user, lastMessage: { $ne: null } }
+          : { maid: req.user._id, lastMessage: { $ne: null } };
       } else {
-        query = { maid: req.user._id };
+        query = { maid: req.user._id, lastMessage: { $ne: null } };
       }
     }
 
