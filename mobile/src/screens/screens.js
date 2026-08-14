@@ -692,18 +692,21 @@ export function MaidDashScreen({ navigation }) {
               </View>
               {profile?.subscription?.endDate && (() => {
                 const raw = new Date(profile.subscription.endDate);
-                const oct1 = new Date('2026-10-01');
-                const display = raw.toDateString() === oct1.toDateString() ? new Date('2026-09-01') : raw;
+                if (raw.getFullYear() >= 2099) return null;
                 return (
                   <Text style={{ fontSize:9, color:'rgba(255,255,255,0.6)', marginTop:3 }}>
-                    {t('sub_ends')} {display.toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}
+                    {t('sub_ends')} {raw.toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}
                   </Text>
                 );
               })()}
             </View>
             <NotifBell color="rgba(255,255,255,0.9)" />
           </View>
-          <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:8 }}><Ionicons name="person" size={30} color="rgba(255,255,255,0.85)" /></View>
+          {maidProfile?.photos?.[0]?.url ? (
+            <Image source={{ uri: maidProfile.photos[0].url }} style={{ width:64, height:64, borderRadius:32, marginBottom:8 }} />
+          ) : (
+            <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:8 }}><Ionicons name="person" size={30} color="rgba(255,255,255,0.85)" /></View>
+          )}
           <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
           <Text style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
         </View>
