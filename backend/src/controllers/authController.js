@@ -16,7 +16,7 @@ exports.register = async (req, res) => {
     if (!['maid','housewife'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid role' });
     }
-    const exists = await User.findOne({ email });
+    const exists = await User.findOne({ email, deletedAt: null });
     if (exists) {
       const conflictMsg = exists.role !== role
         ? `This email is already registered as a ${exists.role}. Each account must use a unique email.`
@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
       if (!EGYPTIAN_PHONE.test(normalizedPhone)) {
         return res.status(400).json({ success: false, message: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)' });
       }
-      const phoneExists = await User.findOne({ phone: normalizedPhone });
+      const phoneExists = await User.findOne({ phone: normalizedPhone, deletedAt: null });
       if (phoneExists) {
         return res.status(400).json({ success: false, message: 'This phone number is already registered' });
       }
