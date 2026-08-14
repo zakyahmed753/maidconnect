@@ -61,9 +61,17 @@ Ratings and reviews reflect the personal opinions and experiences of individual 
 They do not represent endorsements, guarantees, or official opinions of Servix.
 
 7. Payments & Subscriptions
-Certain features of the platform may require subscription fees or service payments.
-Applicable prices, billing terms, and payment details will be presented before completing the purchase.
-Refunds, where applicable, are governed by the Servix Refund Policy.
+Customers (homeowners) are required to pay an active monthly subscription of EGP 2,000 per month to access platform features including chat, hire requests, and helper management. There is no free trial period — access is granted only after payment is confirmed.
+
+Domestic helpers (service providers) use the Servix platform at no charge.
+
+If a Customer releases a currently hired helper, a replacement fee may apply:
+• Within 3 days of hire: Free — no replacement fee
+• Days 4–7: EGP 500
+• Days 8–30: EGP 700
+• After 30 days: EGP 1,000
+
+Replacement fees are separate from the monthly subscription. All applicable fees are shown in the app before confirming any action.
 
 8. Limitation of Liability
 Servix provides a technology platform that facilitates introductions between users.
@@ -132,9 +140,17 @@ Servix منصة إلكترونية تهدف إلى تسهيل التواصل ب�
 ولا تمثل اعتمادًا أو توصية رسمية من Servix.
 
 7. الاشتراكات والمدفوعات
-قد تتطلب بعض خدمات المنصة رسوم اشتراك أو مدفوعات.
-وسيتم توضيح جميع الرسوم قبل إتمام عملية الدفع.
-وتخضع عمليات الاسترداد - إن وجدت - لسياسة الاسترداد الخاصة بـ Servix.
+يُلزَم أصحاب المنازل بسداد اشتراك شهري بقيمة 2,000 جنيه مصري للوصول إلى خدمات المنصة كالمحادثة وطلبات التوظيف وإدارة العمالة. لا توجد فترة تجريبية مجانية — يُفعَّل الوصول فور تأكيد الدفع.
+
+العمالة المنزلية (مقدمو الخدمة) يستخدمون المنصة بدون أي رسوم.
+
+في حال قيام العميل بإنهاء عقد العاملة الحالية، قد تُطبَّق رسوم الاستبدال التالية:
+• خلال 3 أيام من التوظيف: مجاناً — لا توجد رسوم
+• من اليوم 4 إلى 7: 500 جنيه مصري
+• من اليوم 8 إلى 30: 700 جنيه مصري
+• بعد 30 يوماً: 1,000 جنيه مصري
+
+رسوم الاستبدال مستقلة عن الاشتراك الشهري. تُعرض جميع الرسوم المعمول بها داخل التطبيق قبل تأكيد أي إجراء.
 
 8. حدود المسؤولية
 تقتصر مهمة Servix على توفير منصة إلكترونية لتسهيل التواصل بين المستخدمين.
