@@ -15,7 +15,6 @@ const ROLE_PREF_KEY    = 'servix_role_preference';
 export default function LoginScreen({ navigation, route }) {
   const initialRole = route?.params?.role || 'housewife';
   const { t } = useTranslation();
-  const isGuest = useAuthStore(s => s.isGuest);
   const [role, setRole]               = useState(initialRole);
   const [email, setEmail]             = useState('');
   const [password, setPassword]       = useState('');
