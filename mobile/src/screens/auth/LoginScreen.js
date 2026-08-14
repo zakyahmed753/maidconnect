@@ -15,6 +15,7 @@ const ROLE_PREF_KEY    = 'servix_role_preference';
 export default function LoginScreen({ navigation, route }) {
   const initialRole = route?.params?.role || 'housewife';
   const { t } = useTranslation();
+  const isGuest = useAuthStore(s => s.isGuest);
   const [role, setRole]               = useState(initialRole);
   const [email, setEmail]             = useState('');
   const [password, setPassword]       = useState('');
@@ -129,10 +130,8 @@ export default function LoginScreen({ navigation, route }) {
         <View style={styles.topBar}>
           <TouchableOpacity onPress={async () => {
             if (navigation.canGoBack()) { navigation.goBack(); return; }
-            // After logout the role preference still exists, so Splash auto-redirects back here.
-            // Clear it so Splash shows the role-selection screen instead of looping.
             try { await SecureStore.deleteItemAsync(ROLE_PREF_KEY); } catch {}
-            navigation.navigate('Splash');
+            navigation.navigate(isGuest ? 'GuestBrowse' : 'Splash');
           }} style={styles.backBtn}>
             <Text style={{ fontSize: 26, color: COLORS.green, fontWeight: '300', lineHeight: 30 }}>‹</Text>
           </TouchableOpacity>
