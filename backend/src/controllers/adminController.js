@@ -273,6 +273,33 @@ exports.toggleHired = async (req, res) => {
   }
 };
 
+// ── Admin Set Maid Availability ──
+exports.setMaidAvailability = async (req, res) => {
+  try {
+    const { available } = req.body; // true = available, false = hired/unavailable
+    const maid = await Maid.findByIdAndUpdate(
+      req.params.id,
+      { isAvailable: available, isHired: !available, updatedAt: new Date() },
+      { new: true }
+    );
+    if (!maid) return res.status(404).json({ success: false, message: 'Maid not found' });
+    const { sendPush } = require('../utils/push');
+    const User = require('../models/User');
+    const maidUser = await User.findById(maid.user);
+    const title = available ? '🟢 Profile Visible Again' : '💼 You\'re Marked as Hired';
+    const body  = available
+      ? 'Your profile is now visible to new customers again.'
+      : 'Your profile is temporarily hidden — you\'ve been marked as hired.';
+    await Notification.create({ user: maid.user, type: 'system', title, body });
+    if (maidUser?.fcmToken) {
+      await sendPush({ token: maidUser.fcmToken, title, body, userId: String(maid.user) });
+    }
+    return res.json({ success: true, isAvailable: maid.isAvailable, isHired: maid.isHired });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── Offline (Cash Transfer) Payment for Maid Subscription ──
 exports.offlinePayment = async (req, res) => {
   try {

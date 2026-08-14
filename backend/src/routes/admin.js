@@ -290,8 +290,9 @@ router.get('/fix/seed-lead-sources', async (req, res) => {
 router.get('/dashboard',                protect, adminOnly, ac.getDashboard);
 router.put('/maids/:id/subscription',   protect, adminOnly, ac.activateSubscription);
 router.post('/maids/:id/offline-payment', protect, adminOnly, ac.offlinePayment);
-router.put('/maids/:id/hired',          protect, adminOnly, ac.toggleHired);
-router.post('/maids/:id/release',       protect, adminOnly, ac.releaseMaid);
+router.put('/maids/:id/hired',             protect, adminOnly, ac.toggleHired);
+router.patch('/maids/:id/availability',  protect, adminOnly, ac.setMaidAvailability);
+router.post('/maids/:id/release',        protect, adminOnly, ac.releaseMaid);
 router.post('/maids/:id/send-email',    protect, adminOnly, ac.sendEmailToMaid);
 router.post('/housewives/:hwId/offline-subscription', protect, adminOnly, ac.offlineCustomerSubscription);
 router.get('/housewives',               protect, adminOnly, ac.getAllHouseWives);

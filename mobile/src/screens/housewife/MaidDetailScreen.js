@@ -200,6 +200,8 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [pendingAction, setPendingAction]     = useState(null); // 'chat' | 'hire'
 
   const photos = (maid.photos || []).filter(p => p?.url);
+  // True when maid is hired/unavailable by anyone, and this specific customer is NOT the one who hired her
+  const maidTakenByOther = (!maid.isAvailable || maid.isHired) && !isHired;
   const socketRef = useRef();
 
   // Real-time: listen for hire request response (approve/reject) while screen is open
@@ -274,10 +276,14 @@ export default function MaidDetailScreen({ route, navigation }) {
     catch { setLiked(!next); Toast.show({ type:'error', text1: t('save_failed') }); }
   };
 
+  const DEMO_EMAILS = ['demo.maid@servix.world', 'demo.customer@servix.world'];
   const handleHire = () => {
-    const sub = profile?.subscription;
-    const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
-    if (!active) { goToSubscription(); return; }
+    // iOS or demo accounts: check subscription; Android free period skips this
+    if (Platform.OS === 'ios' || DEMO_EMAILS.includes(user?.email)) {
+      const sub = profile?.subscription;
+      const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
+      if (!active) { goToSubscription(); return; }
+    }
     // Block if customer already has a different maid hired — must release first
     if (activeHire) { setPendingAction('hire'); setReleaseModal(true); return; }
     setTermsAgreed(false);
@@ -368,9 +374,12 @@ export default function MaidDetailScreen({ route, navigation }) {
 
   const handleOpenChat = async () => {
     if (user?.role === 'housewife') {
-      const sub = profile?.subscription;
-      const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
-      if (!active) { goToSubscription(); return; }
+      // iOS or demo accounts: check subscription; Android free period skips this
+      if (Platform.OS === 'ios' || DEMO_EMAILS.includes(user?.email)) {
+        const sub = profile?.subscription;
+        const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
+        if (!active) { goToSubscription(); return; }
+      }
       // Block if customer already has a different maid hired — must release first
       if (activeHire) { setPendingAction('chat'); setReleaseModal(true); return; }
     }
@@ -385,7 +394,8 @@ export default function MaidDetailScreen({ route, navigation }) {
           amount: err.response.data.penaltyAmount,
           maidName: maid.fullName,
         });
-      } else if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
+      } else if ((Platform.OS === 'ios' || DEMO_EMAILS.includes(user?.email)) && err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
+        // iOS or demo accounts: handle subscription required; Android free period skips this
         goToSubscription();
       } else {
         Toast.show({ type: 'error', text1: err.response?.data?.message || t('chat_open_failed') });
@@ -570,10 +580,15 @@ export default function MaidDetailScreen({ route, navigation }) {
             {photos[0]?.url
               ? <Image source={{ uri: photos[0].url }} style={{ width:'100%', height:'100%' }}/>
               : <Ionicons name="person" size={60} color="rgba(255,255,255,0.7)" />}
-            {maid.isAvailable && (
+            {maid.isAvailable ? (
               <View style={styles.availBadge}>
                 <View style={styles.availDot}/>
                 <Text style={styles.availTxt}>{t('available_badge')}</Text>
+              </View>
+            ) : (
+              <View style={[styles.availBadge, styles.hiredBadge]}>
+                <Ionicons name="briefcase" size={9} color="#1a1108" style={{ marginRight:3 }}/>
+                <Text style={[styles.availTxt, { color:'#1a1108' }]}>HIRED</Text>
               </View>
             )}
             {photos.length > 1 && (
@@ -741,39 +756,59 @@ export default function MaidDetailScreen({ route, navigation }) {
 
       {/* Action bar */}
       <View style={styles.actionBar}>
-        <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
-          <TouchableOpacity style={styles.btnSecondary} onPress={handleLike}>
-            <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
-              <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={15} color={liked ? COLORS.green : COLORS.muted} />
-              <Text style={[styles.btnSecondaryTxt, liked && { color: COLORS.green }]}>{liked ? t('saved_label') : t('save_label')}</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.btnChat, loading && { opacity:0.6 }]} onPress={handleOpenChat} disabled={loading}>
-            <Text style={styles.btnPrimaryTxt}>{loading ? t('opening') : t('open_chat')}</Text>
-          </TouchableOpacity>
-        </View>
-        {isHired ? (
-          <View style={[styles.btnHire, { backgroundColor:COLORS.green }]}>
-            <Text style={styles.btnPrimaryTxt}>{t('already_hired')}</Text>
-          </View>
-        ) : hireRequestSent ? (
-          <View style={[styles.btnHire, { backgroundColor:'rgba(13,56,39,0.1)', borderWidth:1.5, borderColor:COLORS.green }]}>
-            <Text style={[styles.btnPrimaryTxt, { color:COLORS.green }]}>{t('request_sent_awaiting')}</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.btnHire, hireLoading && { opacity:0.6 }]}
-            onPress={handleHire}
-            disabled={hireLoading}
-          >
-            {hireLoading
-              ? <ActivityIndicator color="#fff"/>
-              : <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
-                  <Ionicons name="checkmark-circle" size={17} color="#fff" />
-                  <Text style={styles.btnPrimaryTxt}>{t('hire_this_maid')}</Text>
+        {maidTakenByOther ? (
+          <>
+            {/* Save only — chat and hire are blocked when maid is hired/unavailable */}
+            <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
+              <TouchableOpacity style={[styles.btnSecondary, { flex:1 }]} onPress={handleLike}>
+                <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
+                  <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={15} color={liked ? COLORS.green : COLORS.muted} />
+                  <Text style={[styles.btnSecondaryTxt, liked && { color: COLORS.green }]}>{liked ? t('saved_label') : t('save_label')}</Text>
                 </View>
-            }
-          </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
+            <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1.5, borderColor:'rgba(201,168,76,0.4)', borderRadius:6, padding:14, alignItems:'center', flexDirection:'row', justifyContent:'center', gap:8 }}>
+              <Ionicons name="briefcase-outline" size={17} color="#c9a84c" />
+              <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#c9a84c' }}>Currently Hired — Not Available</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
+              <TouchableOpacity style={styles.btnSecondary} onPress={handleLike}>
+                <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
+                  <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={15} color={liked ? COLORS.green : COLORS.muted} />
+                  <Text style={[styles.btnSecondaryTxt, liked && { color: COLORS.green }]}>{liked ? t('saved_label') : t('save_label')}</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btnChat, loading && { opacity:0.6 }]} onPress={handleOpenChat} disabled={loading}>
+                <Text style={styles.btnPrimaryTxt}>{loading ? t('opening') : t('open_chat')}</Text>
+              </TouchableOpacity>
+            </View>
+            {isHired ? (
+              <View style={[styles.btnHire, { backgroundColor:COLORS.green }]}>
+                <Text style={styles.btnPrimaryTxt}>{t('already_hired')}</Text>
+              </View>
+            ) : hireRequestSent ? (
+              <View style={[styles.btnHire, { backgroundColor:'rgba(13,56,39,0.1)', borderWidth:1.5, borderColor:COLORS.green }]}>
+                <Text style={[styles.btnPrimaryTxt, { color:COLORS.green }]}>{t('request_sent_awaiting')}</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.btnHire, hireLoading && { opacity:0.6 }]}
+                onPress={handleHire}
+                disabled={hireLoading}
+              >
+                {hireLoading
+                  ? <ActivityIndicator color="#fff"/>
+                  : <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
+                      <Ionicons name="checkmark-circle" size={17} color="#fff" />
+                      <Text style={styles.btnPrimaryTxt}>{t('hire_this_maid')}</Text>
+                    </View>
+                }
+              </TouchableOpacity>
+            )}
+          </>
         )}
       </View>
     </View>
@@ -788,6 +823,7 @@ const styles = StyleSheet.create({
   galSide:     { flex:1, flexDirection:'column' },
   galSm:       { flex:1, alignItems:'center', justifyContent:'center' },
   availBadge:  { position:'absolute', top:10, left:10, flexDirection:'row', alignItems:'center', gap:5, backgroundColor:'rgba(13,56,39,0.85)', borderRadius:20, paddingHorizontal:10, paddingVertical:5, borderWidth:1, borderColor:'rgba(93,214,168,0.45)' },
+  hiredBadge:  { backgroundColor:'rgba(201,168,76,0.92)', borderColor:'rgba(201,168,76,0.55)' },
   availDot:    { width:6, height:6, borderRadius:3, backgroundColor:'#5dd6a8' },
   availTxt:    { fontSize:10, color:'#5dd6a8', fontWeight:'700', letterSpacing:0.5 },
   body:        { padding:18 },

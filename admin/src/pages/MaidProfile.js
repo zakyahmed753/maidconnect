@@ -97,6 +97,7 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
   const [offlineNote,  setOfflineNote]  = useState('');
   const [offlineLoading, setOfflineLoading] = useState(false);
   const [releasing,    setReleasing]    = useState(false);
+  const [settingAvail, setSettingAvail] = useState(false);
   const [hardDeleting, setHardDeleting] = useState(false);
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody,    setEmailBody]    = useState('');
@@ -192,6 +193,20 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
       toast.error(err.response?.data?.message || 'Failed to activate subscription');
     }
     finally { setOfflineLoading(false); }
+  };
+
+  const handleSetAvailability = async (available) => {
+    const label = available ? 'mark as Available' : 'mark as Hired / Unavailable';
+    if (!window.confirm(`${available ? '🟢' : '💼'} ${label.charAt(0).toUpperCase() + label.slice(1)} for ${maid.fullName}?\n\n${available ? 'Her profile will become visible to new customers.' : 'Her profile will be hidden from customers. She will receive a notification.'}`)) return;
+    setSettingAvail(true);
+    try {
+      await adminAPI.setMaidAvailability(maid._id, available);
+      toast.success(available ? '🟢 Maid marked as Available' : '💼 Maid marked as Hired / Unavailable');
+      setMaid(prev => ({ ...prev, isAvailable: available, isHired: !available }));
+      onUpdate(maid._id, { isAvailable: available, isHired: !available });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update availability');
+    } finally { setSettingAvail(false); }
   };
 
   const handleReleaseMaid = async () => {
@@ -643,6 +658,39 @@ export default function MaidProfile({ maid: initialMaid, onClose, onUpdate }) {
                     style={{ width: '100%', padding: '9px', background: 'rgba(93,214,168,0.12)', border: '1px solid rgba(93,214,168,0.35)', borderRadius: 5, color: G.green, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: "'Jost',sans-serif", opacity: offlineLoading ? 0.6 : 1 }}>
                     {offlineLoading ? 'Recording…' : '💵 Record Cash Payment & Activate'}
                   </button>
+                </div>
+              )}
+
+              {/* ── Availability Control — admin-only ── */}
+              {!isAgent && (
+                <div style={{ background: maid.isAvailable === false ? '#1a140a' : '#0a1a14', border: `1.5px solid ${maid.isAvailable === false ? 'rgba(201,168,76,0.5)' : 'rgba(93,214,168,0.35)'}`, borderRadius: 8, padding: 18, gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: maid.isAvailable === false ? G.gold : G.green }}>
+                      {maid.isAvailable === false ? '💼 Maid Availability — Currently Hired' : '🟢 Maid Availability — Currently Available'}
+                    </div>
+                    <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em',
+                      background: maid.isAvailable === false ? 'rgba(201,168,76,0.15)' : 'rgba(93,214,168,0.12)',
+                      color: maid.isAvailable === false ? G.gold : G.green,
+                      border: `1px solid ${maid.isAvailable === false ? 'rgba(201,168,76,0.4)' : 'rgba(93,214,168,0.3)'}` }}>
+                      {maid.isAvailable === false ? 'Hired / Hidden' : 'Visible to Customers'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, color: G.muted, marginBottom: 14, lineHeight: 1.6 }}>
+                    {maid.isAvailable === false
+                      ? 'Profile is hidden from customers. Chat and hire buttons are disabled on the customer\'s view. Only save is allowed. Mark as Available to restore her visibility.'
+                      : 'Profile is visible. Customers can message and send hire requests. Use "Mark as Hired" to hide her profile immediately.'}
+                  </div>
+                  {maid.isAvailable === false ? (
+                    <button onClick={() => handleSetAvailability(true)} disabled={settingAvail}
+                      style={{ width: '100%', padding: '11px', background: 'rgba(93,214,168,0.14)', border: '1.5px solid rgba(93,214,168,0.45)', borderRadius: 5, color: G.green, fontSize: 13, fontWeight: 700, cursor: settingAvail ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: settingAvail ? 0.6 : 1 }}>
+                      {settingAvail ? '⏳ Updating…' : '🟢 Mark as Available — Show Profile'}
+                    </button>
+                  ) : (
+                    <button onClick={() => handleSetAvailability(false)} disabled={settingAvail}
+                      style={{ width: '100%', padding: '11px', background: 'rgba(201,168,76,0.14)', border: '1.5px solid rgba(201,168,76,0.5)', borderRadius: 5, color: G.gold, fontSize: 13, fontWeight: 700, cursor: settingAvail ? 'not-allowed' : 'pointer', fontFamily: "'Jost',sans-serif", opacity: settingAvail ? 0.6 : 1 }}>
+                      {settingAvail ? '⏳ Updating…' : '💼 Mark as Hired — Hide Profile from Customers'}
+                    </button>
+                  )}
                 </div>
               )}
 

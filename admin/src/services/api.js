@@ -37,6 +37,7 @@ export const adminAPI = {
   deleteUser:           (userId, data) => api.put(`/admin/users/${userId}/delete`, data),
   restoreUser:          (userId)       => api.put(`/admin/users/${userId}/restore`),
   toggleHired:          (id)           => api.put(`/admin/maids/${id}/hired`),
+  setMaidAvailability:  (id, available) => api.patch(`/admin/maids/${id}/availability`, { available }),
   releaseMaid:          (id)           => api.post(`/admin/maids/${id}/release`),
   sendEmailToMaid:      (id, data)     => api.post(`/admin/maids/${id}/send-email`, data),
   customerOfflineSubscription:       (hwId, data)     => api.post(`/admin/housewives/${hwId}/offline-subscription`, data),
