@@ -38,7 +38,7 @@ export default function CouponScreen({ navigation }) {
         message:
           `Join Servix and find domestic work opportunities!\n\n` +
           `Use my referral code: ${code}\n` +
-          `You'll get ${discount}% off your first subscription!\n\n` +
+          `Joining is completely free for maids!\n\n` +
           `Download the app: ${APP_STORE_LINK}`,
         title: 'Join Servix with my referral code',
       });
@@ -65,7 +65,7 @@ export default function CouponScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ width:38, height:38, borderRadius:19, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center' }}>
           <BackChevron />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Referral & Coupons ðŸŽ</Text>
+        <Text style={styles.headerTitle}>Referral & Coupons 🎁</Text>
         <Text style={styles.headerSub}>Earn rewards by inviting other maids</Text>
       </View>
 
@@ -76,16 +76,14 @@ export default function CouponScreen({ navigation }) {
           <Text style={styles.codeLabel}>YOUR REFERRAL CODE</Text>
           <Text style={styles.code}>{code}</Text>
           <Text style={styles.codeDesc}>
-            Share this code with other maids. They get{' '}
-            <Text style={{ fontWeight: '700', color: COLORS.green }}>{discount}% off</Text>{' '}
-            their first subscription — and you earn a referral credit!
+            Share this code with other maids. Joining Servix is free for them too — and you earn a referral credit for every maid who signs up!
           </Text>
           <View style={styles.codeActions}>
             <TouchableOpacity style={styles.copyBtn} onPress={handleCopy}>
-              <Text style={styles.copyBtnTxt}>ðŸ“‹ Copy Code</Text>
+              <Text style={styles.copyBtnTxt}>📋 Copy Code</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-              <Text style={styles.shareBtnTxt}>ðŸ“¤ Share App</Text>
+              <Text style={styles.shareBtnTxt}>📤 Share App</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -107,7 +105,7 @@ export default function CouponScreen({ navigation }) {
         {credit > 0 && (
           <View style={[styles.infoBox, { backgroundColor: '#f0fff8', borderColor: '#a8dfc8', marginBottom: 14 }]}>
             <Text style={{ fontSize: 12, color: '#1a5c40', lineHeight: 19 }}>
-              ðŸŽ <Text style={{ fontWeight: '700' }}>EGP {credit} credit</Text> will be automatically deducted from your next subscription payment. Unused credit does not carry over to the following month.
+              🎁 You have <Text style={{ fontWeight: '700' }}>EGP {credit} referral credit</Text> — admin will apply this to future rewards or benefits on your account.
             </Text>
           </View>
         )}
@@ -116,9 +114,9 @@ export default function CouponScreen({ navigation }) {
         <View style={styles.howCard}>
           <Text style={styles.howTitle}>How it works</Text>
           {[
-            { icon: '1âƒ£', text: 'Share your code with a maid friend' },
-            { icon: '2âƒ£', text: `She enters your code and gets ${discount}% off her first subscription` },
-            { icon: '3âƒ£', text: 'You earn a referral credit — admin will apply it to your next renewal' },
+            { icon: '①', text: 'Share your code with a maid friend' },
+            { icon: '②', text: 'She enters your code when registering — joining is free!' },
+            { icon: '③', text: 'You earn a referral credit that admin can apply to future rewards' },
           ].map(({ icon, text }) => (
             <View key={icon} style={styles.howRow}>
               <Text style={{ fontSize: 18 }}>{icon}</Text>
@@ -130,7 +128,7 @@ export default function CouponScreen({ navigation }) {
         {/* Info */}
         <View style={styles.infoBox}>
           <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-            ðŸ’¡ <Text style={{ fontWeight: '700', color: COLORS.dark }}>Note:</Text>{' '}
+            💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Note:</Text>{' '}
             Referral credits are reviewed and applied manually by admin. You'll receive a
             notification each time someone subscribes using your code.
           </Text>

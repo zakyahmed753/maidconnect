@@ -187,23 +187,16 @@ exports.getMe = async (req, res) => {
       profile = await Maid.findOne({ user: user._id });
     } else if (user.role === 'housewife') {
       profile = await HouseWife.findOne({ user: user._id });
-    }
-
-    // FREE PERIOD until Oct 1 2026: subscription checks disabled
-    // // Auto-expire maid subscription if past end date
-    // if (profile && user.role === 'maid' && profile.subscription?.status === 'active' && profile.subscription?.endDate) {
-    //   if (new Date(profile.subscription.endDate) < new Date()) {
-    //     await Maid.findByIdAndUpdate(profile._id, { 'subscription.status': 'expired' });
-    //     profile.subscription.status = 'expired';
-    //   }
-    // }
-    const FREE_UNTIL = new Date('2026-10-01');
-    if (profile && Date.now() < FREE_UNTIL.getTime()) {
-      if (profile.subscription) {
-        profile.subscription.status = 'active';
-        profile.subscription.endDate = FREE_UNTIL;
-      } else {
-        profile.subscription = { status: 'active', endDate: FREE_UNTIL };
+      // If subscription appears active, verify it came from a real payment (not free_period)
+      if (profile?.subscription?.status === 'active' && profile?.subscription?.endDate && new Date(profile.subscription.endDate) >= new Date()) {
+        const { Payment } = require('../models/index');
+        const realPaid = await Payment.findOne({
+          user: user._id,
+          type: 'customer_subscription',
+          status: 'completed',
+          method: { $ne: 'free_period' },
+        }).sort({ createdAt: -1 });
+        if (!realPaid) profile.subscription.status = 'expired';
       }
     }
 

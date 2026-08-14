@@ -8,17 +8,14 @@ import Toast from 'react-native-toast-message';
 import { useTranslation } from '../../utils/i18n';
 import BackChevron from '../../components/BackChevron';
 
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
-const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
+const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
-// Returns what the customer will pay when hiring their NEXT maid (not to release this one).
+// 14-day free replacement guarantee — always free within the window.
 function getReplacementFee(hiredAt) {
   const ms = Date.now() - new Date(hiredAt || 0).getTime();
-  if (ms <= THREE_DAYS_MS) return { amount: 0,    isFree: true  };
-  if (ms <= WEEK_MS)       return { amount: 500,  isFree: false };
-  if (ms <= MONTH_MS)      return { amount: 700,  isFree: false };
-  return                          { amount: 1000, isFree: false };
+  return ms <= FOURTEEN_DAYS_MS
+    ? { amount: 0, isFree: true, withinWindow: true }
+    : { amount: 0, isFree: true, withinWindow: false };
 }
 
 export default function HiredMaidsScreen({ navigation }) {
@@ -80,12 +77,7 @@ export default function HiredMaidsScreen({ navigation }) {
   };
 
   const proceedRelease = (maidId, maidName, hiredAt) => {
-    const fee = getReplacementFee(hiredAt);
-
-    // Dialog body is specific to each scenario
-    const dialogBody = fee.isFree
-      ? `${t('release_confirm_grace_body_1', { name: maidName })}\n\n${t('release_confirm_grace_body_2')}`
-      : `${t('release_confirm_fee_body_1', { name: maidName })}\n\n${t('release_confirm_fee_body_2_prefix')} EGP ${fee.amount} ${t('release_confirm_fee_body_2_suffix')}`;
+    const dialogBody = `${t('release_confirm_grace_body_1', { name: maidName })}\n\n${t('release_confirm_grace_body_2')}`;
 
     Alert.alert(t('release_dialog_title'), dialogBody, [
       { text: t('cancel'), style: 'cancel' },
@@ -95,17 +87,9 @@ export default function HiredMaidsScreen({ navigation }) {
         onPress: async () => {
           setReturning(maidId);
           try {
-            const res = await paymentsAPI.returnMaid({ maidProfileId: maidId });
+            await paymentsAPI.returnMaid({ maidProfileId: maidId });
             setHired(prev => prev.filter(h => (h.maid?._id || h.maid) !== maidId));
-            const penalty = res.data?.penaltyAmount || 0;
-            // Toast is also scenario-specific
-            Toast.show({
-              type: penalty > 0 ? 'info' : 'success',
-              text1: t('vacancy_released'),
-              text2: penalty > 0
-                ? `${t('release_toast_fee_prefix')} EGP ${penalty} ${t('release_toast_fee_suffix')}`
-                : t('release_toast_free'),
-            });
+            Toast.show({ type: 'success', text1: t('vacancy_released'), text2: t('release_toast_free') });
           } catch (err) {
             Toast.show({ type: 'error', text1: err.response?.data?.message || t('release_failed') });
           } finally {
@@ -118,10 +102,9 @@ export default function HiredMaidsScreen({ navigation }) {
 
   const getPenaltyBadge = (hiredAt) => {
     const fee = getReplacementFee(hiredAt);
-    if (fee.isFree)        return { text: t('next_hire_free'),    color: '#2e7d5e', bg: 'rgba(46,125,94,0.1)' };
-    if (fee.amount === 500) return { text: t('next_hire_fee_500'), color: '#b45309', bg: '#fffbeb' };
-    if (fee.amount === 700) return { text: t('next_hire_fee_700'), color: '#b45309', bg: '#fffbeb' };
-    return                        { text: t('next_hire_fee_1000'), color: '#b91c1c', bg: '#fef2f2' };
+    return fee.withinWindow
+      ? { text: t('next_hire_free'), color: '#2e7d5e', bg: 'rgba(46,125,94,0.1)' }
+      : { text: t('next_hire_past_window'), color: COLORS.muted, bg: COLORS.cream };
   };
 
   return (
@@ -182,24 +165,11 @@ export default function HiredMaidsScreen({ navigation }) {
             <Text style={{ fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, marginBottom: 6 }}>{t('rp_title')}</Text>
             <Text style={{ fontSize: 13, color: COLORS.muted, lineHeight: 20, marginBottom: 18 }}>{t('rp_short')}</Text>
 
-            {/* Fee table */}
-            <View style={{ borderRadius: 10, overflow: 'hidden', borderWidth: 1, borderColor: COLORS.border, marginBottom: 20 }}>
-              {/* Header */}
-              <View style={{ flexDirection: 'row', backgroundColor: COLORS.green, padding: 10 }}>
-                <Text style={{ flex: 2, fontSize: 11, fontWeight: '700', color: '#fff', letterSpacing: 0.5 }}>{t('rp_period_col').toUpperCase()}</Text>
-                <Text style={{ flex: 1.5, fontSize: 11, fontWeight: '700', color: '#fff', textAlign: 'right', letterSpacing: 0.5 }}>{t('rp_fee_col').toUpperCase()}</Text>
-              </View>
-              {[
-                { period: t('rp_row0'), fee: t('rp_row0_fee'), free: true },
-                { period: t('rp_row1'), fee: t('rp_row1_fee'), free: false },
-                { period: t('rp_row2'), fee: t('rp_row2_fee'), free: false },
-                { period: t('rp_row3'), fee: t('rp_row3_fee'), free: false },
-              ].map((row, i) => (
-                <View key={i} style={{ flexDirection: 'row', padding: 10, backgroundColor: i % 2 === 0 ? '#f8fffe' : '#fff', borderTopWidth: 1, borderTopColor: COLORS.border }}>
-                  <Text style={{ flex: 2, fontSize: 13, color: COLORS.dark }}>{row.period}</Text>
-                  <Text style={{ flex: 1.5, fontSize: 13, textAlign: 'right', color: row.free ? '#2e7d5e' : COLORS.dark, fontWeight: row.free ? '700' : '500' }}>{row.fee}</Text>
-                </View>
-              ))}
+            {/* 14-day guarantee highlight */}
+            <View style={{ backgroundColor: 'rgba(46,125,94,0.08)', borderWidth: 1.5, borderColor: 'rgba(46,125,94,0.25)', borderRadius: 10, padding: 16, marginBottom: 20, alignItems: 'center' }}>
+              <Text style={{ fontSize: 36, marginBottom: 6 }}>🔄</Text>
+              <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: '#2e7d5e', textAlign: 'center', marginBottom: 6 }}>{t('rp_row0')}</Text>
+              <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', lineHeight: 19 }}>{t('rp_row0_fee')}</Text>
             </View>
 
             {/* Good to know */}
@@ -259,7 +229,7 @@ export default function HiredMaidsScreen({ navigation }) {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.maidName}>{maidName}</Text>
-                    <Text style={styles.maidSub}>{maid.nationality || ''}{maid.age ? ` Â· ${maid.age} yrs` : ''}</Text>
+                    <Text style={styles.maidSub}>{maid.nationality || ''}{maid.age ? ` · ${maid.age} yrs` : ''}</Text>
                     {maid.expectedSalary ? (
                       <Text style={styles.maidSalary}>EGP {maid.expectedSalary.toLocaleString()}/mo</Text>
                     ) : null}

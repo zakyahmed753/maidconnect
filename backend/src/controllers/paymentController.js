@@ -14,7 +14,7 @@ function getMaidPriceCents(nationality = '') {
   return 50000; // 500 EGP
 }
 
-const CUSTOMER_SUBSCRIPTION_CENTS = 100000; // 1000 EGP
+const CUSTOMER_SUBSCRIPTION_CENTS = 200000; // 2000 EGP
 const COMMISSION_RATE = 0.20;
 
 async function paymobAuth() {
@@ -123,16 +123,6 @@ exports.initiatePaymob = async (req, res) => {
       const hw = await HouseWife.findOne({ user: req.user._id });
       const vacancyActive = hw?.freeVacancy?.available && hw.freeVacancy.expiresAt > new Date();
 
-      // Safeguard: replacement fee must be paid via /replacement_fee before hiring
-      if (vacancyActive && (hw.freeVacancy.penaltyAmount || 0) > 0) {
-        return res.status(403).json({
-          success: false,
-          requiresReplacementFee: true,
-          penaltyAmount: hw.freeVacancy.penaltyAmount,
-          message: 'Pay your replacement fee before hiring a new maid.',
-        });
-      }
-
       if (vacancyActive) {
         // Vacancy active with no penalty (grace period or already paid) — hire for free
         await HouseWife.findOneAndUpdate({ user: req.user._id }, {
@@ -155,20 +145,6 @@ exports.initiatePaymob = async (req, res) => {
       // No active vacancy — normal commission
       amountCents = Math.round(maid.expectedSalary * COMMISSION_RATE * 100);
       description = `Commission for ${maid.fullName}`;
-
-    } else if (type === 'replacement_fee') {
-      const hw = await HouseWife.findOne({ user: req.user._id });
-      if (!hw?.freeVacancy?.available) {
-        return res.status(400).json({ success: false, message: 'No active vacancy slot found' });
-      }
-      if (!hw.freeVacancy.penaltyAmount || hw.freeVacancy.penaltyAmount === 0) {
-        return res.status(400).json({ success: false, message: 'No replacement fee pending' });
-      }
-      if (new Date(hw.freeVacancy.expiresAt) < new Date()) {
-        return res.status(400).json({ success: false, message: 'Replacement vacancy has expired' });
-      }
-      amountCents = hw.freeVacancy.penaltyAmount * 100;
-      description = `Replacement slot fee (EGP ${hw.freeVacancy.penaltyAmount})`;
 
     } else {
       return res.status(400).json({ success: false, message: `Invalid payment type: "${type}". Allowed: subscription, customer_subscription, commission, release_fee` });
@@ -322,17 +298,6 @@ async function handlePaymentSuccess(payment) {
       body: 'You can now chat with maids and start hiring.',
     });
 
-  } else if (payment.type === 'replacement_fee') {
-    // Fee paid — clear the penalty so the customer can chat and hire freely
-    await HouseWife.findOneAndUpdate({ user: payment.user }, {
-      'freeVacancy.penaltyAmount': 0,
-    });
-    await Notification.create({
-      user: payment.user, type: 'payment',
-      title: '✅ Replacement Fee Paid',
-      body: 'You can now chat with and hire your next maid.',
-    });
-
   } else if (payment.type === 'commission') {
     const { HouseWife, Chat } = require('../models/index');
     const hw = await HouseWife.findOne({ user: payment.user });
@@ -367,8 +332,7 @@ async function handlePaymentSuccess(payment) {
 exports.returnMaid = async (req, res) => {
   try {
     const { maidProfileId, chatId } = req.body;
-    const DAY_MS    = 24 * 60 * 60 * 1000;
-    const THREE_DAYS_MS = 3 * DAY_MS;
+    const DAY_MS = 24 * 60 * 60 * 1000;
 
     const hw = await HouseWife.findOne({ user: req.user._id });
     const hireEntry = hw?.hiredMaids?.find(h => String(h.maid) === String(maidProfileId));
@@ -376,15 +340,9 @@ exports.returnMaid = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Maid not in your hired list' });
     }
 
-    // Calculate what the customer will owe when they hire their next maid.
-    // Release itself is always free — the fee is charged at next hire time.
-    const daysHired = (Date.now() - new Date(hireEntry.hiredAt || 0).getTime()) / DAY_MS;
-    let penaltyAmount = 0;
-    if      (daysHired > 30) penaltyAmount = 1000;
-    else if (daysHired > 7)  penaltyAmount = 700;
-    else if (daysHired > 3)  penaltyAmount = 500;
-
-    const expiresAt = new Date(Date.now() + THREE_DAYS_MS);
+    // 14-day free replacement guarantee — no penalty ever
+    const penaltyAmount = 0;
+    const expiresAt = new Date(Date.now() + 14 * DAY_MS);
     await HouseWife.findOneAndUpdate({ user: req.user._id }, {
       $set: {
         'freeVacancy.available':     true,
@@ -412,9 +370,7 @@ exports.returnMaid = async (req, res) => {
       }
     }
 
-    const notifBody = penaltyAmount > 0
-      ? `You have 3 days to hire a replacement. A fee of EGP ${penaltyAmount} will apply.`
-      : 'You have 3 days to hire a free replacement maid.';
+    const notifBody = 'You have 14 days to hire a free replacement helper — no extra cost.';
 
     await Notification.create({
       user: req.user._id, type: 'system',

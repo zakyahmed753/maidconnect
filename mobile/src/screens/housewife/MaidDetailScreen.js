@@ -276,14 +276,10 @@ export default function MaidDetailScreen({ route, navigation }) {
     catch { setLiked(!next); Toast.show({ type:'error', text1: t('save_failed') }); }
   };
 
-  const DEMO_EMAILS = ['demo.maid@servix.world', 'demo.customer@servix.world'];
   const handleHire = () => {
-    // iOS or demo accounts: check subscription; Android free period skips this
-    if (Platform.OS === 'ios' || DEMO_EMAILS.includes(user?.email)) {
-      const sub = profile?.subscription;
-      const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
-      if (!active) { goToSubscription(); return; }
-    }
+    const sub = profile?.subscription;
+    const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
+    if (!active) { goToSubscription(); return; }
     // Block if customer already has a different maid hired — must release first
     if (activeHire) { setPendingAction('hire'); setReleaseModal(true); return; }
     setTermsAgreed(false);
@@ -304,14 +300,6 @@ export default function MaidDetailScreen({ route, navigation }) {
       setHireRequestSent(true);
       Toast.show({ type:'success', text1: t('hire_req_sent'), text2: t('hire_req_sent_sub') });
     } catch (err) {
-      if (err.response?.data?.requiresReplacementFee) {
-        navigation.navigate('Payment', {
-          type: 'replacement_fee',
-          amount: err.response.data.penaltyAmount,
-          maidName: maid.fullName,
-        });
-        return;
-      }
       if (err.response?.data?.requiresSubscription) { goToSubscription(); return; }
       Toast.show({ type:'error', text1: err.response?.data?.message || t('hire_failed') });
     } finally {
@@ -374,12 +362,9 @@ export default function MaidDetailScreen({ route, navigation }) {
 
   const handleOpenChat = async () => {
     if (user?.role === 'housewife') {
-      // iOS or demo accounts: check subscription; Android free period skips this
-      if (Platform.OS === 'ios' || DEMO_EMAILS.includes(user?.email)) {
-        const sub = profile?.subscription;
-        const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
-        if (!active) { goToSubscription(); return; }
-      }
+      const sub = profile?.subscription;
+      const active = sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) > new Date();
+      if (!active) { goToSubscription(); return; }
       // Block if customer already has a different maid hired — must release first
       if (activeHire) { setPendingAction('chat'); setReleaseModal(true); return; }
     }
@@ -388,14 +373,7 @@ export default function MaidDetailScreen({ route, navigation }) {
       const res = await chatsAPI.startChat({ maidUserId: maid.user?._id || maid.user, maidProfileId: maid._id });
       navigation.navigate('Chat', { chatId: res.data.chat._id, maidName: maid.fullName });
     } catch (err) {
-      if (err.response?.status === 403 && err.response?.data?.code === 'REPLACEMENT_FEE_REQUIRED') {
-        navigation.navigate('Payment', {
-          type: 'replacement_fee',
-          amount: err.response.data.penaltyAmount,
-          maidName: maid.fullName,
-        });
-      } else if ((Platform.OS === 'ios' || DEMO_EMAILS.includes(user?.email)) && err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
-        // iOS or demo accounts: handle subscription required; Android free period skips this
+      if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
         goToSubscription();
       } else {
         Toast.show({ type: 'error', text1: err.response?.data?.message || t('chat_open_failed') });

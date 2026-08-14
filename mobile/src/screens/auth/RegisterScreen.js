@@ -84,12 +84,9 @@ export default function RegisterScreen({ navigation }) {
     if (!form.nationality) return Toast.show({ type:'error', text1: t('select_nationality_err') });
     if (!form.bio.trim()) return Toast.show({ type:'error', text1: t('bio_required') });
 
-    if (!form.phone || !form.phone.trim()) {
-      return Toast.show({ type: 'error', text1: t('phone_required') });
-    }
     const EGYPTIAN_PHONE = /^01[0125][0-9]{8}$/;
     const phoneNorm = form.phone.trim().replace(/\s|-/g, '');
-    if (!EGYPTIAN_PHONE.test(phoneNorm)) {
+    if (phoneNorm && !EGYPTIAN_PHONE.test(phoneNorm)) {
       return Toast.show({ type: 'error', text1: t('phone_invalid_eg') });
     }
 
@@ -109,13 +106,17 @@ export default function RegisterScreen({ navigation }) {
       await register({ ...form, phone: phoneNorm, role:'maid' });
 
       const uploadedPhotos = [];
-      try {
-        for (const uri of photos) {
+      let failedCount = 0;
+      for (const uri of photos) {
+        try {
           const r = await uploadAPI.image(uri);
           uploadedPhotos.push({ url: r.data.url, publicId: r.data.publicId });
+        } catch {
+          failedCount++;
         }
-      } catch {
-        Toast.show({ type:'info', text1: t('photos_later'), text2: t('photos_continue') });
+      }
+      if (failedCount > 0) {
+        Toast.show({ type: 'info', text1: t('photos_later'), text2: t('photos_continue') });
       }
 
       await maidsAPI.createProfile({
@@ -161,7 +162,7 @@ export default function RegisterScreen({ navigation }) {
         {/* Basic fields */}
         {[['Full Name','name','default'],['Email','email','email-address'],['Password','password','default'],['Phone','phone','phone-pad']].map(([label, key, kb]) => (
           <View key={key}>
-            <Text style={styles.label}>{t(key === 'name' ? 'full_name' : key)}{key === 'phone' ? ' *' : ''}</Text>
+            <Text style={styles.label}>{t(key === 'name' ? 'full_name' : key)}</Text>
             <TextInput style={styles.input} value={form[key]} onChangeText={v=>upd(key,v)}
               placeholder={label} placeholderTextColor={COLORS.muted}
               keyboardType={kb} secureTextEntry={key==='password'} autoCapitalize="none"/>

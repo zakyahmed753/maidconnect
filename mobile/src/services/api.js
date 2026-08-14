@@ -82,13 +82,15 @@ export const paymentsAPI = {
   checkStatus:                 (id)   => api.get(`/payments/${id}/status`),
   verifyAppleIAP:              (data) => api.post('/payments/iap/apple', data),
   verifyAppleCustomerIAP:      (data) => api.post('/payments/iap/apple/customer', data),
+  activateFreePeriod:          ()     => api.post('/payments/activate-free-period'),
 };
 
 export const configAPI = {
-  getAreas:    ()           => api.get('/config/areas'),
+  getAreas:    ()           => api.get('/config/areas?t=' + Date.now()),
   updateAreas: (activeAreas) => api.put('/config/areas', { activeAreas }),
   getTerms:    ()           => api.get('/config/terms'),
   updateTerms: (termsUrl)   => api.put('/config/terms', { termsUrl }),
+  getVersion:  ()           => api.get('/config/version'),
 };
 
 export const couponsAPI = {
@@ -115,7 +117,8 @@ export const uploadAPI = {
     const form = new FormData();
     form.append('photo', { uri, name: 'photo.jpg', type: 'image/jpeg' });
     return api.post('/upload/image', form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
     });
   },
   voice: async (uri, duration) => {

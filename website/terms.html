@@ -1,98 +1,200 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-KMJ5N3PQ');</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RDZPBBWER"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6RDZPBBWER');
+  </script>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Terms of Use — Servix</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230D3827'/><text y='.9em' font-size='70' x='15'>S</text></svg>"/>
+  <title>Terms of Service — Servix</title>
+  <meta name="description" content="Servix Terms of Service — the rules and conditions for using the Servix platform."/>
+  <link rel="icon" type="image/svg+xml" href="assets/logo-square.svg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--green:#0D3827;--mint:#5dd6a8;--gold:#C9A84C;--cream:#f9f5f0;--text:#1a1108;--muted:#7a6955;--border:rgba(13,56,39,0.1)}
-    body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
-    nav{background:var(--green);padding:16px 32px;display:flex;align-items:center;gap:10px}
-    nav img{height:34px;width:34px;border-radius:8px}
-    nav span{font-family:'Jost',sans-serif;font-size:20px;color:#fff;font-weight:700;letter-spacing:.01em}
-    main{flex:1;max-width:720px;margin:60px auto;padding:0 24px 80px}
-    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(13,56,39,0.08);border:1px solid rgba(13,56,39,0.2);border-radius:20px;padding:6px 16px;font-size:12px;color:var(--green);font-weight:700;margin-bottom:24px;letter-spacing:.05em}
-    h1{font-size:34px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.2}
-    .updated{font-size:14px;color:var(--muted);margin-bottom:40px}
-    h2{font-size:18px;font-weight:700;color:var(--green);margin:36px 0 12px}
-    p{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:12px}
-    ul{font-size:15px;color:var(--muted);line-height:1.8;margin:0 0 12px 20px}
-    ul li{margin-bottom:6px}
-    .divider{height:1px;background:var(--border);margin:8px 0}
-    a{color:var(--green);text-decoration:underline}
-    footer{text-align:center;padding:24px;font-size:13px;color:var(--muted)}
+    :root{
+      --green:#0D3827;--green2:#2e7d5e;--green3:#1a5c3a;
+      --mint:#5dd6a8;--mint-pale:rgba(93,214,168,0.10);--mint-border:rgba(93,214,168,0.25);
+      --cream:#f9f5f0;--surface:#fff;--text:#1a1108;--muted:#7a6955;
+      --border:rgba(13,56,39,0.1);--r:12px;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;line-height:1.7}
+
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 48px;background:rgba(13,56,39,0.97);backdrop-filter:blur(18px);border-bottom:1px solid rgba(93,214,168,0.15)}
+    .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .logo img{height:36px;width:36px;border-radius:9px;object-fit:contain}
+    .logo-text{font-family:'Cormorant Garamond',serif;font-size:22px;color:#fff;font-weight:700;letter-spacing:.02em}
+    .nav-home{font-size:13px;color:rgba(255,255,255,0.55);text-decoration:none;font-family:'Cairo','Jost',sans-serif;transition:color .2s}
+    .nav-home:hover{color:var(--mint)}
+    @media(max-width:640px){nav{padding:12px 18px}}
+
+    .page{max-width:780px;margin:0 auto;padding:110px 24px 80px}
+    .page-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--green2);font-weight:700;margin-bottom:12px}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,54px);font-weight:700;color:var(--text);line-height:1.1;margin-bottom:8px}
+    .page-date{font-size:13px;color:var(--muted);margin-bottom:44px;padding-bottom:28px;border-bottom:1px solid var(--border)}
+
+    .intro{font-size:15px;color:var(--muted);margin-bottom:40px;line-height:1.85;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px 28px}
+
+    .section{margin-bottom:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:28px 28px 20px}
+    .section-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--text);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .section-title::before{content:'';display:inline-block;width:4px;height:20px;background:var(--mint);border-radius:2px;flex-shrink:0}
+    .section-sub{font-size:12px;font-weight:700;color:var(--green2);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.08em}
+    p{font-size:14.5px;color:var(--muted);margin-bottom:12px;line-height:1.8}
+    ul{padding-left:20px;margin-bottom:12px}
+    ul li{font-size:14.5px;color:var(--muted);margin-bottom:6px;line-height:1.7}
+    ul li::marker{color:var(--mint)}
+
+    .contact-box{background:var(--mint-pale);border:1px solid var(--mint-border);border-radius:var(--r);padding:22px 26px;margin-top:10px}
+    .contact-box p{margin:0 0 6px;font-size:14px;color:var(--text)}
+    .contact-box p:last-child{margin-bottom:0}
+    .contact-box a{color:var(--green2);text-decoration:none;font-weight:600}
+    .contact-box a:hover{color:var(--mint)}
+
+    footer{text-align:center;padding:32px 24px;border-top:1px solid var(--border);background:var(--green);color:rgba(255,255,255,0.4);font-size:12px;font-family:'Cairo','Jost',sans-serif}
+    footer a{color:var(--mint);text-decoration:none}
+    footer a:hover{color:#fff}
   </style>
 </head>
 <body>
-  <nav>
-    <span>Servix</span>
-  </nav>
-  <main>
-    <div class="badge">LEGAL</div>
-    <h1>Terms of Use</h1>
-    <p class="updated">Last updated: July 26, 2026</p>
-    <div class="divider"></div>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KMJ5N3PQ" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-    <h2>1. Acceptance of Terms</h2>
-    <p>By downloading, installing, or using the Servix mobile application ("App") or visiting servix.world ("Website"), you agree to be bound by these Terms of Use ("Terms"). If you do not agree, do not use the App or Website.</p>
+<nav>
+  <a class="logo" href="/">
+    <img src="assets/logo-square.svg" alt="Servix"/>
+    <span class="logo-text">Servix</span>
+  </a>
+  <a class="nav-home" href="/">← Back to Home</a>
+</nav>
 
-    <h2>2. Description of Service</h2>
-    <p>Servix is a platform that connects customers ("Customers") with domestic helpers and maids ("Maids"). Servix acts solely as an intermediary marketplace and is not an employer of any Maid listed on the platform.</p>
+<div class="page">
+  <div class="page-label">Legal</div>
+  <h1 class="page-title">Terms of Service</h1>
+  <div class="page-date">Last Updated: August 2026</div>
 
-    <h2>3. Eligibility</h2>
+  <div class="intro">
+    Welcome to Servix. By downloading, accessing, or using the Servix mobile application or website, you agree to be bound by these Terms of Service. Please read them carefully before using the platform. If you do not agree to these terms, you may not use Servix.
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. About Servix</div>
+    <p>Servix is a digital marketplace that connects homeowners ("Customers") with domestic service providers ("Maids" or "Helpers"). Servix does not employ, supervise, or control any service provider, and is not a party to any service agreement between users. Servix provides the technology platform only.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. Eligibility</div>
+    <p>You must be at least 18 years old to create an account and use Servix. By registering, you confirm that all information you provide is accurate and that you have the legal capacity to enter into these Terms.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. Account Registration</div>
+    <p>To access most features of Servix, you must create an account. You agree to:</p>
     <ul>
-      <li>You must be at least 18 years old to use Servix.</li>
-      <li>You must provide accurate and complete registration information.</li>
-      <li>One account per person is permitted.</li>
+      <li>Provide accurate, current, and complete registration information</li>
+      <li>Keep your password confidential and not share it with others</li>
+      <li>Notify us immediately of any unauthorized use of your account</li>
+      <li>Be responsible for all activity that occurs under your account</li>
     </ul>
+    <p>Servix reserves the right to suspend or terminate accounts that contain false information or that violate these Terms.</p>
+  </div>
 
-    <h2>4. User Accounts</h2>
-    <p>You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately at <a href="mailto:support@servix.world">support@servix.world</a> if you suspect any unauthorized use of your account.</p>
-
-    <h2>5. Subscriptions and In-App Purchases</h2>
-    <p>Servix offers auto-renewable subscription plans for Maids and Customers through Apple In-App Purchases (iOS). By subscribing:</p>
+  <div class="section">
+    <div class="section-title">4. User Conduct</div>
+    <p>All users agree not to:</p>
     <ul>
-      <li>Your subscription automatically renews at the end of each billing period unless cancelled at least 24 hours before the renewal date.</li>
-      <li>Payment is charged to your Apple ID account upon confirmation of purchase.</li>
-      <li>You can manage or cancel your subscription at any time in your iPhone Settings → Apple ID → Subscriptions.</li>
-      <li>No refunds are provided for the current subscription period upon cancellation.</li>
+      <li>Post false, misleading, or fraudulent information</li>
+      <li>Harass, abuse, or harm other users</li>
+      <li>Use the platform for any illegal purpose</li>
+      <li>Attempt to circumvent the platform by arranging off-platform payments to avoid fees</li>
+      <li>Upload content that is defamatory, obscene, or infringes any third-party rights</li>
+      <li>Use automated tools to scrape, crawl, or extract data from the platform</li>
+      <li>Interfere with or disrupt the platform's infrastructure or servers</li>
     </ul>
+    <p>Violations may result in immediate account suspension or termination.</p>
+  </div>
 
-    <h2>6. Prohibited Conduct</h2>
-    <p>You agree not to:</p>
+  <div class="section">
+    <div class="section-title">5. Service Providers (Maids)</div>
+    <div class="section-sub">5.1 Independent Status</div>
+    <p>Service providers using Servix are independent individuals, not employees or agents of Servix. Servix makes no guarantee about the quality, suitability, or availability of any service provider listed on the platform.</p>
+    <div class="section-sub">5.2 Verification</div>
+    <p>Servix may request identity documents, photos, or other information to verify service providers. Verification does not constitute an endorsement or guarantee of any individual's character, background, or qualifications.</p>
+    <div class="section-sub">5.3 Subscription</div>
+    <p>Service providers (maids/helpers) access the Servix platform free of charge. No subscription fees are charged to service providers.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">6. Payments and Fees</div>
+    <div class="section-sub">6.1 Customer Subscription</div>
+    <p>Customers (homeowners) are required to maintain an active monthly subscription of <strong>EGP 2,000 per month</strong> to access platform features including chat, hire requests, and helper management. All fees are stated in the app at time of purchase. Payment is processed through the Apple App Store or via cash transfer (Instapay / Vodafone Cash) for Android users, and their respective terms and refund policies apply.</p>
+    <div class="section-sub">6.2 14-Day Free Replacement Guarantee</div>
+    <p>Customers are entitled to a <strong>14-day free replacement guarantee</strong>. If you release your helper within 14 days of the hire date, you may hire a replacement helper at no additional charge — no commission or replacement fee will apply. After the 14-day window, standard commission applies for your next hire.</p>
+    <p>Servix is not responsible for any payment disputes between Customers and service providers for services performed outside the platform.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">7. Content</div>
+    <p>Users retain ownership of content they post (photos, descriptions, messages). By posting content on Servix, you grant Servix a non-exclusive, royalty-free, worldwide license to display, reproduce, and distribute that content solely for the purpose of operating the platform.</p>
+    <p>You represent that you have all necessary rights to any content you upload and that it does not violate any third-party rights or applicable law.</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">8. Disclaimers</div>
+    <p>Servix is provided "as is" without warranties of any kind, express or implied. Servix does not warrant that:</p>
     <ul>
-      <li>Use the platform for any unlawful purpose.</li>
-      <li>Post false, misleading, or fraudulent information.</li>
-      <li>Harass, abuse, or harm other users.</li>
-      <li>Attempt to gain unauthorized access to any part of the platform.</li>
-      <li>Use the App to solicit users off-platform to avoid fees.</li>
+      <li>The platform will be uninterrupted, secure, or error-free</li>
+      <li>Any service provider will meet your expectations</li>
+      <li>Results from using the platform will be accurate or reliable</li>
     </ul>
+    <p>Use of Servix is at your own risk. Servix is not liable for any harm arising from services performed by independent service providers.</p>
+  </div>
 
-    <h2>7. Maid Listings and Hiring</h2>
-    <p>Servix does not guarantee the availability, quality, or conduct of any Maid. Customers are responsible for conducting their own due diligence before hiring. All agreements between Customers and Maids are solely between those parties.</p>
+  <div class="section">
+    <div class="section-title">9. Limitation of Liability</div>
+    <p>To the fullest extent permitted by applicable law, Servix and its officers, directors, employees, and agents will not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform, even if advised of the possibility of such damages.</p>
+    <p>Our total liability to you for any claim arising from these Terms or your use of Servix shall not exceed the total fees you paid to Servix in the 12 months preceding the claim.</p>
+  </div>
 
-    <h2>8. Payments and Fees</h2>
-    <p>Servix may charge subscription fees for access to certain features. All fees are displayed clearly before purchase. Servix reserves the right to modify pricing with reasonable notice.</p>
+  <div class="section">
+    <div class="section-title">10. Termination</div>
+    <p>You may delete your account at any time through the app (Profile → Delete Account) or by contacting us at <a href="mailto:support@servix.world" style="color:var(--green2);font-weight:600">support@servix.world</a>.</p>
+    <p>Servix reserves the right to suspend or terminate your account at any time for violation of these Terms, with or without prior notice.</p>
+  </div>
 
-    <h2>9. Termination</h2>
-    <p>Servix reserves the right to suspend or terminate any account that violates these Terms, at our sole discretion and without prior notice.</p>
+  <div class="section">
+    <div class="section-title">11. Changes to These Terms</div>
+    <p>We may update these Terms from time to time. We will notify users of material changes through the app or by email. Continued use of the platform after changes take effect constitutes acceptance of the revised Terms.</p>
+  </div>
 
-    <h2>10. Limitation of Liability</h2>
-    <p>To the maximum extent permitted by law, Servix shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the platform, including any harm resulting from interactions between Customers and Maids.</p>
+  <div class="section">
+    <div class="section-title">12. Governing Law</div>
+    <p>These Terms are governed by and construed in accordance with the laws of the Arab Republic of Egypt. Any disputes shall be subject to the exclusive jurisdiction of the courts of Cairo, Egypt.</p>
+  </div>
 
-    <h2>11. Changes to Terms</h2>
-    <p>We may update these Terms from time to time. Continued use of the App after changes constitutes your acceptance of the revised Terms. We will notify users of material changes where required by law.</p>
+  <div class="section">
+    <div class="section-title">13. Contact Us</div>
+    <p>For any questions about these Terms, please contact:</p>
+    <div class="contact-box">
+      <p><strong>Servix Support</strong></p>
+      <p>Email: <a href="mailto:support@servix.world">support@servix.world</a></p>
+      <p>Website: <a href="https://servix.world">servix.world</a></p>
+    </div>
+  </div>
+</div>
 
-    <h2>12. Governing Law</h2>
-    <p>These Terms are governed by the laws of the Arab Republic of Egypt. Any disputes shall be subject to the exclusive jurisdiction of the courts of Egypt.</p>
-
-    <h2>13. Contact Us</h2>
-    <p>If you have any questions about these Terms, contact us at <a href="mailto:support@servix.world">support@servix.world</a>.</p>
-  </main>
-  <footer>© 2026 Servix. All rights reserved.</footer>
+<footer>
+  <p>&copy; 2026 Servix. All rights reserved. &nbsp;·&nbsp; <a href="/privacy-policy.html">Privacy Policy</a> &nbsp;·&nbsp; <a href="mailto:support@servix.world">support@servix.world</a></p>
+</footer>
 </body>
 </html>

@@ -22,7 +22,9 @@ export default function LoginScreen({ navigation, route }) {
   const [biometricReady, setBiometricReady] = useState(false);
   const [biometricType, setBiometricType]   = useState(null);
   const mountedRef = useRef(true);
-  const login = useAuthStore(s => s.login);
+  const login     = useAuthStore(s => s.login);
+  const setGuest  = useAuthStore(s => s.setGuest);
+  const isGuest   = useAuthStore(s => s.isGuest);
 
   useEffect(() => {
     return () => { mountedRef.current = false; };
@@ -179,12 +181,23 @@ export default function LoginScreen({ navigation, route }) {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('ForgotPassword')}>
-            <Text style={styles.linkTxt}>Forgot password? <Text style={{ color: COLORS.green }}>Reset it</Text></Text>
+            <Text style={styles.linkTxt}>{t('forgot_password')} <Text style={{ color: COLORS.green }}>{t('reset_it')}</Text></Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.link, { marginTop: 10, marginBottom: 4 }]} onPress={() => navigation.navigate(role === 'maid' ? 'Register' : 'RegisterHousewife')}>
             <Text style={styles.linkTxt}>{t('no_account')} <Text style={{ color: COLORS.green }}>{t('sign_up_link')}</Text></Text>
           </TouchableOpacity>
+
+          {role === 'housewife' && (
+            <TouchableOpacity
+              style={styles.guestBtn}
+              onPress={() => {
+                setGuest(true);
+                navigation.navigate('GuestBrowse');
+              }}>
+              <Text style={styles.guestBtnTxt}>{t('browse_as_guest')}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
       </ScrollView>
@@ -216,4 +229,6 @@ const styles = StyleSheet.create({
   btnTxt:           { fontFamily: FONTS.bodySemiBold, fontSize: 14, color: '#fff', letterSpacing: 0.5 },
   link:             { alignItems: 'center', marginTop: 16 },
   linkTxt:          { fontSize: 13, color: COLORS.muted },
+  guestBtn:         { alignItems: 'center', marginTop: 18, paddingVertical: 10, borderTopWidth: 1, borderTopColor: COLORS.border },
+  guestBtnTxt:      { fontSize: 13, color: COLORS.muted, textDecorationLine: 'underline' },
 });

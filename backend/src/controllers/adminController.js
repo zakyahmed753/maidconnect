@@ -106,11 +106,15 @@ exports.updateMaidStatus = async (req, res) => {
   try {
     const { status, note } = req.body;
     const update = { approvalStatus: status, approvalNote: note, approvedBy: req.user._id, approvedAt: Date.now() };
-    // When admin approves the profile, also mark identity as verified
+    // When admin approves the profile, also mark identity as verified and auto-activate free subscription
     if (status === 'approved') {
       update.verificationStatus = 'verified';
       update.verifiedBy = req.user._id;
       update.verifiedAt = new Date();
+      update['subscription.status'] = 'active';
+      update['subscription.plan'] = 'free';
+      update['subscription.startDate'] = new Date();
+      update['subscription.endDate'] = new Date('2099-01-01');
     }
     const maid = await Maid.findByIdAndUpdate(req.params.id, update, { new: true }).populate('user');
 
@@ -520,12 +524,9 @@ exports.releaseMaid = async (req, res) => {
       const hireEntry = hw.hiredMaids.find(h => String(h.maid) === String(maidProfile._id));
       const daysHired = hireEntry ? (Date.now() - new Date(hireEntry.hiredAt || 0).getTime()) / DAY_MS : 0;
 
-      let penaltyAmount = 0;
-      if      (daysHired > 30) penaltyAmount = 1000;
-      else if (daysHired > 7)  penaltyAmount = 700;
-      else if (daysHired > 3)  penaltyAmount = 500;
-
-      const expiresAt = new Date(Date.now() + 3 * DAY_MS);
+      // 14-day free replacement guarantee — no penalty ever
+      const penaltyAmount = 0;
+      const expiresAt = new Date(Date.now() + 14 * DAY_MS);
 
       await HouseWife.findByIdAndUpdate(hw._id, {
         'freeVacancy.available':     true,
@@ -538,9 +539,7 @@ exports.releaseMaid = async (req, res) => {
 
       await Chat.updateMany({ housewife: hw.user, maid: maidProfile.user }, { isActive: false });
 
-      const custBody = penaltyAmount > 0
-        ? `Your maid has been released by admin. You have 3 days to hire a replacement. A fee of EGP ${penaltyAmount} will apply.`
-        : 'Your maid has been released by admin. You have 3 days to hire a free replacement.';
+      const custBody = 'Your helper has been released by admin. You have 14 days to hire a free replacement — no extra cost.';
       await Notification.create({ user: hw.user, type: 'system', title: '↩ Maid Released by Admin', body: custBody });
 
       const hwUser = await User.findById(hw.user).select('fcmToken');
@@ -787,6 +786,42 @@ exports.deleteLeadSource = async (req, res) => {
     const LeadSource = require('../models/LeadSource');
     await LeadSource.findByIdAndDelete(req.params.id);
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ── One-time migration: expire all free-period customer subscriptions ──
+exports.expireFreePeriodCustomers = async (req, res) => {
+  try {
+    // Users who activated the free period
+    const freePeriodUserIds = await Payment.distinct('user', {
+      type: 'customer_subscription',
+      method: 'free_period',
+      status: 'completed',
+    });
+
+    // Users who ALSO have a real paid subscription — keep them active
+    const realPaidUserIds = await Payment.distinct('user', {
+      type: 'customer_subscription',
+      method: { $ne: 'free_period' },
+      status: 'completed',
+    });
+
+    const realPaidSet = new Set(realPaidUserIds.map(id => id.toString()));
+    const toExpire = freePeriodUserIds.filter(id => !realPaidSet.has(id.toString()));
+
+    const result = await HouseWife.updateMany(
+      { user: { $in: toExpire } },
+      { $set: { 'subscription.status': 'expired' } }
+    );
+
+    res.json({
+      success: true,
+      identified: toExpire.length,
+      expired: result.modifiedCount,
+      message: `Expired free-period subscriptions for ${result.modifiedCount} customers`,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

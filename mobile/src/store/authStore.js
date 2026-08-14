@@ -7,6 +7,7 @@ const useAuthStore = create((set, get) => ({
   user:        null,
   profile:     null,
   loading:     false,
+  isGuest:     false,
   activeAreas: [],
   allAreas:    [],
 
@@ -60,25 +61,33 @@ const useAuthStore = create((set, get) => ({
         authAPI.getMe(),
         configAPI.getAreas().catch(() => ({ data: { activeAreas: get().activeAreas, allAreas: get().allAreas } })),
       ]);
-      set({ token, user: me.data.user, profile: me.data.profile, activeAreas: areasRes.data.activeAreas, allAreas: areasRes.data.allAreas });
+      set({ token, user: me.data.user, profile: me.data.profile, activeAreas: areasRes.data.activeAreas, allAreas: areasRes.data.allAreas, isGuest: false });
     }
   },
 
   login: async (email, password, role) => {
     const res = await authAPI.login({ email, password, role });
     await SecureStore.setItemAsync('maidconnect_token', res.data.token);
-    const me = await authAPI.getMe();
-    set({ token: res.data.token, user: res.data.user, profile: me.data.profile });
+    const [me, areasRes] = await Promise.all([
+      authAPI.getMe(),
+      configAPI.getAreas().catch(() => ({ data: { activeAreas: get().activeAreas, allAreas: get().allAreas } })),
+    ]);
+    set({ token: res.data.token, user: me.data.user, profile: me.data.profile, activeAreas: areasRes.data.activeAreas, allAreas: areasRes.data.allAreas, isGuest: false });
     return res.data;
   },
 
   socialLogin: async (data) => {
     const res = await authAPI.socialAuth(data);
     await SecureStore.setItemAsync('maidconnect_token', res.data.token);
-    const me = await authAPI.getMe();
-    set({ token: res.data.token, user: res.data.user, profile: me.data.profile });
+    const [me, areasRes] = await Promise.all([
+      authAPI.getMe(),
+      configAPI.getAreas().catch(() => ({ data: { activeAreas: get().activeAreas, allAreas: get().allAreas } })),
+    ]);
+    set({ token: res.data.token, user: me.data.user, profile: me.data.profile, activeAreas: areasRes.data.activeAreas, allAreas: areasRes.data.allAreas, isGuest: false });
     return res.data;
   },
+
+  setGuest: (v) => set({ isGuest: v }),
 
   setProfile: (profile) => set({ profile }),
 

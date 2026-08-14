@@ -2,7 +2,7 @@
   "expo": {
     "name": "Servix",
     "slug": "maidconnect",
-    "version": "1.3.4",
+    "version": "1.3.8",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/icon.png",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "world.servix.mobile",
-      "buildNumber": "14",
+      "buildNumber": "25",
       "icon": "./assets/icon.png",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to log in to Servix quickly and securely.",
@@ -29,14 +29,14 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0D3827"
       },
-      "package": "world.servix.app",
-      "versionCode": 25,
+      "package": "app.servix.world",
+      "versionCode": 32,
       "googleServicesFile": "./google-services.json",
       "softwareKeyboardLayoutMode": "pan",
       "notification": {
         "icon": "./assets/icon.png",
         "color": "#C9A84C",
-        "defaultChannel": "default"
+        "defaultChannel": "servix_v2"
       },
       "permissions": [
         "RECORD_AUDIO",
@@ -66,8 +66,8 @@
         {
           "icon": "./assets/icon.png",
           "color": "#C9A84C",
-          "defaultChannel": "default",
-          "sounds": []
+          "defaultChannel": "servix_v2",
+          "sounds": ["./assets/sounds/notification.wav"]
         }
       ]
     ],

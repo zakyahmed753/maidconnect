@@ -74,12 +74,13 @@ const SORT_OPTS = [
 const EMPTY_ADV = { minSalary: '', maxSalary: '', minAge: '', maxAge: '', minExp: '', sort: 'createdAt' };
 
 // ── Maid Card ──
-const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
+const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked, isGuest, onGuestAction }) => {
   const { t } = useTranslation();
   const [liked, setLiked] = useState(!!initialLiked);
   useEffect(() => { setLiked(!!initialLiked); }, [initialLiked]);
 
   const handleLike = async () => {
+    if (isGuest) { onGuestAction && onGuestAction(); return; }
     const next = !liked;
     setLiked(next);
     try { await maidsAPI.toggleLike(maid._id); }
@@ -181,7 +182,8 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked }) => {
 // ── Browse Screen ──
 export default function BrowseScreen({ navigation }) {
   const { t } = useTranslation();
-  const user = useAuthStore(s => s.user);
+  const user    = useAuthStore(s => s.user);
+  const isGuest = useAuthStore(s => s.isGuest);
 
   const [maids, setMaids]                 = useState([]);
   const [savedIds, setSavedIds]           = useState(new Set());
@@ -196,6 +198,7 @@ export default function BrowseScreen({ navigation }) {
   const [photoViewer, setPhotoViewer]     = useState({ visible: false, photos: [], index: 0 });
   const [hiwOpen, setHiwOpen]             = useState(false);
   const [hiwDismissed, setHiwDismissed]   = useState(false);
+  const [guestModal, setGuestModal]       = useState(false);
 
   const pageRef     = useRef(1);
   const hasMoreRef  = useRef(true);
@@ -206,11 +209,12 @@ export default function BrowseScreen({ navigation }) {
   const advRef      = useRef(EMPTY_ADV);
 
   const loadSavedIds = useCallback(async () => {
+    if (isGuest) return;
     try {
       const res = await maidsAPI.getSaved();
       setSavedIds(new Set((res.data.maids || []).map(m => m._id)));
     } catch {}
-  }, []);
+  }, [isGuest]);
 
   const fetchMaids = useCallback(async (page, sq, chipKey, adv) => {
     if (fetchingRef.current && page > 1) return;
@@ -325,7 +329,7 @@ export default function BrowseScreen({ navigation }) {
           {STORIES.map(c => (
             <TouchableOpacity key={c.key} onPress={() => onChipPress(c.key)}
               style={[styles.story, chip === c.key && styles.storyActive]}>
-              <Ionicons name={c.icon} size={20} color={chip === c.key ? COLORS.green : COLORS.muted} />
+              <Ionicons name={c.icon} size={18} color={chip === c.key ? COLORS.green : COLORS.muted} />
               <Text style={[styles.storyTxt, chip === c.key && styles.storyTxtActive]}>{t(c.lk)}</Text>
             </TouchableOpacity>
           ))}
@@ -338,7 +342,7 @@ export default function BrowseScreen({ navigation }) {
           {CATEGORIES.map(c => (
             <TouchableOpacity key={c.key} onPress={() => onChipPress(c.key)}
               style={[styles.cat, chip === c.key && styles.catActive]}>
-              <Ionicons name={c.icon} size={16} color={chip === c.key ? COLORS.green : COLORS.muted} />
+              <Ionicons name={c.icon} size={14} color={chip === c.key ? COLORS.green : COLORS.muted} />
               <Text style={[styles.catTxt, chip === c.key && styles.catTxtActive]}>{t(c.lk)}</Text>
             </TouchableOpacity>
           ))}
@@ -403,10 +407,15 @@ export default function BrowseScreen({ navigation }) {
               <MaidCard
                 maid={item}
                 initialLiked={savedIds.has(item._id)}
-                onPress={() => navigation.navigate('MaidDetail', {
-                  maid: item,
-                  onHired: (id) => setMaids(prev => prev.filter(m => m._id !== id)),
-                })}
+                isGuest={isGuest}
+                onGuestAction={() => setGuestModal(true)}
+                onPress={() => {
+                  if (isGuest) { setGuestModal(true); return; }
+                  navigation.navigate('MaidDetail', {
+                    maid: item,
+                    onHired: (id) => setMaids(prev => prev.filter(m => m._id !== id)),
+                  });
+                }}
                 onPhotoPress={(photos, index) => setPhotoViewer({ visible: true, photos, index })}
               />
             )}
@@ -477,6 +486,31 @@ export default function BrowseScreen({ navigation }) {
             {photoViewer.photos.map((_, i) => (
               <View key={i} style={[styles.pvDot, i === photoViewer.index && styles.pvDotActive]} />
             ))}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Guest login/register prompt */}
+      <Modal visible={guestModal} animationType="slide" transparent statusBarTranslucent onRequestClose={() => setGuestModal(false)}>
+        <View style={styles.guestModalRoot}>
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setGuestModal(false)} />
+          <View style={styles.guestSheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.guestTitle}>{t('guest_signin_title')}</Text>
+            <Text style={styles.guestSub}>{t('guest_signin_sub')}</Text>
+            <TouchableOpacity
+              style={styles.guestBtnPrimary}
+              onPress={() => { setGuestModal(false); navigation.navigate('Login'); }}>
+              <Text style={styles.guestBtnPrimaryTxt}>{t('sign_in')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.guestBtnOutline}
+              onPress={() => { setGuestModal(false); navigation.navigate('RegisterHousewife'); }}>
+              <Text style={styles.guestBtnOutlineTxt}>{t('sign_up')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.guestNotNow} onPress={() => setGuestModal(false)}>
+              <Text style={styles.guestNotNowTxt}>{t('guest_not_now')}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -578,20 +612,20 @@ const styles = StyleSheet.create({
 
   // Stories (circular quick filters)
   storiesWrap: { backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  stories:     { paddingHorizontal: 14, paddingVertical: 12, gap: 12 },
-  story:       { width: 72, height: 72, borderRadius: 36, backgroundColor: '#dfeee8', alignItems: 'center', justifyContent: 'center' },
+  stories:     { paddingHorizontal: 14, paddingVertical: 8, gap: 10 },
+  story:       { width: 60, height: 60, borderRadius: 30, backgroundColor: '#dfeee8', alignItems: 'center', justifyContent: 'center' },
   storyActive: { backgroundColor: COLORS.green },
-  storyIcon:   { fontSize: 22 },
-  storyTxt:    { fontSize: 10, color: COLORS.muted, marginTop: 2, textAlign: 'center', fontFamily: FONTS.bodyMedium },
+  storyIcon:   { fontSize: 18 },
+  storyTxt:    { fontSize: 9, color: COLORS.muted, marginTop: 2, textAlign: 'center', fontFamily: FONTS.bodyMedium },
   storyTxtActive: { color: '#fff' },
 
   // Category pill filters
   catsWrap:    { backgroundColor: COLORS.surface, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  cats:        { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
-  cat:         { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 14, backgroundColor: COLORS.surface, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  cats:        { paddingHorizontal: 14, paddingVertical: 7, gap: 7 },
+  cat:         { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12, backgroundColor: COLORS.surface, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   catActive:   { backgroundColor: COLORS.green },
-  catIcon:     { fontSize: 16 },
-  catTxt:      { fontSize: 13, color: COLORS.dark, fontFamily: FONTS.bodyMedium },
+  catIcon:     { fontSize: 14 },
+  catTxt:      { fontSize: 12, color: COLORS.dark, fontFamily: FONTS.bodyMedium },
   catTxtActive:{ color: '#fff' },
 
   // Card
@@ -668,4 +702,16 @@ const styles = StyleSheet.create({
   rangeRow:    { flexDirection: 'row', alignItems: 'center', gap: 10 },
   rangeInput:  { flex: 1, backgroundColor: COLORS.cream, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 10, fontSize: 14, color: COLORS.text },
   rangeDash:   { fontSize: 18, color: COLORS.muted },
+
+  // Guest modal
+  guestModalRoot:     { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
+  guestSheet:         { backgroundColor: COLORS.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: Platform.OS === 'ios' ? 44 : 28 },
+  guestTitle:         { fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, textAlign: 'center', marginBottom: 8 },
+  guestSub:           { fontSize: 13, color: COLORS.muted, textAlign: 'center', lineHeight: 19, marginBottom: 24 },
+  guestBtnPrimary:    { backgroundColor: COLORS.green, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 10 },
+  guestBtnPrimaryTxt: { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: '#fff' },
+  guestBtnOutline:    { borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1.5, borderColor: COLORS.green },
+  guestBtnOutlineTxt: { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: COLORS.green },
+  guestNotNow:        { alignItems: 'center', paddingVertical: 14 },
+  guestNotNowTxt:     { fontSize: 13, color: COLORS.muted },
 });

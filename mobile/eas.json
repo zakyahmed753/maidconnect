@@ -1,8 +1,13 @@
 {
   "cli": { "version": ">= 5.9.0" },
+  "submit": {
+    "production": {
+      "ios": { "ascAppId": "6782191284" }
+    }
+  },
   "build": {
     "preview": { "android": { "buildType": "apk" }, "ios": { "simulator": false } },
-    "production": { "android": { "buildType": "app-bundle" }, "ios": {} },
-    "production-apk": { "android": { "buildType": "apk" }, "ios": {} }
+    "production": { "channel": "production", "android": { "buildType": "app-bundle" }, "ios": {} },
+    "production-apk": { "channel": "production", "android": { "buildType": "apk" }, "ios": {} }
   }
 }

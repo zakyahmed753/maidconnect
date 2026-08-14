@@ -1,49 +1,42 @@
-const { Chat, Message, Notification, HouseWife } = require('../models/index');
+const { Chat, Message, Notification, HouseWife, Payment } = require('../models/index');
 const Maid = require('../models/Maid');
 const User = require('../models/User');
 const { sendPush } = require('../utils/push');
+
+// Returns true if the customer has a valid paid subscription (not a free-period one)
+async function customerHasPaidSub(userId) {
+  const hw = await HouseWife.findOne({ user: userId });
+  const sub = hw?.subscription;
+  if (!sub || sub.status !== 'active' || !sub.endDate || new Date(sub.endDate) < new Date()) {
+    if (sub?.status === 'active' && sub?.endDate && new Date(sub.endDate) < new Date()) {
+      await HouseWife.findOneAndUpdate({ user: userId }, { 'subscription.status': 'expired' });
+    }
+    return false;
+  }
+  const realPaid = await Payment.findOne({
+    user: userId,
+    type: 'customer_subscription',
+    status: 'completed',
+    method: { $ne: 'free_period' },
+  });
+  return !!realPaid;
+}
 
 // ── Get or Create Chat ──
 exports.getOrCreateChat = async (req, res) => {
   try {
     const { maidUserId, maidProfileId } = req.body;
 
-    // FREE PERIOD until Oct 1 2026: customer subscription gate disabled
-    // if (req.user.role === 'housewife') {
-    //   const { HouseWife } = require('../models/index');
-    //   const hw = await HouseWife.findOne({ user: req.user._id });
-    //   const sub = hw?.subscription;
-    //   if (!sub || sub.status !== 'active' || !sub.endDate || new Date(sub.endDate) < new Date()) {
-    //     // Expire if past end date
-    //     if (sub && sub.status === 'active' && sub.endDate && new Date(sub.endDate) < new Date()) {
-    //       await HouseWife.findOneAndUpdate({ user: req.user._id }, { 'subscription.status': 'expired' });
-    //     }
-    //     return res.status(403).json({ success: false, message: 'subscription_required', code: 'SUBSCRIPTION_REQUIRED' });
-    //   }
-    // }
+    if (req.user.role === 'housewife') {
+      if (!(await customerHasPaidSub(req.user._id))) {
+        return res.status(403).json({ success: false, message: 'subscription_required', code: 'SUBSCRIPTION_REQUIRED' });
+      }
+    }
 
     let chat = await Chat.findOne({
       housewife: req.user._id,
       maid: maidUserId
     }).populate('maid', 'name avatar lastSeen').populate('lastMessage');
-
-    // Gate: block NEW chat creation when a replacement fee is owed
-    if (!chat && req.user.role === 'housewife') {
-      const { HouseWife } = require('../models/index');
-      const hw2 = await HouseWife.findOne({ user: req.user._id });
-      if (
-        hw2?.freeVacancy?.available &&
-        hw2.freeVacancy.penaltyAmount > 0 &&
-        new Date(hw2.freeVacancy.expiresAt) > new Date()
-      ) {
-        return res.status(403).json({
-          success: false,
-          code: 'REPLACEMENT_FEE_REQUIRED',
-          penaltyAmount: hw2.freeVacancy.penaltyAmount,
-          message: 'Pay your replacement fee before starting new chats.',
-        });
-      }
-    }
 
     if (!chat) {
       chat = await Chat.create({
@@ -72,6 +65,10 @@ exports.getOrCreateChat = async (req, res) => {
 // ── Get My Chats ──
 exports.getMyChats = async (req, res) => {
   try {
+    if (req.user.role === 'housewife' && !(await customerHasPaidSub(req.user._id))) {
+      return res.status(403).json({ success: false, chats: [], code: 'SUBSCRIPTION_REQUIRED' });
+    }
+
     let query;
     if (req.user.role === 'housewife') {
       query = { housewife: req.user._id };
@@ -129,6 +126,10 @@ exports.getMessages = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const { chatId, content, type = 'text', voiceUrl, voiceDuration, imageUrl } = req.body;
+
+    if (req.user.role === 'housewife' && !(await customerHasPaidSub(req.user._id))) {
+      return res.status(403).json({ success: false, message: 'subscription_required', code: 'SUBSCRIPTION_REQUIRED' });
+    }
 
     const chat = await Chat.findById(chatId);
     if (!chat) return res.status(404).json({ success: false, message: 'Chat not found' });

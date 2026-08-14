@@ -15,7 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import BackChevron from '../../components/BackChevron';
 import { useTranslation } from '../../utils/i18n';
 
-const PRICE = 1000;
+const PRICE = 2000;
 const CUSTOMER_SKU = 'world.servix.customer.monthly';
 
 const IS_EXPO_GO = Constants.executionEnvironment === 'storeClient';
@@ -25,8 +25,8 @@ const iap = USE_IAP ? require('react-native-iap') : {};
 const {
   initConnection,
   endConnection,
-  getSubscriptions,
-  requestSubscription,
+  fetchProducts,
+  requestPurchase,
   getAvailablePurchases,
   finishTransaction,
   purchaseUpdatedListener,
@@ -35,7 +35,10 @@ const {
 
 export default function CustomerSubscriptionScreen({ route, navigation }) {
   const { maidUserId, maidProfileId, maidName } = route.params || {};
-  const completeAuth = useAuthStore(s => s.completeAuth);
+  const completeAuth  = useAuthStore(s => s.completeAuth);
+  const user          = useAuthStore(s => s.user);
+  const DEMO_EMAILS   = ['demo.maid@servix.world', 'demo.customer@servix.world'];
+  const isDemoAccount = DEMO_EMAILS.includes(user?.email);
   const { t } = useTranslation();
   const mountedRef = useRef(true);
   useEffect(() => { return () => { mountedRef.current = false; }; }, []);
@@ -58,6 +61,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
   // iOS IAP state
   const [iapProduct,      setIapProduct]      = useState(null);
   const [iapLoading,      setIapLoading]      = useState(false);
+  const [iapError,        setIapError]        = useState(null);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
   const purchaseListenerRef = useRef(null);
   const errorListenerRef    = useRef(null);
@@ -87,43 +91,44 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
       try {
         setIapLoading(true);
         await initConnection();
-        const subs = await getSubscriptions({ skus: [CUSTOMER_SKU] });
+
+        purchaseListenerRef.current = purchaseUpdatedListener(async (purchase) => {
+          const receipt = purchase.transactionReceipt;
+          if (!receipt) return;
+          try {
+            setPurchaseLoading(true);
+            await paymentsAPI.verifyAppleCustomerIAP({ receiptData: receipt, productId: purchase.productId });
+            await finishTransaction({ purchase, isConsumable: false });
+            await goAfterSuccess();
+          } catch {
+            Toast.show({
+              type: 'error',
+              text1: 'Activation failed',
+              text2: 'Payment was taken. Contact support if this persists.',
+              visibilityTime: 6000,
+            });
+          } finally {
+            if (mountedRef.current) setPurchaseLoading(false);
+          }
+        });
+
+        errorListenerRef.current = purchaseErrorListener((error) => {
+          if (error.code !== 'E_USER_CANCELLED') {
+            Toast.show({ type: 'error', text1: error.message || 'Purchase failed' });
+          }
+          if (mountedRef.current) setPurchaseLoading(false);
+        });
+
+        const subs = await fetchProducts({ skus: [CUSTOMER_SKU], type: 'subs' });
         if (mounted && subs.length) setIapProduct(subs[0]);
-      } catch {
-        // silent — product not in App Store Connect yet or simulator
+      } catch (e) {
+        if (mounted) setIapError(e?.message || String(e) || 'IAP init failed');
       } finally {
         if (mounted) setIapLoading(false);
       }
     };
 
     setup();
-
-    purchaseListenerRef.current = purchaseUpdatedListener(async (purchase) => {
-      const receipt = purchase.transactionReceipt;
-      if (!receipt) return;
-      try {
-        setPurchaseLoading(true);
-        await paymentsAPI.verifyAppleCustomerIAP({ receiptData: receipt, productId: purchase.productId });
-        await finishTransaction({ purchase, isConsumable: false });
-        await goAfterSuccess();
-      } catch {
-        Toast.show({
-          type: 'error',
-          text1: 'Activation failed',
-          text2: 'Payment was taken. Contact support if this persists.',
-          visibilityTime: 6000,
-        });
-      } finally {
-        if (mountedRef.current) setPurchaseLoading(false);
-      }
-    });
-
-    errorListenerRef.current = purchaseErrorListener((error) => {
-      if (error.code !== 'E_USER_CANCELLED') {
-        Toast.show({ type: 'error', text1: error.message || 'Purchase failed' });
-      }
-      if (mountedRef.current) setPurchaseLoading(false);
-    });
 
     return () => {
       mounted = false;
@@ -149,7 +154,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
     if (purchaseLoading || !iapProduct) return;
     setPurchaseLoading(true);
     try {
-      await requestSubscription({ sku: CUSTOMER_SKU });
+      await requestPurchase({ request: { apple: { sku: CUSTOMER_SKU } }, type: 'subs' });
     } catch (err) {
       if (err.code !== 'E_USER_CANCELLED') {
         Toast.show({ type: 'error', text1: err.message || 'Could not start purchase' });
@@ -274,6 +279,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         {/* ── iOS — Apple IAP ──────────────────────────────────────────────── */}
         {Platform.OS === 'ios' && (
           <View style={styles.iapSection}>
+
             {iapLoading ? (
               <ActivityIndicator color={COLORS.green} style={{ marginVertical: 20 }} />
             ) : iapProduct ? (
@@ -298,6 +304,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
                 <Text style={{ fontSize: 12, color: COLORS.muted, textAlign: 'center', lineHeight: 18 }}>
                   In-app purchase is unavailable right now.{'\n'}Please contact support to activate your subscription.
                 </Text>
+                {iapError ? <Text style={{ fontSize: 10, color: '#cc0000', textAlign: 'center', marginTop: 6 }}>{iapError}</Text> : null}
               </View>
             )}
 
@@ -416,6 +423,18 @@ const styles = StyleSheet.create({
   card:        { backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 10, padding: 16, marginBottom: 12 },
   cardLabel:   { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, fontFamily: FONTS.bodySemiBold, marginBottom: 12 },
   featureRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+
+  // Free period card (iOS)
+  freePeriodCard:   { backgroundColor: 'rgba(201,168,76,0.10)', borderWidth: 1.5, borderColor: 'rgba(201,168,76,0.45)', borderRadius: 14, padding: 18, marginBottom: 12 },
+  freePeriodBadge:  { alignSelf: 'flex-start', backgroundColor: 'rgba(201,168,76,0.18)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 10 },
+  freePeriodBadgeTxt: { fontSize: 10, color: '#9a6f0e', fontWeight: '800', letterSpacing: 0.8 },
+  freePeriodTitle:  { fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, marginBottom: 8, lineHeight: 26 },
+  freePeriodSub:    { fontSize: 12, color: COLORS.muted, lineHeight: 17, marginBottom: 14 },
+  freePeriodBtn:    { backgroundColor: COLORS.green, borderRadius: 10, paddingVertical: 13, alignItems: 'center' },
+  freePeriodBtnTxt: { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: '#fff' },
+  iapDivider:       { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  iapDividerLine:   { flex: 1, height: 1, backgroundColor: COLORS.border },
+  iapDividerTxt:    { fontSize: 11, color: COLORS.muted, fontWeight: '500' },
 
   iapSection:    { marginBottom: 4 },
   iapBtn:        { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1c1c1e', borderRadius: 12, paddingVertical: 15, paddingHorizontal: 16, marginBottom: 4 },

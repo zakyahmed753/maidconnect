@@ -189,6 +189,10 @@ export default function HireRequestScreen({ navigation }) {
         setRequests(prev => prev.some(r => r._id === req._id) ? prev : [req, ...prev]);
         Toast.show({ type: 'info', text1: 'New Hire Request!', text2: `${req.housewife?.name} wants to hire you.` });
       });
+      socket.on('hire_request_cancelled', ({ requestId }) => {
+        if (!mounted) return;
+        setRequests(prev => prev.filter(r => r._id !== requestId));
+      });
     })();
     return () => { mounted = false; socketRef.current?.disconnect(); };
   }, []);
@@ -373,7 +377,7 @@ export default function HireRequestScreen({ navigation }) {
         </View>
       ) : requests.length === 0 ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <Text style={{ fontSize: 48, marginBottom: 16 }}>ðŸ“­</Text>
+          <Text style={{ fontSize: 48, marginBottom: 16 }}>🔭</Text>
           <Text style={{ fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, textAlign: 'center' }}>{t('no_pending_requests')}</Text>
           <Text style={{ fontSize: 13, color: COLORS.muted, textAlign: 'center', marginTop: 6, lineHeight: 20 }}>
             {t('no_pending_sub')}
@@ -418,7 +422,7 @@ export default function HireRequestScreen({ navigation }) {
                   style={styles.viewProfileBtn}
                   onPress={() => setProfileModal(req)}>
                   <Text style={styles.viewProfileTxt}>{t('view_customer_profile')}</Text>
-                  <Text style={{ color: COLORS.gold, fontSize: 14 }}>→</Text>
+                  <Text style={{ color: COLORS.gold, fontSize: 14 }}>{isAr ? '←' : '→'}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.divider} />

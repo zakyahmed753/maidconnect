@@ -310,6 +310,7 @@ router.delete('/lead-sources/:id',      protect, adminOnly, ac.deleteLeadSource)
 router.post('/payments/:paymentId/confirm-customer', protect, adminOnly, ac.confirmCustomerOfflinePayment);
 router.delete('/maids/:id/hard-delete',             protect, adminOnly, ac.hardDeleteMaid);
 router.delete('/housewives/:hwId/hard-delete',      protect, adminOnly, ac.hardDeleteHouseWife);
+router.post('/fix/expire-free-period-customers',    protect, adminOnly, ac.expireFreePeriodCustomers);
 
 // Reset all payment records (wipe test data) — secret-protected, no auth required
 // Usage: DELETE /api/admin/fix/reset-payments?secret=servix2026

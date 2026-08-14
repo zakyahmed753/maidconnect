@@ -215,7 +215,7 @@ function MaidTabs() {
 
 // Root navigator
 export default function AppNavigator() {
-  const { token, user, profile } = useAuthStore();
+  const { token, user, profile, isGuest } = useAuthStore();
 
   // Register Expo push token whenever the user logs in
   useEffect(() => {
@@ -224,11 +224,11 @@ export default function AppNavigator() {
       try {
         // Android: create sound-enabled notification channel
         if (Platform.OS === 'android') {
-          await Notifications.setNotificationChannelAsync('default', {
+          await Notifications.setNotificationChannelAsync('servix_v2', {
             name: 'Servix Notifications',
             importance: Notifications.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
-            sound: 'default',
+            sound: 'notification',
             lightColor: '#0D3827',
           });
         }
@@ -249,7 +249,23 @@ export default function AppNavigator() {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator screenOptions={{ headerShown:false, cardStyle:{ backgroundColor:COLORS.cream } }}>
-        {!token ? (
+        {!token && isGuest ? (
+          // Guest browse — no account needed; card taps prompt login/register
+          <>
+            <Stack.Screen name="GuestBrowse"        component={BrowseScreen}/>
+            <Stack.Screen name="Login"              component={LoginScreen}/>
+            <Stack.Screen name="Register"           component={RegisterScreen}/>
+            <Stack.Screen name="RegisterHousewife"  component={RegisterHousewifeScreen}/>
+            <Stack.Screen name="SelfieVerification" component={SelfieVerificationScreen}/>
+            <Stack.Screen name="PendingApproval"    component={PendingApprovalScreen}/>
+            <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
+            <Stack.Screen name="Payment"            component={PaymentScreen}/>
+            <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
+            <Stack.Screen name="OTPVerification"    component={OTPVerificationScreen}/>
+            <Stack.Screen name="ForgotPassword"     component={ForgotPasswordScreen}/>
+            <Stack.Screen name="ResetPassword"      component={ResetPasswordScreen}/>
+          </>
+        ) : !token ? (
           // Unauthenticated + mid-registration (completeAuth not yet called)
           <>
             <Stack.Screen name="Splash"             component={SplashScreen}/>
@@ -264,6 +280,7 @@ export default function AppNavigator() {
             <Stack.Screen name="OTPVerification"    component={OTPVerificationScreen}/>
             <Stack.Screen name="ForgotPassword"     component={ForgotPasswordScreen}/>
             <Stack.Screen name="ResetPassword"      component={ResetPasswordScreen}/>
+            <Stack.Screen name="GuestBrowse"        component={BrowseScreen}/>
           </>
         ) : user?.role === 'maid' && profile && (
             profile.verificationStatus === 'pending' ||
@@ -273,16 +290,6 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="PendingApproval"    component={PendingApprovalScreen}/>
             <Stack.Screen name="SelfieResubmit"     component={SelfieVerificationScreen}/>
-            <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
-            <Stack.Screen name="Payment"            component={PaymentScreen}/>
-            <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>
-          </>
-        ) : user?.role === 'maid' && (
-            profile?.subscription?.status !== 'active' ||
-            (profile?.subscription?.endDate && new Date(profile.subscription.endDate) < new Date())
-          ) ? (
-          // Approved but subscription not yet paid or expired — go straight to subscription
-          <>
             <Stack.Screen name="Subscription"       component={SubscriptionScreen}/>
             <Stack.Screen name="Payment"            component={PaymentScreen}/>
             <Stack.Screen name="PaymentResult"      component={PaymentResultScreen}/>

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
   StyleSheet, StatusBar, ActivityIndicator
@@ -7,12 +7,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
-import { hwAPI } from '../../services/api';
+import { hwAPI, configAPI } from '../../services/api';
 
 export default function AreaSelectScreen({ navigation }) {
   const { activeAreas, allAreas, completeAuth } = useAuthStore();
   const [selected, setSelected] = useState(null);
   const [saving,   setSaving]   = useState(false);
+  const [freshAreas, setFreshAreas] = useState(null);
+
+  useEffect(() => {
+    configAPI.getAreas()
+      .then(r => setFreshAreas({ active: r.data.activeAreas, all: r.data.allAreas }))
+      .catch(() => {});
+  }, []);
+
+  const effectiveAll    = freshAreas?.all?.length    ? freshAreas.all    : allAreas;
+  const effectiveActive = freshAreas?.active?.length ? freshAreas.active : activeAreas;
 
   const handleSelect = async (area) => {
     setSelected(area);
@@ -33,7 +43,7 @@ export default function AreaSelectScreen({ navigation }) {
     <View style={{ flex: 1 }}>
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#0D3827', '#0d5e4a']} style={styles.hero}>
-        <Text style={{ fontSize: 32, marginBottom: 8 }}>ðŸ“</Text>
+        <Text style={{ fontSize: 32, marginBottom: 8 }}>📍</Text>
         <Text style={styles.heroT}>Where do you live?</Text>
         <Text style={styles.heroS}>We'll show you maids available in your area</Text>
       </LinearGradient>
@@ -43,7 +53,7 @@ export default function AreaSelectScreen({ navigation }) {
         {/* Active areas */}
         <Text style={styles.sectionLabel}>Available now in Cairo</Text>
         <View style={styles.grid}>
-          {allAreas.filter(a => activeAreas.includes(a)).map(area => (
+          {effectiveAll.filter(a => effectiveActive.includes(a)).map(area => (
             <TouchableOpacity
               key={area}
               style={[styles.areaCard, styles.areaActive, selected === area && styles.areaSelected]}
@@ -62,7 +72,7 @@ export default function AreaSelectScreen({ navigation }) {
         {/* Coming soon areas */}
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Coming soon</Text>
         <View style={styles.grid}>
-          {allAreas.filter(a => !activeAreas.includes(a)).map(area => (
+          {effectiveAll.filter(a => !effectiveActive.includes(a)).map(area => (
             <TouchableOpacity
               key={area}
               style={[styles.areaCard, styles.areaInactive]}
@@ -76,7 +86,7 @@ export default function AreaSelectScreen({ navigation }) {
 
         <View style={styles.infoBox}>
           <Text style={{ fontSize: 12, color: COLORS.muted, lineHeight: 19 }}>
-            ðŸ’¡ <Text style={{ fontWeight: '700', color: COLORS.dark }}>Don't see your area?</Text>{' '}
+            💡 <Text style={{ fontWeight: '700', color: COLORS.dark }}>Don't see your area?</Text>{' '}
             Select it anyway — we'll notify you as soon as we launch there.
           </Text>
         </View>

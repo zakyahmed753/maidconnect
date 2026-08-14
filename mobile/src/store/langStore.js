@@ -3,7 +3,10 @@ import * as SecureStore from 'expo-secure-store';
 import * as Updates from 'expo-updates';
 import { Alert, BackHandler, I18nManager, Platform } from 'react-native';
 
-I18nManager.allowRTL(true);
+// iOS: never flip native layout — we handle Arabic direction manually per-component.
+// Android: allow native RTL flip (works correctly there).
+if (Platform.OS !== 'ios') I18nManager.allowRTL(true);
+if (Platform.OS === 'ios') I18nManager.forceRTL(false);
 
 const RESTART_LABELS = {
   en: { title: 'Restart Required', body: 'Close and reopen the app to apply RTL changes.', btn: 'Close App' },
@@ -19,7 +22,7 @@ const useLangStore = create((set) => ({
     try {
       const saved = await SecureStore.getItemAsync('app_lang');
       if (saved) {
-        I18nManager.forceRTL(saved === 'ar');
+        if (Platform.OS !== 'ios') I18nManager.forceRTL(saved === 'ar');
         set({ lang: saved });
       }
     } catch {}
@@ -28,7 +31,7 @@ const useLangStore = create((set) => ({
   setLang: async (lang) => {
     try {
       await SecureStore.setItemAsync('app_lang', lang);
-      I18nManager.forceRTL(lang === 'ar');
+      if (Platform.OS !== 'ios') I18nManager.forceRTL(lang === 'ar');
       set({ lang });
       // Wait for modal close animation before showing Alert
       setTimeout(() => {
