@@ -194,10 +194,16 @@ export default function App() {
             new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000)),
           ]);
         } catch {}
-        if (!storeVersion) {
+        // Always check DB too — store API may return a valid but stale version
+        // (e.g. iTunes country=us hasn't propagated the new release yet).
+        // Take whichever is newer.
+        try {
           const res = await configAPI.getVersion();
-          storeVersion = Platform.OS === 'ios' ? res.data?.ios : res.data?.android;
-        }
+          const dbVersion = Platform.OS === 'ios' ? res.data?.ios : res.data?.android;
+          if (dbVersion && (!storeVersion || isNewerVersion(dbVersion, storeVersion))) {
+            storeVersion = dbVersion;
+          }
+        } catch {}
         if (storeVersion && isNewerVersion(storeVersion, localVersion)) {
           setUpdateUrl(Platform.OS === 'ios' ? IOS_STORE_URL : ANDROID_STORE_URL);
         }
