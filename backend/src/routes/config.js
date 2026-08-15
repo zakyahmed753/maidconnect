@@ -14,7 +14,7 @@ async function fetchIosStoreVersion() {
   if (Date.now() - _iosCache.fetchedAt < CACHE_MS && _iosCache.version) return _iosCache.version;
   try {
     const r = await axios.get(
-      `https://itunes.apple.com/lookup?id=${IOS_APP_ID}&country=us`,
+      `https://itunes.apple.com/lookup?id=${IOS_APP_ID}&country=eg`,
       { timeout: 6000 }
     );
     const v = r.data?.results?.[0]?.version || null;

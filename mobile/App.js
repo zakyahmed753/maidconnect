@@ -42,7 +42,7 @@ function isNewerVersion(serverVer, localVer) {
 // For Android: fetch Play Store page and parse the version from embedded data.
 async function fetchStoreVersion() {
   if (Platform.OS === 'ios') {
-    const r = await fetch(`https://itunes.apple.com/lookup?id=${IOS_APP_ID}&country=us`);
+    const r = await fetch(`https://itunes.apple.com/lookup?id=${IOS_APP_ID}&country=eg`);
     const d = await r.json();
     return d.results?.[0]?.version ?? null;
   }
