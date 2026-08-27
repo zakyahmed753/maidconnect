@@ -15,6 +15,7 @@ import Coupons from './pages/Coupons';
 import Areas   from './pages/Areas';
 import Agents      from './pages/Agents';
 import LeadSources from './pages/LeadSources';
+import Events      from './pages/Events';
 
 const AGENT_ALLOWED = ['/maids', '/approvals', '/support'];
 
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="areas"   element={<AdminRoute><Areas /></AdminRoute>} />
           <Route path="agents"       element={<AdminRoute><Agents /></AdminRoute>} />
           <Route path="lead-sources" element={<AdminRoute><LeadSources /></AdminRoute>} />
+          <Route path="events"      element={<AdminRoute><Events /></AdminRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>

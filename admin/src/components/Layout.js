@@ -14,6 +14,7 @@ const ALL_NAV = [
   { to: '/areas',        icon: '📍', label: 'Areas',         adminOnly: true },
   { to: '/agents',       icon: '👥', label: 'Agents',        adminOnly: true },
   { to: '/lead-sources', icon: '📣', label: 'Lead Sources',  adminOnly: true },
+  { to: '/events',       icon: '📡', label: 'Analytics',     adminOnly: true },
 ];
 
 export default function Layout() {

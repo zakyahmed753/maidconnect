@@ -52,6 +52,7 @@ export const adminAPI = {
   hardDeleteMaid:       (id)           => api.delete(`/admin/maids/${id}/hard-delete`),
   hardDeleteHouseWife:  (hwId)         => api.delete(`/admin/housewives/${hwId}/hard-delete`),
   resetPayments:        ()             => api.delete('/admin/fix/reset-payments', { params: { secret: 'servix2026' } }),
+  getEvents:            (params)       => api.get('/events', { params }),
 };
 
 export const configAPI = {

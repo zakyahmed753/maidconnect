@@ -13,6 +13,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 import { useFocusEffect } from '@react-navigation/native';
 import * as SecureStore from 'expo-secure-store';
 import { maidsAPI } from '../../services/api';
+import { track } from '../../services/analytics';
 import useAuthStore from '../../store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONTS, SHADOWS } from '../../utils/theme';
@@ -83,7 +84,10 @@ const MaidCard = ({ maid, onPress, onPhotoPress, initialLiked, isGuest, onGuestA
     if (isGuest) { onGuestAction && onGuestAction(); return; }
     const next = !liked;
     setLiked(next);
-    try { await maidsAPI.toggleLike(maid._id); }
+    try {
+      await maidsAPI.toggleLike(maid._id);
+      if (next) track('action_save_maid', { maidId: maid._id });
+    }
     catch { setLiked(!next); Toast.show({ type: 'error', text1: 'Failed to save' }); }
   };
 
@@ -254,7 +258,7 @@ export default function BrowseScreen({ navigation }) {
   }, [fetchMaids]);
 
   useEffect(() => { resetFetch(chip, searchRef.current, advFilters); }, [chip, advFilters]);
-  useFocusEffect(React.useCallback(() => { loadSavedIds(); }, [loadSavedIds]));
+  useFocusEffect(React.useCallback(() => { loadSavedIds(); track('screen_browse'); }, [loadSavedIds]));
 
   useEffect(() => {
     (async () => {
@@ -273,7 +277,10 @@ export default function BrowseScreen({ navigation }) {
   const onSearchChange = (text) => {
     setSearch(text);
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => resetFetch(chipRef.current, text, advRef.current), 500);
+    debounceRef.current = setTimeout(() => {
+      if (text.trim()) track('action_search', { query: text.trim() });
+      resetFetch(chipRef.current, text, advRef.current);
+    }, 500);
   };
 
   const onChipPress  = (k) => { chipRef.current = k; setChip(k); };
@@ -411,6 +418,7 @@ export default function BrowseScreen({ navigation }) {
                 onGuestAction={() => setGuestModal(true)}
                 onPress={() => {
                   if (isGuest) { setGuestModal(true); return; }
+                  track('action_view_maid', { maidId: item._id, maidName: item.fullName });
                   navigation.navigate('MaidDetail', {
                     maid: item,
                     onHired: (id) => setMaids(prev => prev.filter(m => m._id !== id)),

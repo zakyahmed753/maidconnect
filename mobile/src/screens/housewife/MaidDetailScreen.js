@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 import { maidsAPI, chatsAPI, hwAPI, paymentsAPI, configAPI } from '../../services/api';
+import { track } from '../../services/analytics';
 import io from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
@@ -244,6 +245,10 @@ export default function MaidDetailScreen({ route, navigation }) {
     return () => { mounted = false; socketRef.current?.disconnect(); };
   }, []);
 
+  useEffect(() => {
+    track('screen_maid_detail', { maidId: maid._id, maidName: maid.fullName });
+  }, []);
+
   // Re-fetch on every focus so hire status stays fresh after maid approves
   useFocusEffect(
     useCallback(() => {
@@ -277,7 +282,10 @@ export default function MaidDetailScreen({ route, navigation }) {
   const handleLike = async () => {
     const next = !liked;
     setLiked(next);
-    try { await maidsAPI.toggleLike(maid._id); }
+    try {
+      await maidsAPI.toggleLike(maid._id);
+      if (next) track('action_save_maid', { maidId: maid._id, maidName: maid.fullName });
+    }
     catch { setLiked(!next); Toast.show({ type:'error', text1: t('save_failed') }); }
   };
 
@@ -303,6 +311,7 @@ export default function MaidDetailScreen({ route, navigation }) {
     try {
       await hwAPI.hireMaid({ maidProfileId: maid._id });
       setHireRequestSent(true);
+      track('action_hire_request', { maidId: maid._id, maidName: maid.fullName });
       Toast.show({ type:'success', text1: t('hire_req_sent'), text2: t('hire_req_sent_sub') });
     } catch (err) {
       if (err.response?.data?.requiresSubscription) { goToSubscription(); return; }
@@ -376,6 +385,7 @@ export default function MaidDetailScreen({ route, navigation }) {
     setLoading(true);
     try {
       const res = await chatsAPI.startChat({ maidUserId: maid.user?._id || maid.user, maidProfileId: maid._id });
+      track('action_open_chat', { maidId: maid._id, maidName: maid.fullName });
       navigation.navigate('Chat', { chatId: res.data.chat._id, maidName: maid.fullName });
     } catch (err) {
       if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {

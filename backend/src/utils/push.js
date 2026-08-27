@@ -9,9 +9,9 @@ exports.sendPush = async ({ token, title, body, data = {}, userId = null }) => {
       title,
       body,
       data,
-      sound: 'default',
+      sound: 'notification.wav',
       priority: 'high',
-      channelId: 'default',
+      channelId: 'servix_v2',
     }, { headers: { 'Content-Type': 'application/json', Accept: 'application/json' } });
     const ticket = res.data?.data;
     if (ticket?.status === 'error') {

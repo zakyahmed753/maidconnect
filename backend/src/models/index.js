@@ -186,7 +186,22 @@ const supportTicketSchema = new mongoose.Schema({
 });
 supportTicketSchema.index({ user: 1, createdAt: -1 });
 
+// ── App Event (analytics) ──
+const appEventSchema = new mongoose.Schema({
+  userId:     { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  role:       { type: String, enum: ['housewife', 'maid', 'guest'] },
+  name:       { type: String, required: true }, // 'screen_browse', 'action_save_maid', etc.
+  meta:       { type: mongoose.Schema.Types.Mixed },
+  platform:   { type: String },   // 'ios' | 'android'
+  appVersion: { type: String },
+  createdAt:  { type: Date, default: Date.now },
+});
+appEventSchema.index({ createdAt: -1 });
+appEventSchema.index({ name: 1, createdAt: -1 });
+appEventSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = {
+  AppEvent:     mongoose.model('AppEvent', appEventSchema),
   HouseWife:    mongoose.model('HouseWife', houseWifeSchema),
   SupportTicket:mongoose.model('SupportTicket', supportTicketSchema),
   Chat:         mongoose.model('Chat', chatSchema),
