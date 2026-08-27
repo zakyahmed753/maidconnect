@@ -55,8 +55,9 @@ export default function Events() {
     try {
       const res = await adminAPI.getEvents({ days, name: filterName || undefined });
       setData(res.data);
-    } catch {
-      toast.error('Failed to load events');
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Network error';
+      toast.error(`Events: ${msg}`);
     } finally {
       setLoading(false);
     }
