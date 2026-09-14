@@ -197,7 +197,16 @@ exports.getAllMaids = async (req, res) => {
       if (maxAge) filter.age.$lte = Number(maxAge);
     }
     if (minExp) filter.experienceYears = { $gte: Number(minExp) };
-    if (name) filter.fullName = new RegExp(name.trim(), 'i');
+    if (name) {
+      const re = new RegExp(name.trim(), 'i');
+      const searchOr = [{ fullName: re }, { nationality: re }, { skills: re }];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: searchOr }];
+        delete filter.$or;
+      } else {
+        filter.$or = searchOr;
+      }
+    }
 
     const NEARBY_MAP = {
       'Maadi':          ['New Cairo','Heliopolis','Garden City'],
