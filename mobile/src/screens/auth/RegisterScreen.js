@@ -1,7 +1,7 @@
 ﻿// src/screens/auth/RegisterScreen.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
+  KeyboardAvoidingView, Platform, StatusBar, Image, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
@@ -29,11 +29,27 @@ export default function RegisterScreen({ navigation }) {
     name:'', email:'', password:'', phone:'', nationality:'', age:'',
     experienceYears:'', expectedSalary:'', bio:'', skills:[], languages:[], idNumber:'',
   });
+  const [agentSlug, setAgentSlug] = useState('');
   const [photos, setPhotos] = useState([]);
   const [idPhoto, setIdPhoto] = useState(null); // passport photo (non-Egyptian only)
   const [loading, setLoading] = useState(false);
   const submitting = useRef(false);
   const register = useAuthStore(s => s.register);
+
+  // Capture agent slug from deep link (servix://register?agent=SLUG)
+  useEffect(() => {
+    const extractAgent = (url) => {
+      if (!url) return;
+      try {
+        const params = new URL(url).searchParams;
+        const a = params.get('agent');
+        if (a) setAgentSlug(a.toLowerCase());
+      } catch (_) {}
+    };
+    Linking.getInitialURL().then(extractAgent);
+    const sub = Linking.addEventListener('url', ({ url }) => extractAgent(url));
+    return () => sub.remove();
+  }, []);
 
   const isEgyptian = form.nationality === 'Egypt';
 
@@ -130,6 +146,7 @@ export default function RegisterScreen({ navigation }) {
         skills: form.skills,
         languages: form.languages,
         photos: uploadedPhotos,
+        ...(agentSlug ? { heardAboutUs: 'agent', agentName: agentSlug } : {}),
       });
 
       navigation.navigate('OTPVerification', {
