@@ -1,4 +1,4 @@
-// v4
+// v5-portal
 import React, { useEffect, useState } from 'react';
 import { adminAPI } from '../services/api';
 import toast from 'react-hot-toast';
@@ -46,6 +46,7 @@ function getSourceLabel(m, agentMap) {
 const AGENT_COLORS = ['#5dd6a8','#b47adb','#6aabcc','#f0a050','#e86aa8','#a8e86a','#e8c97a'];
 
 export default function LeadSources() {
+  console.log('[LeadSources] v5-portal loaded');
   const [maids,         setMaids]         = useState([]);
   const [agents,        setAgents]        = useState([]);
   const [lsUsers,       setLsUsers]       = useState([]);
