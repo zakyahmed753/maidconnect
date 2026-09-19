@@ -188,13 +188,13 @@ export default function PaymentScreen({ route, navigation }) {
           <Text style={styles.cardLabel}>Order Summary</Text>
           <View style={styles.row}>
             <Text style={styles.rowKey}>
-              {type === ‘subscription’
+              {type === 'subscription'
                 ? `${planInfo?.label ?? plan} Subscription`
-                : type === ‘customer_subscription’
-                ? ‘Customer Platform Subscription’
-                : type === ‘replacement_fee’
+                : type === 'customer_subscription'
+                ? 'Customer Platform Subscription'
+                : type === 'replacement_fee'
                 ? `Replacement Fee — unlock your next hire`
-                : `Commission — ${maidName || ‘Maid’}`}
+                : `Commission — ${maidName || 'Maid'}`}
             </Text>
             {planInfo?.badge && (
               <View style={styles.badge}><Text style={styles.badgeTxt}>{planInfo.badge}</Text></View>
@@ -205,7 +205,7 @@ export default function PaymentScreen({ route, navigation }) {
           {appliedCoupon && (
             <View style={styles.row}>
               <Text style={{ fontSize: 13, color: COLORS.muted }}>Original price</Text>
-              <Text style={{ fontSize: 13, color: COLORS.muted, textDecorationLine: ‘line-through’ }}>
+              <Text style={{ fontSize: 13, color: COLORS.muted, textDecorationLine: 'line-through' }}>
                 EGP {originalAmount?.toLocaleString()}
               </Text>
             </View>
@@ -214,28 +214,28 @@ export default function PaymentScreen({ route, navigation }) {
           {/* Applied coupon row */}
           {appliedCoupon && (
             <View style={styles.row}>
-              <View style={{ flexDirection: ‘row’, alignItems: ‘center’, gap: 6, flex: 1 }}>
-                <Text style={{ fontSize: 12, color: ‘#2e7d5e’ }}>🏷 {appliedCoupon.code}</Text>
-                <View style={[styles.badge, { backgroundColor: ‘rgba(46,125,94,0.1)’ }]}>
-                  <Text style={[styles.badgeTxt, { color: ‘#2e7d5e’ }]}>−EGP {appliedCoupon.discountAmount}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+                <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🏷 {appliedCoupon.code}</Text>
+                <View style={[styles.badge, { backgroundColor: 'rgba(46,125,94,0.1)' }]}>
+                  <Text style={[styles.badgeTxt, { color: '#2e7d5e' }]}>−EGP {appliedCoupon.discountAmount}</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={() => setAppliedCoupon(null)}>
-                <Text style={{ fontSize: 11, color: ‘#e05555’ }}>Remove</Text>
+                <Text style={{ fontSize: 11, color: '#e05555' }}>Remove</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {referralCreditApplied > 0 && (
             <View style={styles.row}>
-              <Text style={{ fontSize: 12, color: ‘#2e7d5e’ }}>🎁 Referral credit</Text>
-              <Text style={{ fontSize: 12, color: ‘#2e7d5e’, fontWeight: ‘700’ }}>−EGP {referralCreditApplied}</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🎁 Referral credit</Text>
+              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>−EGP {referralCreditApplied}</Text>
             </View>
           )}
 
           <View style={[styles.row, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Due</Text>
-            <Text style={[styles.totalAmount, appliedCoupon && { color: ‘#2e7d5e’ }]}>
+            <Text style={[styles.totalAmount, appliedCoupon && { color: '#2e7d5e' }]}>
               EGP {displayAmount?.toLocaleString()}
             </Text>
           </View>
@@ -245,7 +245,7 @@ export default function PaymentScreen({ route, navigation }) {
         {!appliedCoupon && (
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Have a coupon?</Text>
-            <View style={{ flexDirection: ‘row’, gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
               <TextInput
                 value={couponInput}
                 onChangeText={t => setCouponInput(t.toUpperCase())}
