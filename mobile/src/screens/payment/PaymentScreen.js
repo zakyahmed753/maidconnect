@@ -1,10 +1,10 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
-  StyleSheet, StatusBar, ActivityIndicator, Linking, AppState
+  StyleSheet, StatusBar, ActivityIndicator, Linking, AppState, TextInput
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { paymentsAPI } from '../../services/api';
+import { paymentsAPI, couponsAPI } from '../../services/api';
 import useAuthStore from '../../store/authStore';
 import { COLORS, FONTS } from '../../utils/theme';
 import Toast from 'react-native-toast-message';
@@ -31,8 +31,38 @@ export default function PaymentScreen({ route, navigation }) {
 
   const [backendAmount, setBackendAmount] = useState(null);
   const [referralCreditApplied, setReferralCreditApplied] = useState(0);
-  const displayAmount = backendAmount ?? discountedAmount ?? amount ?? (plan ? PLANS[plan]?.price : 0);
-  const planInfo      = plan ? PLANS[plan] : null;
+
+  // Coupon state
+  const [couponInput,   setCouponInput]   = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(
+    couponCode && discountedAmount
+      ? { code: couponCode, finalAmount: discountedAmount, discountAmount: (amount ?? 0) - discountedAmount }
+      : null
+  );
+
+  const originalAmount = amount ?? (plan ? PLANS[plan]?.price : 0);
+  const effectiveAmount = backendAmount ?? (appliedCoupon ? appliedCoupon.finalAmount : originalAmount);
+  const displayAmount   = effectiveAmount;
+  const planInfo        = plan ? PLANS[plan] : null;
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponLoading(true);
+    try {
+      const res = await couponsAPI.validate({ code, amount: originalAmount });
+      if (res.data.valid) {
+        setAppliedCoupon({ code, finalAmount: res.data.finalAmount, discountAmount: res.data.discountAmount });
+        setCouponInput('');
+        Toast.show({ type: 'success', text1: 'Coupon applied!', text2: `You save EGP ${res.data.discountAmount}` });
+      }
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Invalid coupon code' });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   // Poll backend until payment is confirmed or all attempts exhausted
   const pollStatus = (paymentId) => {
@@ -116,7 +146,8 @@ export default function PaymentScreen({ route, navigation }) {
   const handlePay = async () => {
     setLoading(true);
     try {
-      const res = await paymentsAPI.initiatePaymob({ type, plan, maidProfileId, chatId, couponCode });
+      const activeCoupon = appliedCoupon?.code ?? couponCode;
+      const res = await paymentsAPI.initiatePaymob({ type, plan, maidProfileId, chatId, couponCode: activeCoupon });
       const { iframeUrl, paymentId, amount: returnedAmount, freeViaCredit, creditApplied, referralCreditApplied: rca } = res.data;
 
       // Subscription fully covered by referral credit — already activated
@@ -157,37 +188,85 @@ export default function PaymentScreen({ route, navigation }) {
           <Text style={styles.cardLabel}>Order Summary</Text>
           <View style={styles.row}>
             <Text style={styles.rowKey}>
-              {type === 'subscription'
+              {type === ‘subscription’
                 ? `${planInfo?.label ?? plan} Subscription`
-                : type === 'customer_subscription'
-                ? 'Customer Platform Subscription'
-                : type === 'replacement_fee'
+                : type === ‘customer_subscription’
+                ? ‘Customer Platform Subscription’
+                : type === ‘replacement_fee’
                 ? `Replacement Fee — unlock your next hire`
-                : `Commission — ${maidName || 'Maid'}`}
+                : `Commission — ${maidName || ‘Maid’}`}
             </Text>
             {planInfo?.badge && (
               <View style={styles.badge}><Text style={styles.badgeTxt}>{planInfo.badge}</Text></View>
             )}
           </View>
-          {couponCode && (
+
+          {/* Original price — strikethrough when coupon applied */}
+          {appliedCoupon && (
             <View style={styles.row}>
-              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🏷 Coupon: {couponCode}</Text>
-              <View style={[styles.badge, { backgroundColor: 'rgba(46,125,94,0.1)' }]}>
-                <Text style={[styles.badgeTxt, { color: '#2e7d5e' }]}>Discount applied</Text>
-              </View>
+              <Text style={{ fontSize: 13, color: COLORS.muted }}>Original price</Text>
+              <Text style={{ fontSize: 13, color: COLORS.muted, textDecorationLine: ‘line-through’ }}>
+                EGP {originalAmount?.toLocaleString()}
+              </Text>
             </View>
           )}
+
+          {/* Applied coupon row */}
+          {appliedCoupon && (
+            <View style={styles.row}>
+              <View style={{ flexDirection: ‘row’, alignItems: ‘center’, gap: 6, flex: 1 }}>
+                <Text style={{ fontSize: 12, color: ‘#2e7d5e’ }}>🏷 {appliedCoupon.code}</Text>
+                <View style={[styles.badge, { backgroundColor: ‘rgba(46,125,94,0.1)’ }]}>
+                  <Text style={[styles.badgeTxt, { color: ‘#2e7d5e’ }]}>−EGP {appliedCoupon.discountAmount}</Text>
+                </View>
+              </View>
+              <TouchableOpacity onPress={() => setAppliedCoupon(null)}>
+                <Text style={{ fontSize: 11, color: ‘#e05555’ }}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {referralCreditApplied > 0 && (
             <View style={styles.row}>
-              <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🎁 Referral credit</Text>
-              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>âˆ’EGP {referralCreditApplied}</Text>
+              <Text style={{ fontSize: 12, color: ‘#2e7d5e’ }}>🎁 Referral credit</Text>
+              <Text style={{ fontSize: 12, color: ‘#2e7d5e’, fontWeight: ‘700’ }}>−EGP {referralCreditApplied}</Text>
             </View>
           )}
+
           <View style={[styles.row, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total Due</Text>
-            <Text style={styles.totalAmount}>EGP {displayAmount?.toLocaleString()}</Text>
+            <Text style={[styles.totalAmount, appliedCoupon && { color: ‘#2e7d5e’ }]}>
+              EGP {displayAmount?.toLocaleString()}
+            </Text>
           </View>
         </View>
+
+        {/* Coupon code input */}
+        {!appliedCoupon && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Have a coupon?</Text>
+            <View style={{ flexDirection: ‘row’, gap: 8 }}>
+              <TextInput
+                value={couponInput}
+                onChangeText={t => setCouponInput(t.toUpperCase())}
+                placeholder="Enter coupon code"
+                placeholderTextColor={COLORS.muted}
+                autoCapitalize="characters"
+                style={styles.couponInput}
+                editable={!couponLoading}
+              />
+              <TouchableOpacity
+                onPress={handleApplyCoupon}
+                disabled={couponLoading || !couponInput.trim()}
+                style={[styles.couponBtn, (!couponInput.trim() || couponLoading) && { opacity: 0.5 }]}
+              >
+                {couponLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.couponBtnTxt}>Apply</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Paymob card */}
         <View style={styles.card}>
@@ -236,6 +315,7 @@ export default function PaymentScreen({ route, navigation }) {
             {loading
               ? <ActivityIndicator color={COLORS.dark} />
               : <Text style={styles.payBtnTxt}>Pay EGP {displayAmount?.toLocaleString()} →</Text>}
+
           </TouchableOpacity>
         )}
 
@@ -278,4 +358,7 @@ const styles = StyleSheet.create({
   payBtnTxt:   { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: '#fff', letterSpacing: 0.5 },
   cancelBtn:   { alignItems: 'center', padding: 12 },
   cancelTxt:   { fontSize: 13, color: COLORS.muted },
+  couponInput: { flex: 1, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: COLORS.text, fontFamily: FONTS.bodySemiBold, letterSpacing: 1 },
+  couponBtn:   { backgroundColor: COLORS.green, borderRadius: 6, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
+  couponBtnTxt:{ fontSize: 13, color: '#fff', fontFamily: FONTS.bodySemiBold },
 });
