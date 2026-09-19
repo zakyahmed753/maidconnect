@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { Platform, View, Modal, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import { Platform, View, Modal, Text, TouchableOpacity, Linking, StyleSheet, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as Font from 'expo-font';
 import * as Updates from 'expo-updates';
 import * as Notifications from 'expo-notifications';
@@ -22,6 +23,22 @@ import AppNavigator, { navigationRef } from './src/navigation/AppNavigator';
 import useAuthStore from './src/store/authStore';
 import useLangStore from './src/store/langStore';
 import { authAPI, configAPI } from './src/services/api';
+
+const WA_PHONE = '201040155533';
+
+function WhatsAppFAB() {
+  const handlePress = () => {
+    const waUrl = `whatsapp://send?phone=${WA_PHONE}`;
+    Linking.canOpenURL(waUrl)
+      .then(supported => Linking.openURL(supported ? waUrl : `https://wa.me/${WA_PHONE}`))
+      .catch(() => Linking.openURL(`https://wa.me/${WA_PHONE}`));
+  };
+  return (
+    <Pressable onPress={handlePress} style={waStyles.fab}>
+      <Ionicons name="logo-whatsapp" size={28} color="#fff" />
+    </Pressable>
+  );
+}
 
 const IOS_STORE_URL     = 'https://apps.apple.com/app/id6782191284';
 const ANDROID_STORE_URL = 'https://play.google.com/store/apps/details?id=app.servix.world';
@@ -220,6 +237,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AppNavigator />
+        <WhatsAppFAB />
         <Toast />
 
         {/* ── App update banner ─────────────────────────────────────────── */}
@@ -257,6 +275,26 @@ export default function App() {
     </GestureHandlerRootView>
   );
 }
+
+const waStyles = StyleSheet.create({
+  fab: {
+    position: 'absolute',
+    bottom: 28,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#25D366',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+});
 
 const upStyles = StyleSheet.create({
   overlay:      { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'flex-end' },
