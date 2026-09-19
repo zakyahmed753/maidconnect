@@ -29,8 +29,11 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = window.innerWidth < 768;
 
-  const isAgent = admin?.role === 'agent';
-  const NAV = ALL_NAV.filter(n => !n.adminOnly || !isAgent);
+  const isAgent      = admin?.role === 'agent';
+  const isLeadsource = admin?.role === 'leadsource';
+  const NAV = isLeadsource
+    ? [{ to: '/', icon: '📊', label: 'My Dashboard', adminOnly: false }]
+    : ALL_NAV.filter(n => !n.adminOnly || !isAgent);
 
   useEffect(() => {
     localStorage.setItem('sidebarPinned', String(pinned));
@@ -89,7 +92,7 @@ export default function Layout() {
                 <div>
                   <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:17, fontWeight:700, color:'#e8c97a', lineHeight:1 }}>Servix</div>
                   <div style={{ fontSize:9, letterSpacing:'0.12em', textTransform:'uppercase', color:'#555', fontFamily:"'DM Mono',monospace", marginTop:2 }}>
-                    {isAgent ? 'Agent Panel' : 'Admin Panel'}
+                    {isLeadsource ? 'Lead Source' : isAgent ? 'Agent Panel' : 'Admin Panel'}
                   </div>
                 </div>
               </div>
@@ -133,7 +136,7 @@ export default function Layout() {
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ fontSize:12, color:'#aaa', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{admin?.name || 'Agent'}</div>
                 <div style={{ fontSize:9, color: isAgent ? '#6aabcc' : '#444', fontFamily:"'DM Mono',monospace" }}>
-                  {isAgent ? 'AGENT' : 'SUPER ADMIN'}
+                  {isLeadsource ? 'LEAD SOURCE' : isAgent ? 'AGENT' : 'SUPER ADMIN'}
                 </div>
               </div>
               <button style={{ background:'none', border:'none', color:'#555', cursor:'pointer', fontSize:16, padding:4 }} onClick={handleLogout} title="Logout">🚪</button>

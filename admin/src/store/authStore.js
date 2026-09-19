@@ -14,7 +14,7 @@ const useAuthStore = create(
       admin: null,
       login: async (email, password) => {
         const res = await api.post('/auth/login', { email, password });
-        if (!['admin', 'agent'].includes(res.data.user.role)) throw new Error('Admin access only');
+        if (!['admin', 'agent', 'leadsource'].includes(res.data.user.role)) throw new Error('Admin access only');
         set({ token: res.data.token, admin: res.data.user });
         return res.data;
       },

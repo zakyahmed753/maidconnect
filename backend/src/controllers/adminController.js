@@ -791,6 +791,43 @@ exports.deleteLeadSource = async (req, res) => {
   }
 };
 
+// ── LeadSource Portal Users ──
+exports.createLeadsourceUser = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const { name, email, password, leadSourceSlug } = req.body;
+    if (!name || !email || !password || !leadSourceSlug)
+      return res.status(400).json({ success: false, message: 'name, email, password and leadSourceSlug are required' });
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) return res.status(409).json({ success: false, message: 'Email already in use' });
+    const user = new User({ name, email, password, role: 'leadsource', leadSourceSlug, emailVerified: true, isActive: true });
+    await user.save();
+    res.status(201).json({ success: true, user: { _id: user._id, name, email, leadSourceSlug } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.listLeadsourceUsers = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const users = await User.find({ role: 'leadsource' }).select('name email leadSourceSlug createdAt isSuspended').lean();
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.deleteLeadsourceUser = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    await User.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // ── One-time migration: expire all free-period customer subscriptions ──
 exports.expireFreePeriodCustomers = async (req, res) => {
   try {

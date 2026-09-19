@@ -53,6 +53,10 @@ export const adminAPI = {
   hardDeleteHouseWife:  (hwId)         => api.delete(`/admin/housewives/${hwId}/hard-delete`),
   resetPayments:        ()             => api.delete('/admin/fix/reset-payments', { params: { secret: 'servix2026' } }),
   getEvents:            (params)       => api.get('/events', { params }),
+  createLeadsourceUser: (data)         => api.post('/admin/leadsource-users', data),
+  listLeadsourceUsers:  ()             => api.get('/admin/leadsource-users'),
+  deleteLeadsourceUser: (id)           => api.delete(`/admin/leadsource-users/${id}`),
+  getLeadsourceDashboard: ()           => api.get('/leadsource/dashboard'),
 };
 
 export const configAPI = {

@@ -45,24 +45,31 @@ function getSourceLabel(m, agentMap) {
 const AGENT_COLORS = ['#5dd6a8','#b47adb','#6aabcc','#f0a050','#e86aa8','#a8e86a','#e8c97a'];
 
 export default function LeadSources() {
-  const [maids,       setMaids]       = useState([]);
-  const [agents,      setAgents]      = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [filter,      setFilter]      = useState('all');
-  const [creating,    setCreating]    = useState(false);
-  const [newName,     setNewName]     = useState('');
-  const [newColor,    setNewColor]    = useState(AGENT_COLORS[0]);
-  const [saving,      setSaving]      = useState(false);
-  const [deleting,    setDeleting]    = useState(null);
+  const [maids,         setMaids]         = useState([]);
+  const [agents,        setAgents]        = useState([]);
+  const [lsUsers,       setLsUsers]       = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [filter,        setFilter]        = useState('all');
+  const [creating,      setCreating]      = useState(false);
+  const [newName,       setNewName]       = useState('');
+  const [newColor,      setNewColor]      = useState(AGENT_COLORS[0]);
+  const [saving,        setSaving]        = useState(false);
+  const [deleting,      setDeleting]      = useState(null);
+  const [portalForm,    setPortalForm]    = useState(null); // slug of agent whose form is open
+  const [portalFields,  setPortalFields]  = useState({ name:'', email:'', password:'' });
+  const [savingPortal,  setSavingPortal]  = useState(false);
+  const [deletingUser,  setDeletingUser]  = useState(null);
 
   const load = () => {
     setLoading(true);
     Promise.all([
       adminAPI.getMaids({ limit: 500 }),
       adminAPI.getLeadSources(),
-    ]).then(([mRes, aRes]) => {
+      adminAPI.listLeadsourceUsers(),
+    ]).then(([mRes, aRes, uRes]) => {
       setMaids(mRes.data.maids || []);
       setAgents(aRes.data.sources || []);
+      setLsUsers(uRes.data.users || []);
     }).catch(() => toast.error('Failed to load'))
       .finally(() => setLoading(false));
   };
@@ -127,6 +134,33 @@ export default function LeadSources() {
       load();
     } catch { toast.error('Failed to remove'); }
     finally { setDeleting(null); }
+  };
+
+  const handleCreatePortalUser = async (slug) => {
+    if (!portalFields.name.trim() || !portalFields.email.trim() || !portalFields.password.trim())
+      return toast.error('Name, email and password are required');
+    setSavingPortal(true);
+    try {
+      await adminAPI.createLeadsourceUser({ ...portalFields, leadSourceSlug: slug });
+      toast.success('Portal account created');
+      setPortalForm(null);
+      setPortalFields({ name:'', email:'', password:'' });
+      const uRes = await adminAPI.listLeadsourceUsers();
+      setLsUsers(uRes.data.users || []);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create');
+    } finally { setSavingPortal(false); }
+  };
+
+  const handleDeletePortalUser = async (userId, email) => {
+    if (!window.confirm(`Delete portal account "${email}"?`)) return;
+    setDeletingUser(userId);
+    try {
+      await adminAPI.deleteLeadsourceUser(userId);
+      toast.success('Portal account deleted');
+      setLsUsers(prev => prev.filter(u => u._id !== userId));
+    } catch { toast.error('Failed to delete'); }
+    finally { setDeletingUser(null); }
   };
 
   const copyLink = (link) => {
@@ -229,7 +263,7 @@ export default function LeadSources() {
                           <div style={{ fontSize:9, color:'#555', textTransform:'uppercase', letterSpacing:'0.06em' }}>Pending</div>
                         </div>
                       </div>
-                      <div style={{ display:'flex', gap:6 }}>
+                      <div style={{ display:'flex', gap:6, marginBottom:10 }}>
                         <button onClick={() => copyLink(link)}
                           style={{ ...BTN, background:'rgba(201,168,76,0.12)', color:'#c9a84c', border:'1px solid rgba(201,168,76,0.25)', flex:1, fontSize:10 }}>
                           📋 Copy Link
@@ -239,6 +273,81 @@ export default function LeadSources() {
                           {isActive ? '✕ Clear' : '▼ Filter'}
                         </button>
                       </div>
+
+                      {/* Portal accounts section */}
+                      {(() => {
+                        const agentUsers = lsUsers.filter(u => u.leadSourceSlug === agent.slug);
+                        const isFormOpen = portalForm === agent.slug;
+                        return (
+                          <div style={{ borderTop:'1px solid #2a2a2a', paddingTop:10 }}>
+                            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:agentUsers.length > 0 || isFormOpen ? 8 : 0 }}>
+                              <span style={{ fontSize:9, color:'#555', fontFamily:"'DM Mono',monospace", textTransform:'uppercase', letterSpacing:'0.08em' }}>Portal Accounts</span>
+                              {!isFormOpen && (
+                                <button
+                                  onClick={() => { setPortalForm(agent.slug); setPortalFields({ name:'', email:'', password:'' }); }}
+                                  style={{ ...BTN, background:'transparent', color:'#5dd6a8', border:'1px solid rgba(93,214,168,0.3)', padding:'2px 8px', fontSize:10 }}>
+                                  + Add
+                                </button>
+                              )}
+                            </div>
+                            {agentUsers.map(u => (
+                              <div key={u._id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'4px 0', borderBottom:'1px solid #1e1e1e' }}>
+                                <div>
+                                  <div style={{ fontSize:11, color:'#ccc' }}>{u.name}</div>
+                                  <div style={{ fontSize:10, color:'#555', fontFamily:"'DM Mono',monospace" }}>{u.email}</div>
+                                </div>
+                                <button
+                                  onClick={() => handleDeletePortalUser(u._id, u.email)}
+                                  disabled={deletingUser === u._id}
+                                  style={{ ...BTN, background:'transparent', color:'#555', border:'none', padding:'2px 6px', fontSize:13 }}
+                                  title="Delete account">
+                                  {deletingUser === u._id ? '…' : '×'}
+                                </button>
+                              </div>
+                            ))}
+                            {agentUsers.length === 0 && !isFormOpen && (
+                              <div style={{ fontSize:10, color:'#444', fontStyle:'italic' }}>No portal accounts yet</div>
+                            )}
+                            {isFormOpen && (
+                              <div style={{ marginTop:8, display:'flex', flexDirection:'column', gap:6 }}>
+                                <input
+                                  placeholder="Full name"
+                                  value={portalFields.name}
+                                  onChange={e => setPortalFields(p => ({ ...p, name: e.target.value }))}
+                                  style={{ ...INP, fontSize:11, padding:'6px 10px' }}
+                                />
+                                <input
+                                  placeholder="Email"
+                                  type="email"
+                                  value={portalFields.email}
+                                  onChange={e => setPortalFields(p => ({ ...p, email: e.target.value }))}
+                                  style={{ ...INP, fontSize:11, padding:'6px 10px' }}
+                                />
+                                <input
+                                  placeholder="Password"
+                                  type="password"
+                                  value={portalFields.password}
+                                  onChange={e => setPortalFields(p => ({ ...p, password: e.target.value }))}
+                                  style={{ ...INP, fontSize:11, padding:'6px 10px' }}
+                                />
+                                <div style={{ display:'flex', gap:6 }}>
+                                  <button
+                                    onClick={() => handleCreatePortalUser(agent.slug)}
+                                    disabled={savingPortal}
+                                    style={{ ...BTN, background:'rgba(93,214,168,0.15)', color:'#5dd6a8', border:'1px solid rgba(93,214,168,0.3)', flex:1, fontSize:10 }}>
+                                    {savingPortal ? 'Creating…' : 'Create Account'}
+                                  </button>
+                                  <button
+                                    onClick={() => setPortalForm(null)}
+                                    style={{ ...BTN, background:'transparent', color:'#555', border:'1px solid #2a2a2a', fontSize:10 }}>
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

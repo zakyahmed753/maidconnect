@@ -15,7 +15,8 @@ import Coupons from './pages/Coupons';
 import Areas   from './pages/Areas';
 import Agents      from './pages/Agents';
 import LeadSources from './pages/LeadSources';
-import Events      from './pages/Events';
+import Events              from './pages/Events';
+import LeadSourceDashboard from './pages/LeadSourceDashboard';
 
 const AGENT_ALLOWED = ['/maids', '/approvals', '/support'];
 
@@ -24,11 +25,26 @@ const ProtectedRoute = ({ children }) => {
   return token ? children : <Navigate to="/login" />;
 };
 
-// Redirects agents away from admin-only pages
+// Redirects agents away from admin-only pages; redirects leadsource to their dashboard
 const AdminRoute = ({ children }) => {
   const admin = useAuthStore(s => s.admin);
+  if (admin?.role === 'leadsource') return <Navigate to="/" replace />;
   if (admin?.role === 'agent') return <Navigate to="/maids" replace />;
   return children;
+};
+
+// Leadsource users only
+const LeadsourceRoute = ({ children }) => {
+  const admin = useAuthStore(s => s.admin);
+  if (admin?.role !== 'leadsource') return <Navigate to="/" replace />;
+  return children;
+};
+
+// Index: admin → Dashboard, leadsource → their dashboard
+const IndexRoute = () => {
+  const admin = useAuthStore(s => s.admin);
+  if (admin?.role === 'leadsource') return <LeadSourceDashboard />;
+  return <AdminRoute><Dashboard /></AdminRoute>;
 };
 
 export default function App() {
@@ -38,7 +54,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index         element={<AdminRoute><Dashboard /></AdminRoute>} />
+          <Route index         element={<IndexRoute />} />
           <Route path="maids"  element={<Maids />} />
           <Route path="housewives" element={<AdminRoute><HouseWives /></AdminRoute>} />
           <Route path="approvals"  element={<Approvals />} />

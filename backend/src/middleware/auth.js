@@ -27,6 +27,13 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
+const leadsourceOnly = (req, res, next) => {
+  if (req.user?.role !== 'leadsource') {
+    return res.status(403).json({ success: false, message: 'Lead source access required' });
+  }
+  next();
+};
+
 // Admin or Agent — for routes agents are allowed to use
 const adminOrAgent = (req, res, next) => {
   if (!['admin', 'agent'].includes(req.user?.role)) {
@@ -53,4 +60,4 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 };
 
-module.exports = { protect, adminOnly, adminOrAgent, maidOnly, housewifeOnly, generateToken };
+module.exports = { protect, adminOnly, adminOrAgent, maidOnly, housewifeOnly, leadsourceOnly, generateToken };
