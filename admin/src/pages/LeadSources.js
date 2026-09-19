@@ -65,7 +65,7 @@ export default function LeadSources() {
     Promise.all([
       adminAPI.getMaids({ limit: 500 }),
       adminAPI.getLeadSources(),
-      adminAPI.listLeadsourceUsers(),
+      adminAPI.listLeadsourceUsers().catch(() => ({ data: { users: [] } })),
     ]).then(([mRes, aRes, uRes]) => {
       setMaids(mRes.data.maids || []);
       setAgents(aRes.data.sources || []);
