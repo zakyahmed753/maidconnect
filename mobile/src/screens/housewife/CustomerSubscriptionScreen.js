@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  StatusBar, ActivityIndicator, Modal, Pressable, Platform,
+  StatusBar, ActivityIndicator, Modal, Pressable, Platform, TextInput,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,7 +10,7 @@ import Toast from 'react-native-toast-message';
 import Constants from 'expo-constants';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
-import { hwAPI, paymentsAPI, uploadAPI } from '../../services/api';
+import { hwAPI, paymentsAPI, uploadAPI, couponsAPI } from '../../services/api';
 import * as ImagePicker from 'expo-image-picker';
 import BackChevron from '../../components/BackChevron';
 import { useTranslation } from '../../utils/i18n';
@@ -57,6 +57,30 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
   const [submitError,    setSubmitError]    = useState(null);
   const [pendingPayment, setPendingPayment] = useState(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
+
+  // Coupon state (Android only)
+  const [couponInput,   setCouponInput]   = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const displayPrice = appliedCoupon ? appliedCoupon.finalAmount : PRICE;
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponLoading(true);
+    try {
+      const res = await couponsAPI.validate({ code, amount: PRICE });
+      if (res.data.valid) {
+        setAppliedCoupon({ code, finalAmount: res.data.finalAmount, discountAmount: res.data.discountAmount });
+        setCouponInput('');
+        Toast.show({ type: 'success', text1: 'Coupon applied!', text2: `You save EGP ${res.data.discountAmount}` });
+      }
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Invalid coupon code' });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   // iOS IAP state
   const [iapProduct,      setIapProduct]      = useState(null);
@@ -215,7 +239,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
     setSubmitError(null);
     try {
       const up  = await uploadAPI.image(receiptUri);
-      const res = await hwAPI.requestOfflinePayment({ receiptUrl: up.data.url, receiptPublicId: up.data.publicId });
+      const res = await hwAPI.requestOfflinePayment({ receiptUrl: up.data.url, receiptPublicId: up.data.publicId, couponCode: appliedCoupon?.code, discountedAmount: appliedCoupon?.finalAmount });
       setOfflineModal(false);
       setReceiptUri(null);
       navigation.navigate('PaymentResult', { amount: PRICE, paymentId: res.data.payment?._id, isOffline: true, goTo: 'Browse' });
@@ -271,8 +295,51 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         {Platform.OS !== 'ios' && (
           <View style={[styles.card, { alignItems: 'center', paddingVertical: 20 }]}>
             <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>{t('monthly_plan_name')}</Text>
-            <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: COLORS.green }}>EGP {PRICE.toLocaleString()}</Text>
-            <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>{t('cancel_anytime')}</Text>
+            {appliedCoupon && (
+              <Text style={{ fontSize: 16, color: COLORS.muted, textDecorationLine: 'line-through', marginBottom: 2 }}>
+                EGP {PRICE.toLocaleString()}
+              </Text>
+            )}
+            <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: appliedCoupon ? '#2e7d5e' : COLORS.green }}>
+              EGP {displayPrice.toLocaleString()}
+            </Text>
+            {appliedCoupon && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🏷 {appliedCoupon.code}</Text>
+                <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>−EGP {appliedCoupon.discountAmount}</Text>
+                <TouchableOpacity onPress={() => setAppliedCoupon(null)}>
+                  <Text style={{ fontSize: 11, color: '#e05555' }}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>{t('cancel_anytime')}</Text>
+          </View>
+        )}
+
+        {/* Coupon code input — Android only */}
+        {Platform.OS !== 'ios' && !appliedCoupon && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Have a coupon?</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput
+                value={couponInput}
+                onChangeText={v => setCouponInput(v.toUpperCase())}
+                placeholder="Enter coupon code"
+                placeholderTextColor={COLORS.muted}
+                autoCapitalize="characters"
+                style={styles.couponInput}
+                editable={!couponLoading}
+              />
+              <TouchableOpacity
+                onPress={handleApplyCoupon}
+                disabled={couponLoading || !couponInput.trim()}
+                style={[styles.couponBtn, (!couponInput.trim() || couponLoading) && { opacity: 0.5 }]}
+              >
+                {couponLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.couponBtnTxt}>Apply</Text>}
+              </TouchableOpacity>
+            </View>
           </View>
         )}
 
@@ -361,7 +428,13 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
             <Text style={styles.modalSub}>{t('cash_transfer_modal_sub')}</Text>
             <View style={styles.amountBox}>
               <Text style={styles.amountLabel}>{t('amount_due')}</Text>
-              <Text style={styles.amountVal}>EGP {PRICE.toLocaleString()}</Text>
+              {appliedCoupon && (
+                <Text style={{ fontSize: 14, color: COLORS.muted, textDecorationLine: 'line-through' }}>EGP {PRICE.toLocaleString()}</Text>
+              )}
+              <Text style={styles.amountVal}>EGP {displayPrice.toLocaleString()}</Text>
+              {appliedCoupon && (
+                <Text style={{ fontSize: 11, color: '#2e7d5e', fontWeight: '700', marginTop: 2 }}>Coupon {appliedCoupon.code} applied</Text>
+              )}
               <Text style={styles.amountNote}>{t('monthly_access_note')}</Text>
             </View>
             <Text style={styles.detailsHeader}>{t('transfer_to')}</Text>
@@ -468,4 +541,7 @@ const styles = StyleSheet.create({
   errorBox:      { backgroundColor: 'rgba(224,85,85,0.12)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 7, padding: 12, marginBottom: 12 },
   submitBtn:     { backgroundColor: COLORS.green, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 4 },
   submitTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#fff', letterSpacing: 0.3 },
+  couponInput:   { flex: 1, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: COLORS.text, fontFamily: FONTS.bodySemiBold, letterSpacing: 1 },
+  couponBtn:     { backgroundColor: COLORS.green, borderRadius: 6, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
+  couponBtnTxt:  { fontSize: 13, color: '#fff', fontFamily: FONTS.bodySemiBold },
 });
