@@ -56,7 +56,7 @@ export default function LeadSources() {
   const [saving,        setSaving]        = useState(false);
   const [deleting,      setDeleting]      = useState(null);
   const [portalForm,    setPortalForm]    = useState(null); // slug of agent whose form is open
-  const [portalFields,  setPortalFields]  = useState({ name:'', email:'', password:'' });
+  const [portalFields,  setPortalFields]  = useState({ name:'', email:'', password:'', slug:'' });
   const [savingPortal,  setSavingPortal]  = useState(false);
   const [deletingUser,  setDeletingUser]  = useState(null);
 
@@ -183,6 +183,125 @@ export default function LeadSources() {
           style={{ ...BTN, background:'linear-gradient(135deg,#c9a84c,#e8c97a)', color:'#1a1108', padding:'8px 16px', fontSize:12 }}>
           {creating ? '✕ Cancel' : '+ Add Agent'}
         </button>
+      </div>
+
+      {/* ── Portal Logins Section ── */}
+      <div style={{ ...CARD, border:'1px solid rgba(93,214,168,0.2)', marginBottom:24 }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+          <div>
+            <div style={{ fontSize:12, fontWeight:700, color:'#5dd6a8', textTransform:'uppercase', letterSpacing:'0.1em' }}>🔑 Portal Logins</div>
+            <div style={{ fontSize:11, color:'#555', marginTop:3 }}>Create login credentials for lead sources to access their own dashboard</div>
+          </div>
+          <button
+            onClick={() => { setPortalForm('__new__'); setPortalFields({ name:'', email:'', password:'', slug:'' }); }}
+            style={{ ...BTN, background:'rgba(93,214,168,0.12)', color:'#5dd6a8', border:'1px solid rgba(93,214,168,0.3)', fontSize:12 }}>
+            + Create Login
+          </button>
+        </div>
+
+        {/* Create form (standalone) */}
+        {portalForm === '__new__' && (
+          <div style={{ background:'#111', border:'1px solid #2a2a2a', borderRadius:6, padding:14, marginBottom:14 }}>
+            <div style={{ fontSize:10, color:'#5dd6a8', textTransform:'uppercase', letterSpacing:'0.08em', fontFamily:"'DM Mono',monospace", marginBottom:12 }}>New Portal Account</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:10 }}>
+              <div style={{ flex:'1 1 140px' }}>
+                <div style={{ fontSize:10, color:'#555', marginBottom:4 }}>Full Name</div>
+                <input placeholder="e.g. Sara Ahmed"
+                  value={portalFields.name}
+                  onChange={e => setPortalFields(p => ({ ...p, name: e.target.value }))}
+                  style={{ ...INP, width:'100%', boxSizing:'border-box', fontSize:12 }}
+                />
+              </div>
+              <div style={{ flex:'1 1 180px' }}>
+                <div style={{ fontSize:10, color:'#555', marginBottom:4 }}>Email (login username)</div>
+                <input placeholder="sara@example.com" type="email"
+                  value={portalFields.email}
+                  onChange={e => setPortalFields(p => ({ ...p, email: e.target.value }))}
+                  style={{ ...INP, width:'100%', boxSizing:'border-box', fontSize:12 }}
+                />
+              </div>
+              <div style={{ flex:'1 1 140px' }}>
+                <div style={{ fontSize:10, color:'#555', marginBottom:4 }}>Password</div>
+                <input placeholder="Choose a password" type="password"
+                  value={portalFields.password}
+                  onChange={e => setPortalFields(p => ({ ...p, password: e.target.value }))}
+                  style={{ ...INP, width:'100%', boxSizing:'border-box', fontSize:12 }}
+                />
+              </div>
+              <div style={{ flex:'1 1 140px' }}>
+                <div style={{ fontSize:10, color:'#555', marginBottom:4 }}>Link to Agent</div>
+                <select
+                  value={portalFields.slug || ''}
+                  onChange={e => setPortalFields(p => ({ ...p, slug: e.target.value }))}
+                  style={{ ...INP, width:'100%', boxSizing:'border-box', fontSize:12 }}>
+                  <option value="">— select agent —</option>
+                  {agents.map(a => (
+                    <option key={a.slug} value={a.slug}>{a.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button
+                disabled={savingPortal}
+                onClick={async () => {
+                  if (!portalFields.name.trim() || !portalFields.email.trim() || !portalFields.password.trim())
+                    return toast.error('Name, email and password are required');
+                  setSavingPortal(true);
+                  try {
+                    await adminAPI.createLeadsourceUser({ name: portalFields.name, email: portalFields.email, password: portalFields.password, leadSourceSlug: portalFields.slug || null });
+                    toast.success('Portal account created');
+                    setPortalForm(null);
+                    setPortalFields({ name:'', email:'', password:'', slug:'' });
+                    const uRes = await adminAPI.listLeadsourceUsers();
+                    setLsUsers(uRes.data.users || []);
+                  } catch (err) {
+                    toast.error(err.response?.data?.message || 'Failed to create');
+                  } finally { setSavingPortal(false); }
+                }}
+                style={{ ...BTN, background:'rgba(93,214,168,0.15)', color:'#5dd6a8', border:'1px solid rgba(93,214,168,0.3)', padding:'8px 20px' }}>
+                {savingPortal ? 'Creating…' : 'Create Account'}
+              </button>
+              <button onClick={() => setPortalForm(null)}
+                style={{ ...BTN, background:'transparent', color:'#555', border:'1px solid #2a2a2a' }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Existing accounts list */}
+        {lsUsers.length === 0 && portalForm !== '__new__' ? (
+          <div style={{ fontSize:12, color:'#444', fontStyle:'italic', padding:'8px 0' }}>No portal logins yet — click "+ Create Login" to add one.</div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
+            {lsUsers.map((u, i) => {
+              const linkedAgent = agents.find(a => a.slug === u.leadSourceSlug);
+              return (
+                <div key={u._id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'9px 0', borderBottom: i < lsUsers.length - 1 ? '1px solid #1e1e1e' : 'none' }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:14 }}>
+                    <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(93,214,168,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>👤</div>
+                    <div>
+                      <div style={{ fontSize:13, color:'#e8c97a', fontWeight:600 }}>{u.name}</div>
+                      <div style={{ fontSize:11, color:'#555', fontFamily:"'DM Mono',monospace" }}>{u.email}</div>
+                    </div>
+                    {linkedAgent && (
+                      <span style={{ fontSize:10, padding:'2px 8px', borderRadius:3, background: hexToAlpha(linkedAgent.color, 0.15), color: linkedAgent.color, border:`1px solid ${linkedAgent.color}40`, fontFamily:"'DM Mono',monospace" }}>
+                        {linkedAgent.name}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeletePortalUser(u._id, u.email)}
+                    disabled={deletingUser === u._id}
+                    style={{ ...BTN, background:'transparent', color:'#555', border:'1px solid #2a2a2a', fontSize:11, padding:'4px 10px' }}>
+                    {deletingUser === u._id ? '…' : '🗑 Delete'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Create form */}
