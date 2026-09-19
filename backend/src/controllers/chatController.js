@@ -94,11 +94,14 @@ exports.getMessages = async (req, res) => {
     const { chatId } = req.params;
     const { page = 1, limit = 50 } = req.query;
 
-    const messages = await Message.find({ chat: chatId })
-      .populate('sender', 'name avatar role')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+    const [messages, chat] = await Promise.all([
+      Message.find({ chat: chatId })
+        .populate('sender', 'name avatar role')
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(Number(limit)),
+      Chat.findById(chatId).populate('maid', 'lastSeen').populate('housewife', 'lastSeen'),
+    ]);
 
     // Mark messages as read
     await Message.updateMany(
@@ -106,7 +109,14 @@ exports.getMessages = async (req, res) => {
       { isRead: true, readAt: Date.now() }
     );
 
-    res.json({ success: true, messages: messages.reverse() });
+    // Determine the other party's lastSeen
+    let otherLastSeen = null;
+    if (chat) {
+      const isMaid = chat.maid && String(chat.maid._id) === String(req.user._id);
+      otherLastSeen = isMaid ? chat.housewife?.lastSeen : chat.maid?.lastSeen;
+    }
+
+    res.json({ success: true, messages: messages.reverse(), otherLastSeen });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

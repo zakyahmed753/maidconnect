@@ -14,6 +14,8 @@ const protect = async (req, res, next) => {
     if (user.deletedAt) return res.status(403).json({ success: false, message: 'Account deactivated. Contact admin to restore.' });
     if (user.isSuspended) return res.status(403).json({ success: false, message: 'Account suspended' });
     req.user = user;
+    // Fire-and-forget; never block the request
+    User.updateOne({ _id: user._id }, { lastSeen: new Date() }).exec().catch(() => {});
     next();
   } catch (err) {
     return res.status(401).json({ success: false, message: 'Token invalid or expired' });
