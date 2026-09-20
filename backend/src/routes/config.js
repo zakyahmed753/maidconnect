@@ -12,6 +12,7 @@ const ANDROID_APP_ID = 'app.servix.world';
 let _iosCache     = { version: null, fetchedAt: 0 };
 let _androidCache = { version: null, fetchedAt: 0 };
 const CACHE_MS = 30 * 60 * 1000; // 30 minutes
+let _iosLastError = null, _androidLastError = null; // TEMP: debugging stale-version issue
 
 async function fetchIosStoreVersion() {
   if (Date.now() - _iosCache.fetchedAt < CACHE_MS && _iosCache.version) return _iosCache.version;
@@ -23,7 +24,9 @@ async function fetchIosStoreVersion() {
     const v = r.data?.results?.[0]?.version || null;
     if (v) _iosCache = { version: v, fetchedAt: Date.now() };
     return v;
-  } catch {
+  } catch (err) {
+    console.error('fetchIosStoreVersion failed:', err.message);
+    _iosLastError = err.message;
     return null;
   }
 }
@@ -38,7 +41,9 @@ async function fetchAndroidStoreVersion() {
     const v = r?.version || null;
     if (v) _androidCache = { version: v, fetchedAt: Date.now() };
     return v;
-  } catch {
+  } catch (err) {
+    console.error('fetchAndroidStoreVersion failed:', err.message);
+    _androidLastError = err.message;
     return null;
   }
 }
@@ -115,11 +120,16 @@ router.get('/version', async (req, res) => {
       Config.findOne({ key: 'appVersion' }),
     ]);
     const db = cfg?.value || { ios: '1.3.7', android: '1.3.7' };
-    res.json({
+    const out = {
       success: true,
       ios:     iosLive || db.ios,
       android: androidLive || db.android,
-    });
+    };
+    if (req.query.debug === '1') { // TEMP: debugging stale-version issue
+      out.iosError = _iosLastError;
+      out.androidError = _androidLastError;
+    }
+    res.json(out);
   } catch (err) {
     res.status(500).json({ success: false });
   }
