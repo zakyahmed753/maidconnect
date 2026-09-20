@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView,
   StyleSheet, StatusBar, ActivityIndicator
@@ -7,12 +7,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
-import { hwAPI } from '../../services/api';
+import { hwAPI, configAPI } from '../../services/api';
 
 export default function AreaSelectScreen({ navigation }) {
   const { activeAreas, allAreas, completeAuth } = useAuthStore();
   const [selected, setSelected] = useState(null);
   const [saving,   setSaving]   = useState(false);
+  const [freshAreas, setFreshAreas] = useState(null);
+
+  useEffect(() => {
+    configAPI.getAreas()
+      .then(r => setFreshAreas({ active: r.data.activeAreas, all: r.data.allAreas }))
+      .catch(() => {});
+  }, []);
+
+  const effectiveAll    = freshAreas?.all?.length    ? freshAreas.all    : allAreas;
+  const effectiveActive = freshAreas?.active?.length ? freshAreas.active : activeAreas;
 
   const handleSelect = async (area) => {
     setSelected(area);
@@ -43,7 +53,7 @@ export default function AreaSelectScreen({ navigation }) {
         {/* Active areas */}
         <Text style={styles.sectionLabel}>Available now in Cairo</Text>
         <View style={styles.grid}>
-          {allAreas.filter(a => activeAreas.includes(a)).map(area => (
+          {effectiveAll.filter(a => effectiveActive.includes(a)).map(area => (
             <TouchableOpacity
               key={area}
               style={[styles.areaCard, styles.areaActive, selected === area && styles.areaSelected]}
@@ -62,7 +72,7 @@ export default function AreaSelectScreen({ navigation }) {
         {/* Coming soon areas */}
         <Text style={[styles.sectionLabel, { marginTop: 20 }]}>Coming soon</Text>
         <View style={styles.grid}>
-          {allAreas.filter(a => !activeAreas.includes(a)).map(area => (
+          {effectiveAll.filter(a => !effectiveActive.includes(a)).map(area => (
             <TouchableOpacity
               key={area}
               style={[styles.areaCard, styles.areaInactive]}

@@ -1,25 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  StatusBar, ActivityIndicator, Modal, Pressable,
+  StatusBar, ActivityIndicator, Modal, Pressable, Platform, TextInput,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
+import Constants from 'expo-constants';
 import { COLORS, FONTS } from '../../utils/theme';
 import useAuthStore from '../../store/authStore';
-import { hwAPI, paymentsAPI, uploadAPI } from '../../services/api';
+import { hwAPI, paymentsAPI, uploadAPI, couponsAPI } from '../../services/api';
 import * as ImagePicker from 'expo-image-picker';
 import BackChevron from '../../components/BackChevron';
 import { useTranslation } from '../../utils/i18n';
 
-const PRICE = 1000;
+const PRICE = 2000;
+const CUSTOMER_SKU = 'world.servix.customer.monthly';
+
+const IS_EXPO_GO = Constants.executionEnvironment === 'storeClient';
+const USE_IAP    = Platform.OS === 'ios' && !IS_EXPO_GO;
+
+const iap = USE_IAP ? require('react-native-iap') : {};
+const {
+  initConnection,
+  endConnection,
+  fetchProducts,
+  requestPurchase,
+  getAvailablePurchases,
+  finishTransaction,
+  purchaseUpdatedListener,
+  purchaseErrorListener,
+} = iap;
 
 export default function CustomerSubscriptionScreen({ route, navigation }) {
   const { maidUserId, maidProfileId, maidName } = route.params || {};
-  const completeAuth = useAuthStore(s => s.completeAuth);
+  const completeAuth  = useAuthStore(s => s.completeAuth);
+  const user          = useAuthStore(s => s.user);
+  const DEMO_EMAILS   = ['demo.maid@servix.world', 'demo.customer@servix.world'];
+  const isDemoAccount = DEMO_EMAILS.includes(user?.email);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const mountedRef = useRef(true);
+  useEffect(() => { return () => { mountedRef.current = false; }; }, []);
 
   const FEATURES = [
     ['chatbubble-outline',        '#7c3aed', t('feat_chat_any')],
@@ -36,35 +60,163 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
   const [pendingPayment, setPendingPayment] = useState(null);
   const [checkingStatus, setCheckingStatus] = useState(false);
 
-  // On every focus: check if subscription is already active or receipt pending
+  // Coupon state (Android only)
+  const [couponInput,   setCouponInput]   = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const displayPrice = appliedCoupon ? appliedCoupon.finalAmount : PRICE;
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponLoading(true);
+    try {
+      const res = await couponsAPI.validate({ code, amount: PRICE });
+      if (res.data.valid) {
+        setAppliedCoupon({ code, finalAmount: res.data.finalAmount, discountAmount: res.data.discountAmount });
+        setCouponInput('');
+        Toast.show({ type: 'success', text1: 'Coupon applied!', text2: `You save EGP ${res.data.discountAmount}` });
+      }
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err.response?.data?.message || 'Invalid coupon code' });
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // iOS IAP state
+  const [iapProduct,      setIapProduct]      = useState(null);
+  const [iapLoading,      setIapLoading]      = useState(false);
+  const [iapError,        setIapError]        = useState(null);
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
+  const purchaseListenerRef = useRef(null);
+  const errorListenerRef    = useRef(null);
+
   useFocusEffect(
     React.useCallback(() => {
       completeAuth().catch(() => {});
-      paymentsAPI.getHistory()
-        .then(r => {
-          const pending = (r.data?.payments || []).find(
-            p => p.type === 'customer_subscription' && p.method === 'cash_transfer' && p.status === 'pending'
-          );
-          setPendingPayment(pending || null);
-        })
-        .catch(() => {});
+      if (Platform.OS !== 'ios') {
+        paymentsAPI.getHistory()
+          .then(r => {
+            const pending = (r.data?.payments || []).find(
+              p => p.type === 'customer_subscription' && p.method === 'cash_transfer' && p.status === 'pending'
+            );
+            setPendingPayment(pending || null);
+          })
+          .catch(() => {});
+      }
     }, [])
   );
 
+  // iOS IAP connection
+  useEffect(() => {
+    if (!USE_IAP) return;
+    let mounted = true;
+
+    const setup = async () => {
+      try {
+        setIapLoading(true);
+        await initConnection();
+
+        purchaseListenerRef.current = purchaseUpdatedListener(async (purchase) => {
+          const receipt = purchase.transactionReceipt;
+          if (!receipt) return;
+          try {
+            setPurchaseLoading(true);
+            await paymentsAPI.verifyAppleCustomerIAP({ receiptData: receipt, productId: purchase.productId });
+            await finishTransaction({ purchase, isConsumable: false });
+            await goAfterSuccess();
+          } catch {
+            Toast.show({
+              type: 'error',
+              text1: 'Activation failed',
+              text2: 'Payment was taken. Contact support if this persists.',
+              visibilityTime: 6000,
+            });
+          } finally {
+            if (mountedRef.current) setPurchaseLoading(false);
+          }
+        });
+
+        errorListenerRef.current = purchaseErrorListener((error) => {
+          if (error.code !== 'E_USER_CANCELLED') {
+            Toast.show({ type: 'error', text1: error.message || 'Purchase failed' });
+          }
+          if (mountedRef.current) setPurchaseLoading(false);
+        });
+
+        const subs = await fetchProducts({ skus: [CUSTOMER_SKU], type: 'subs' });
+        if (mounted && subs.length) setIapProduct(subs[0]);
+      } catch (e) {
+        if (mounted) setIapError(e?.message || String(e) || 'IAP init failed');
+      } finally {
+        if (mounted) setIapLoading(false);
+      }
+    };
+
+    setup();
+
+    return () => {
+      mounted = false;
+      purchaseListenerRef.current?.remove();
+      errorListenerRef.current?.remove();
+      endConnection();
+    };
+  }, []);
+
+  const goAfterSuccess = async () => {
+    await completeAuth();
+    if (!mountedRef.current) return;
+    if (maidUserId) {
+      const { chatsAPI } = require('../../services/api');
+      const chatRes = await chatsAPI.startChat({ maidUserId, maidProfileId });
+      navigation.replace('Chat', { chatId: chatRes.data.chat._id, maidName });
+    } else {
+      navigation.navigate('Browse');
+    }
+  };
+
+  const handleAppleSubscribe = async () => {
+    if (purchaseLoading || !iapProduct) return;
+    setPurchaseLoading(true);
+    try {
+      await requestPurchase({ request: { apple: { sku: CUSTOMER_SKU } }, type: 'subs' });
+    } catch (err) {
+      if (err.code !== 'E_USER_CANCELLED') {
+        Toast.show({ type: 'error', text1: err.message || 'Could not start purchase' });
+      }
+      if (mountedRef.current) setPurchaseLoading(false);
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    if (purchaseLoading) return;
+    setPurchaseLoading(true);
+    try {
+      const purchases = await getAvailablePurchases();
+      const found = purchases.find(p => p.productId === CUSTOMER_SKU);
+      if (!found) {
+        Toast.show({ type: 'info', text1: 'No previous subscription found' });
+        return;
+      }
+      await paymentsAPI.verifyAppleCustomerIAP({ receiptData: found.transactionReceipt, productId: found.productId });
+      await finishTransaction({ purchase: found, isConsumable: false });
+      await goAfterSuccess();
+    } catch {
+      Toast.show({ type: 'error', text1: 'Could not restore subscription' });
+    } finally {
+      if (mountedRef.current) setPurchaseLoading(false);
+    }
+  };
+
+  // Android handlers
   const handleCheckPendingStatus = async () => {
     if (!pendingPayment?._id) return;
     setCheckingStatus(true);
     try {
       const res = await paymentsAPI.checkStatus(pendingPayment._id);
       if (res.data?.status === 'completed') {
-        await completeAuth();
-        if (maidUserId) {
-          const { chatsAPI } = require('../../services/api');
-          const chatRes = await chatsAPI.startChat({ maidUserId, maidProfileId });
-          navigation.replace('Chat', { chatId: chatRes.data.chat._id, maidName });
-        } else {
-          navigation.goBack();
-        }
+        await goAfterSuccess();
       } else if (res.data?.status === 'failed') {
         setPendingPayment(null);
         Toast.show({ type: 'info', text1: t('receipt_rejected'), text2: t('receipt_rejected_sub') });
@@ -79,10 +231,7 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
   };
 
   const pickReceipt = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.85,
-    });
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.85 });
     if (!res.canceled) setReceiptUri(res.assets[0].uri);
   };
 
@@ -92,21 +241,12 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
     setSubmitError(null);
     try {
       const up  = await uploadAPI.image(receiptUri);
-      const res = await hwAPI.requestOfflinePayment({
-        receiptUrl:      up.data.url,
-        receiptPublicId: up.data.publicId,
-      });
+      const res = await hwAPI.requestOfflinePayment({ receiptUrl: up.data.url, receiptPublicId: up.data.publicId, couponCode: appliedCoupon?.code, discountedAmount: appliedCoupon?.finalAmount });
       setOfflineModal(false);
       setReceiptUri(null);
-      navigation.navigate('PaymentResult', {
-        amount:    PRICE,
-        paymentId: res.data.payment?._id,
-        isOffline: true,
-        goTo:      'Browse',
-      });
+      navigation.navigate('PaymentResult', { amount: PRICE, paymentId: res.data.payment?._id, isOffline: true, goTo: 'Browse' });
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || t('save_failed');
-      setSubmitError(msg);
+      setSubmitError(err.response?.data?.message || err.message || t('save_failed'));
     } finally {
       setSubmitting(false);
     }
@@ -126,20 +266,15 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
         <Text style={styles.heroSub}>{t('cust_sub_hero_sub')}</Text>
       </LinearGradient>
 
-      <ScrollView style={{ backgroundColor: COLORS.cream }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      <ScrollView style={{ backgroundColor: COLORS.cream }} contentContainerStyle={{ padding: 16, paddingBottom: 40 + insets.bottom }}>
 
-        {/* Pending receipt banner */}
-        {pendingPayment && (
+        {/* Pending receipt banner — Android only */}
+        {Platform.OS !== 'ios' && pendingPayment && (
           <View style={styles.pendingBanner}>
             <Text style={styles.pendingTitle}>{t('receipt_under_review')}</Text>
             <Text style={styles.pendingSub}>{t('cust_sub_receipt_body')}</Text>
-            <TouchableOpacity
-              onPress={handleCheckPendingStatus}
-              disabled={checkingStatus}
-              style={[styles.checkBtn, checkingStatus && { opacity: 0.6 }]}>
-              {checkingStatus
-                ? <ActivityIndicator color="#fff" size="small" />
-                : <Text style={styles.checkBtnTxt}>{t('check_confirmation_status')}</Text>}
+            <TouchableOpacity onPress={handleCheckPendingStatus} disabled={checkingStatus} style={[styles.checkBtn, checkingStatus && { opacity: 0.6 }]}>
+              {checkingStatus ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.checkBtnTxt}>{t('check_confirmation_status')}</Text>}
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setPendingPayment(null)} style={{ alignItems: 'center', paddingTop: 10 }}>
               <Text style={{ fontSize: 11, color: COLORS.muted }}>{t('submit_new_receipt')}</Text>
@@ -158,117 +293,193 @@ export default function CustomerSubscriptionScreen({ route, navigation }) {
           ))}
         </View>
 
-        {/* Price card */}
-        <View style={[styles.card, { alignItems: 'center', paddingVertical: 20 }]}>
-          <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>{t('monthly_plan_name')}</Text>
-          <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: COLORS.green }}>EGP {PRICE.toLocaleString()}</Text>
-          <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>{t('cancel_anytime')}</Text>
-        </View>
-
-        {/* Cash Transfer button */}
-        <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
-          <Ionicons name="cash-outline" size={24} color={COLORS.green} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.offlineTxt}>{t('pay_cash')}</Text>
-            <Text style={styles.offlineSub}>{t('instapay_voda_hint')}</Text>
+        {/* Price card — Android only; iOS price comes from Apple */}
+        {Platform.OS !== 'ios' && (
+          <View style={[styles.card, { alignItems: 'center', paddingVertical: 20 }]}>
+            <Text style={{ fontSize: 10, color: COLORS.muted, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>{t('monthly_plan_name')}</Text>
+            {appliedCoupon && (
+              <Text style={{ fontSize: 16, color: COLORS.muted, textDecorationLine: 'line-through', marginBottom: 2 }}>
+                EGP {PRICE.toLocaleString()}
+              </Text>
+            )}
+            <Text style={{ fontFamily: FONTS.display, fontSize: 40, color: appliedCoupon ? '#2e7d5e' : COLORS.green }}>
+              EGP {displayPrice.toLocaleString()}
+            </Text>
+            {appliedCoupon && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <Text style={{ fontSize: 12, color: '#2e7d5e' }}>🏷 {appliedCoupon.code}</Text>
+                <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>−EGP {appliedCoupon.discountAmount}</Text>
+                <TouchableOpacity onPress={() => setAppliedCoupon(null)}>
+                  <Text style={{ fontSize: 11, color: '#e05555' }}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            <Text style={{ fontSize: 12, color: COLORS.muted, marginTop: 6 }}>{t('cancel_anytime')}</Text>
           </View>
-          <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
-        </TouchableOpacity>
+        )}
 
-        {/* Already paid check */}
-        <TouchableOpacity
-          style={{ alignItems: 'center', paddingVertical: 12 }}
-          onPress={async () => {
-            try {
-              await completeAuth();
-              if (maidUserId) {
-                const { chatsAPI } = require('../../services/api');
-                const chatRes = await chatsAPI.startChat({ maidUserId, maidProfileId });
-                navigation.replace('Chat', { chatId: chatRes.data.chat._id, maidName });
-              } else {
-                navigation.goBack();
-              }
-            } catch {
-              Toast.show({ type: 'info', text1: t('sub_not_active') });
-            }
-          }}>
-          <Text style={{ fontSize: 12, color: COLORS.muted }}>{t('already_paid_check')}</Text>
-        </TouchableOpacity>
+        {/* Coupon code input — Android only */}
+        {Platform.OS !== 'ios' && !appliedCoupon && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>Have a coupon?</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput
+                value={couponInput}
+                onChangeText={v => setCouponInput(v.toUpperCase())}
+                placeholder="Enter coupon code"
+                placeholderTextColor={COLORS.muted}
+                autoCapitalize="characters"
+                style={styles.couponInput}
+                editable={!couponLoading}
+              />
+              <TouchableOpacity
+                onPress={handleApplyCoupon}
+                disabled={couponLoading || !couponInput.trim()}
+                style={[styles.couponBtn, (!couponInput.trim() || couponLoading) && { opacity: 0.5 }]}
+              >
+                {couponLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.couponBtnTxt}>Apply</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
+        {/* ── iOS — Apple IAP ──────────────────────────────────────────────── */}
+        {Platform.OS === 'ios' && (
+          <View style={styles.iapSection}>
+
+            {iapLoading ? (
+              <ActivityIndicator color={COLORS.green} style={{ marginVertical: 20 }} />
+            ) : iapProduct ? (
+              <TouchableOpacity
+                style={[styles.iapBtn, purchaseLoading && { opacity: 0.6 }]}
+                onPress={handleAppleSubscribe}
+                disabled={purchaseLoading}
+                activeOpacity={0.85}>
+                {purchaseLoading ? <ActivityIndicator color="#fff" /> : (
+                  <>
+                    <Text style={styles.iapBtnIcon}></Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.iapBtnTxt}>Subscribe with Apple</Text>
+                      <Text style={styles.iapBtnPrice}>{iapProduct.localizedPrice} / month · renews automatically</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.6)" />
+                  </>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.iapUnavailable}>
+                <Text style={{ fontSize: 12, color: COLORS.muted, textAlign: 'center', lineHeight: 18 }}>
+                  In-app purchase is unavailable right now.{'\n'}Please contact support to activate your subscription.
+                </Text>
+                {iapError ? <Text style={{ fontSize: 10, color: '#cc0000', textAlign: 'center', marginTop: 6 }}>{iapError}</Text> : null}
+              </View>
+            )}
+
+            <TouchableOpacity onPress={handleRestorePurchases} disabled={purchaseLoading} style={{ alignItems: 'center', paddingVertical: 10 }}>
+              <Text style={styles.restoreLink}>Restore Previous Subscription</Text>
+            </TouchableOpacity>
+
+            <View style={styles.iapLegal}>
+              <Text style={styles.iapLegalTxt}>
+                Subscription auto-renews monthly. Cancel anytime in iPhone Settings → Apple ID → Subscriptions.
+              </Text>
+            </View>
+
+            <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 12 }} onPress={async () => {
+              try { await goAfterSuccess(); } catch { Toast.show({ type: 'info', text1: t('sub_not_active') }); }
+            }}>
+              <Text style={{ fontSize: 12, color: COLORS.muted }}>{t('already_paid_check')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Android — cash transfer ──────────────────────────────────────── */}
+        {Platform.OS !== 'ios' && (
+          <>
+            <TouchableOpacity style={styles.offlineBtn} onPress={() => setOfflineModal(true)}>
+              <Ionicons name="cash-outline" size={24} color={COLORS.green} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.offlineTxt}>{t('pay_cash')}</Text>
+                <Text style={styles.offlineSub}>{t('instapay_voda_hint')}</Text>
+              </View>
+              <Text style={{ color: COLORS.muted, fontSize: 16 }}>›</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 12 }} onPress={async () => {
+              try { await goAfterSuccess(); } catch { Toast.show({ type: 'info', text1: t('sub_not_active') }); }
+            }}>
+              <Text style={{ fontSize: 12, color: COLORS.muted }}>{t('already_paid_check')}</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
         <TouchableOpacity style={{ alignItems: 'center', padding: 12 }} onPress={() => navigation.goBack()}>
           <Text style={{ fontSize: 13, color: COLORS.muted }}>{t('maybe_later')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Offline Payment Modal */}
-      <Modal visible={offlineModal} transparent animationType="slide" statusBarTranslucent>
-        <Pressable style={styles.modalOverlay} onPress={closeModal} />
-        <ScrollView style={styles.modalSheet} contentContainerStyle={{ paddingBottom: 36 }} bounces={false}>
-          <View style={styles.modalHandle} />
-
-          <Text style={styles.modalTitle}>{t('cash_transfer_title')}</Text>
-          <Text style={styles.modalSub}>{t('cash_transfer_modal_sub')}</Text>
-
-          {/* Amount box */}
-          <View style={styles.amountBox}>
-            <Text style={styles.amountLabel}>{t('amount_due')}</Text>
-            <Text style={styles.amountVal}>EGP {PRICE.toLocaleString()}</Text>
-            <Text style={styles.amountNote}>{t('monthly_access_note')}</Text>
-          </View>
-
-          {/* Payment details */}
-          <Text style={styles.detailsHeader}>{t('transfer_to')}</Text>
-          {[
-            { icon: 'flash-outline',          label: 'Instapay',       value: '01022781113' },
-            { icon: 'phone-portrait-outline', label: 'Vodafone Cash',  value: '01022781113' },
-          ].map(({ icon, label, value }) => (
-            <View key={label} style={styles.detailRow}>
-              <Ionicons name={icon} size={20} color={COLORS.green} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.detailLabel}>{label}</Text>
-                <Text style={styles.detailValue}>{value}</Text>
+      {/* Offline Payment Modal — Android only */}
+      {Platform.OS !== 'ios' && (
+        <Modal visible={offlineModal} transparent animationType="slide" statusBarTranslucent>
+          <Pressable style={styles.modalOverlay} onPress={closeModal} />
+          <ScrollView style={styles.modalSheet} contentContainerStyle={{ paddingBottom: 36 + insets.bottom }} bounces={false}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>{t('cash_transfer_title')}</Text>
+            <Text style={styles.modalSub}>{t('cash_transfer_modal_sub')}</Text>
+            <View style={styles.amountBox}>
+              <Text style={styles.amountLabel}>{t('amount_due')}</Text>
+              {appliedCoupon && (
+                <Text style={{ fontSize: 14, color: COLORS.muted, textDecorationLine: 'line-through' }}>EGP {PRICE.toLocaleString()}</Text>
+              )}
+              <Text style={styles.amountVal}>EGP {displayPrice.toLocaleString()}</Text>
+              {appliedCoupon && (
+                <Text style={{ fontSize: 11, color: '#2e7d5e', fontWeight: '700', marginTop: 2 }}>Coupon {appliedCoupon.code} applied</Text>
+              )}
+              <Text style={styles.amountNote}>{t('monthly_access_note')}</Text>
+            </View>
+            <Text style={styles.detailsHeader}>{t('transfer_to')}</Text>
+            {[
+              { icon: 'flash-outline',          label: 'Instapay',      value: '01022781113' },
+              { icon: 'phone-portrait-outline', label: 'Vodafone Cash', value: '01022781113' },
+            ].map(({ icon, label, value }) => (
+              <View key={label} style={styles.detailRow}>
+                <Ionicons name={icon} size={20} color={COLORS.green} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.detailLabel}>{label}</Text>
+                  <Text style={styles.detailValue}>{value}</Text>
+                </View>
               </View>
+            ))}
+            <View style={styles.nameRow}>
+              <Text style={styles.detailLabel}>{t('account_name')}</Text>
+              <Text style={styles.detailValue}>Ahmed Ibrahim Zaky Ahmed Ismail</Text>
             </View>
-          ))}
-          <View style={styles.nameRow}>
-            <Text style={styles.detailLabel}>{t('account_name')}</Text>
-            <Text style={styles.detailValue}>Ahmed Ibrahim Zaky Ahmed Ismail</Text>
-          </View>
-
-          {/* Receipt upload */}
-          <Text style={[styles.detailsHeader, { marginTop: 18 }]}>{t('upload_receipt')}</Text>
-          <TouchableOpacity style={styles.receiptBtn} onPress={pickReceipt}>
-            {receiptUri ? (
-              <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>{t('receipt_selected')}</Text>
-            ) : (
-              <>
-                <Text style={{ fontSize: 24, marginBottom: 6 }}>📎</Text>
-                <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>{t('tap_upload_receipt')}</Text>
-                <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t('receipt_screenshot_note')}</Text>
-              </>
+            <Text style={[styles.detailsHeader, { marginTop: 18 }]}>{t('upload_receipt')}</Text>
+            <TouchableOpacity style={styles.receiptBtn} onPress={pickReceipt}>
+              {receiptUri
+                ? <Text style={{ fontSize: 12, color: '#2e7d5e', fontWeight: '700' }}>{t('receipt_selected')}</Text>
+                : (<>
+                    <Text style={{ fontSize: 24, marginBottom: 6 }}>📎</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.green }}>{t('tap_upload_receipt')}</Text>
+                    <Text style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{t('receipt_screenshot_note')}</Text>
+                  </>)}
+            </TouchableOpacity>
+            {submitError && (
+              <View style={styles.errorBox}>
+                <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠ {submitError}</Text>
+              </View>
             )}
-          </TouchableOpacity>
-
-          {submitError && (
-            <View style={styles.errorBox}>
-              <Text style={{ fontSize: 12, color: '#e05555', lineHeight: 17 }}>⚠ {submitError}</Text>
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={[styles.submitBtn, (!receiptUri || submitting) && { opacity: 0.5 }]}
-            onPress={submitOfflinePayment}
-            disabled={!receiptUri || submitting}>
-            {submitting
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.submitTxt}>{submitError ? t('retry') : t('cust_submit_receipt')}</Text>}
-          </TouchableOpacity>
-
-          <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 12 }} onPress={closeModal}>
-            <Text style={{ fontSize: 13, color: COLORS.muted }}>{t('cancel')}</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </Modal>
+            <TouchableOpacity style={[styles.submitBtn, (!receiptUri || submitting) && { opacity: 0.5 }]} onPress={submitOfflinePayment} disabled={!receiptUri || submitting}>
+              {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitTxt}>{submitError ? t('retry') : t('cust_submit_receipt')}</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity style={{ alignItems: 'center', paddingVertical: 12 }} onPress={closeModal}>
+              <Text style={{ fontSize: 13, color: COLORS.muted }}>{t('cancel')}</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -288,12 +499,34 @@ const styles = StyleSheet.create({
   cardLabel:   { fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase', color: COLORS.muted, fontFamily: FONTS.bodySemiBold, marginBottom: 12 },
   featureRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, borderBottomWidth: 1, borderBottomColor: COLORS.border },
 
+  // Free period card (iOS)
+  freePeriodCard:   { backgroundColor: 'rgba(201,168,76,0.10)', borderWidth: 1.5, borderColor: 'rgba(201,168,76,0.45)', borderRadius: 14, padding: 18, marginBottom: 12 },
+  freePeriodBadge:  { alignSelf: 'flex-start', backgroundColor: 'rgba(201,168,76,0.18)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, marginBottom: 10 },
+  freePeriodBadgeTxt: { fontSize: 10, color: '#9a6f0e', fontWeight: '800', letterSpacing: 0.8 },
+  freePeriodTitle:  { fontFamily: FONTS.display, fontSize: 20, color: COLORS.dark, marginBottom: 8, lineHeight: 26 },
+  freePeriodSub:    { fontSize: 12, color: COLORS.muted, lineHeight: 17, marginBottom: 14 },
+  freePeriodBtn:    { backgroundColor: COLORS.green, borderRadius: 10, paddingVertical: 13, alignItems: 'center' },
+  freePeriodBtnTxt: { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: '#fff' },
+  iapDivider:       { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  iapDividerLine:   { flex: 1, height: 1, backgroundColor: COLORS.border },
+  iapDividerTxt:    { fontSize: 11, color: COLORS.muted, fontWeight: '500' },
+
+  iapSection:    { marginBottom: 4 },
+  iapBtn:        { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#1c1c1e', borderRadius: 12, paddingVertical: 15, paddingHorizontal: 16, marginBottom: 4 },
+  iapBtnIcon:    { fontSize: 22 },
+  iapBtnTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 15, color: '#fff' },
+  iapBtnPrice:   { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 },
+  iapUnavailable:{ backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: 10, padding: 16, marginBottom: 8, alignItems: 'center' },
+  restoreLink:   { fontSize: 12, color: COLORS.muted, textDecorationLine: 'underline' },
+  iapLegal:      { backgroundColor: '#f5f5f5', borderRadius: 8, padding: 12, marginTop: 4, marginBottom: 8 },
+  iapLegalTxt:   { fontSize: 10, color: COLORS.muted, lineHeight: 15, textAlign: 'center' },
+
   offlineBtn:  { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.green, borderRadius: 8, padding: 14, marginBottom: 10 },
   offlineTxt:  { fontSize: 13, fontWeight: '600', color: COLORS.dark },
   offlineSub:  { fontSize: 11, color: COLORS.muted, marginTop: 1 },
 
   modalOverlay:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
-  modalSheet:    { backgroundColor: COLORS.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22 },
+  modalSheet:    { backgroundColor: COLORS.surface, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22, maxHeight: '85%' },
   modalHandle:   { width: 40, height: 4, backgroundColor: COLORS.border, borderRadius: 2, alignSelf: 'center', marginBottom: 18 },
   modalTitle:    { fontFamily: FONTS.display, fontSize: 22, color: COLORS.dark, marginBottom: 6 },
   modalSub:      { fontSize: 12, color: COLORS.muted, lineHeight: 18, marginBottom: 18 },
@@ -310,4 +543,7 @@ const styles = StyleSheet.create({
   errorBox:      { backgroundColor: 'rgba(224,85,85,0.12)', borderWidth: 1, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 7, padding: 12, marginBottom: 12 },
   submitBtn:     { backgroundColor: COLORS.green, padding: 14, borderRadius: 8, alignItems: 'center', marginBottom: 4 },
   submitTxt:     { fontFamily: FONTS.bodySemiBold, fontSize: 13, color: '#fff', letterSpacing: 0.3 },
+  couponInput:   { flex: 1, backgroundColor: COLORS.surface, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: COLORS.text, fontFamily: FONTS.bodySemiBold, letterSpacing: 1 },
+  couponBtn:     { backgroundColor: COLORS.green, borderRadius: 6, paddingHorizontal: 18, alignItems: 'center', justifyContent: 'center' },
+  couponBtnTxt:  { fontSize: 13, color: '#fff', fontFamily: FONTS.bodySemiBold },
 });

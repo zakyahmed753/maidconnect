@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 import { maidsAPI, chatsAPI, hwAPI, paymentsAPI, configAPI } from '../../services/api';
+import { track } from '../../services/analytics';
 import io from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
@@ -61,9 +62,13 @@ Ratings and reviews reflect the personal opinions and experiences of individual 
 They do not represent endorsements, guarantees, or official opinions of Servix.
 
 7. Payments & Subscriptions
-Certain features of the platform may require subscription fees or service payments.
-Applicable prices, billing terms, and payment details will be presented before completing the purchase.
-Refunds, where applicable, are governed by the Servix Refund Policy.
+Customers (homeowners) are required to pay an active monthly subscription of EGP 2,000 per month to access platform features including chat, hire requests, and helper management. There is no free trial period — access is granted only after payment is confirmed.
+
+Domestic helpers (service providers) use the Servix platform at no charge.
+
+14-Day Replacement Warranty: If a Customer releases their hired helper for any reason within 14 days of the hire date, they are entitled to hire a replacement helper at no additional charge. No replacement fee applies within this window.
+
+All applicable fees are shown in the app before confirming any action.
 
 8. Limitation of Liability
 Servix provides a technology platform that facilitates introductions between users.
@@ -132,9 +137,13 @@ Servix منصة إلكترونية تهدف إلى تسهيل التواصل ب�
 ولا تمثل اعتمادًا أو توصية رسمية من Servix.
 
 7. الاشتراكات والمدفوعات
-قد تتطلب بعض خدمات المنصة رسوم اشتراك أو مدفوعات.
-وسيتم توضيح جميع الرسوم قبل إتمام عملية الدفع.
-وتخضع عمليات الاسترداد - إن وجدت - لسياسة الاسترداد الخاصة بـ Servix.
+يُلزَم أصحاب المنازل بسداد اشتراك شهري بقيمة 2,000 جنيه مصري للوصول إلى خدمات المنصة كالمحادثة وطلبات التوظيف وإدارة العمالة. لا توجد فترة تجريبية مجانية — يُفعَّل الوصول فور تأكيد الدفع.
+
+العمالة المنزلية (مقدمو الخدمة) يستخدمون المنصة بدون أي رسوم.
+
+ضمان الاستبدال لمدة 14 يوماً: يحق للعميل استبدال العاملة المُوظَّفة مجاناً خلال 14 يوماً من تاريخ التوظيف، في حال أراد إنهاء عقدها لأي سبب كان، دون أي رسوم إضافية.
+
+تُعرض جميع الرسوم المعمول بها داخل التطبيق قبل تأكيد أي إجراء.
 
 8. حدود المسؤولية
 تقتصر مهمة Servix على توفير منصة إلكترونية لتسهيل التواصل بين المستخدمين.
@@ -160,15 +169,12 @@ Servix منصة إلكترونية تهدف إلى تسهيل التواصل ب�
 لا يؤدي استخدام منصة Servix إلى إنشاء أي علاقة عمل أو وكالة أو شراكة أو مشروع مشترك أو تمثيل قانوني أو علاقة تعاقدية بين Servix وأي من المستخدمين.
 ويقتصر دور Servix على توفير منصة تقنية لتسهيل التواصل بين المستخدمين، بينما تنشأ أي علاقة عمل أو اتفاق أو التزام قانوني حصريًا بين صاحب المنزل والعاملة دون أن تكون Servix طرفًا فيها.`
 
-const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-const WEEK_MS       = 7 * 24 * 60 * 60 * 1000;
-const MONTH_MS      = 30 * 24 * 60 * 60 * 1000;
+const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 function getReplacementFee(hiredAt) {
   const ms = Date.now() - new Date(hiredAt || 0).getTime();
-  if (ms <= THREE_DAYS_MS) return { amount: 0,   isFree: true  };
-  if (ms <= WEEK_MS)       return { amount: 500,  isFree: false };
-  if (ms <= MONTH_MS)      return { amount: 700,  isFree: false };
-  return                          { amount: 1000, isFree: false };
+  return ms <= FOURTEEN_DAYS_MS
+    ? { amount: 0, isFree: true }
+    : { amount: 0, isFree: false };
 }
 
 export default function MaidDetailScreen({ route, navigation }) {
@@ -200,6 +206,8 @@ export default function MaidDetailScreen({ route, navigation }) {
   const [pendingAction, setPendingAction]     = useState(null); // 'chat' | 'hire'
 
   const photos = (maid.photos || []).filter(p => p?.url);
+  // True when maid is hired/unavailable by anyone, and this specific customer is NOT the one who hired her
+  const maidTakenByOther = (!maid.isAvailable || maid.isHired) && !isHired;
   const socketRef = useRef();
 
   // Real-time: listen for hire request response (approve/reject) while screen is open
@@ -237,6 +245,10 @@ export default function MaidDetailScreen({ route, navigation }) {
     return () => { mounted = false; socketRef.current?.disconnect(); };
   }, []);
 
+  useEffect(() => {
+    track('screen_maid_detail', { maidId: maid._id, maidName: maid.fullName });
+  }, []);
+
   // Re-fetch on every focus so hire status stays fresh after maid approves
   useFocusEffect(
     useCallback(() => {
@@ -270,7 +282,10 @@ export default function MaidDetailScreen({ route, navigation }) {
   const handleLike = async () => {
     const next = !liked;
     setLiked(next);
-    try { await maidsAPI.toggleLike(maid._id); }
+    try {
+      await maidsAPI.toggleLike(maid._id);
+      if (next) track('action_save_maid', { maidId: maid._id, maidName: maid.fullName });
+    }
     catch { setLiked(!next); Toast.show({ type:'error', text1: t('save_failed') }); }
   };
 
@@ -296,16 +311,9 @@ export default function MaidDetailScreen({ route, navigation }) {
     try {
       await hwAPI.hireMaid({ maidProfileId: maid._id });
       setHireRequestSent(true);
+      track('action_hire_request', { maidId: maid._id, maidName: maid.fullName });
       Toast.show({ type:'success', text1: t('hire_req_sent'), text2: t('hire_req_sent_sub') });
     } catch (err) {
-      if (err.response?.data?.requiresReplacementFee) {
-        navigation.navigate('Payment', {
-          type: 'replacement_fee',
-          amount: err.response.data.penaltyAmount,
-          maidName: maid.fullName,
-        });
-        return;
-      }
       if (err.response?.data?.requiresSubscription) { goToSubscription(); return; }
       Toast.show({ type:'error', text1: err.response?.data?.message || t('hire_failed') });
     } finally {
@@ -377,15 +385,10 @@ export default function MaidDetailScreen({ route, navigation }) {
     setLoading(true);
     try {
       const res = await chatsAPI.startChat({ maidUserId: maid.user?._id || maid.user, maidProfileId: maid._id });
+      track('action_open_chat', { maidId: maid._id, maidName: maid.fullName });
       navigation.navigate('Chat', { chatId: res.data.chat._id, maidName: maid.fullName });
     } catch (err) {
-      if (err.response?.status === 403 && err.response?.data?.code === 'REPLACEMENT_FEE_REQUIRED') {
-        navigation.navigate('Payment', {
-          type: 'replacement_fee',
-          amount: err.response.data.penaltyAmount,
-          maidName: maid.fullName,
-        });
-      } else if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
+      if (err.response?.status === 403 && err.response?.data?.code === 'SUBSCRIPTION_REQUIRED') {
         goToSubscription();
       } else {
         Toast.show({ type: 'error', text1: err.response?.data?.message || t('chat_open_failed') });
@@ -570,10 +573,15 @@ export default function MaidDetailScreen({ route, navigation }) {
             {photos[0]?.url
               ? <Image source={{ uri: photos[0].url }} style={{ width:'100%', height:'100%' }}/>
               : <Ionicons name="person" size={60} color="rgba(255,255,255,0.7)" />}
-            {maid.isAvailable && (
+            {maid.isAvailable ? (
               <View style={styles.availBadge}>
                 <View style={styles.availDot}/>
                 <Text style={styles.availTxt}>{t('available_badge')}</Text>
+              </View>
+            ) : (
+              <View style={[styles.availBadge, styles.hiredBadge]}>
+                <Ionicons name="briefcase" size={9} color="#1a1108" style={{ marginRight:3 }}/>
+                <Text style={[styles.availTxt, { color:'#1a1108' }]}>HIRED</Text>
               </View>
             )}
             {photos.length > 1 && (
@@ -741,39 +749,59 @@ export default function MaidDetailScreen({ route, navigation }) {
 
       {/* Action bar */}
       <View style={styles.actionBar}>
-        <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
-          <TouchableOpacity style={styles.btnSecondary} onPress={handleLike}>
-            <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
-              <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={15} color={liked ? COLORS.green : COLORS.muted} />
-              <Text style={[styles.btnSecondaryTxt, liked && { color: COLORS.green }]}>{liked ? t('saved_label') : t('save_label')}</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.btnChat, loading && { opacity:0.6 }]} onPress={handleOpenChat} disabled={loading}>
-            <Text style={styles.btnPrimaryTxt}>{loading ? t('opening') : t('open_chat')}</Text>
-          </TouchableOpacity>
-        </View>
-        {isHired ? (
-          <View style={[styles.btnHire, { backgroundColor:COLORS.green }]}>
-            <Text style={styles.btnPrimaryTxt}>{t('already_hired')}</Text>
-          </View>
-        ) : hireRequestSent ? (
-          <View style={[styles.btnHire, { backgroundColor:'rgba(13,56,39,0.1)', borderWidth:1.5, borderColor:COLORS.green }]}>
-            <Text style={[styles.btnPrimaryTxt, { color:COLORS.green }]}>{t('request_sent_awaiting')}</Text>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={[styles.btnHire, hireLoading && { opacity:0.6 }]}
-            onPress={handleHire}
-            disabled={hireLoading}
-          >
-            {hireLoading
-              ? <ActivityIndicator color="#fff"/>
-              : <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
-                  <Ionicons name="checkmark-circle" size={17} color="#fff" />
-                  <Text style={styles.btnPrimaryTxt}>{t('hire_this_maid')}</Text>
+        {maidTakenByOther ? (
+          <>
+            {/* Save only — chat and hire are blocked when maid is hired/unavailable */}
+            <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
+              <TouchableOpacity style={[styles.btnSecondary, { flex:1 }]} onPress={handleLike}>
+                <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
+                  <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={15} color={liked ? COLORS.green : COLORS.muted} />
+                  <Text style={[styles.btnSecondaryTxt, liked && { color: COLORS.green }]}>{liked ? t('saved_label') : t('save_label')}</Text>
                 </View>
-            }
-          </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
+            <View style={{ backgroundColor:'rgba(201,168,76,0.1)', borderWidth:1.5, borderColor:'rgba(201,168,76,0.4)', borderRadius:6, padding:14, alignItems:'center', flexDirection:'row', justifyContent:'center', gap:8 }}>
+              <Ionicons name="briefcase-outline" size={17} color="#c9a84c" />
+              <Text style={{ fontFamily:FONTS.bodySemiBold, fontSize:14, color:'#c9a84c' }}>Currently Hired — Not Available</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={{ flexDirection:'row', gap:10, marginBottom:10 }}>
+              <TouchableOpacity style={styles.btnSecondary} onPress={handleLike}>
+                <View style={{ flexDirection:'row', alignItems:'center', gap:6 }}>
+                  <Ionicons name={liked ? 'bookmark' : 'bookmark-outline'} size={15} color={liked ? COLORS.green : COLORS.muted} />
+                  <Text style={[styles.btnSecondaryTxt, liked && { color: COLORS.green }]}>{liked ? t('saved_label') : t('save_label')}</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.btnChat, loading && { opacity:0.6 }]} onPress={handleOpenChat} disabled={loading}>
+                <Text style={styles.btnPrimaryTxt}>{loading ? t('opening') : t('open_chat')}</Text>
+              </TouchableOpacity>
+            </View>
+            {isHired ? (
+              <View style={[styles.btnHire, { backgroundColor:COLORS.green }]}>
+                <Text style={styles.btnPrimaryTxt}>{t('already_hired')}</Text>
+              </View>
+            ) : hireRequestSent ? (
+              <View style={[styles.btnHire, { backgroundColor:'rgba(13,56,39,0.1)', borderWidth:1.5, borderColor:COLORS.green }]}>
+                <Text style={[styles.btnPrimaryTxt, { color:COLORS.green }]}>{t('request_sent_awaiting')}</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.btnHire, hireLoading && { opacity:0.6 }]}
+                onPress={handleHire}
+                disabled={hireLoading}
+              >
+                {hireLoading
+                  ? <ActivityIndicator color="#fff"/>
+                  : <View style={{ flexDirection:'row', alignItems:'center', gap:8 }}>
+                      <Ionicons name="checkmark-circle" size={17} color="#fff" />
+                      <Text style={styles.btnPrimaryTxt}>{t('hire_this_maid')}</Text>
+                    </View>
+                }
+              </TouchableOpacity>
+            )}
+          </>
         )}
       </View>
     </View>
@@ -788,6 +816,7 @@ const styles = StyleSheet.create({
   galSide:     { flex:1, flexDirection:'column' },
   galSm:       { flex:1, alignItems:'center', justifyContent:'center' },
   availBadge:  { position:'absolute', top:10, left:10, flexDirection:'row', alignItems:'center', gap:5, backgroundColor:'rgba(13,56,39,0.85)', borderRadius:20, paddingHorizontal:10, paddingVertical:5, borderWidth:1, borderColor:'rgba(93,214,168,0.45)' },
+  hiredBadge:  { backgroundColor:'rgba(201,168,76,0.92)', borderColor:'rgba(201,168,76,0.55)' },
   availDot:    { width:6, height:6, borderRadius:3, backgroundColor:'#5dd6a8' },
   availTxt:    { fontSize:10, color:'#5dd6a8', fontWeight:'700', letterSpacing:0.5 },
   body:        { padding:18 },

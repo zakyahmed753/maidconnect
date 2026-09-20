@@ -72,7 +72,7 @@ export default function PendingApprovalScreen({ navigation }) {
     { label: 'Profile created',             done: true },
     { label: 'Passport & selfie submitted', done: true },
     { label: 'Identity review (24 hrs)',    done: false, active: true },
-    { label: 'Subscription & payment',     done: false },
+    { label: 'Profile verified — ready!',   done: false },
   ];
 
   return (
@@ -109,7 +109,7 @@ export default function PendingApprovalScreen({ navigation }) {
 
         {status === 'verified' && (
           <TouchableOpacity style={styles.proceedBtn} onPress={() => navigation.navigate('Subscription')}>
-            <Text style={styles.proceedBtnTxt}>{t('choose_subscription')}</Text>
+            <Text style={styles.proceedBtnTxt}>Get Started — It's Free</Text>
           </TouchableOpacity>
         )}
 

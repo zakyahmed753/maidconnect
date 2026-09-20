@@ -64,6 +64,7 @@ export const maidsAPI = {
   getHireRequests:         ()           => api.get('/maids/hire-requests'),
   respondHireRequest:      (id, action) => api.put(`/maids/hire-requests/${id}/respond`, { action }),
   requestOfflinePayment:   (data)       => api.post('/maids/me/offline-payment-request', data),
+  applyReferral:           (referralCode) => api.post('/maids/me/referral', { referralCode }),
 };
 
 export const chatsAPI = {
@@ -80,13 +81,18 @@ export const paymentsAPI = {
   returnMaid:                  (data) => api.post('/payments/return-maid', data),
   getHistory:                  ()     => api.get('/payments/history'),
   checkStatus:                 (id)   => api.get(`/payments/${id}/status`),
+  verifyAppleIAP:              (data) => api.post('/payments/iap/apple', data),
+  verifyAppleCustomerIAP:      (data) => api.post('/payments/iap/apple/customer', data),
+  activateFreePeriod:          ()     => api.post('/payments/activate-free-period'),
 };
 
 export const configAPI = {
-  getAreas:    ()           => api.get('/config/areas'),
+  getAreas:    ()           => api.get('/config/areas?t=' + Date.now()),
   updateAreas: (activeAreas) => api.put('/config/areas', { activeAreas }),
   getTerms:    ()           => api.get('/config/terms'),
   updateTerms: (termsUrl)   => api.put('/config/terms', { termsUrl }),
+  getVersion:  ()           => api.get('/config/version'),
+  getLeadSources: ()        => api.get('/config/lead-sources'),
 };
 
 export const couponsAPI = {
@@ -108,22 +114,40 @@ export const notificationsAPI = {
   markAll:  ()   => api.put('/notifications/read-all'),
 };
 
+// Retries transient failures (network drop, timeout, 5xx) with backoff.
+// Skips retry on 4xx — a bad/unsupported file won't succeed just by trying again.
+async function uploadWithRetry(buildForm, path, options = {}, { retries = 2, baseDelay = 1000 } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await api.post(path, buildForm(), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 60000,
+        ...options,
+      });
+    } catch (err) {
+      lastErr = err;
+      const status = err.response?.status;
+      const isClientError = status >= 400 && status < 500;
+      if (isClientError || attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, baseDelay * (attempt + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 export const uploadAPI = {
-  image: async (uri) => {
+  image: (uri) => uploadWithRetry(() => {
     const form = new FormData();
     form.append('photo', { uri, name: 'photo.jpg', type: 'image/jpeg' });
-    return api.post('/upload/image', form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
-  voice: async (uri, duration) => {
+    return form;
+  }, '/upload/image'),
+  voice: (uri, duration) => uploadWithRetry(() => {
     const form = new FormData();
     form.append('voice', { uri, name: 'voice.m4a', type: 'audio/m4a' });
     form.append('duration', String(duration));
-    return api.post('/upload/voice', form, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  }
+    return form;
+  }, '/upload/voice'),
 };
 
 export default api;

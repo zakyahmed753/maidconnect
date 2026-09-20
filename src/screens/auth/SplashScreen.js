@@ -1,6 +1,6 @@
 // src/screens/auth/SplashScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Modal, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Modal, ActivityIndicator, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as SecureStore from 'expo-secure-store';
 import { Ionicons } from '@expo/vector-icons';
@@ -85,13 +85,13 @@ export function SplashScreen({ navigation }) {
           <View style={styles.logoCircle}>
             <Ionicons name="home" size={36} color="#fff" />
           </View>
-          <Text style={styles.tagline}>FIND TRUSTED HOME HELPERS</Text>
+          <Text style={styles.tagline}>{t('splash_tagline')}</Text>
         </View>
 
         {/* Welcome heading */}
         <View style={styles.welcomeBlock}>
-          <Text style={styles.welcomeText}>Welcome to Servix</Text>
-          <Text style={styles.welcomeSub}>How can we help you today?</Text>
+          <Text style={styles.welcomeText}>{t('splash_welcome')}</Text>
+          <Text style={styles.welcomeSub}>{t('splash_welcome_sub')}</Text>
         </View>
 
         {/* Card — Find a Maid */}
@@ -102,12 +102,12 @@ export function SplashScreen({ navigation }) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle}>{t('splash_hw_title')}</Text>
-              <Text style={styles.cardSub}>Find trusted, vetted domestic staff for your home</Text>
+              <Text style={styles.cardSub}>{t('splash_hw_sub')}</Text>
             </View>
           </View>
           <View style={styles.cardBtn}>
-            <Text style={styles.cardBtnTxt}>Get Started</Text>
-            <Text style={styles.cardBtnArrow}>→</Text>
+            <Text style={styles.cardBtnTxt}>{t('splash_get_started')}</Text>
+            <Text style={styles.cardBtnArrow}>{lang === 'ar' ? '←' : '→'}</Text>
           </View>
         </TouchableOpacity>
 
@@ -118,13 +118,13 @@ export function SplashScreen({ navigation }) {
               <Ionicons name="briefcase" size={28} color="#d97706" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>I'm looking for work</Text>
-              <Text style={styles.cardSub}>Find a domestic staff placement near you</Text>
+              <Text style={styles.cardTitle}>{t('splash_maid_title')}</Text>
+              <Text style={styles.cardSub}>{t('splash_maid_sub')}</Text>
             </View>
           </View>
           <View style={[styles.cardBtn, styles.cardBtnOutline]}>
-            <Text style={[styles.cardBtnTxt, styles.cardBtnTxtOutline]}>Get Started</Text>
-            <Text style={[styles.cardBtnArrow, { color: COLORS.green }]}>→</Text>
+            <Text style={[styles.cardBtnTxt, styles.cardBtnTxtOutline]}>{t('splash_get_started')}</Text>
+            <Text style={[styles.cardBtnArrow, { color: COLORS.green }]}>{lang === 'ar' ? '←' : '→'}</Text>
           </View>
         </TouchableOpacity>
 
@@ -133,8 +133,8 @@ export function SplashScreen({ navigation }) {
           onPress={() => navigation.navigate('Login')}
           style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
           activeOpacity={0.7}>
-          <Text style={styles.footerText}>Already a member?</Text>
-          <Text style={[styles.footerLink, { marginLeft: 5 }]}>Sign In</Text>
+          <Text style={styles.footerText}>{t('splash_already_member')}</Text>
+          <Text style={[styles.footerLink, { marginLeft: 5 }]}>{t('sign_in_link')}</Text>
         </TouchableOpacity>
 
       </ScrollView>

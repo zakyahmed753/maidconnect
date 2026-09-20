@@ -282,13 +282,13 @@ export function ChatsListScreen({ navigation }) {
     return sub && sub.status === 'active' && sub.endDate && new Date(sub.endDate) > new Date();
   };
 
-  const handleOpenChat = (item, other) => {
+  const handleOpenChat = (item, other, photoUrl) => {
     if (!isSubscribed()) {
       navigation.navigate('Browse', { screen: 'CustomerSubscription', params: {} });
       return;
     }
     const partnerName = other?.fullName || other?.name;
-    navigation.navigate('Chat', { chatId: item._id, maidName: partnerName });
+    navigation.navigate('Chat', { chatId: item._id, maidName: partnerName, maidPhoto: photoUrl || null });
   };
 
   return (
@@ -318,7 +318,7 @@ export function ChatsListScreen({ navigation }) {
               : (item.maidProfile || item.maid);
             const photoUrl = user?.role === 'maid' ? null : (item.maidProfile || item.maid)?.photos?.[0]?.url;
             return (
-              <TouchableOpacity style={styles.chatItem} onPress={() => handleOpenChat(item, other)}>
+              <TouchableOpacity style={styles.chatItem} onPress={() => handleOpenChat(item, other, photoUrl)}>
                 <View style={styles.chatAva}>
                   {photoUrl
                     ? <Image source={{ uri: photoUrl }} style={{ width:'100%', height:'100%', borderRadius:22 }} resizeMode="cover"/>
@@ -567,6 +567,7 @@ export function HWProfileScreen({ navigation }) {
           </View>
           <Text style={{ fontSize:12, color:'rgba(255,255,255,0.65)', fontFamily:FONTS.body, marginTop:3 }}>{user?.email}</Text>
         </View>
+
         {/* Sectioned menu */}
         {MENU_SECTIONS.map(section => (
           <View key={section.label} style={{ marginHorizontal:16, marginTop:18 }}>
@@ -579,7 +580,7 @@ export function HWProfileScreen({ navigation }) {
                     <Ionicons name={icon} size={19} color={iconColor} />
                   </View>
                   <Text style={{ fontSize:14, fontWeight:'500', color: color==='red' ? '#e05555' : COLORS.text, flex:1 }}>{title}</Text>
-                  <Text style={{ color:COLORS.muted, fontSize:20 }}>{lang === 'ar' && Platform.OS !== 'ios' ? '‹' : '›'}</Text>
+                  <Ionicons name={lang === 'ar' ? 'chevron-back' : 'chevron-forward'} size={18} color={COLORS.muted} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -689,15 +690,23 @@ export function MaidDashScreen({ navigation }) {
               <View style={{ backgroundColor:'rgba(255,255,255,0.15)', borderWidth:1, borderColor:'rgba(255,255,255,0.3)', paddingHorizontal:10, paddingVertical:5, borderRadius:14, flexDirection:'row', alignItems:'center', gap:5 }}>
                 <View style={{ width:5, height:5, borderRadius:3, backgroundColor:'#5dd6a8' }}/><Text style={{ fontSize:10, color:'#fff' }}>{t('active_subscription')}</Text>
               </View>
-              {profile?.subscription?.endDate && (
-                <Text style={{ fontSize:9, color:'rgba(255,255,255,0.6)', marginTop:3 }}>
-                  {t('sub_ends')} {new Date(profile.subscription.endDate).toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}
-                </Text>
-              )}
+              {profile?.subscription?.endDate && (() => {
+                const raw = new Date(profile.subscription.endDate);
+                if (raw.getFullYear() >= 2099) return null;
+                return (
+                  <Text style={{ fontSize:9, color:'rgba(255,255,255,0.6)', marginTop:3 }}>
+                    {t('sub_ends')} {raw.toLocaleDateString([], { day:'numeric', month:'short', year:'numeric' })}
+                  </Text>
+                );
+              })()}
             </View>
             <NotifBell color="rgba(255,255,255,0.9)" />
           </View>
-          <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:8 }}><Ionicons name="person" size={30} color="rgba(255,255,255,0.85)" /></View>
+          {maidProfile?.photos?.[0]?.url ? (
+            <Image source={{ uri: maidProfile.photos[0].url }} style={{ width:64, height:64, borderRadius:32, marginBottom:8 }} />
+          ) : (
+            <View style={{ width:64, height:64, borderRadius:32, backgroundColor:'rgba(255,255,255,0.2)', alignItems:'center', justifyContent:'center', marginBottom:8 }}><Ionicons name="person" size={30} color="rgba(255,255,255,0.85)" /></View>
+          )}
           <Text style={{ fontFamily:FONTS.display, fontSize:22, color:'#fff' }}>{profile?.fullName || user?.name || 'Fatima'}</Text>
           <Text style={{ fontSize:11, color:'rgba(255,255,255,0.7)', marginTop:2 }}>@{user?.name?.toLowerCase().replace(' ','') || 'maid'} · {profile?.nationality || 'Ethiopia'}</Text>
         </View>
@@ -790,7 +799,7 @@ export function MaidDashScreen({ navigation }) {
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:bg, alignItems:'center', justifyContent:'center' }}><Ionicons name={icon} size={16} color={iconColor} /></View>
                 <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
-                <Text style={{ color:COLORS.muted }}>{lang === 'ar' && Platform.OS !== 'ios' ? '‹' : '›'}</Text>
+                <Ionicons name={lang === 'ar' ? 'chevron-back' : 'chevron-forward'} size={16} color={COLORS.muted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -799,7 +808,7 @@ export function MaidDashScreen({ navigation }) {
             {[
               { icon:'person-circle-outline', iconColor:'#d97706',   bg:'#fef3e2', id:'hire_req',  title:t('menu_hire_requests'), sub: pendingRequests > 0 ? `${pendingRequests} ${t('incoming_label')}` : '', isRed:false, onPress: () => navigation.navigate('HireRequest') },
               { icon:'chatbubbles-outline',   iconColor:'#7c3aed',   bg:'#ede8fd', id:'messages',  title:t('menu_messages2'),     sub: `${stats.chats} ${t('chats_stat')}`,                      isRed:false, onPress: () => navigation.navigate('MaidChats') },
-              { icon:'card-outline',          iconColor:'#2563eb',   bg:'#e8f0fe', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.endDate ? `${t('active_subscription')} · ${new Date(profile.subscription.endDate).toLocaleDateString([], { day:'numeric', month:'short' })}` : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
+              // { icon:'card-outline',          iconColor:'#2563eb',   bg:'#e8f0fe', id:'payments',  title:t('menu_payments2'),     sub: profile?.subscription?.endDate ? (() => { const raw = new Date(profile.subscription.endDate); const oct1 = new Date('2026-10-01'); const d = raw.toDateString() === oct1.toDateString() ? new Date('2026-09-01') : raw; return `${t('active_subscription')} · ${d.toLocaleDateString([], { day:'numeric', month:'short' })}`; })() : '', isRed:false, onPress: () => navigation.navigate('PaymentHistory') },
               { icon:'gift-outline',          iconColor:'#d97706',   bg:'#fef3e2', id:'referrals', title:t('menu_referrals'),     sub: t('share_code_earn'),                                     isRed:false, onPress: () => navigation.navigate('Coupons') },
               { icon:'bar-chart-outline',     iconColor:'#0891b2',   bg:'#e0f2fe', id:'analytics', title:t('menu_analytics'),     sub: `${stats.views} ${t('views')} · ${stats.likes} ${t('likes')}`, isRed:false, onPress: () => navigation.navigate('Analytics') },
               { icon:'globe-outline',         iconColor:'#4f46e5',   bg:'#f0f4ff', id:'language',  title:t('language'),           sub: '',                                                       isRed:false, onPress: () => setLangVisible(true) },
@@ -812,7 +821,7 @@ export function MaidDashScreen({ navigation }) {
                 style={{ flexDirection:'row', alignItems:'center', gap:11, padding:13, borderBottomWidth:1, borderBottomColor:COLORS.border }}>
                 <View style={{ width:30, height:30, borderRadius:5, backgroundColor:bg, alignItems:'center', justifyContent:'center' }}><Ionicons name={icon} size={16} color={iconColor} /></View>
                 <View style={{ flex:1 }}><Text style={{ fontSize:13, fontWeight:'500', color: isRed?COLORS.red:COLORS.text }}>{title}</Text>{sub?<Text style={{ fontSize:10, color:COLORS.muted }}>{sub}</Text>:null}</View>
-                <Text style={{ color:COLORS.muted }}>{lang === 'ar' && Platform.OS !== 'ios' ? '‹' : '›'}</Text>
+                <Ionicons name={lang === 'ar' ? 'chevron-back' : 'chevron-forward'} size={16} color={COLORS.muted} />
               </TouchableOpacity>
             ))}
           </View>
@@ -1206,7 +1215,7 @@ export function PaymentHistoryScreen({ navigation }) {
   }, []);
 
   const statusColor = { completed:'#2e7d5e', pending:COLORS.green, failed:'#e05555', refunded:'#888' };
-  const methodIcon  = { fawry:'card-outline', vodafone_cash:'phone-portrait-outline', instapay:'flash-outline', amazon_pay:'bag-outline', paymob:'card-outline', cash_transfer:'cash-outline' };
+  const methodIcon  = { fawry:'card-outline', vodafone_cash:'phone-portrait-outline', instapay:'flash-outline', amazon_pay:'bag-outline', paymob:'card-outline', cash_transfer:'cash-outline', free_period:'gift-outline' };
 
   return (
     <View style={{ flex:1, backgroundColor:COLORS.cream }}>
@@ -1236,17 +1245,26 @@ export function PaymentHistoryScreen({ navigation }) {
                         <Text style={{ fontSize:13, fontWeight:'600', color:COLORS.dark, textTransform:'capitalize' }}>{item.type}</Text>
                         {item.offlineByAdmin && <View style={{ backgroundColor:'rgba(13,56,39,0.15)', paddingHorizontal:6, paddingVertical:1, borderRadius:4, borderWidth:1, borderColor:'rgba(13,56,39,0.4)' }}><Text style={{ fontSize:9, color:COLORS.green, fontWeight:'700', textTransform:'uppercase', letterSpacing:0.5 }}>Offline</Text></View>}
                       </View>
-                      <Text style={{ fontSize:11, color:COLORS.muted }}>{(item.method||'').replace('_',' ')}</Text>
+                      <Text style={{ fontSize:11, color:COLORS.muted }}>
+                        {item.method === 'free_period' ? 'Free Launch Period' : (item.method||'').replace(/_/g,' ')}
+                      </Text>
                     </View>
                   </View>
                   <View style={{ alignItems:'flex-end' }}>
-                    <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.green }}>EGP {(item.amount||0).toLocaleString()}</Text>
+                    <Text style={{ fontFamily:FONTS.display, fontSize:18, color:COLORS.green }}>
+                      {item.method === 'free_period' ? 'FREE' : `EGP ${(item.amount||0).toLocaleString()}`}
+                    </Text>
                     <View style={{ backgroundColor:`${statusColor[item.status]||'#888'}20`, paddingHorizontal:8, paddingVertical:2, borderRadius:10, marginTop:3 }}>
                       <Text style={{ fontSize:10, color: statusColor[item.status]||'#888', textTransform:'uppercase', letterSpacing:0.5 }}>{item.status}</Text>
                     </View>
                   </View>
                 </View>
-                {item.subscriptionPlan && <Text style={{ fontSize:11, color:COLORS.muted, marginBottom:2 }}>Plan: {item.subscriptionPlan}</Text>}
+                {item.method === 'free_period' && item.gatewayResponse?.endDate && (
+                  <Text style={{ fontSize:11, color:COLORS.muted, marginBottom:2 }}>
+                    {`Free access until ${new Date(item.gatewayResponse.endDate).toLocaleDateString([], { day:'numeric', month:'long', year:'numeric' })}`}
+                  </Text>
+                )}
+                {item.subscriptionPlan && item.method !== 'free_period' && <Text style={{ fontSize:11, color:COLORS.muted, marginBottom:2 }}>Plan: {item.subscriptionPlan}</Text>}
                 <Text style={{ fontSize:10, color:COLORS.muted }}>{new Date(item.createdAt).toLocaleDateString()}</Text>
               </View>
             )}

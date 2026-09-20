@@ -128,7 +128,7 @@ const T = {
     chats_title: 'Messages', no_chats: 'No chats yet',
     subscribe_chat_title: 'Subscribe to Access Messages',
     subscribe_chat_body: 'Chat with maids and manage your hiring process with a monthly subscription.',
-    subscribe_btn: 'Subscribe — EGP 1,000/mo',
+    subscribe_btn: 'Subscribe — EGP 2,000/mo',
 
     // Saved
     saved_title: 'Saved Helpers', no_saved_maids: 'No saved helpers yet',
@@ -154,6 +154,19 @@ const T = {
     // Login
     welcome_back: 'Welcome Back', role_customer: '🏠 Customer', role_maid: '👩 Helper',
     splash_hw_title: 'I need a Helper',
+    splash_tagline: 'FIND TRUSTED HOME HELPERS',
+    splash_welcome: 'Welcome to Servix',
+    splash_welcome_sub: 'How can we help you today?',
+    splash_hw_sub: 'Find trusted, vetted domestic staff for your home',
+    splash_get_started: 'Get Started',
+    splash_maid_title: "I'm looking for work",
+    splash_maid_sub: 'Find a domestic staff placement near you',
+    splash_already_member: 'Already a member?',
+    forgot_password: 'Forgot password?', reset_it: 'Reset it',
+    browse_as_guest: 'Browse as Guest',
+    guest_signin_title: 'Sign in to continue',
+    guest_signin_sub: 'Log in or create an account to view full profiles and get in touch.',
+    guest_not_now: 'Not now',
 
     // Register
     select_nationality_err: 'Select nationality', bio_required: 'Bio is required',
@@ -174,6 +187,7 @@ const T = {
     select_area_err: 'Please select your area in Cairo',
     phone_invalid_hw: 'Phone must be a valid Egyptian mobile number (e.g. 01012345678)',
     your_area_cairo: 'Your area in Cairo', area_soon_badge: 'soon',
+    area_waitlist_note: 'Not in your area yet — you\'ll be added to the waitlist and notified when we launch there.',
 
     // Chat
     chat_online: '● Online', voice_note: '🎙 Voice note',
@@ -347,6 +361,10 @@ const T = {
     receipt_screenshot_note: 'Screenshot or photo of transfer confirmation',
     try_again_btn: 'Try Again', submit_receipt_btn: 'Submit Receipt for Confirmation',
     already_paid_check: "Already paid? Tap to check if admin activated your subscription",
+    free_ends_banner_title: 'Free access ends September 1',
+    free_ends_banner_body: 'After September 1, a subscription will be required to keep your profile active and visible to families. Subscribe now to avoid losing your spot.',
+    free_ends_days_left: 'DAYS LEFT',
+    free_ends_day_left: 'DAY LEFT',
 
     // Subscription extra 2
     receipt_rejected: 'Receipt rejected', receipt_rejected_sub: 'Please re-upload a clear receipt.',
@@ -361,39 +379,27 @@ const T = {
     rate_label: 'Rate', login_success_toast: 'Welcome back! 👋',
 
     // HiredMaids extra
-    next_hire_free:     '✓ Next hire is free (grace period)',
-    next_hire_fee_500:  '⚠ Next hire fee: EGP 500',
-    next_hire_fee_700:  '⚠ Next hire fee: EGP 700',
-    next_hire_fee_1000: '⚠ Next hire fee: EGP 1,000',
-    vacancy_released: 'Maid Released',
+    next_hire_free:        '✓ 14-day free replacement active',
+    next_hire_past_window: 'Replacement window ended',
+    vacancy_released: 'Helper Released',
     release_failed: 'Failed to release',
     release_btn: 'Release',
     release_dialog_title: '↩ Release Maid',
-    // Grace period dialog (penalty = 0)
-    release_confirm_grace_body_1: 'You are in the 3-day grace period. Releasing this maid is completely free.',
-    release_confirm_grace_body_2: 'Your next hire will also be free. You have 3 days to choose a replacement.',
-    // Fee dialog (penalty > 0)
-    release_confirm_fee_body_1: '⚠ A replacement fee is required before you can chat or hire your next maid.',
-    release_confirm_fee_body_2_prefix: 'Fee amount:',
-    release_confirm_fee_body_2_suffix: 'This fee must be paid before starting any new chat or hire request.',
+    // Release dialog
+    release_confirm_grace_body_1: 'Your subscription includes a 14-day free replacement guarantee. Releasing this helper is completely free.',
+    release_confirm_grace_body_2: 'You have 14 days to choose and hire a replacement helper at no extra cost.',
     // Toast after release
-    release_toast_free: 'Free 3-day replacement window is now active.',
-    release_toast_fee_prefix: 'Pay',
-    release_toast_fee_suffix: 'to unlock chatting with your next maid.',
-    // Replacement policy modal
-    rp_title: 'Replacement Policy',
-    rp_short: "If your helper isn't the right fit, you can request a replacement.",
-    rp_learn_more: 'Learn how replacement fees work',
-    rp_period_col: 'Working Period',
-    rp_fee_col: 'Replacement Fee',
-    rp_row0: '0–3 days',     rp_row0_fee: '✅ Free (Trial period)',
-    rp_row1: '4–7 days',     rp_row1_fee: 'EGP 500',
-    rp_row2: '8–30 days',    rp_row2_fee: 'EGP 700',
-    rp_row3: 'After 30 days',rp_row3_fee: 'EGP 1,000',
+    release_toast_free: 'Your 14-day free replacement window is now active.',
+    // 14-day replacement guarantee modal
+    rp_title: '14-Day Replacement Guarantee',
+    rp_short: 'You have 14 days to release your helper and get another one for free.',
+    rp_learn_more: 'Learn about the replacement guarantee',
+    rp_row0: '14-Day Free Replacement',
+    rp_row0_fee: 'Release your helper within 14 days of hiring and your next hire is completely free — no commission, no fees.',
     rp_good_to_know: 'Good to know',
-    rp_note1: 'The replacement fee is charged only when you hire your replacement helper, not when you release your current helper.',
-    rp_note2: 'After ending the current helper\'s service, you have 30 days to choose a replacement under this policy.',
-    rp_note3: 'This policy helps us maintain service quality while giving you flexibility if the match isn\'t suitable.',
+    rp_note1: 'The 14-day window starts from the date you first hired your helper.',
+    rp_note2: 'After releasing, you have up to 14 days to browse and hire a new helper for free.',
+    rp_note3: 'After the 14-day window, standard commission applies for your next hire.',
 
     // CustomerSubscription
     unlock_chat_access: 'Unlock Chat Access',
@@ -406,14 +412,14 @@ const T = {
     receipt_selected: '✓ Receipt selected — tap to change',
     sub_not_active: 'Subscription not active yet',
     cust_sub_receipt_body: "Your receipt has been submitted and is awaiting admin confirmation. You'll be notified once it's approved.",
-    cash_transfer_modal_sub: 'Transfer EGP 1,000 to the number below, then upload a screenshot of your receipt.',
+    cash_transfer_modal_sub: 'Transfer EGP 2,000 to the number below, then upload a screenshot of your receipt.',
     cust_submit_receipt: 'Submit Receipt',
     receipt_still_pending_sub: "Admin hasn't confirmed yet. Check back soon.",
     feat_chat_any: 'Chat with any helper on the platform',
     feat_profile_refs: 'Full profile access & references',
     feat_hire_inapp: 'Complete hiring process in-app',
     feat_leave_reviews: 'Leave reviews after hiring',
-    feat_free_replace: "Free replacement if helper doesn't fit (within 3 days)",
+    feat_free_replace: "Free replacement within 14 days if the helper isn't the right fit",
   },
 
   ar: {
@@ -543,7 +549,7 @@ const T = {
     chats_title: 'رسايلي', no_chats: 'لسه مفيش محادثات',
     subscribe_chat_title: 'اشترك عشان تتكلم مع المساعدات',
     subscribe_chat_body: 'بالاشتراك الشهري تقدر تتكلم مع أي مساعدة وتوظفها بسهولة.',
-    subscribe_btn: 'اشترك — 1,000 جنيه/شهر',
+    subscribe_btn: 'اشترك — 2,000 جنيه/شهر',
 
     // Saved
     saved_title: 'اللي أعجبوني', no_saved_maids: 'لسه ما حفظتش حد — تصفح واختار!',
@@ -568,7 +574,20 @@ const T = {
 
     // Login
     welcome_back: 'يا أهلاً بيك!', role_customer: '🏠 عميل/عميلة', role_maid: '👩 مساعدة',
-    splash_hw_title: 'خدمة العلاء',
+    splash_hw_title: 'عايز/ة مساعدة',
+    splash_tagline: 'ابحث عن مساعدين منزليين موثوقين',
+    splash_welcome: 'أهلاً بيك في Servix',
+    splash_welcome_sub: 'إيه اللي محتاج؟',
+    splash_hw_sub: 'لاقي مساعدين منزليين موثوقين لبيتك',
+    splash_get_started: 'ابدأ دلوقتي',
+    splash_maid_title: 'بدوّر على شغل',
+    splash_maid_sub: 'لاقي فرصة شغل في مجال الخدمات المنزلية',
+    splash_already_member: 'عندك حساب؟',
+    forgot_password: 'نسيت كلمة السر؟', reset_it: 'غيّرها',
+    browse_as_guest: 'تصفح كزائر',
+    guest_signin_title: 'سجّل دخولك للمتابعة',
+    guest_signin_sub: 'سجّل دخولك أو أنشئ حساب عشان تشوف الملفات الكاملة وتتواصل مع المساعدين.',
+    guest_not_now: 'مش دلوقتي',
 
     // Register
     select_nationality_err: 'اختاري جنسيتك', bio_required: 'التعريف بنفسك مطلوب',
@@ -589,6 +608,7 @@ const T = {
     select_area_err: 'اختار منطقتك في القاهرة',
     phone_invalid_hw: 'رقم الموبايل المصري لازم يبدأ بـ 01 (مثال: 01012345678)',
     your_area_cairo: 'منطقتك في القاهرة', area_soon_badge: 'قريباً',
+    area_waitlist_note: 'منطقتك مش متاحة لسه — هتتضاف لقائمة الانتظار ونبلغك لما نوصلها.',
 
     // Chat
     chat_online: '● أونلاين', voice_note: '🎙 رسالة صوتية',
@@ -762,6 +782,10 @@ const T = {
     receipt_screenshot_note: 'صورة أو سكرين شوت من تأكيد التحويل',
     try_again_btn: 'جربي تاني', submit_receipt_btn: 'ابعتي الإيصال للتأكيد',
     already_paid_check: 'دفعتي بالفعل؟ انقري تتحققي إذا الإدارة فعّلت اشتراكك',
+    free_ends_banner_title: 'الوصول المجاني ينتهي في 1 سبتمبر',
+    free_ends_banner_body: 'بعد 1 سبتمبر، يلزم الاشتراك للحفاظ على ملفك الشخصي ظاهراً للعائلات. اشتركي الآن حتى لا تفقدي مكانك.',
+    free_ends_days_left: 'يوم متبقي',
+    free_ends_day_left: 'يوم واحد متبقي',
 
     // Subscription extra 2
     receipt_rejected: 'الإيصال اترفض', receipt_rejected_sub: 'ارفعي إيصال أوضح من فضلك.',
@@ -776,36 +800,25 @@ const T = {
     rate_label: 'تقييمك', login_success_toast: 'أهلاً بيك! 👋',
 
     // HiredMaids extra
-    next_hire_free:     '✓ التوظيف الجاي مجاني (فترة السماح)',
-    next_hire_fee_500:  '⚠ رسوم التوظيف الجاي: 500 جنيه',
-    next_hire_fee_700:  '⚠ رسوم التوظيف الجاي: 700 جنيه',
-    next_hire_fee_1000: '⚠ رسوم التوظيف الجاي: 1,000 جنيه',
-    vacancy_released: 'العقد اتنهى',
+    next_hire_free:        '✓ ضمان الاستبدال المجاني خلال 14 يومًا',
+    next_hire_past_window: 'انتهت فترة الاستبدال',
+    vacancy_released: 'تم إنهاء عقد العاملة',
     release_failed: 'الإنهاء مش تمام',
     release_btn: 'إنهاء العقد',
     release_dialog_title: '↩ إنهاء عقد المساعدة',
-    release_confirm_grace_body_1: 'أنتي في فترة السماح (3 أيام) — الإنهاء مجاني خالص.',
-    release_confirm_grace_body_2: 'التوظيف الجاي مجاني برضو — عندك 3 أيام تختاري بديلة.',
-    release_confirm_fee_body_1: '⚠ لازم تدفعي رسوم الاستبدال قبل ما تتكلمي أو توظفي مساعدة جديدة.',
-    release_confirm_fee_body_2_prefix: 'قيمة الرسوم:',
-    release_confirm_fee_body_2_suffix: 'الرسوم دي لازم تتدفع قبل أي محادثة أو طلب توظيف جديد.',
-    release_toast_free: 'نافذة الاستبدال المجاني لمدة 3 أيام شغالة دلوقتي! 🎉',
-    release_toast_fee_prefix: 'ادفعي',
-    release_toast_fee_suffix: 'عشان تقدري تتكلمي مع مساعدتك الجاية.',
-    // Replacement policy modal
-    rp_title: 'سياسة استبدال العاملة',
-    rp_short: 'إذا لم تكن العاملة مناسبة لاحتياجاتك، يمكنك طلب استبدالها.',
-    rp_learn_more: 'اعرفي كيف تعمل رسوم الاستبدال',
-    rp_period_col: 'مدة العمل',
-    rp_fee_col: 'رسوم الاستبدال',
-    rp_row0: '0–3 أيام',     rp_row0_fee: '✅ مجانًا (فترة تجربة)',
-    rp_row1: '4–7 أيام',     rp_row1_fee: '500 جنيه مصري',
-    rp_row2: '8–30 يومًا',   rp_row2_fee: '700 جنيه مصري',
-    rp_row3: 'بعد 30 يومًا', rp_row3_fee: '1000 جنيه مصري',
+    release_confirm_grace_body_1: 'اشتراكك يشمل ضمان استبدال مجاني لمدة 14 يومًا. إنهاء العقد مجاني تمامًا.',
+    release_confirm_grace_body_2: 'عندك 14 يوم تختاري وتوظفي مساعدة بديلة بدون أي تكلفة إضافية.',
+    release_toast_free: 'نافذة الاستبدال المجاني لمدة 14 يومًا شغالة دلوقتي! 🎉',
+    // Replacement guarantee modal
+    rp_title: 'ضمان الاستبدال خلال 14 يومًا',
+    rp_short: 'عندك 14 يوم تنهي عقد مساعدتك وتطلبي واحدة تانية مجانًا.',
+    rp_learn_more: 'اعرفي أكتر عن ضمان الاستبدال',
+    rp_row0: 'ضمان الاستبدال المجاني خلال 14 يومًا',
+    rp_row0_fee: 'انهي عقد مساعدتك خلال 14 يوم من التوظيف وتوظيفك الجاي مجاني تمامًا — بدون عمولة أو رسوم.',
     rp_good_to_know: 'معلومات مهمة',
-    rp_note1: 'يتم تحصيل رسوم الاستبدال عند التعاقد مع العاملة الجديدة فقط، وليس عند إنهاء العاملة الحالية.',
-    rp_note2: 'بعد إنهاء خدمة العاملة الحالية، لديك 30 يومًا لاختيار عاملة بديلة ضمن هذه السياسة.',
-    rp_note3: 'تهدف هذه السياسة إلى توفير مرونة أكبر مع الحفاظ على جودة الخدمة.',
+    rp_note1: 'فترة الـ 14 يوم بتبدأ من أول يوم وظفتي فيه مساعدتك.',
+    rp_note2: 'بعد الإنهاء، عندك لغاية 14 يوم تختاري وتوظفي مساعدة جديدة مجانًا.',
+    rp_note3: 'بعد انتهاء فترة الـ 14 يوم، بيتم تحصيل العمولة المعتادة على التوظيف الجاي.',
 
     // CustomerSubscription
     unlock_chat_access: 'افتح إمكانية التواصل',
@@ -818,14 +831,14 @@ const T = {
     receipt_selected: '✓ الإيصال اتاختار — اضغط للتغيير',
     sub_not_active: 'الاشتراك مش شغال لسه',
     cust_sub_receipt_body: "الإيصال بتاعك اتبعت وفي انتظار تأكيد الإدارة. هتاخد/هتاخدي إشعار لما يتوافق عليه.",
-    cash_transfer_modal_sub: 'حوّل/حوّلي 1,000 جنيه للرقم اللي في الأسفل، وبعدين ارفع/ارفعي صورة الإيصال.',
+    cash_transfer_modal_sub: 'حوّل/حوّلي 2,000 جنيه للرقم اللي في الأسفل، وبعدين ارفع/ارفعي صورة الإيصال.',
     cust_submit_receipt: 'ارفع/ارفعي الإيصال',
     receipt_still_pending_sub: 'الإدارة لسه مأكدتش. ارجع/ارجعي بعدين.',
     feat_chat_any: 'اتكلم/اتكلمي مع أي مساعد/ة على المنصة',
     feat_profile_refs: 'وصول كامل للملف الشخصي والمراجع',
     feat_hire_inapp: 'أكمل/أكملي عملية التوظيف من داخل التطبيق',
     feat_leave_reviews: 'اترك/اتركي تقييمات بعد التوظيف',
-    feat_free_replace: 'استبدال مجاني لو المساعد/ة مش مناسب/ة (خلال 3 أيام)',
+    feat_free_replace: 'استبدال مجاني خلال 14 يومًا لو المساعد/ة مش مناسب/ة',
   },
 
   fr: {
@@ -949,7 +962,7 @@ const T = {
     chats_title: 'Messages', no_chats: 'Aucune conversation',
     subscribe_chat_title: "S'abonner pour accéder aux messages",
     subscribe_chat_body: 'Discutez avec les employées et gérez votre processus d\'embauche.',
-    subscribe_btn: "S'abonner — 1 000 EGP/mois",
+    subscribe_btn: "S'abonner — 2 000 EGP/mois",
 
     // Saved
     saved_title: 'Aides sauvegardées', no_saved_maids: 'Aucune aide sauvegardée',
@@ -975,6 +988,19 @@ const T = {
     // Login
     welcome_back: 'Bon retour', role_customer: '🏠 Cliente', role_maid: '👩 Auxiliaire',
     splash_hw_title: "J'ai besoin d'une aide",
+    splash_tagline: 'TROUVEZ DES AIDES À DOMICILE DE CONFIANCE',
+    splash_welcome: 'Bienvenue sur Servix',
+    splash_welcome_sub: 'Comment pouvons-nous vous aider ?',
+    splash_hw_sub: 'Trouvez du personnel domestique fiable pour votre maison',
+    splash_get_started: 'Commencer',
+    splash_maid_title: 'Je cherche du travail',
+    splash_maid_sub: 'Trouvez un emploi en services à domicile près de chez vous',
+    splash_already_member: 'Déjà membre ?',
+    forgot_password: 'Mot de passe oublié ?', reset_it: 'Réinitialiser',
+    browse_as_guest: 'Parcourir en tant qu\'invité',
+    guest_signin_title: 'Connectez-vous pour continuer',
+    guest_signin_sub: 'Connectez-vous ou créez un compte pour voir les profils complets.',
+    guest_not_now: 'Pas maintenant',
 
     // Register
     select_nationality_err: 'Sélectionnez la nationalité', bio_required: 'La biographie est requise',
@@ -995,6 +1021,7 @@ const T = {
     select_area_err: 'Sélectionnez votre zone au Caire',
     phone_invalid_hw: 'Téléphone mobile égyptien valide requis (ex: 01012345678)',
     your_area_cairo: 'Votre zone au Caire', area_soon_badge: 'bientôt',
+    area_waitlist_note: 'Pas encore dans votre zone — vous serez ajouté(e) à la liste d\'attente et notifié(e) au lancement.',
 
     // Chat
     chat_online: '● En ligne', voice_note: '🎙 Note vocale',
@@ -1162,6 +1189,10 @@ const T = {
     receipt_screenshot_note: 'Capture ou photo de la confirmation',
     try_again_btn: 'Réessayer', submit_receipt_btn: 'Soumettre le reçu',
     already_paid_check: "Déjà payé? Appuyez pour vérifier si l'admin a activé votre abonnement",
+    free_ends_banner_title: "L'accès gratuit se termine le 1er septembre",
+    free_ends_banner_body: "Après le 1er septembre, un abonnement sera nécessaire pour maintenir votre profil visible aux familles. Abonnez-vous maintenant pour ne pas perdre votre place.",
+    free_ends_days_left: 'JOURS RESTANTS',
+    free_ends_day_left: 'JOUR RESTANT',
 
     // Subscription extra 2
     receipt_rejected: 'Reçu rejeté', receipt_rejected_sub: 'Veuillez re-télécharger un reçu clair.',
@@ -1176,36 +1207,25 @@ const T = {
     rate_label: 'Évaluer', login_success_toast: 'Bon retour ! 👋',
 
     // HiredMaids extra
-    next_hire_free:     '✓ Prochaine embauche gratuite (grâce)',
-    next_hire_fee_500:  '⚠ Frais prochaine embauche : EGP 500',
-    next_hire_fee_700:  '⚠ Frais prochaine embauche : EGP 700',
-    next_hire_fee_1000: '⚠ Frais prochaine embauche : EGP 1 000',
-    vacancy_released: 'Employée libérée',
+    next_hire_free:        '✓ Garantie de remplacement gratuit de 14 jours active',
+    next_hire_past_window: 'Fenêtre de remplacement terminée',
+    vacancy_released: 'Aide libérée',
     release_failed: 'Échec de la libération',
     release_btn: 'Libérer',
     release_dialog_title: '↩ Libérer l\'employée',
     release_confirm_grace_body_1: 'Vous êtes dans la période de grâce de 3 jours. La libération est totalement gratuite.',
-    release_confirm_grace_body_2: 'Votre prochaine embauche sera aussi gratuite. Vous avez 3 jours pour choisir un remplaçant.',
-    release_confirm_fee_body_1: '⚠ Des frais de remplacement sont requis avant de pouvoir discuter ou embaucher votre prochaine employée.',
-    release_confirm_fee_body_2_prefix: 'Montant des frais :',
-    release_confirm_fee_body_2_suffix: 'Ces frais doivent être payés avant de démarrer toute conversation ou demande d\'embauche.',
-    release_toast_free: 'Fenêtre de remplacement gratuite de 3 jours active.',
-    release_toast_fee_prefix: 'Payez',
-    release_toast_fee_suffix: 'pour déverrouiller le chat avec votre prochaine employée.',
-    // Replacement policy modal
+    release_confirm_grace_body_2: 'Vous avez 14 jours pour choisir et embaucher une aide de remplacement gratuitement.',
+    release_toast_free: 'Votre fenêtre de remplacement gratuite de 14 jours est maintenant active.',
+    // Replacement guarantee modal
     rp_title: 'Politique de remplacement',
     rp_short: "Si votre employée ne convient pas, vous pouvez demander un remplacement.",
-    rp_learn_more: 'Voir les frais de remplacement',
-    rp_period_col: 'Période de travail',
-    rp_fee_col: 'Frais de remplacement',
-    rp_row0: '0–3 jours',     rp_row0_fee: "✅ Gratuit (période d'essai)",
-    rp_row1: '4–7 jours',     rp_row1_fee: 'EGP 500',
-    rp_row2: '8–30 jours',    rp_row2_fee: 'EGP 700',
-    rp_row3: 'Après 30 jours',rp_row3_fee: 'EGP 1 000',
+    rp_learn_more: 'En savoir plus sur la garantie de remplacement',
+    rp_row0: 'Garantie de remplacement gratuit de 14 jours',
+    rp_row0_fee: 'Libérez votre aide dans les 14 jours suivant l\'embauche et votre prochain recrutement est entièrement gratuit.',
     rp_good_to_know: 'Bon à savoir',
-    rp_note1: 'Les frais de remplacement ne sont facturés que lorsque vous embauchez votre employée de remplacement, pas quand vous libérez la précédente.',
-    rp_note2: 'Après la fin de service, vous avez 30 jours pour choisir une remplaçante.',
-    rp_note3: 'Cette politique nous aide à maintenir la qualité du service tout en vous offrant de la flexibilité.',
+    rp_note1: 'La fenêtre de 14 jours commence à la date d\'embauche de votre aide.',
+    rp_note2: 'Après la libération, vous avez jusqu\'à 14 jours pour trouver et embaucher une nouvelle aide gratuitement.',
+    rp_note3: 'Après la fenêtre de 14 jours, la commission standard s\'applique pour votre prochain recrutement.',
 
     // CustomerSubscription
     unlock_chat_access: "Débloquer l'accès au chat",
@@ -1218,14 +1238,14 @@ const T = {
     receipt_selected: '✓ Reçu sélectionné — appuyer pour changer',
     sub_not_active: 'Abonnement pas encore actif',
     cust_sub_receipt_body: "Votre reçu a été soumis et est en attente de confirmation. Vous serez notifié une fois approuvé.",
-    cash_transfer_modal_sub: 'Transférez 1 000 EGP au numéro ci-dessous, puis téléchargez une capture de votre reçu.',
+    cash_transfer_modal_sub: 'Transférez 2 000 EGP au numéro ci-dessous, puis téléchargez une capture de votre reçu.',
     cust_submit_receipt: 'Soumettre le reçu',
     receipt_still_pending_sub: "L'admin n'a pas encore confirmé. Revenez bientôt.",
     feat_chat_any: "Discutez avec n'importe quelle aide sur la plateforme",
     feat_profile_refs: 'Accès complet au profil et aux références',
     feat_hire_inapp: "Processus de recrutement complet dans l'application",
     feat_leave_reviews: "Laissez des avis après l'embauche",
-    feat_free_replace: "Remplacement gratuit si l'aide ne convient pas (sous 3 jours)",
+    feat_free_replace: "Remplacement gratuit dans les 14 jours si l'aide ne convient pas",
   },
 
   ha: {
@@ -1349,7 +1369,7 @@ const T = {
     chats_title: 'Saƙonni', no_chats: 'Babu tattaunawa tukuna',
     subscribe_chat_title: 'Yi rajista don samun damar saƙonni',
     subscribe_chat_body: 'Yi hira da ma\'aikata kuma sarrafa tsarin ɗaukar ma\'aikata.',
-    subscribe_btn: 'Yi rajista — EGP 1,000/wata',
+    subscribe_btn: 'Yi rajista — EGP 2,000/wata',
 
     // Saved
     saved_title: "Mataimaka da aka adana", no_saved_maids: "Babu mataimaka da aka adana tukuna",
@@ -1375,6 +1395,19 @@ const T = {
     // Login
     welcome_back: 'Barka da komawa', role_customer: '🏠 Abokin ciniki', role_maid: "👩 Mai Taimako",
     splash_hw_title: "Ina buƙatar mataimaki",
+    splash_tagline: 'NEMI MATAIMAKA NA GIDA MAI AMINCI',
+    splash_welcome: 'Barka da zuwa Servix',
+    splash_welcome_sub: 'Yaya zamu iya taimaka maka yau?',
+    splash_hw_sub: 'Nemi ma\'aikatan gida masu aminci ga gidanka',
+    splash_get_started: 'Fara',
+    splash_maid_title: 'Ina neman aiki',
+    splash_maid_sub: 'Nemi matsayin ma\'aikacin gida kusa da kai',
+    splash_already_member: 'Kana da asusun?',
+    forgot_password: 'Manta kalmar sirri?', reset_it: 'Sake saita',
+    browse_as_guest: 'Bincika a matsayin baƙo',
+    guest_signin_title: 'Shiga don ci gaba',
+    guest_signin_sub: 'Shiga ko ƙirƙiri asusun don ganin cikakken bayanai.',
+    guest_not_now: 'Ba yanzu ba',
 
     // Register
     select_nationality_err: 'Zaɓi ƙasa', bio_required: 'Bayanin game da kai ya zama dole',
@@ -1395,6 +1428,7 @@ const T = {
     select_area_err: 'Da fatan zaɓi yankinki a Alkahira',
     phone_invalid_hw: 'Lambar wayar hannu ta Masar mai inganci (misali: 01012345678)',
     your_area_cairo: 'Yankinki a Alkahira', area_soon_badge: 'nan gaba',
+    area_waitlist_note: 'Ba a yankinki ba tukuna — za a saka ki a jerin aiki kuma za a sanar da ki lokacin da muka isa can.',
 
     // Chat
     chat_online: '● A kan layi', voice_note: '🎙 Saƙon murya',
@@ -1562,6 +1596,10 @@ const T = {
     receipt_screenshot_note: 'Hoton allo ko hoto na tabbatarwa',
     try_again_btn: 'Sake gwadawa', submit_receipt_btn: 'Aika Rasit don Tabbatarwa',
     already_paid_check: "Kun riga kun biya? Taɓa don duba idan admin ya kunna biyan ku",
+    free_ends_banner_title: 'Lokacin kyauta ya ƙare a 1 Satumba',
+    free_ends_banner_body: 'Bayan 1 Satumba, biyan kuɗi zai zama wajibi don adana bayananka kuma ka kasance a gani ga iyalai. Yi biyan kuɗi yanzu don kada ka rasa wurinka.',
+    free_ends_days_left: 'KWANAKI SUKA RAGE',
+    free_ends_day_left: 'KWANA GUDA YA RAGE',
 
     // Subscription extra 2
     receipt_rejected: 'An ƙi rasit', receipt_rejected_sub: 'Da fatan sake loda rasit mai kyau.',
@@ -1576,36 +1614,25 @@ const T = {
     rate_label: 'Ƙimar', login_success_toast: 'Barka da komawa! 👋',
 
     // HiredMaids extra
-    next_hire_free:     '✓ Ɗaukar aiki na gaba kyauta (alheri)',
-    next_hire_fee_500:  '⚠ Kuɗin ɗaukar aiki na gaba: EGP 500',
-    next_hire_fee_700:  '⚠ Kuɗin ɗaukar aiki na gaba: EGP 700',
-    next_hire_fee_1000: '⚠ Kuɗin ɗaukar aiki na gaba: EGP 1,000',
-    vacancy_released: 'An sake ma\'aikaciya',
+    next_hire_free:        '✓ Garantin maye gurbi na kwana 14 yana aiki',
+    next_hire_past_window: 'Lokacin maye gurbi ya ƙare',
+    vacancy_released: "An sake ma'aikaciya",
     release_failed: 'Sakin ya kasa',
     release_btn: 'Sake',
     release_dialog_title: '↩ Sake Ma\'aikaciya',
     release_confirm_grace_body_1: 'Kuna cikin lokacin alheri na kwanaki 3. Sakin kyauta ne gaba ɗaya.',
-    release_confirm_grace_body_2: 'Ɗaukar aiki na gaba kyauta ne. Kuna da kwanaki 3 don zaɓar maye gurbi.',
-    release_confirm_fee_body_1: '⚠ Dole ne ku biya kuɗin maye gurbi kafin fara tattaunawa ko ɗaukar sabuwar ma\'aikaciya.',
-    release_confirm_fee_body_2_prefix: 'Adadin kuɗin:',
-    release_confirm_fee_body_2_suffix: 'Dole ne a biya kuɗin nan kafin fara tattaunawa ko ƙaddamar da buƙatar ɗaukar aiki.',
-    release_toast_free: 'Tagar maye gurbi kyauta ta kwanaki 3 tana aiki yanzu.',
-    release_toast_fee_prefix: 'Biya',
-    release_toast_fee_suffix: 'don buɗe tattaunawa da ma\'aikaciyanku ta gaba.',
-    // Replacement policy modal
+    release_confirm_grace_body_2: 'Kuna da kwana 14 don zaɓar kuma ɗaukar sabuwar mai taimako kyauta.',
+    release_toast_free: 'Tagar maye gurbi kyauta ta kwana 14 tana aiki yanzu.',
+    // Replacement guarantee modal
     rp_title: "Manufar Maye Gurbi",
     rp_short: "Idan ma'aikatarku ba ta dace ba, za ku iya neman maye gurbi.",
-    rp_learn_more: 'Koyi game da kuɗaɗen maye gurbi',
-    rp_period_col: 'Tsawon Aiki',
-    rp_fee_col: 'Kuɗin Maye Gurbi',
-    rp_row0: 'Kwana 0–3',     rp_row0_fee: '✅ Kyauta (lokacin gwaji)',
-    rp_row1: 'Kwana 4–7',     rp_row1_fee: 'EGP 500',
-    rp_row2: 'Kwana 8–30',    rp_row2_fee: 'EGP 700',
-    rp_row3: 'Bayan kwana 30',rp_row3_fee: 'EGP 1,000',
+    rp_learn_more: 'Koyi game da garantin maye gurbi',
+    rp_row0: 'Garantin Maye Gurbi na Kwana 14',
+    rp_row0_fee: "Sake ma'aikatarku a cikin kwana 14 bayan ɗaukar hira kuma ɗaukar hira na gaba kyauta ne gaba ɗaya.",
     rp_good_to_know: 'Yana da kyau a sani',
-    rp_note1: "Ana biyan kuɗin maye gurbi ne kawai lokacin da kuka ɗauki ma'aikatarku ta maye, ba lokacin da kuka sake ta ba.",
-    rp_note2: "Bayan kammala ayyukan ma'aikatarku ta yanzu, kuna da kwana 30 don zaɓar maye gurbi.",
-    rp_note3: 'Wannan manufa tana taimaka wajen kiyaye ingancin sabis tare da ba ku sassauci.',
+    rp_note1: "Taga kwana 14 tana farawa daga ranar da kuka ɗauki ma'aikatarku.",
+    rp_note2: "Bayan sake, kuna da har kwana 14 don nemo kuma ɗauki ma'aikatar da ba a biya ba.",
+    rp_note3: 'Bayan taga kwana 14, ana biyan kudade na yau da kullun don ɗaukar hira na gaba.',
 
     // CustomerSubscription
     unlock_chat_access: 'Buɗe Damar Tattaunawa',
@@ -1618,14 +1645,14 @@ const T = {
     receipt_selected: '✓ An zaɓi rasit — taɓa don canza',
     sub_not_active: 'Biyan kuɗi ba ya aiki tukuna',
     cust_sub_receipt_body: 'An aika rasitin ku kuma yana jiran tabbatarwar admin. Za ku sami sanarwa da zarar an amince.',
-    cash_transfer_modal_sub: 'Canja EGP 1,000 zuwa lambar da ke ƙasa, sannan loda hoton allon rasitin ku.',
+    cash_transfer_modal_sub: 'Canja EGP 2,000 zuwa lambar da ke ƙasa, sannan loda hoton allon rasitin ku.',
     cust_submit_receipt: 'Aika Rasit',
     receipt_still_pending_sub: 'Admin bai tabbatar ba tukuna. Dawo daga baya.',
     feat_chat_any: 'Yi hira da kowane mai taimako a kan dandali',
     feat_profile_refs: 'Cikakken damar bayanin martaba da manyan hujjoji',
     feat_hire_inapp: 'Cika tsarin hayar a cikin app',
     feat_leave_reviews: 'Bar bitoci bayan hayar',
-    feat_free_replace: 'Maye gurbi kyauta idan mai taimako bai dace ba (a cikin kwanaki 3)',
+    feat_free_replace: 'Maye gurbi kyauta a cikin kwana 14 idan mai taimako bai dace ba',
   },
 };
 

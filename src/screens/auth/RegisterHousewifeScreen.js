@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   ScrollView, KeyboardAvoidingView, Platform, StatusBar
@@ -6,26 +6,10 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import Toast from 'react-native-toast-message';
 import useAuthStore from '../../store/authStore';
-import { hwAPI } from '../../services/api';
+import { hwAPI, configAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import { useTranslation } from '../../utils/i18n';
 import BackChevron from '../../components/BackChevron';
-
-const CAIRO_AREAS = [
-  { label: 'Maadi',          active: true  },
-  { label: 'Zamalek',        active: true  },
-  { label: 'New Cairo',      active: true  },
-  { label: 'Heliopolis',     active: true  },
-  { label: 'Sheikh Zayed',   active: true  },
-  { label: '6th of October', active: true  },
-  { label: 'Nasr City',      active: false },
-  { label: 'Dokki',          active: false },
-  { label: 'Mohandessin',    active: false },
-  { label: 'Garden City',    active: false },
-  { label: 'Rehab City',     active: false },
-  { label: 'Madinaty',       active: false },
-  { label: 'Other',          active: false },
-];
 
 export default function RegisterHousewifeScreen({ navigation }) {
   const { t } = useTranslation();
@@ -34,6 +18,21 @@ export default function RegisterHousewifeScreen({ navigation }) {
   const [loading, setLoading]   = useState(false);
   const register     = useAuthStore(s => s.register);
   const completeAuth = useAuthStore(s => s.completeAuth);
+  const activeAreas  = useAuthStore(s => s.activeAreas);
+  const allAreas     = useAuthStore(s => s.allAreas);
+  const [freshAreas, setFreshAreas] = useState(null);
+
+  useEffect(() => {
+    configAPI.getAreas()
+      .then(r => setFreshAreas({ active: r.data.activeAreas, all: r.data.allAreas }))
+      .catch(() => {});
+  }, []);
+
+  const effectiveAll    = freshAreas?.all?.length    ? freshAreas.all    : allAreas;
+  const effectiveActive = freshAreas?.active?.length ? freshAreas.active : activeAreas;
+  const CAIRO_AREAS = effectiveAll
+    .map(label => ({ label, active: effectiveActive.includes(label) }))
+    .sort((a, b) => (b.active ? 1 : 0) - (a.active ? 1 : 0));
 
   const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -130,7 +129,7 @@ export default function RegisterHousewifeScreen({ navigation }) {
         {area !== '' && !CAIRO_AREAS.find(a => a.label === area)?.active && (
           <View style={styles.waitlistNote}>
             <Text style={{ fontSize: 12, color: '#b45309' }}>
-              â³ We're not in {area} yet — you'll be on the waitlist and notified on launch.
+              {t('area_waitlist_note')}
             </Text>
           </View>
         )}

@@ -422,7 +422,7 @@ export default function HireRequestScreen({ navigation }) {
                   style={styles.viewProfileBtn}
                   onPress={() => setProfileModal(req)}>
                   <Text style={styles.viewProfileTxt}>{t('view_customer_profile')}</Text>
-                  <Text style={{ color: COLORS.gold, fontSize: 14 }}>→</Text>
+                  <Text style={{ color: COLORS.gold, fontSize: 14 }}>{isAr ? '←' : '→'}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.divider} />

@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, FlatList,
-  StyleSheet, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator, Keyboard
+  StyleSheet, KeyboardAvoidingView, Platform, StatusBar, ActivityIndicator, Keyboard, Image
 } from 'react-native';
 import { chatsAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
@@ -16,14 +16,29 @@ import BackChevron from '../../components/BackChevron';
 
 const POLL_MS = 3000; // fallback poll interval when socket is unreliable
 
+const ONLINE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+
+function formatLastSeen(dateStr) {
+  if (!dateStr) return null;
+  const diff = Date.now() - new Date(dateStr).getTime();
+  if (diff < ONLINE_THRESHOLD_MS) return 'online';
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `Last seen ${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Last seen ${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `Last seen ${days}d ago`;
+}
+
 export default function ChatScreen({ route, navigation }) {
-  const { chatId, maidName } = route.params || {};
+  const { chatId, maidName, maidPhoto } = route.params || {};
   const { user } = useAuthStore();
   const { t, lang } = useTranslation();
   const isAr = lang === 'ar';
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [otherLastSeen, setOtherLastSeen] = useState(null);
   const listRef   = useRef();
   const socketRef = useRef();
   const pollRef   = useRef();
@@ -59,6 +74,7 @@ export default function ChatScreen({ route, navigation }) {
     try {
       const res = await chatsAPI.getMessages(chatId);
       const msgs = res.data.messages || [];
+      if (res.data.otherLastSeen) setOtherLastSeen(res.data.otherLastSeen);
       if (initial) {
         setMessages(msgs);
         setTimeout(() => listRef.current?.scrollToEnd({ animated: false }), 50);
@@ -206,10 +222,19 @@ export default function ChatScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.navigate(user?.role === 'maid' ? 'MaidChatsList' : 'HWChatsList')} style={{ width:38, height:38, borderRadius:19, backgroundColor:'#e8f4f1', alignItems:'center', justifyContent:'center' }}>
           <BackChevron color={COLORS.green} />
         </TouchableOpacity>
-        <View style={styles.chatAva}><Text style={{ fontSize: 16, color: '#fff', fontWeight: 'bold' }}>{(maidName || 'M').replace(/[^a-zA-Z؀-ۿ]/g, '').charAt(0).toUpperCase() || 'M'}</Text></View>
+        <View style={styles.chatAva}>
+          {maidPhoto
+            ? <Image source={{ uri: maidPhoto }} style={{ width: '100%', height: '100%', borderRadius: 19 }} resizeMode="cover" />
+            : <Text style={{ fontSize: 16, color: '#fff', fontWeight: 'bold' }}>{(maidName || 'M').replace(/[^a-zA-Z؀-ۿ]/g, '').charAt(0).toUpperCase() || 'M'}</Text>}
+        </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.chatName}>{maidName || 'Maid'}</Text>
-          <Text style={styles.chatOnline}>{t('chat_online')}</Text>
+          {(() => {
+            const status = formatLastSeen(otherLastSeen);
+            if (status === 'online') return <Text style={styles.chatOnline}>Online</Text>;
+            if (status) return <Text style={[styles.chatOnline, { color: '#888' }]}>{status}</Text>;
+            return null;
+          })()}
         </View>
       </View>
 

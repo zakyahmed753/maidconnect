@@ -1,12 +1,12 @@
 ﻿// src/screens/auth/RegisterScreen.js
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform, StatusBar, Image } from 'react-native';
+  KeyboardAvoidingView, Platform, StatusBar, Image, Linking } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import useAuthStore from '../../store/authStore';
-import { maidsAPI, uploadAPI } from '../../services/api';
+import { maidsAPI, uploadAPI, configAPI } from '../../services/api';
 import { COLORS, FONTS } from '../../utils/theme';
 import { validatePassport } from '../../utils/passportValidator';
 import CountryPicker from '../../components/CountryPicker';
@@ -29,11 +29,42 @@ export default function RegisterScreen({ navigation }) {
     name:'', email:'', password:'', phone:'', nationality:'', age:'',
     experienceYears:'', expectedSalary:'', bio:'', skills:[], languages:[], idNumber:'',
   });
+  const [agentSlug, setAgentSlug] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [photos, setPhotos] = useState([]);
   const [idPhoto, setIdPhoto] = useState(null); // passport photo (non-Egyptian only)
   const [loading, setLoading] = useState(false);
   const submitting = useRef(false);
   const register = useAuthStore(s => s.register);
+
+  // "How did you hear about us?" — optional, skipped when agent/referral already known from deep link
+  const [leadSources, setLeadSources] = useState([]);
+  const [heardSource, setHeardSource] = useState(null); // 'facebook' | 'instagram' | <lead source slug> | 'other' | null
+  const [heardOtherText, setHeardOtherText] = useState('');
+
+  // Capture agent slug / referral code from deep link
+  // (servix://register?agent=SLUG or servix://register?mref=CODE)
+  useEffect(() => {
+    const extractParams = (url) => {
+      if (!url) return;
+      try {
+        const params = new URL(url).searchParams;
+        const a = params.get('agent');
+        const r = params.get('mref');
+        if (a) setAgentSlug(a.toLowerCase());
+        if (r) setReferralCode(r.toUpperCase());
+      } catch (_) {}
+    };
+    Linking.getInitialURL().then(extractParams);
+    const sub = Linking.addEventListener('url', ({ url }) => extractParams(url));
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    configAPI.getLeadSources()
+      .then(r => setLeadSources(r.data?.sources || []))
+      .catch(() => {});
+  }, []);
 
   const isEgyptian = form.nationality === 'Egypt';
 
@@ -105,14 +136,41 @@ export default function RegisterScreen({ navigation }) {
     try {
       await register({ ...form, phone: phoneNorm, role:'maid' });
 
+      // uploadAPI.image already retries transient network/server failures internally —
+      // this loop only has to handle photos that still failed after those retries.
       const uploadedPhotos = [];
-      try {
-        for (const uri of photos) {
+      let failedCount = 0;
+      for (const uri of photos) {
+        try {
           const r = await uploadAPI.image(uri);
           uploadedPhotos.push({ url: r.data.url, publicId: r.data.publicId });
+        } catch {
+          failedCount++;
         }
-      } catch {
-        Toast.show({ type:'info', text1: t('photos_later'), text2: t('photos_continue') });
+      }
+
+      const MIN_PHOTOS = 3;
+      if (uploadedPhotos.length < MIN_PHOTOS) {
+        throw new Error(
+          `Only ${uploadedPhotos.length} of ${photos.length} photos uploaded — check your connection and tap Continue to try again.`
+        );
+      }
+      if (failedCount > 0) {
+        Toast.show({ type: 'info', text1: t('photos_later'), text2: t('photos_continue') });
+      }
+
+      // "How did you hear about us?" — only sent when not already known via a deep link
+      let heardFields = {};
+      if (agentSlug) {
+        heardFields = { heardAboutUs: 'agent', agentName: agentSlug };
+      } else if (!referralCode && heardSource) {
+        if (heardSource === 'other') {
+          heardFields = { heardAboutUs: 'other', ...(heardOtherText.trim() ? { heardAboutUsOther: heardOtherText.trim() } : {}) };
+        } else if (heardSource === 'facebook' || heardSource === 'instagram') {
+          heardFields = { heardAboutUs: heardSource };
+        } else {
+          heardFields = { heardAboutUs: 'agent', agentName: heardSource };
+        }
       }
 
       await maidsAPI.createProfile({
@@ -126,7 +184,12 @@ export default function RegisterScreen({ navigation }) {
         skills: form.skills,
         languages: form.languages,
         photos: uploadedPhotos,
+        ...heardFields,
       });
+
+      if (referralCode) {
+        maidsAPI.applyReferral(referralCode).catch(() => {});
+      }
 
       navigation.navigate('OTPVerification', {
         email: form.email,
@@ -137,7 +200,7 @@ export default function RegisterScreen({ navigation }) {
         }),
       });
     } catch (err) {
-      Toast.show({ type:'error', text1: err.response?.data?.message || t('registration_failed') });
+      Toast.show({ type:'error', text1: err.response?.data?.message || err.message || t('registration_failed') });
     } finally { submitting.current = false; setLoading(false); }
   };
 
@@ -243,6 +306,33 @@ export default function RegisterScreen({ navigation }) {
           ))}
         </View>
 
+        {referralCode ? (
+          <View style={styles.referralBadge}>
+            <Text style={styles.referralBadgeTxt}>🔗 Referred by a friend — thanks for joining Servix!</Text>
+          </View>
+        ) : !agentSlug && (
+          <>
+            <Text style={styles.label}>How did you hear about us? (optional)</Text>
+            <View style={styles.skillsWrap}>
+              {['facebook', 'instagram', ...leadSources.map(s => s.slug), 'other'].map(key => {
+                const source = leadSources.find(s => s.slug === key);
+                const label = key === 'facebook' ? 'Facebook' : key === 'instagram' ? 'Instagram' : key === 'other' ? 'Other' : (source?.name || key);
+                const isOn = heardSource === key;
+                return (
+                  <TouchableOpacity key={key} onPress={() => setHeardSource(isOn ? null : key)}
+                    style={[styles.skillChip, isOn && styles.skillChipOn]}>
+                    <Text style={[styles.skillTxt, isOn && styles.skillTxtOn]}>{label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {heardSource === 'other' && (
+              <TextInput style={styles.input} value={heardOtherText} onChangeText={setHeardOtherText}
+                placeholder="Tell us more (optional)" placeholderTextColor={COLORS.muted}/>
+            )}
+          </>
+        )}
+
         <Text style={styles.label}>{t('photos')} — {photos.length}/5</Text>
         <TouchableOpacity style={styles.uploadBox} onPress={pickPhoto}>
           <Text style={{ fontSize:28, marginBottom:6 }}>📸</Text>
@@ -287,6 +377,8 @@ const styles = StyleSheet.create({
   skillTxt:    { fontSize:12, color:COLORS.muted },
   skillTxtOn:  { color:'#fff', fontWeight:'700' },
   uploadBox:   { borderWidth:1.5, borderColor:COLORS.border, borderStyle:'dashed', borderRadius:7, padding:20, alignItems:'center', backgroundColor:COLORS.surface },
+  referralBadge:    { backgroundColor:'#f0ecfb', borderWidth:1, borderColor:'#8a6fd8', borderRadius:7, padding:12, marginTop:13 },
+  referralBadgeTxt: { fontSize:12, color:'#5d4a96', fontWeight:'600' },
   photoRow:    { flexDirection:'row', flexWrap:'wrap', gap:8, marginTop:10 },
   photoThumb:  { width:68, height:68, borderRadius:4, borderWidth:1, borderColor:COLORS.border, position:'relative' },
   photoDel:    { position:'absolute', top:-6, right:-6, width:18, height:18, borderRadius:9, backgroundColor:COLORS.red, alignItems:'center', justifyContent:'center' },
