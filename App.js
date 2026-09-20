@@ -101,10 +101,13 @@ async function fetchStoreVersion() {
     { headers: { 'Accept-Language': 'en-US,en;q=0.9' } }
   );
   const html = await r.text();
-  // JSON-LD structured data is the most stable pattern Google embeds
+  // JSON-LD structured data is the most stable pattern Google embeds.
+  // Google changes the surrounding structure without notice, so patterns here
+  // are best-effort only — the backend's google-play-scraper lookup is the
+  // reliable source; these just add a second, on-device signal.
   const patterns = [
     /"softwareVersion"\s*:\s*"([^"]+)"/,
-    /\[\[\["([\d]+\.[\d]+\.[\d]+)"\]\],null,\[/,
+    /\[\[\["([\d]+\.[\d]+\.[\d]+)"\]\]/,
     /\["([\d]+\.[\d]+\.[\d]+)","[\d]+\.[\d]+/,
   ];
   for (const p of patterns) {
