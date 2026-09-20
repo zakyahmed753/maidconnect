@@ -1,13 +1,16 @@
 const express = require('express');
 const router  = express.Router();
 const axios   = require('axios');
+const gplay   = require('google-play-scraper').default;
 const { Config } = require('../models/index');
 const { protect, adminOnly } = require('../middleware/auth');
 
-const IOS_APP_ID  = '6782191284';
+const IOS_APP_ID    = '6782191284';
+const ANDROID_APP_ID = 'app.servix.world';
 
-// In-memory cache — avoids hitting iTunes on every app open
-let _iosCache = { version: null, fetchedAt: 0 };
+// In-memory cache — avoids hitting the stores on every app open
+let _iosCache     = { version: null, fetchedAt: 0 };
+let _androidCache = { version: null, fetchedAt: 0 };
 const CACHE_MS = 30 * 60 * 1000; // 30 minutes
 
 async function fetchIosStoreVersion() {
@@ -19,6 +22,21 @@ async function fetchIosStoreVersion() {
     );
     const v = r.data?.results?.[0]?.version || null;
     if (v) _iosCache = { version: v, fetchedAt: Date.now() };
+    return v;
+  } catch {
+    return null;
+  }
+}
+
+// Uses the google-play-scraper library instead of hand-parsing the Play Store
+// HTML — Google changes that page's internal data format without notice,
+// which previously broke the app's own on-device regex check silently.
+async function fetchAndroidStoreVersion() {
+  if (Date.now() - _androidCache.fetchedAt < CACHE_MS && _androidCache.version) return _androidCache.version;
+  try {
+    const r = await gplay.app({ appId: ANDROID_APP_ID });
+    const v = r?.version || null;
+    if (v) _androidCache = { version: v, fetchedAt: Date.now() };
     return v;
   } catch {
     return null;
@@ -87,20 +105,20 @@ router.put('/terms', protect, adminOnly, async (req, res) => {
 });
 
 // GET /api/config/version — public
-// iOS: auto-fetched from iTunes API (reliable from any server).
-// Android: from DB config (updated via PUT below when releasing a new build,
-//          or the app checks the Play Store directly on the device).
+// Both platforms: auto-fetched live from their store (iTunes API / Play Store
+// listing). DB config is only a manual fallback if a live lookup ever fails.
 router.get('/version', async (req, res) => {
   try {
-    const [iosLive, cfg] = await Promise.all([
+    const [iosLive, androidLive, cfg] = await Promise.all([
       fetchIosStoreVersion(),
+      fetchAndroidStoreVersion(),
       Config.findOne({ key: 'appVersion' }),
     ]);
     const db = cfg?.value || { ios: '1.3.7', android: '1.3.7' };
     res.json({
       success: true,
       ios:     iosLive || db.ios,
-      android: db.android,
+      android: androidLive || db.android,
     });
   } catch (err) {
     res.status(500).json({ success: false });
