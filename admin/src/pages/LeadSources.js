@@ -10,6 +10,7 @@ const INP   = { padding:'9px 12px', background:'#1a1a1a', border:'1px solid #2a2
 const STATIC_SOURCES = [
   { key:'facebook',  icon:'📘', label:'Facebook',  color:'#4267B2', colorAlpha:'rgba(66,103,178,0.15)'  },
   { key:'instagram', icon:'📸', label:'Instagram', color:'#E1306C', colorAlpha:'rgba(225,48,108,0.15)'  },
+  { key:'referral',  icon:'🔗', label:'Referral (friend link)', color:'#8a6fd8', colorAlpha:'rgba(138,111,216,0.15)' },
   { key:'other',     icon:'💬', label:'Other',     color:'#c9a84c', colorAlpha:'rgba(201,168,76,0.12)'  },
   { key:'unknown',   icon:'❓', label:'Not specified', color:'#555', colorAlpha:'rgba(80,80,80,0.1)'    },
 ];
@@ -40,6 +41,7 @@ function getSourceLabel(m, agentMap) {
   }
   if (m.heardAboutUs === 'facebook')  return '📘 Facebook';
   if (m.heardAboutUs === 'instagram') return '📸 Instagram';
+  if (m.heardAboutUs === 'referral')  return '🔗 Referral (friend link)';
   return `💬 Other${m.heardAboutUsOther ? ': ' + m.heardAboutUsOther : ''}`;
 }
 

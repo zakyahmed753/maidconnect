@@ -44,8 +44,12 @@ exports.createProfile = async (req, res) => {
     const { referredBy, ...rest } = req.body;
     const data = { ...rest, user: req.user._id, referralCode };
     if (referredBy) {
-      data.referredBy = referredBy;
-      await Maid.updateOne({ referralCode: referredBy }, { $inc: { referralCount: 1, referralCredit: 100 } });
+      const referrer = await Maid.findOne({ referralCode: referredBy });
+      if (referrer) {
+        data.referredBy = referredBy;
+        data.heardAboutUs = 'referral'; // verified referral overrides any self-reported source
+        await Maid.updateOne({ referralCode: referredBy }, { $inc: { referralCount: 1, referralCredit: 100 } });
+      }
     }
 
     const maid = await Maid.create(data);
@@ -125,7 +129,7 @@ exports.applyReferral = async (req, res) => {
     const referrer = await Maid.findOne({ referralCode });
     if (!referrer) return res.status(404).json({ success: false, message: 'Referral code not found' });
 
-    await Maid.updateOne({ _id: maid._id }, { referredBy: referralCode });
+    await Maid.updateOne({ _id: maid._id }, { referredBy: referralCode, heardAboutUs: 'referral' });
     await Maid.updateOne({ referralCode }, { $inc: { referralCount: 1, referralCredit: 100 } });
 
     res.json({ success: true });

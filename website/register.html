@@ -611,8 +611,9 @@ const urlMref  = new URLSearchParams(window.location.search).get('mref')  || nul
 const urlAgent = new URLSearchParams(window.location.search).get('agent') || null;
 
 // On mobile, try to open app via deep link first; fall back to web form
-if (urlAgent && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-  const deepLink = `servix://register?agent=${encodeURIComponent(urlAgent)}`;
+if ((urlAgent || urlMref) && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+  const deepLinkParam = urlMref ? `mref=${encodeURIComponent(urlMref)}` : `agent=${encodeURIComponent(urlAgent)}`;
+  const deepLink = `servix://register?${deepLinkParam}`;
   const iosStore = 'https://apps.apple.com/app/id6503602878';
   const androidStore = 'https://play.google.com/store/apps/details?id=app.servix.world';
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
