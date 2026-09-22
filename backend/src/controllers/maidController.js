@@ -54,11 +54,9 @@ exports.createProfile = async (req, res) => {
 
     const maid = await Maid.create(data);
 
-    // Send referral link email (non-blocking)
-    try {
-      const { sendReferralEmail } = require('../utils/email');
-      await sendReferralEmail(req.user.email, maid.fullName, maid.referralCode);
-    } catch (_) {}
+    // Send referral link email (non-blocking — don't hold up the response on email latency)
+    const { sendReferralEmail } = require('../utils/email');
+    sendReferralEmail(req.user.email, maid.fullName, maid.referralCode).catch(() => {});
 
     res.status(201).json({ success: true, maid });
   } catch (err) {
