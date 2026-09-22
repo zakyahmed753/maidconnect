@@ -22,6 +22,7 @@ export const navigationRef = createNavigationContainerRef();
 import SplashScreen  from '../screens/auth/SplashScreen';
 import LoginScreen   from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
+import CompleteProfileScreen from '../screens/auth/CompleteProfileScreen';
 import RegisterHousewifeScreen from '../screens/auth/RegisterHousewifeScreen';
 import SelfieVerificationScreen from '../screens/auth/SelfieVerificationScreen';
 import PendingApprovalScreen from '../screens/auth/PendingApprovalScreen';
@@ -282,7 +283,16 @@ export default function AppNavigator() {
             <Stack.Screen name="ResetPassword"      component={ResetPasswordScreen}/>
             <Stack.Screen name="GuestBrowse"        component={BrowseScreen}/>
           </>
-        ) : user?.role === 'maid' && profile && (
+        ) : user?.role === 'maid' && !profile ? (
+          // Account exists but profile creation never completed (e.g. app was
+          // closed mid-upload) — resume from the profile step, not the home screen.
+          <>
+            <Stack.Screen name="CompleteProfile"    component={CompleteProfileScreen}/>
+            <Stack.Screen name="OTPVerification"    component={OTPVerificationScreen}/>
+            <Stack.Screen name="SelfieVerification" component={SelfieVerificationScreen}/>
+            <Stack.Screen name="PendingApproval"    component={PendingApprovalScreen}/>
+          </>
+        ) : user?.role === 'maid' && (
             profile.verificationStatus === 'pending' ||
             profile.approvalStatus !== 'approved'
           ) ? (
