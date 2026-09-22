@@ -151,14 +151,34 @@ export function HouseWives() {
     (h.user?.phone || h.phone || '').includes(search)
   );
 
+  const handleExport = () => {
+    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lines = [
+      'Customer Name,Customer Phone',
+      ...filtered.map(h => `${esc(h.fullName)},${esc(h.user?.phone || h.phone)}`)
+    ];
+    const csv = '﻿' + lines.join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `servix_customers_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div style={{ fontFamily:"'Jost',sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&family=DM+Mono:wght@400&display=swap');`}</style>
 
       <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:16, flexWrap:'wrap' }}>
         <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, color:'#666', letterSpacing:'0.1em', textTransform:'uppercase', marginRight:4 }}>{filtered.length} customers</div>
+        <button onClick={handleExport} disabled={!filtered.length}
+          style={{ marginLeft:'auto', padding:'8px 14px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:5, color: filtered.length ? '#c9a84c' : '#555', fontSize:12, cursor: filtered.length ? 'pointer' : 'default', fontFamily:"'Jost',sans-serif", fontWeight:600 }}>
+          ⬇ Export CSV
+        </button>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email or phone…"
-          style={{ marginLeft:'auto', padding:'8px 14px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:5, color:'#f0ece4', fontSize:13, outline:'none', width:260, fontFamily:"'Jost',sans-serif" }}/>
+          style={{ padding:'8px 14px', background:'#1a1a1a', border:'1px solid #2a2a2a', borderRadius:5, color:'#f0ece4', fontSize:13, outline:'none', width:260, fontFamily:"'Jost',sans-serif" }}/>
       </div>
 
       {loading && <div style={{ color:'#555', textAlign:'center', padding:40 }}>Loading…</div>}
